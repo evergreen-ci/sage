@@ -2,22 +2,30 @@ package main
 
 import (
 	"bufio"
+	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 // Config holds secrets and configuration
 type Config struct {
-	Secret string
-	OPENAI_KEY string
-	OPENAI_ENDPOINT string
-	CENTRAL_RAG_API_KEY string
+	OPENAI_KEY                  string
+	OPENAI_ENDPOINT             string
+	CENTRAL_RAG_API_KEY         string
 	CENTRAL_RAG_OPENAI_BASE_URL string
+	MONGO_URL                   string
+	MONGO_USERNAME              string
+	MONGO_PASSWORD              string
 }
 
 var config Config
@@ -46,10 +54,36 @@ func loadEnv() {
 
 func loadConfig() {
 	loadEnv()
-	config.Secret = os.Getenv("SECRET")
-	if config.Secret == "" {
-		log.Fatalf("SECRET not set in .env file")
+	config.MONGO_URL = os.Getenv("MONGO_URL")
+	if config.MONGO_URL == "" {
+		log.Fatalf("MONGO_URL not set in .env file")
 	}
+	config.MONGO_USERNAME = os.Getenv("MONGO_USERNAME")
+	if config.MONGO_URL == "" {
+		log.Fatalf("MONGO_USERNAME not set in .env file")
+	}
+	config.MONGO_PASSWORD = os.Getenv("MONGO_PASSWORD")
+	if config.MONGO_URL == "" {
+		log.Fatalf("MONGO_PASSWORD not set in .env file")
+	}
+	clientOpts := options.Client().ApplyURI(config.MONGO_URL)
+	clientOpts.SetAuth(options.Credential{
+		Username: config.MONGO_USERNAME,
+		Password: config.MONGO_PASSWORD,
+	})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, clientOpts)
+	if err != nil {
+		log.Fatalf("Error connecting to MongoDB: %v", err)
+	}
+
+	err = client.Ping(ctx, readpref.Primary())
+	if err != nil {
+		log.Fatalf("Error pinging MongoDB: %v", err)
+	}
+	fmt.Println("Connected to MongoDB!")
 }
 
 func helloHandler(c *gin.Context) {
