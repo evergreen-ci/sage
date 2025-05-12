@@ -3,8 +3,6 @@ package main
 import (
 	"bufio"
 	"context"
-	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -15,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"go.uber.org/zap"
 )
 
 // Config holds secrets and configuration
@@ -29,11 +28,20 @@ type Config struct {
 }
 
 var config Config
+var logger *zap.Logger
+
+func initLogger() {
+	var err error
+	logger, err = zap.NewProduction()
+	if err != nil {
+		panic(err)
+	}
+}
 
 func loadEnv() {
 	file, err := os.Open(".env")
 	if err != nil {
-		log.Fatalf("Error opening .env file: %v", err)
+		logger.Fatal("Error opening .env file", zap.Error(err))
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
@@ -48,7 +56,7 @@ func loadEnv() {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		log.Fatalf("Error reading .env file: %v", err)
+		logger.Fatal("Error reading .env file", zap.Error(err))
 	}
 }
 
@@ -56,15 +64,15 @@ func loadConfig() {
 	loadEnv()
 	config.MONGO_URL = os.Getenv("MONGO_URL")
 	if config.MONGO_URL == "" {
-		log.Fatalf("MONGO_URL not set in .env file")
+		logger.Fatal("MONGO_URL not set in .env file")
 	}
 	config.MONGO_USERNAME = os.Getenv("MONGO_USERNAME")
-	if config.MONGO_URL == "" {
-		log.Fatalf("MONGO_USERNAME not set in .env file")
+	if config.MONGO_USERNAME == "" {
+		logger.Fatal("MONGO_USERNAME not set in .env file")
 	}
 	config.MONGO_PASSWORD = os.Getenv("MONGO_PASSWORD")
-	if config.MONGO_URL == "" {
-		log.Fatalf("MONGO_PASSWORD not set in .env file")
+	if config.MONGO_PASSWORD == "" {
+		logger.Fatal("MONGO_PASSWORD not set in .env file")
 	}
 	clientOpts := options.Client().ApplyURI(config.MONGO_URL)
 	clientOpts.SetAuth(options.Credential{
@@ -76,14 +84,14 @@ func loadConfig() {
 
 	client, err := mongo.Connect(ctx, clientOpts)
 	if err != nil {
-		log.Fatalf("Error connecting to MongoDB: %v", err)
+		logger.Fatal("Error connecting to MongoDB", zap.Error(err))
 	}
 
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
-		log.Fatalf("Error pinging MongoDB: %v", err)
+		logger.Fatal("Error pinging MongoDB", zap.Error(err))
 	}
-	fmt.Println("Connected to MongoDB!")
+	logger.Info("Connected to MongoDB!")
 }
 
 func helloHandler(c *gin.Context) {
@@ -91,6 +99,9 @@ func helloHandler(c *gin.Context) {
 }
 
 func main() {
+	initLogger()
+	defer logger.Sync()
+
 	loadConfig()
 	router := gin.Default()
 	router.Use(cors.Default())
