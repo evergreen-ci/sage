@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -14,6 +15,7 @@ import (
 
 var client *azopenai.Client
 var modelDeploymentName string
+var systemMessage string
 
 func InitOpenAIClient() error {
 	if config.OPENAI_KEY == "" {
@@ -25,7 +27,12 @@ func InitOpenAIClient() error {
 	logger.Info("OpenAI endpoint", zap.String("endpoint", config.OPENAI_ENDPOINT))
 	keyCredential := azcore.NewKeyCredential(config.OPENAI_KEY)
 	modelDeploymentName = "gpt-4.1"
-	var err error
+	promptBuffer, err := os.ReadFile("prompts/parsley_system_prompt.md")
+	if err != nil {
+		logger.Error("Failed to read system message file", zap.Error(err))
+		panic(err)
+	}
+	systemMessage = string(promptBuffer)
 	client, err = azopenai.NewClientWithKeyCredential(config.OPENAI_ENDPOINT, keyCredential, nil)
 	if err != nil {
 		logger.Error("Failed to create OpenAI client", zap.Error(err))
@@ -44,7 +51,7 @@ func OpenAIGinHandler(c *gin.Context) {
 	}
 	messages := []azopenai.ChatRequestMessageClassification{
 		&azopenai.ChatRequestSystemMessage{
-			Content: azopenai.NewChatRequestSystemMessageContent("You are a helpful assistant that talks like a pirate"),
+			Content: azopenai.NewChatRequestSystemMessageContent(systemMessage),
 		},
 		&azopenai.ChatRequestUserMessage{
 			Content: azopenai.NewChatRequestUserMessageContent(req.Message),
