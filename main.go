@@ -2,16 +2,16 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"github.com/gin-gonic/gin"
 )
 
 // Config holds secrets and configuration
 type Config struct {
-	Secret string
+	Secret string `json:"secret"`
 }
 
 var config Config
@@ -46,22 +46,14 @@ func loadConfig() {
 	}
 }
 
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-	fmt.Fprintf(w, "Hello, World! Secret: %s", config.Secret)
+func helloHandler(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, config)
 }
 
 func main() {
 	loadConfig()
-	http.HandleFunc("/", helloHandler)
-	log.Println("Server started on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatalf("Server failed: %v", err)
-	}
+	router := gin.Default()
+	router.GET("/", helloHandler)
+
+	router.Run("localhost:8080")
 }
