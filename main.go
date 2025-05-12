@@ -6,12 +6,18 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 // Config holds secrets and configuration
 type Config struct {
-	Secret string `json:"secret"`
+	Secret string
+	OPENAI_KEY string
+	OPENAI_ENDPOINT string
+	CENTRAL_RAG_API_KEY string
+	CENTRAL_RAG_OPENAI_BASE_URL string
 }
 
 var config Config
@@ -47,12 +53,13 @@ func loadConfig() {
 }
 
 func helloHandler(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, config)
+	c.IndentedJSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
 func main() {
 	loadConfig()
 	router := gin.Default()
+	router.Use(cors.Default())
 	router.GET("/", helloHandler)
 
 	router.Run("localhost:8080")
