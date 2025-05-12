@@ -62,6 +62,8 @@ func loadEnv() {
 
 func loadConfig() {
 	loadEnv()
+	config.OPENAI_KEY = os.Getenv("OPENAI_KEY")
+	config.OPENAI_ENDPOINT = os.Getenv("OPENAI_ENDPOINT")
 	config.MONGO_URL = os.Getenv("MONGO_URL")
 	if config.MONGO_URL == "" {
 		logger.Fatal("MONGO_URL not set in .env file")
@@ -101,11 +103,16 @@ func helloHandler(c *gin.Context) {
 func main() {
 	initLogger()
 	defer logger.Sync()
-
 	loadConfig()
+	err := InitOpenAIClient()
+	if err != nil {
+		logger.Fatal("Error initializing OpenAI client", zap.Error(err))
+	}
 	router := gin.Default()
 	router.Use(cors.Default())
 	router.GET("/", helloHandler)
+
+	router.POST("/parsley_ai", OpenAIGinHandler)
 
 	router.Run("localhost:8080")
 }
