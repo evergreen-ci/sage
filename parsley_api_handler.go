@@ -1,6 +1,8 @@
 package main
 
 import (
+	"evergreen-ai-service/config"
+	"evergreen-ai-service/openaiservice"
 	"net/http"
 	"os"
 
@@ -14,7 +16,7 @@ var systemMessage string
 func InitParsleySystemMessage() error {
 	promptBuffer, err := os.ReadFile("prompts/parsley_system_prompt.md")
 	if err != nil {
-		logger.Error("Failed to read system message file", zap.Error(err))
+		config.Logger.Error("Failed to read system message file", zap.Error(err))
 		return err
 	}
 	systemMessage = string(promptBuffer)
@@ -37,10 +39,10 @@ func ParsleyGinHandler(c *gin.Context) {
 			Content: azopenai.NewChatRequestUserMessageContent(req.Message),
 		},
 	}
-	chatCompletion, err := GetOpenAICompletion(messages)
+	chatCompletion, err := openaiservice.GetOpenAICompletion(messages)
 
 	if err != nil || len(chatCompletion.Choices) == 0 {
-		logger.Error("Failed to get response from OpenAI", zap.Error(err))
+		config.Logger.Error("Failed to get response from OpenAI", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get response from OpenAI"})
 		return
 	}

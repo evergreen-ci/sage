@@ -2,73 +2,66 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.uber.org/zap"
+
+	"evergreen-ai-service/config"
+	"evergreen-ai-service/openaiservice"
 )
 
-// Config holds secrets and configuration
-type Config struct {
-	OPENAI_KEY                  string
-	OPENAI_ENDPOINT             string
-	CENTRAL_RAG_API_KEY         string
-	CENTRAL_RAG_OPENAI_BASE_URL string
-	MONGO_URL                   string
-	MONGO_USERNAME              string
-	MONGO_PASSWORD              string
-}
+var mongoClient *mongo.Client
 
-var config Config
-var logger *zap.Logger
+func initMongo() error {
+	if config.Config.MongoURL == "" {
+		return fmt.Errorf("MONGO_URL is not set")
+	}
+	if config.Config.MongoUsername == "" {
+		return fmt.Errorf("MONGO_USERNAME is not set")
+	}
+	if config.Config.MongoPassword == "" {
+		return fmt.Errorf("MONGO_PASSWORD is not set")
+	}
 
-func initLogger() {
+	clientOptions := options.Client().
+		ApplyURI(config.Config.MongoURL).
+		SetAuth(options.Credential{
+			Username: config.Config.MongoUsername,
+			Password: config.Config.MongoPassword,
+		})
+
 	var err error
-	logger, err = zap.NewProduction()
+	mongoClient, err = mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
-		panic(err)
+		return err
+	}
+
+	err = mongoClient.Ping(context.TODO(), readpref.Primary())
+	if err != nil {
+		return err
+	}
+
+	config.Logger.Info("MongoDB connection established")
+	return nil
+}
+
+func loadEnv() {
+	// Load environment variables from .env file
+	if err := godotenv.Load(); err != nil {
+		config.Logger.Warn("Error loading .env file", zap.Error(err))
 	}
 }
 
-func loadConfig() {
-	config.OPENAI_KEY = os.Getenv("OPENAI_KEY")
-	config.OPENAI_ENDPOINT = os.Getenv("OPENAI_ENDPOINT")
-	config.MONGO_URL = os.Getenv("MONGO_URL")
-	if config.MONGO_URL == "" {
-		logger.Fatal("MONGO_URL not set in .env file")
-	}
-	config.MONGO_USERNAME = os.Getenv("MONGO_USERNAME")
-	if config.MONGO_USERNAME == "" {
-		logger.Fatal("MONGO_USERNAME not set in .env file")
-	}
-	config.MONGO_PASSWORD = os.Getenv("MONGO_PASSWORD")
-	if config.MONGO_PASSWORD == "" {
-		logger.Fatal("MONGO_PASSWORD not set in .env file")
-	}
-	clientOpts := options.Client().ApplyURI(config.MONGO_URL)
-	clientOpts.SetAuth(options.Credential{
-		Username: config.MONGO_USERNAME,
-		Password: config.MONGO_PASSWORD,
-	})
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	client, err := mongo.Connect(ctx, clientOpts)
-	if err != nil {
-		logger.Fatal("Error connecting to MongoDB", zap.Error(err))
-	}
-
-	err = client.Ping(ctx, readpref.Primary())
-	if err != nil {
-		logger.Fatal("Error pinging MongoDB", zap.Error(err))
-	}
-	logger.Info("Connected to MongoDB!")
+func initService() {
+	loadEnv()
+	config.Load()
 }
 
 func helloHandler(c *gin.Context) {
@@ -76,16 +69,22 @@ func helloHandler(c *gin.Context) {
 }
 
 func main() {
-	initLogger()
-	defer logger.Sync()
-	loadConfig()
-	err := InitOpenAIClient()
+	initService()
+	defer config.Logger.Sync()
+	err := initMongo()
 	if err != nil {
-		logger.Fatal("Error initializing OpenAI client", zap.Error(err))
+		config.Logger.Fatal("Error initializing MongoDB", zap.Error(err))
+		panic(err)
+	}
+	err = openaiservice.InitOpenAIClient()
+	if err != nil {
+		config.Logger.Fatal("Error initializing OpenAI client", zap.Error(err))
+		panic(err)
 	}
 	err = InitParsleySystemMessage()
 	if err != nil {
-		logger.Fatal("Error initializing system message", zap.Error(err))
+		config.Logger.Fatal("Error initializing system message", zap.Error(err))
+		panic(err)
 	}
 	router := gin.Default()
 	router.Use(cors.Default())
