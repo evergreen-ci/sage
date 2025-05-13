@@ -41,7 +41,7 @@ dry-run: helm-repo ## Outputs a manifest of resources to be deployed without mak
 	$(HELM_UPGRADE) --dry-run
 
 .PHONY: install
-install: helm-repo ## Install/upgrade deployment via helm
+install: helm-repo ## Install/upgrade deployment via helm.
 	$(HELM_UPGRADE)
 
 .PHONY: delete
