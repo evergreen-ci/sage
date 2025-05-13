@@ -37,7 +37,7 @@ helm-repo:
 	helm repo update mongodb
 
 .PHONY: dry-run
-dry-run: helm-repo ## Outputs a manifest of resources to be deployed without making any changes.
+dry-run: helm-repo ## Outputs a manifest of resources to be deployed without making any changes
 	$(HELM_UPGRADE) --dry-run
 
 .PHONY: install
