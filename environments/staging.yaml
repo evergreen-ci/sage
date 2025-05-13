@@ -1,0 +1,10 @@
+arch: "arm64"
+
+ingress:
+  enabled: true
+  hosts:
+    - parsley-ai-agent-skunkworks.skunkworks.staging.corp.mongodb.com
+service:
+  targetPort: 8080
+mesh:
+  enabled: true

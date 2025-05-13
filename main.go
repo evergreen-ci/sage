@@ -1,11 +1,9 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -38,30 +36,7 @@ func initLogger() {
 	}
 }
 
-func loadEnv() {
-	file, err := os.Open(".env")
-	if err != nil {
-		logger.Fatal("Error opening .env file", zap.Error(err))
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, "#") || len(strings.TrimSpace(line)) == 0 {
-			continue
-		}
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) == 2 {
-			os.Setenv(strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]))
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		logger.Fatal("Error reading .env file", zap.Error(err))
-	}
-}
-
 func loadConfig() {
-	loadEnv()
 	config.OPENAI_KEY = os.Getenv("OPENAI_KEY")
 	config.OPENAI_ENDPOINT = os.Getenv("OPENAI_ENDPOINT")
 	config.MONGO_URL = os.Getenv("MONGO_URL")
