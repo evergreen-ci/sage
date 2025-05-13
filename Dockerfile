@@ -3,7 +3,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN go build evergreen-ai-service .
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build evergreen-ai-service .
 FROM alpine:3.19
 WORKDIR /root/
 COPY --from=builder /app/evergreen-ai-service .
