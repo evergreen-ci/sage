@@ -8,3 +8,9 @@ service:
   targetPort: 8080
 mesh:
   enabled: true
+
+envSecrets:
+  MONGO_URL: parsley-ai-secrets
+  MONGO_USERNAME: parsley-ai-secrets
+  MONGO_PASSWORD: parsley-ai-secrets
+  OPENAI_KEY: parsley-ai-secrets
