@@ -57,3 +57,6 @@ all: ## Build, push, and install
 .PHONY: run
 run: build ## Locally run the docker container
 	docker run -p 8080:8080 -e MONGO_URL=${MONGO_URL} -e MONGO_USERNAME=${MONGO_USERNAME} -e MONGO_PASSWORD=${MONGO_PASSWORD} ${APP}
+	
+run-local:
+	go run .
