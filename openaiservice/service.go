@@ -43,6 +43,20 @@ func GetOpenAICompletion(messages []azopenai.ChatRequestMessageClassification) (
 		return nil, err
 	}
 
+	config.Logger.Info("OpenAI usage: ", zap.String("usage: ", fmt.Sprintf("Total Tokens: %d, Prompt Tokens: %d, Completion Tokens: %d, Total Cost $%.6f", *chatCompletion.Usage.TotalTokens, *chatCompletion.Usage.PromptTokens, *chatCompletion.Usage.CompletionTokens, calculateCost(chatCompletion.Usage))))
 	return &chatCompletion, nil
 
+}
+
+func calculateCost(usage *azopenai.CompletionsUsage) float64 {
+	// Assuming the cost is $2 per 1M tokens for the model
+	costPerInputToken := 2.0 / 1000000.0
+	// Assuming the cost is $8 per 1M tokens for the output
+	costPerOutputToken := 8.0 / 1000000.0
+
+	costForInput := float64(*usage.PromptTokens) * costPerInputToken
+	costForOutput := float64(*usage.CompletionTokens) * costPerOutputToken
+	costTotal := costForInput + costForOutput
+
+	return float64(costTotal)
 }

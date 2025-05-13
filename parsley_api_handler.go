@@ -1,8 +1,8 @@
 package main
 
 import (
+	orchestrator "evergreen-ai-service/Orchestrator"
 	"evergreen-ai-service/config"
-	"evergreen-ai-service/openaiservice"
 	"net/http"
 	"os"
 
@@ -39,12 +39,17 @@ func ParsleyGinHandler(c *gin.Context) {
 			Content: azopenai.NewChatRequestUserMessageContent(req.Message),
 		},
 	}
-	chatCompletion, err := openaiservice.GetOpenAICompletion(messages)
-
-	if err != nil || len(chatCompletion.Choices) == 0 {
+	resp, err := orchestrator.RunOrchestration(c, messages)
+	// chatCompletion, err := openaiservice.GetOpenAICompletion(messages)
+	// if err != nil || len(chatCompletion.Choices) == 0 {
+	// 	config.Logger.Error("Failed to get response from OpenAI", zap.Error(err))
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get response from OpenAI"})
+	// 	return
+	// }
+	if err != nil {
 		config.Logger.Error("Failed to get response from OpenAI", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get response from OpenAI"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"response": chatCompletion.Choices[0].Message.Content})
+	c.JSON(http.StatusOK, gin.H{"response": resp})
 }
