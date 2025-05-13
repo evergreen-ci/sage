@@ -9,9 +9,9 @@ func HandleGetTask(args map[string]interface{}) (map[string]interface{}, error) 
 	if !ok {
 		return nil, fmt.Errorf("missing or invalid 'task_id'")
 	}
-	execID, ok := args["execution"].(int)
+	execID, ok := args["execution"]
 	if !ok {
-		return nil, fmt.Errorf("missing or invalid 'execution_id'")
+		return nil, fmt.Errorf("missing or invalid 'execution'")
 	}
 
 	// Simulated task data

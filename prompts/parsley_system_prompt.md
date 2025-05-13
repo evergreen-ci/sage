@@ -15,8 +15,8 @@ You interact with two entities: the **user** and the **orchestrator**.
 
 You have access to the following internal tool:
 
-- **get\_task(task\_id: str, execution\_id: str)**: Returns metadata for a
-  specific task, including its creator, status, base task ID and execution, and
+- **get\_task(task\_id: str, execution: int)**: Returns metadata for a specific
+  task, including its creator, status, base task ID and execution, and
   environment details.
 
 ### Communication Rules
@@ -37,7 +37,7 @@ You have access to the following internal tool:
   "tool": "get_task",
   "args": {
     "task_id": "<task_id>",
-    "execution_id": "<execution_id>"
+    "execution": "<execution>"
   }
 }
 ```
