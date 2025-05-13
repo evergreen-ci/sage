@@ -23,7 +23,7 @@ create: login ## Creates your ECR docker repository
 	./scripts/ecr-create.sh
 
 .PHONY: build
-build: ## Build and tag your docker container
+build: ## Build and tag your docker container.
 	docker build -t ${APP} .
 	docker tag ${APP} ${REGISTRY}:${COMMIT_SHA}
 
