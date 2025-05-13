@@ -1,14 +1,16 @@
 # Evergreen AI Service
 
-This is a simple Go-based web server that responds to HTTP requests, handles
-CORS headers, and loads secrets from a `.env` file.
+This is a Go-based web server and AI assistant for Evergreen CI and log viewing.
+It supports local development, Docker, and deployment to Kubernetes via Helm.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Go 1.18 or newer (recommended: Go 1.24)
+- Go 1.18 or newer (recommended: Go 1.24+)
+- Docker
 - Make
+- (Optional) Helm, kubectl, and AWS CLI for deployment
 
 ### Setup
 
@@ -17,46 +19,95 @@ CORS headers, and loads secrets from a `.env` file.
    git clone <your-repo-url>
    cd evergreen-ai-service
    ```
-
 2. **Create a `.env` file**
    ```sh
-   echo "SECRET=your_secret_value" > .env
+   cp .env.example .env
+   # or manually create and fill in required secrets
    ```
-   Replace `your_secret_value` with your actual secret.
-
-3. **Initialize Go modules (if not already done)**
+3. **Install Go dependencies**
    ```sh
    go mod tidy
    ```
 
-### Running the Server
+## Running Locally
 
-Start the server using Make:
+### With Go
+
+```sh
+make run-local
+```
+
+### With Docker
+
+Build and run the container locally:
 
 ```sh
 make run
 ```
 
-The server will start on `http://localhost:8080`.
+This will build the Docker image and run it, exposing port 8080.
 
-### Example Request
+## Makefile Commands
 
-Send a GET request to the root endpoint:
+- `make run-local` – Run the server directly with Go (for development)
+- `make run` – Build and run the Docker container locally
+- `make build` – Build and tag the Docker image
+- `make push` – Push the Docker image to ECR
+- `make install` – Deploy/update the app in Kubernetes via Helm
+- `make dry-run` – Output a manifest of resources to be deployed (no changes)
+- `make delete` – Remove the deployment from Kubernetes
+- `make all` – Build, push, and install in sequence
+- `make login` – Login to AWS ECR
+- `make create` – Create the ECR repository
+- `make helm-repo` – Update local cache of MongoDB Helm charts
+- `make context` – Set kubectl context to staging
+
+## Environment Variables
+
+Set these in your `.env` file as needed:
+
+- `SECRET` – App secret
+- `MONGO_URL`, `MONGO_USERNAME`, `MONGO_PASSWORD` – MongoDB connection
+- `OPENAI_API_KEY` – For OpenAI integration
+- `CORS_ALLOWED_ORIGINS`, `CORS_ALLOWED_HEADERS` – CORS configuration
+- `APP` – Name of the app for Docker/Helm
+
+## Project Structure
+
+- `main.go` – Entry point
+- `config/` – Global config and logger
+- `openaiservice/` – OpenAI service integration
+- `Orchestrator/` – Orchestration logic
+- `evergreen/` – Evergreen API integration
+- `prompts/` – System prompts and recipes
+- `environments/` – Deployment configs
+- `scripts/` – Helper scripts for ECR, secrets, etc.
+
+## Example Request
 
 ```sh
 curl http://localhost:8080/
 ```
 
-You should see a response like:
+## Parsley AI Endpoint
 
+The `/parsley_ai` route provides AI-powered assistance for debugging Evergreen
+CI tasks using the Parsley assistant. This endpoint leverages system prompts and
+tools to help users analyze logs and resolve issues.
+
+### Example Request
+
+Send a POST request to `/parsley_ai` with a JSON body containing your message or
+task details:
+
+```sh
+curl -X POST http://localhost:8080/parsley_ai \
+  -H 'Content-Type: application/json' \
+  -d '{"message": "Help me debug task 12345 on execution 1"}'
 ```
-Hello, World! Secret: your_secret_value
-```
 
-### Notes
-
-- The `.env` file is ignored by git and should not be committed.
-- CORS headers are set to allow all origins and GET/OPTIONS methods.
+The response will include AI-generated suggestions or debugging steps based on
+the provided input.
 
 ---
 
