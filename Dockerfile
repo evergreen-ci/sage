@@ -5,9 +5,9 @@ RUN go mod download
 COPY . .
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build evergreen-ai-service .
 FROM alpine:3.19
-WORKDIR /root/
+WORKDIR /app
 COPY --from=builder /app/evergreen-ai-service .
 RUN mkdir -p /app/prompts
 COPY --from=builder /app/prompts/*.md /app/prompts/
 EXPOSE 8080
-CMD ["/root/evergreen-ai-service"]
+CMD ["/app/evergreen-ai-service"]
