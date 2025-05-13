@@ -108,11 +108,15 @@ func main() {
 	if err != nil {
 		logger.Fatal("Error initializing OpenAI client", zap.Error(err))
 	}
+	err = InitParsleySystemMessage()
+	if err != nil {
+		logger.Fatal("Error initializing system message", zap.Error(err))
+	}
 	router := gin.Default()
 	router.Use(cors.Default())
 	router.GET("/", helloHandler)
 
-	router.POST("/parsley_ai", OpenAIGinHandler)
+	router.POST("/parsley_ai", ParsleyGinHandler)
 
 	router.Run("localhost:8080")
 }
