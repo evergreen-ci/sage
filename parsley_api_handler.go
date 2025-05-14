@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	orchestrator "evergreen-ai-service/Orchestrator"
 	"evergreen-ai-service/config"
 	"fmt"
@@ -101,7 +102,13 @@ func ParsleyGinHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert session into database"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"response": resp, "session": session})
+	var parsedResp map[string]interface{}
+	err = json.Unmarshal([]byte(resp), &parsedResp)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse response into JSON"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"response": parsedResp, "session": session})
 }
 
 type Session struct {

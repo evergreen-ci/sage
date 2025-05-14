@@ -76,7 +76,7 @@ explicitly call this tool.
 }
 ```
 
-Use `end_response` only when you are ready to deliver the final, complete answer
+Use `end_orchestration` only when you are ready to deliver the final, complete answer
 to the user. Never invoke it midway through an internal exchange.
 
 ### Response Guidelines
