@@ -48,6 +48,15 @@ call this tool.
 }
 ```
 
+```json
+{
+  "tool": "get_task_history",
+  "args": {
+    "task_name": "<task_name>"
+  }
+}
+```
+
 #### Format for User Response
 
 ```json

@@ -13,6 +13,7 @@ type AppConfig struct {
 	EvergreenAPIUser string
 	EvergreenAPIKey  string
 	EvergreenAPIURL  string
+	EvergreenURL     string
 	MongoURL         string
 	MongoUsername    string
 	MongoPassword    string
@@ -35,6 +36,7 @@ func Load() {
 			EvergreenAPIUser: os.Getenv("EVERGREEN_API_USER"),
 			EvergreenAPIKey:  os.Getenv("EVERGREEN_API_KEY"),
 			EvergreenAPIURL:  os.Getenv("EVERGREEN_API_URL"),
+			EvergreenURL:     os.Getenv("EVERGREEN_URL"),
 			MongoURL:         os.Getenv("MONGO_URL"),
 			MongoUsername:    os.Getenv("MONGO_USERNAME"),
 			MongoPassword:    os.Getenv("MONGO_PASSWORD"),

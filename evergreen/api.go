@@ -46,3 +46,29 @@ func HandleGetTask(taskId string, execution int) (map[string]interface{}, error)
 	}
 	return result, nil
 }
+
+func HandleGetTaskHistory(taskName string) (map[string]interface{}, error) {
+	url := fmt.Sprintf("%s/task_history/%s?format=json&before=true", config.Config.EvergreenURL, taskName)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Api-User", config.Config.EvergreenAPIUser)
+	req.Header.Set("Api-Key", config.Config.EvergreenAPIKey)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
