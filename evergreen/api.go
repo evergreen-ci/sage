@@ -1,23 +1,11 @@
 package evergreen
 
-import (
-	"fmt"
-)
-
-func HandleGetTask(args map[string]interface{}) (map[string]interface{}, error) {
-	taskID, ok := args["task_id"].(string)
-	if !ok {
-		return nil, fmt.Errorf("missing or invalid 'task_id'")
-	}
-	execID, ok := args["execution"]
-	if !ok {
-		return nil, fmt.Errorf("missing or invalid 'execution'")
-	}
+func HandleGetTask(taskId string, execution int) (map[string]interface{}, error) {
 
 	// Simulated task data
 	return map[string]interface{}{
-		"task_id":        taskID,
-		"execution":      execID,
+		"task_id":        taskId,
+		"execution":      execution,
 		"status":         "success",
 		"display_status": "success",
 		"activated_by":   "mohamed.khelif",

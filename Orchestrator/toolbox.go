@@ -1,29 +1,69 @@
 package orchestrator
 
 import (
-	"evergreen-ai-service/evergreen"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"strconv"
+
+	"evergreen-ai-service/evergreen"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 )
 
-// ToolHandler defines a function that handles a tool request
 type ToolHandler func(args map[string]interface{}) (map[string]interface{}, error)
 
-// ToolCall represents a model tool invocation
-type ToolCall struct {
-	Tool string                 `json:"tool"`
-	Args map[string]interface{} `json:"args"`
-}
-
-// ToolResult represents the tool output passed back to the model
 type ToolResult struct {
 	Tool    string                 `json:"tool"`
 	Results map[string]interface{} `json:"results"`
 }
 
-// toolbox maps tool names to their respective handlers
-// This is where you can add new tools and their handlers
-var toolbox = map[string]ToolHandler{
-	"get_task": evergreen.HandleGetTask,
+var toolbox = make(map[string]ToolHandler)
+var toolDefinitions []azopenai.ChatCompletionsToolDefinitionClassification
+
+type getTaskParams struct {
+	Type                 string                       `json:"type"`
+	Properties           map[string]map[string]string `json:"properties"`
+	Required             []string                     `json:"required"`
+	AdditionalProperties bool                         `json:"additionalProperties"`
+}
+
+func init() {
+	initToolbox()
+}
+
+func initToolbox() {
+	// Register handler
+	toolbox["get_task"] = getTaskHandler
+
+	// Build schema struct
+	params := getTaskParams{
+		Type: "object",
+		Properties: map[string]map[string]string{
+			"task_id":   {"type": "string"},
+			"execution": {"type": "string"},
+		},
+		Required:             []string{"task_id", "execution"},
+		AdditionalProperties: false,
+	}
+
+	// Marshal schema
+	paramBytes, err := json.Marshal(params)
+	if err != nil {
+		panic("failed to marshal get_task params: " + err.Error())
+	}
+
+	// Define tool
+	toolDefinitions = []azopenai.ChatCompletionsToolDefinitionClassification{
+		&azopenai.ChatCompletionsFunctionToolDefinition{
+			Function: &azopenai.ChatCompletionsFunctionToolDefinitionFunction{
+				Name:       to.Ptr("get_task"),
+				Strict:     to.Ptr(true),
+				Parameters: paramBytes,
+			},
+		},
+	}
 }
 
 func validateTool(toolName string) (ToolHandler, error) {
@@ -32,4 +72,25 @@ func validateTool(toolName string) (ToolHandler, error) {
 		return nil, fmt.Errorf("unsupported tool: %s", toolName)
 	}
 	return handler, nil
+}
+
+func getTaskHandler(args map[string]interface{}) (map[string]interface{}, error) {
+	taskID, ok1 := args["task_id"].(string)
+	execution, ok2 := args["execution"].(string)
+	if !ok1 || !ok2 {
+		fmt.Println(args)
+		return nil, errors.New("missing or invalid arguments")
+	}
+
+	// Convert execution to int
+	executionInt, err := strconv.Atoi(execution)
+	if err != nil {
+		return nil, fmt.Errorf("invalid execution value: %s", execution)
+	}
+
+	task, err := evergreen.HandleGetTask(taskID, executionInt)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]interface{}{"task": task}, nil
 }
