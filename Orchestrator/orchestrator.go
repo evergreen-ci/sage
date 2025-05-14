@@ -25,6 +25,11 @@ func RunOrchestrationWithNativeTools(ctx context.Context, messages []azopenai.Ch
 		}
 		if len(resp.Choices) > 0 {
 			responseMessage := resp.Choices[0].Message
+			// config.Logger.Info("Response message", zap.String("content", *responseMessage.Content))
+			if len(responseMessage.ToolCalls) == 0 {
+				// No tool calls, just return the content
+				return *responseMessage.Content, nil
+			}
 			if len(responseMessage.ToolCalls) > 0 {
 				messages = append(messages, &azopenai.ChatRequestAssistantMessage{
 					ToolCalls: responseMessage.ToolCalls,
