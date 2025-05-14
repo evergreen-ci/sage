@@ -3,6 +3,11 @@ package main
 import (
 	orchestrator "evergreen-ai-service/Orchestrator"
 	"evergreen-ai-service/config"
+	"fmt"
+	"github.com/evergreen-ci/utility"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"net/http"
 	"os"
 
@@ -26,17 +31,34 @@ func InitParsleySystemMessage() error {
 func ParsleyGinHandler(c *gin.Context) {
 	var req struct {
 		Message string `json:"message"`
+		Session string `json:"session"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
+	}
+	message := req.Message
+	if req.Session != "" {
+		id, err := primitive.ObjectIDFromHex(req.Session)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid id"})
+			return
+		}
+		var sessionResp Session
+		result := mongoClient.Database("parsley-ai-agent-skunkworks").Collection("sessions").FindOne(c, bson.M{"_id": id})
+		if err := result.Decode(&sessionResp); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+		if sessionResp.PreviousConversation != "" {
+			message = fmt.Sprintf("here is the previous conversation context: %s", sessionResp.PreviousConversation) + "and here is the new message prompt: " + message
+		}
 	}
 	messages := []azopenai.ChatRequestMessageClassification{
 		&azopenai.ChatRequestSystemMessage{
 			Content: azopenai.NewChatRequestSystemMessageContent(systemMessage),
 		},
 		&azopenai.ChatRequestUserMessage{
-			Content: azopenai.NewChatRequestUserMessageContent(req.Message),
+			Content: azopenai.NewChatRequestUserMessageContent(message),
 		},
 	}
 	resp, err := orchestrator.RunOrchestrationWithNativeTools(c, messages)
@@ -51,5 +73,33 @@ func ParsleyGinHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get response from OpenAI"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"response": resp})
+	session := req.Session
+	if session == "" {
+		session = primitive.NewObjectID().Hex()
+	}
+	id, err := primitive.ObjectIDFromHex(session)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid id"})
+	}
+	sessionDoc := Session{
+		Id:                   id,
+		PreviousConversation: resp,
+	}
+	query := bson.M{
+		"_id": id,
+	}
+	update := bson.M{
+		"$set": sessionDoc,
+	}
+	_, err = mongoClient.Database("parsley-ai-agent-skunkworks").Collection("sessions").UpdateOne(c, query, update, &options.UpdateOptions{Upsert: utility.TruePtr()})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert session into database"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"response": resp, "session": session})
+}
+
+type Session struct {
+	Id                   primitive.ObjectID `bson:"_id" json:"id"`
+	PreviousConversation string             `json:"previous_conversation" bson:"previous_conversation"`
 }
