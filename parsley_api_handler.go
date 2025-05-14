@@ -39,7 +39,7 @@ func ParsleyGinHandler(c *gin.Context) {
 			Content: azopenai.NewChatRequestUserMessageContent(req.Message),
 		},
 	}
-	resp, err := orchestrator.RunOrchestration(c, messages)
+	resp, err := orchestrator.RunOrchestrationWithNativeTools(c, messages)
 	// chatCompletion, err := openaiservice.GetOpenAICompletion(messages)
 	// if err != nil || len(chatCompletion.Choices) == 0 {
 	// 	config.Logger.Error("Failed to get response from OpenAI", zap.Error(err))

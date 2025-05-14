@@ -32,10 +32,11 @@ func InitOpenAIClient() error {
 	return nil
 }
 
-func GetOpenAICompletion(messages []azopenai.ChatRequestMessageClassification) (*azopenai.GetChatCompletionsResponse, error) {
+func GetOpenAICompletion(messages []azopenai.ChatRequestMessageClassification, tools []azopenai.ChatCompletionsToolDefinitionClassification) (*azopenai.GetChatCompletionsResponse, error) {
 	chatCompletion, err := client.GetChatCompletions(context.TODO(), azopenai.ChatCompletionsOptions{
 		Messages:       messages,
 		DeploymentName: &modelDeploymentName,
+		Tools:          tools,
 	}, nil)
 
 	if err != nil || len(chatCompletion.Choices) == 0 {

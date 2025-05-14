@@ -8,14 +8,98 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"go.uber.org/zap"
 )
+
+var tools []azopenai.ChatCompletionsToolDefinitionClassification
+
+func RunOrchestrationWithNativeTools(ctx context.Context, messages []azopenai.ChatRequestMessageClassification) (string, error) {
+	structuredJSONToolDefParams := []byte(`{
+		"type": "object",
+		"properties": {
+			"task_id": {
+				"type": "string"
+			},
+			"execution": {
+				"type": "string"
+			}
+		},
+		"required": [
+			"task_id",
+			"execution"
+		],
+		"additionalProperties": false
+	}`)
+	tools := []azopenai.ChatCompletionsToolDefinitionClassification{
+		&azopenai.ChatCompletionsFunctionToolDefinition{
+			Function: &azopenai.ChatCompletionsFunctionToolDefinitionFunction{
+				Strict:     to.Ptr(true),
+				Name:       to.Ptr("get_task"),
+				Parameters: structuredJSONToolDefParams,
+			},
+		},
+	}
+	resp, err := openaiservice.GetOpenAICompletion(messages, tools)
+
+	if err != nil {
+		fmt.Println("Error getting chat completions:", err)
+		return "", fmt.Errorf("initial completion error")
+	}
+	if len(resp.Choices) > 0 {
+		responseMessage := resp.Choices[0].Message
+		if len(responseMessage.ToolCalls) > 0 {
+			messages = append(messages, &azopenai.ChatRequestAssistantMessage{
+				ToolCalls: responseMessage.ToolCalls,
+			})
+			for _, toolCall := range responseMessage.ToolCalls {
+				fn := toolCall.(*azopenai.ChatCompletionsFunctionToolCall).Function
+				argumentsObj := map[string]any{}
+
+				err = json.Unmarshal([]byte(*fn.Arguments), &argumentsObj)
+				if err != nil {
+					fmt.Printf("Could not unmarshal arguments: %s", err)
+					return "", err
+				}
+
+				config.Logger.Info("Tool call", zap.String("tool", *fn.Name), zap.String("args", string(*fn.Arguments)))
+				handler, err := validateTool(*fn.Name)
+				if err != nil {
+					return "", fmt.Errorf("tool validation error: %w", err)
+				}
+				result, err := handler(argumentsObj)
+				if err != nil {
+					return "", fmt.Errorf("tool execution failed: %w", err)
+				}
+
+				resultJSON, _ := json.Marshal(ToolResult{
+					Tool:    *fn.Name,
+					Results: result,
+				})
+
+				toolMessage := &azopenai.ChatRequestToolMessage{
+					Content:    azopenai.NewChatRequestToolMessageContent(string(resultJSON)),
+					ToolCallID: toolCall.GetChatCompletionsToolCall().ID,
+				}
+				messages = append(messages, toolMessage)
+			}
+		}
+	}
+
+	finalResp, err := openaiservice.GetOpenAICompletion(messages, nil)
+	if err != nil {
+		return "", fmt.Errorf("final completion error: %w", err)
+	}
+
+	finalMsg := finalResp.Choices[0].Message
+	return *finalMsg.Content, nil
+}
 
 // // RunOrchestration executes the full orchestrator cycle for a user message
 func RunOrchestration(ctx context.Context, messages []azopenai.ChatRequestMessageClassification) (string, error) {
 
 	// Step 2: Get model response
-	resp, err := openaiservice.GetOpenAICompletion(messages)
+	resp, err := openaiservice.GetOpenAICompletion(messages, nil)
 	if err != nil {
 		return "", fmt.Errorf("initial completion error: %w", err)
 	}
@@ -66,7 +150,7 @@ func RunOrchestration(ctx context.Context, messages []azopenai.ChatRequestMessag
 
 	}
 
-	finalResp, err := openaiservice.GetOpenAICompletion(messages)
+	finalResp, err := openaiservice.GetOpenAICompletion(messages, nil)
 	if err != nil {
 		return "", fmt.Errorf("final completion error: %w", err)
 	}
