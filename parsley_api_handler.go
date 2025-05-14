@@ -4,12 +4,13 @@ import (
 	orchestrator "evergreen-ai-service/Orchestrator"
 	"evergreen-ai-service/config"
 	"fmt"
+	"net/http"
+	"os"
+
 	"github.com/evergreen-ci/utility"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"net/http"
-	"os"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
 	"github.com/gin-gonic/gin"
@@ -30,14 +31,20 @@ func InitParsleySystemMessage() error {
 
 func ParsleyGinHandler(c *gin.Context) {
 	var req struct {
-		Message string `json:"message"`
-		Session string `json:"session"`
+		Message   string `json:"message"`
+		Session   string `json:"session"`
+		TaskID    string `json:"task_id"`
+		Execution *int   `json:"execution"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 	message := req.Message
+	if req.TaskID == "" || req.Execution == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Task ID and execution are required"})
+		return
+	}
 	if req.Session != "" {
 		id, err := primitive.ObjectIDFromHex(req.Session)
 		if err != nil {
@@ -57,17 +64,15 @@ func ParsleyGinHandler(c *gin.Context) {
 		&azopenai.ChatRequestSystemMessage{
 			Content: azopenai.NewChatRequestSystemMessageContent(systemMessage),
 		},
+		&azopenai.ChatRequestSystemMessage{
+			Content: azopenai.NewChatRequestSystemMessageContent(fmt.Sprintf("Task ID: %s, Execution: %d"+req.TaskID, req.Execution)),
+		},
 		&azopenai.ChatRequestUserMessage{
 			Content: azopenai.NewChatRequestUserMessageContent(message),
 		},
 	}
 	resp, err := orchestrator.RunOrchestrationWithNativeTools(c, messages)
-	// chatCompletion, err := openaiservice.GetOpenAICompletion(messages)
-	// if err != nil || len(chatCompletion.Choices) == 0 {
-	// 	config.Logger.Error("Failed to get response from OpenAI", zap.Error(err))
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get response from OpenAI"})
-	// 	return
-	// }
+
 	if err != nil {
 		config.Logger.Error("Failed to get response from OpenAI", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get response from OpenAI"})
