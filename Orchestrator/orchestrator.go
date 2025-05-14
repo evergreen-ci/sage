@@ -11,50 +11,60 @@ import (
 	"go.uber.org/zap"
 )
 
+var MAX_ORCHESTRATOR_ITERATIONS int = 5
+
 func RunOrchestrationWithNativeTools(ctx context.Context, messages []azopenai.ChatRequestMessageClassification) (string, error) {
 
-	resp, err := openaiservice.GetOpenAICompletion(messages, toolDefinitions)
-
-	if err != nil {
-		fmt.Println("Error getting chat completions:", err)
-		return "", fmt.Errorf("initial completion error")
-	}
-	if len(resp.Choices) > 0 {
-		responseMessage := resp.Choices[0].Message
-		if len(responseMessage.ToolCalls) > 0 {
-			messages = append(messages, &azopenai.ChatRequestAssistantMessage{
-				ToolCalls: responseMessage.ToolCalls,
-			})
-			for _, toolCall := range responseMessage.ToolCalls {
-				fn := toolCall.(*azopenai.ChatCompletionsFunctionToolCall).Function
-				argumentsObj := map[string]any{}
-
-				err = json.Unmarshal([]byte(*fn.Arguments), &argumentsObj)
-				if err != nil {
-					fmt.Printf("Could not unmarshal arguments: %s", err)
-					return "", err
-				}
-
-				config.Logger.Info("Tool call", zap.String("tool", *fn.Name), zap.String("args", string(*fn.Arguments)))
-				handler, err := validateTool(*fn.Name)
-				if err != nil {
-					return "", fmt.Errorf("tool validation error: %w", err)
-				}
-				result, err := handler(argumentsObj)
-				if err != nil {
-					return "", fmt.Errorf("tool execution failed: %w", err)
-				}
-
-				resultJSON, _ := json.Marshal(ToolResult{
-					Tool:    *fn.Name,
-					Results: result,
+	orchestratorIteration := 0
+	shouldEndOrchestration := false
+	for orchestratorIteration < MAX_ORCHESTRATOR_ITERATIONS && !shouldEndOrchestration {
+		orchestratorIteration++
+		resp, err := openaiservice.GetOpenAICompletion(messages, toolDefinitions)
+		if err != nil {
+			return "", fmt.Errorf("initial completion error")
+		}
+		if len(resp.Choices) > 0 {
+			responseMessage := resp.Choices[0].Message
+			if len(responseMessage.ToolCalls) > 0 {
+				messages = append(messages, &azopenai.ChatRequestAssistantMessage{
+					ToolCalls: responseMessage.ToolCalls,
 				})
+				for _, toolCall := range responseMessage.ToolCalls {
+					fn := toolCall.(*azopenai.ChatCompletionsFunctionToolCall).Function
+					argumentsObj := map[string]any{}
 
-				toolMessage := &azopenai.ChatRequestToolMessage{
-					Content:    azopenai.NewChatRequestToolMessageContent(string(resultJSON)),
-					ToolCallID: toolCall.GetChatCompletionsToolCall().ID,
+					err = json.Unmarshal([]byte(*fn.Arguments), &argumentsObj)
+					if err != nil {
+						fmt.Printf("Could not unmarshal arguments: %s", err)
+						return "", err
+					}
+
+					config.Logger.Info("Tool call", zap.String("tool", *fn.Name), zap.String("args", string(*fn.Arguments)))
+					handler, err := validateTool(*fn.Name)
+					if err != nil {
+						return "", fmt.Errorf("tool validation error: %w", err)
+					}
+					result, err := handler(argumentsObj)
+					if err != nil {
+						return "", fmt.Errorf("tool execution failed: %w", err)
+					}
+
+					resultJSON, _ := json.Marshal(ToolResult{
+						Tool:    *fn.Name,
+						Results: result,
+					})
+
+					toolMessage := &azopenai.ChatRequestToolMessage{
+						Content:    azopenai.NewChatRequestToolMessageContent(string(resultJSON)),
+						ToolCallID: toolCall.GetChatCompletionsToolCall().ID,
+					}
+					messages = append(messages, toolMessage)
+					if isEndOrchestrationTool(*fn.Name) {
+						// End orchestration
+						config.Logger.Info("Ending orchestration")
+						shouldEndOrchestration = true
+					}
 				}
-				messages = append(messages, toolMessage)
 			}
 		}
 	}

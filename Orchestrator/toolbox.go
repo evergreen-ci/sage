@@ -22,7 +22,7 @@ type ToolResult struct {
 var toolbox = make(map[string]ToolHandler)
 var toolDefinitions []azopenai.ChatCompletionsToolDefinitionClassification
 
-type getTaskParams struct {
+type toolParams struct {
 	Type                 string                       `json:"type"`
 	Properties           map[string]map[string]string `json:"properties"`
 	Required             []string                     `json:"required"`
@@ -36,9 +36,59 @@ func init() {
 func initToolbox() {
 	// Register handler
 	toolbox["get_task"] = getTaskHandler
+	toolbox["end_orchestration"] = endOrchestrationHandler
 
+	// Register tool
+	getTaskTool := getTaskHandlerToolDefinition()
+	endOrchestrationTool := getEndOrchestrationToolDefinition()
+
+	// Define tool
+	toolDefinitions = []azopenai.ChatCompletionsToolDefinitionClassification{
+		getTaskTool,
+		endOrchestrationTool,
+	}
+}
+
+func validateTool(toolName string) (ToolHandler, error) {
+	handler, ok := toolbox[toolName]
+	if !ok {
+		return nil, fmt.Errorf("unsupported tool: %s", toolName)
+	}
+	return handler, nil
+}
+
+// isEndOrchestrationTool checks if the tool is "end_orchestration"
+// and returns true if it is, false otherwise. This is used to determine if we should stop the orchestration and prepare to send a response to the user.
+func isEndOrchestrationTool(toolName string) bool {
+	return toolName == "end_orchestration"
+}
+func getEndOrchestrationToolDefinition() *azopenai.ChatCompletionsFunctionToolDefinition {
 	// Build schema struct
-	params := getTaskParams{
+	params := toolParams{
+		Type:                 "object",
+		Properties:           map[string]map[string]string{},
+		Required:             []string{},
+		AdditionalProperties: false,
+	}
+
+	// Marshal schema
+	paramBytes, err := json.Marshal(params)
+	if err != nil {
+		panic("failed to marshal get_task params: " + err.Error())
+	}
+	return &azopenai.ChatCompletionsFunctionToolDefinition{
+		Function: &azopenai.ChatCompletionsFunctionToolDefinitionFunction{
+			Name:       to.Ptr("end_orchestration"),
+			Strict:     to.Ptr(true),
+			Parameters: paramBytes,
+		},
+	}
+}
+
+// getTaskHandlerToolDefinition returns the tool definition for the get_task function
+func getTaskHandlerToolDefinition() *azopenai.ChatCompletionsFunctionToolDefinition {
+	// Build schema struct
+	params := toolParams{
 		Type: "object",
 		Properties: map[string]map[string]string{
 			"task_id":   {"type": "string"},
@@ -53,27 +103,14 @@ func initToolbox() {
 	if err != nil {
 		panic("failed to marshal get_task params: " + err.Error())
 	}
-
-	// Define tool
-	toolDefinitions = []azopenai.ChatCompletionsToolDefinitionClassification{
-		&azopenai.ChatCompletionsFunctionToolDefinition{
-			Function: &azopenai.ChatCompletionsFunctionToolDefinitionFunction{
-				Name:       to.Ptr("get_task"),
-				Strict:     to.Ptr(true),
-				Parameters: paramBytes,
-			},
+	return &azopenai.ChatCompletionsFunctionToolDefinition{
+		Function: &azopenai.ChatCompletionsFunctionToolDefinitionFunction{
+			Name:       to.Ptr("get_task"),
+			Strict:     to.Ptr(true),
+			Parameters: paramBytes,
 		},
 	}
 }
-
-func validateTool(toolName string) (ToolHandler, error) {
-	handler, ok := toolbox[toolName]
-	if !ok {
-		return nil, fmt.Errorf("unsupported tool: %s", toolName)
-	}
-	return handler, nil
-}
-
 func getTaskHandler(args map[string]interface{}) (map[string]interface{}, error) {
 	taskID, ok1 := args["task_id"].(string)
 	execution, ok2 := args["execution"].(string)
@@ -93,4 +130,9 @@ func getTaskHandler(args map[string]interface{}) (map[string]interface{}, error)
 		return nil, err
 	}
 	return map[string]interface{}{"task": task}, nil
+}
+
+func endOrchestrationHandler(args map[string]interface{}) (map[string]interface{}, error) {
+	// Implement the endOrchestration logic here
+	return nil, nil
 }
