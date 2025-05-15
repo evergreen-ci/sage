@@ -6,11 +6,16 @@ import (
 	"evergreen-ai-service/config"
 	"evergreen-ai-service/openaiservice"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
+	"time"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
+
+	"go.uber.org/zap"
 )
 
 const logPrompt = "The following is a section of a log file. Please analyze it and provide a brief summary of key events, errors, and notable patterns. Focus on important information and anomalies:\n\n%s"
@@ -46,29 +51,101 @@ func HandleGetTask(taskId string, execution int) (map[string]interface{}, error)
 	return result, nil
 }
 
-func HandleGetTaskHistory(taskName string) (map[string]interface{}, error) {
-	url := fmt.Sprintf("%s/task_history/%s?format=json&before=true", config.Config.EvergreenURL, taskName)
-	req, err := http.NewRequest("GET", url, nil)
+func HandleGetTaskHistory(projectIdentifier, taskName, buildVariant, taskID, direction string) (map[string]interface{}, error) {
+	url := config.Config.EvergreenURL + "/graphql/query"
+	query := `query TaskHistory($options: TaskHistoryOpts!) {
+		taskHistory(options: $options) {
+			pagination {
+				mostRecentTaskOrder
+				oldestTaskOrder
+			}
+			tasks {
+				id
+				activated
+				canRestart
+				createTime
+				displayStatus
+				execution
+				order
+				revision
+				details {
+					description
+					status
+					timedOut
+					timeoutType
+					type
+					oomTracker {
+						detected
+					}
+				}
+				versionMetadata {
+					id
+					author
+					message
+				}
+			}
+		}
+	}`
+
+	variables := map[string]interface{}{
+		"options": map[string]interface{}{
+			"projectIdentifier": projectIdentifier,
+			"taskName":          taskName,
+			"buildVariant":      buildVariant,
+			"cursorParams": map[string]interface{}{
+				"cursorId":      taskID,
+				"direction":     direction,
+				"includeCursor": true,
+			},
+		},
+	}
+
+	payload := map[string]interface{}{
+		"query":     query,
+		"variables": variables,
+	}
+
+	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal JSON payload: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", url, strings.NewReader(string(jsonPayload)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 	req.Header.Set("Api-User", config.Config.EvergreenAPIUser)
 	req.Header.Set("Api-Key", config.Config.EvergreenAPIKey)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	var result map[string]interface{}
-	err = json.Unmarshal(body, &result)
+	req.Header.Set("Content-Type", "application/json")
 
+	// Use HTTP client with timeout
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("HTTP request failed: %w", err)
 	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("non-200 response: %d %s", resp.StatusCode, resp.Status)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	// Check if GraphQL returned any errors
+	if errs, ok := result["errors"]; ok {
+		config.Logger.Warn("GraphQL error returned", zap.Any("errors", errs))
+		return result, fmt.Errorf("GraphQL error: %v", errs)
+	}
+
 	return result, nil
 }
 

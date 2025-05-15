@@ -54,7 +54,11 @@ explicitly call this tool.
 {
   "tool": "get_task_history",
   "args": {
-    "task_name": "<task_name>"
+    "task_name": "<task_name>",
+    "build_variant": "<build_variant>",
+    "task_id": "<task_id>",
+    "direction": "<direction>", // BEFORE or AFTER
+    "project_identifier": "<project_identifier>"
   }
 }
 ```
@@ -85,8 +89,8 @@ explicitly call this tool.
 }
 ```
 
-Use `end_orchestration` only when you are ready to deliver the final, complete answer
-to the user. Never invoke it midway through an internal exchange.
+Use `end_orchestration` only when you are ready to deliver the final, complete
+answer to the user. Never invoke it midway through an internal exchange.
 
 ### Response Guidelines
 

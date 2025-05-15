@@ -23,10 +23,10 @@ var toolbox = make(map[string]ToolHandler)
 var toolDefinitions []azopenai.ChatCompletionsToolDefinitionClassification
 
 type toolParams struct {
-	Type                 string                       `json:"type"`
-	Properties           map[string]map[string]string `json:"properties"`
-	Required             []string                     `json:"required"`
-	AdditionalProperties bool                         `json:"additionalProperties"`
+	Type                 string                            `json:"type"`
+	Properties           map[string]map[string]interface{} `json:"properties"`
+	Required             []string                          `json:"required"`
+	AdditionalProperties bool                              `json:"additionalProperties"`
 }
 
 func init() {
@@ -72,7 +72,7 @@ func getEndOrchestrationToolDefinition() *azopenai.ChatCompletionsFunctionToolDe
 	// Build schema struct
 	params := toolParams{
 		Type:                 "object",
-		Properties:           map[string]map[string]string{},
+		Properties:           map[string]map[string]interface{}{},
 		Required:             []string{},
 		AdditionalProperties: false,
 	}
@@ -96,7 +96,7 @@ func getTaskHandlerToolDefinition() *azopenai.ChatCompletionsFunctionToolDefinit
 	// Build schema struct
 	params := toolParams{
 		Type: "object",
-		Properties: map[string]map[string]string{
+		Properties: map[string]map[string]interface{}{
 			"task_id":   {"type": "string"},
 			"execution": {"type": "string"},
 		},
@@ -123,10 +123,14 @@ func getTaskHistoryHandlerToolDefinition() *azopenai.ChatCompletionsFunctionTool
 	// Build schema struct
 	params := toolParams{
 		Type: "object",
-		Properties: map[string]map[string]string{
-			"task_name": {"type": "string"},
+		Properties: map[string]map[string]interface{}{
+			"task_name":          {"type": "string"},
+			"build_variant":      {"type": "string"},
+			"task_id":            {"type": "string"},
+			"direction":          {"type": "string", "enum": []interface{}{"BEFORE", "AFTER"}},
+			"project_identifier": {"type": "string"},
 		},
-		Required:             []string{"task_name"},
+		Required:             []string{"project_identifier", "task_name", "build_variant", "task_id", "direction"},
 		AdditionalProperties: false,
 	}
 
@@ -195,10 +199,31 @@ func getTaskHistoryHandler(args map[string]interface{}) (map[string]interface{},
 	taskName, ok := args["task_name"].(string)
 	if !ok {
 		fmt.Println(args)
-		return nil, errors.New("missing or invalid arguments")
+		return nil, errors.New("missing task_name argument")
+	}
+	buildVariant, ok := args["build_variant"].(string)
+	if !ok {
+		fmt.Println(args)
+		return nil, errors.New("missing build_variant argument")
+	}
+	taskID, ok := args["task_id"].(string)
+	if !ok {
+		fmt.Println(args)
+		fmt.Println(args["task_id"])
+		return nil, errors.New("missing task_id argument")
+	}
+	direction, ok := args["direction"].(string)
+	if !ok {
+		fmt.Println(args)
+		return nil, errors.New("missing direction argument")
+	}
+	projectIdentifier, ok := args["project_identifier"].(string)
+	if !ok {
+		fmt.Println(args)
+		return nil, errors.New("missing project_identifier argument")
 	}
 
-	task, err := evergreen.HandleGetTaskHistory(taskName)
+	task, err := evergreen.HandleGetTaskHistory(projectIdentifier, taskName, buildVariant, taskID, direction)
 	if err != nil {
 		return nil, err
 	}
