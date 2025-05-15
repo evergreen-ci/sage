@@ -14,7 +14,6 @@ import (
 var MAX_ORCHESTRATOR_ITERATIONS int = 5
 
 func RunOrchestrationWithNativeTools(ctx context.Context, messages []azopenai.ChatRequestMessageClassification) (string, error) {
-
 	orchestratorIteration := 0
 	shouldEndOrchestration := false
 	for orchestratorIteration < MAX_ORCHESTRATOR_ITERATIONS && !shouldEndOrchestration {

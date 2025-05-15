@@ -10,32 +10,32 @@ import (
 	"go.uber.org/zap"
 )
 
-var client *azopenai.Client
-var modelDeploymentName string
+var OpenAIClient *azopenai.Client
+var ModelDeploymentName string
 
 func InitOpenAIClient() error {
 	if config.Config.OpenAIKey == "" {
 		// Return an error if the key is not set
 		return fmt.Errorf("OPENAI_KEY is not set")
 	}
-	config.Logger.Info("Initializing OpenAI client")
+	config.Logger.Info("Initializing OpenAI OpenAIClient")
 	config.Logger.Info("OpenAI key", zap.String("key", config.Config.OpenAIKey))
 	config.Logger.Info("OpenAI endpoint", zap.String("endpoint", config.Config.OpenAIEndpoint))
 	keyCredential := azcore.NewKeyCredential(config.Config.OpenAIKey)
-	modelDeploymentName = "gpt-4.1"
+	ModelDeploymentName = "gpt-4.1"
 	var err error
-	client, err = azopenai.NewClientWithKeyCredential(config.Config.OpenAIEndpoint, keyCredential, nil)
+	OpenAIClient, err = azopenai.NewClientWithKeyCredential(config.Config.OpenAIEndpoint, keyCredential, nil)
 	if err != nil {
-		config.Logger.Error("Failed to create OpenAI client", zap.Error(err))
+		config.Logger.Error("Failed to create OpenAI OpenAIClient", zap.Error(err))
 	}
 
 	return nil
 }
 
 func GetOpenAICompletion(messages []azopenai.ChatRequestMessageClassification, tools []azopenai.ChatCompletionsToolDefinitionClassification) (*azopenai.GetChatCompletionsResponse, error) {
-	chatCompletion, err := client.GetChatCompletions(context.TODO(), azopenai.ChatCompletionsOptions{
+	chatCompletion, err := OpenAIClient.GetChatCompletions(context.TODO(), azopenai.ChatCompletionsOptions{
 		Messages:       messages,
-		DeploymentName: &modelDeploymentName,
+		DeploymentName: &ModelDeploymentName,
 		Tools:          tools,
 	}, nil)
 

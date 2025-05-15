@@ -37,17 +37,20 @@ func initToolbox() {
 	// Register handler
 	toolbox["get_task"] = getTaskHandler
 	toolbox["get_task_history"] = getTaskHistoryHandler
+	toolbox["get_task_logs"] = getTaskLogsHandler
 	toolbox["end_orchestration"] = endOrchestrationHandler
 
 	// Register tool
 	getTaskTool := getTaskHandlerToolDefinition()
 	getTaskHistoryTool := getTaskHistoryHandlerToolDefinition()
+	getTaskLogsTool := getTaskLogsHandlerToolDefinition()
 	endOrchestrationTool := getEndOrchestrationToolDefinition()
 
 	// Define tool
 	toolDefinitions = []azopenai.ChatCompletionsToolDefinitionClassification{
 		getTaskTool,
 		getTaskHistoryTool,
+		getTaskLogsTool,
 		endOrchestrationTool,
 	}
 }
@@ -141,6 +144,32 @@ func getTaskHistoryHandlerToolDefinition() *azopenai.ChatCompletionsFunctionTool
 	}
 }
 
+// getTaskLogsHandlerToolDefinition returns the tool definition for the get_task_logs function
+func getTaskLogsHandlerToolDefinition() *azopenai.ChatCompletionsFunctionToolDefinition {
+	// Build schema struct
+	params := toolParams{
+		Type: "object",
+		Properties: map[string]map[string]string{
+			"task_id": {"type": "string"},
+		},
+		Required:             []string{"task_id"},
+		AdditionalProperties: false,
+	}
+
+	// Marshal schema
+	paramBytes, err := json.Marshal(params)
+	if err != nil {
+		panic("failed to marshal get_task_logs params: " + err.Error())
+	}
+	return &azopenai.ChatCompletionsFunctionToolDefinition{
+		Function: &azopenai.ChatCompletionsFunctionToolDefinitionFunction{
+			Name:       to.Ptr("get_task_logs"),
+			Strict:     to.Ptr(true),
+			Parameters: paramBytes,
+		},
+	}
+}
+
 func getTaskHandler(args map[string]interface{}) (map[string]interface{}, error) {
 	taskID, ok1 := args["task_id"].(string)
 	execution, ok2 := args["execution"].(string)
@@ -174,6 +203,20 @@ func getTaskHistoryHandler(args map[string]interface{}) (map[string]interface{},
 		return nil, err
 	}
 	return map[string]interface{}{"task_history": task}, nil
+}
+
+func getTaskLogsHandler(args map[string]interface{}) (map[string]interface{}, error) {
+	taskID, ok := args["task_id"].(string)
+	if !ok {
+		fmt.Println(args)
+		return nil, errors.New("missing or invalid arguments")
+	}
+
+	task, err := evergreen.HandleGetTaskLogs(taskID)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]interface{}{"task_logs": task}, nil
 }
 
 func endOrchestrationHandler(args map[string]interface{}) (map[string]interface{}, error) {

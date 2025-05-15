@@ -59,6 +59,15 @@ explicitly call this tool.
 }
 ```
 
+```json
+{
+  "tool": "get_task_logs",
+  "args": {
+    "task_id": "<task_id>"
+  }
+}
+```
+
 #### Format for User Response
 
 ```json
