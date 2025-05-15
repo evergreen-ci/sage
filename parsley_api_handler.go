@@ -108,7 +108,7 @@ func ParsleyGinHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse response into JSON"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"response": parsedResp, "session": session})
+	c.JSON(http.StatusOK, gin.H{"response": parsedResp["args"], "session": session})
 }
 
 type Session struct {

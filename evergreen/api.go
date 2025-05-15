@@ -6,10 +6,11 @@ import (
 	"evergreen-ai-service/config"
 	"evergreen-ai-service/openaiservice"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
 )
 
 const logPrompt = "The following is a section of a log file. Please analyze it and provide a brief summary of key events, errors, and notable patterns. Focus on important information and anomalies:\n\n%s"
@@ -88,7 +89,7 @@ func HandleGetTaskLogs(taskID string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	sections, err := divideLogIntoSections(string(body), 200)
+	sections, err := divideLogIntoSections(string(body), 30000)
 	if err != nil {
 		return nil, err
 	}
