@@ -153,7 +153,7 @@ func getTaskLogsHandlerToolDefinition() *azopenai.ChatCompletionsFunctionToolDef
 	// Build schema struct
 	params := toolParams{
 		Type: "object",
-		Properties: map[string]map[string]string{
+		Properties: map[string]map[string]interface{}{
 			"task_id": {"type": "string"},
 		},
 		Required:             []string{"task_id"},
