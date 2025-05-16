@@ -94,9 +94,9 @@ func main() {
 		config.Logger.Fatal("Error initializing analyze log system message", zap.Error(err))
 		panic(err)
 	}
-	err = evergreen.InitRecepySystemMessage()
+	err = evergreen.InitRecipeSystemMessage()
 	if err != nil {
-		config.Logger.Fatal("Error initializing recepy system message", zap.Error(err))
+		config.Logger.Fatal("Error initializing recipe system message", zap.Error(err))
 		panic(err)
 	}
 	router := gin.Default()

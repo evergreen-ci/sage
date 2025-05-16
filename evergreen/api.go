@@ -23,7 +23,7 @@ var analyzeLogInitialSystemMessage string
 var analyzeLogGeneralSystemMessage string
 var analyzeLogInitialPrompt string
 var analyzeLogPromptWithContext string
-var recepySystemMessage string
+var recipeSystemMessage string
 var numPrevSections = 5
 
 func InitAnalyzeLogSystemMessages() error {
@@ -55,13 +55,13 @@ func InitAnalyzeLogSystemMessages() error {
 
 }
 
-func InitRecepySystemMessage() error {
-	promptBuffer, err := os.ReadFile("prompts/car_recepy_prompt.md")
+func InitRecipeSystemMessage() error {
+	promptBuffer, err := os.ReadFile("prompts/car_recipe_prompt.md")
 	if err != nil {
-		config.Logger.Error("Failed to read recepy system message file", zap.Error(err))
+		config.Logger.Error("Failed to read recipe system message file", zap.Error(err))
 		return err
 	}
-	recepySystemMessage = string(promptBuffer)
+	recipeSystemMessage = string(promptBuffer)
 	return nil
 
 }
@@ -295,7 +295,7 @@ func analyzeLogSection(ctx context.Context, client *azopenai.Client, section Log
 	result := AnalysisResult{SectionID: section.ID}
 	prompt := fmt.Sprintf(analyzeLogInitialPrompt, section.Content)
 
-	var systemMessage = analyzeLogInitialSystemMessage + "\nTry to generate an hypothesis use a custom strategy or following one used by engineers of the CAR team.\n" + recepySystemMessage
+	var systemMessage = analyzeLogInitialSystemMessage + "\nTry to generate an hypothesis use a custom strategy or following one used by engineers of the CAR team.\n" + recipeSystemMessage
 	chatMessages := []azopenai.ChatRequestMessageClassification{
 		&azopenai.ChatRequestSystemMessage{
 			Content: azopenai.NewChatRequestSystemMessageContent(systemMessage),
@@ -324,7 +324,7 @@ func analyzeLogSectionWithContext(ctx context.Context, client *azopenai.Client, 
 	result := AnalysisResult{SectionID: section.ID}
 	prompt := fmt.Sprintf(analyzeLogPromptWithContext, prevContext, section.Content)
 
-	var systemMessage = analyzeLogGeneralSystemMessage + "\nTry to use a custom strategy or one of the following one used by engineers of the CAR team.\n" + recepySystemMessage
+	var systemMessage = analyzeLogGeneralSystemMessage + "\nTry to use a custom strategy or one of the following one used by engineers of the CAR team.\n" + recipeSystemMessage
 	chatMessages := []azopenai.ChatRequestMessageClassification{
 		&azopenai.ChatRequestSystemMessage{
 			Content: azopenai.NewChatRequestSystemMessageContent(systemMessage),
