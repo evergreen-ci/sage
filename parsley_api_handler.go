@@ -109,7 +109,12 @@ func ParsleyGinHandler(c *gin.Context) {
 		return
 	}
 	parsedResp["session"] = session
-	c.JSON(http.StatusOK, parsedResp)
+	// HACK: sometimes the IA returns {args: {links:[...], response: "..."}} instead of {links:[...], response: "..."}
+	var r = parsedResp["args"]
+	if r == nil {
+		r = parsedResp
+	}
+	c.JSON(http.StatusOK, r)
 }
 
 type Session struct {
