@@ -16,6 +16,7 @@ import (
 	"go.uber.org/zap"
 
 	"evergreen-ai-service/config"
+	"evergreen-ai-service/evergreen"
 	"evergreen-ai-service/openaiservice"
 )
 
@@ -86,6 +87,16 @@ func main() {
 	err = InitParsleySystemMessage()
 	if err != nil {
 		config.Logger.Fatal("Error initializing system message", zap.Error(err))
+		panic(err)
+	}
+	err = evergreen.InitAnalyzeLogSystemMessages()
+	if err != nil {
+		config.Logger.Fatal("Error initializing analyze log system message", zap.Error(err))
+		panic(err)
+	}
+	err = evergreen.InitRecepySystemMessage()
+	if err != nil {
+		config.Logger.Fatal("Error initializing recepy system message", zap.Error(err))
 		panic(err)
 	}
 	router := gin.Default()

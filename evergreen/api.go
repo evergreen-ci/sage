@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"time"
@@ -18,10 +19,52 @@ import (
 	"go.uber.org/zap"
 )
 
-const logPrompt = "The following is a section of a log file. Please analyze it and provide a brief summary of key events, errors, and notable patterns. Focus on important information and anomalies:\n\n%s"
-const logPromptWithContext = "The following is a section of a log file. Previous sections analysis:\n%s\n\nPlease analyze this new section and provide a brief summary of key events, errors, and notable patterns. Focus on important information, anomalies, and connections to previously observed patterns:\n\n%s"
-
+var analyzeLogInitialSystemMessage string
+var analyzeLogGeneralSystemMessage string
+var analyzeLogInitialPrompt string
+var analyzeLogPromptWithContext string
+var recepySystemMessage string
 var numPrevSections = 5
+
+func InitAnalyzeLogSystemMessages() error {
+	promptBuffer, err := os.ReadFile("prompts/analyze_log_initial_system_prompt.md")
+	if err != nil {
+		config.Logger.Error("Failed to read analyze log initial system message file", zap.Error(err))
+		return err
+	}
+	analyzeLogInitialSystemMessage = string(promptBuffer)
+	promptBuffer2, err := os.ReadFile("prompts/analyze_log_general_system_prompt.md")
+	if err != nil {
+		config.Logger.Error("Failed to read analyze log general system message file", zap.Error(err))
+		return err
+	}
+	analyzeLogGeneralSystemMessage = string(promptBuffer2)
+	promptBuffer3, err := os.ReadFile("prompts/analyze_log_initial_user_prompt.md")
+	if err != nil {
+		config.Logger.Error("Failed to read analyze log initial user message file", zap.Error(err))
+		return err
+	}
+	analyzeLogInitialPrompt = string(promptBuffer3)
+	promptBuffer4, err := os.ReadFile("prompts/analyze_log_general_user_prompt.md")
+	if err != nil {
+		config.Logger.Error("Failed to read analyze log general user message file", zap.Error(err))
+		return err
+	}
+	analyzeLogPromptWithContext = string(promptBuffer4)
+	return nil
+
+}
+
+func InitRecepySystemMessage() error {
+	promptBuffer, err := os.ReadFile("prompts/car_recepy_prompt.md")
+	if err != nil {
+		config.Logger.Error("Failed to read recepy system message file", zap.Error(err))
+		return err
+	}
+	recepySystemMessage = string(promptBuffer)
+	return nil
+
+}
 
 func HandleGetTask(taskId string, execution int) (map[string]interface{}, error) {
 	url := fmt.Sprintf("%s/tasks/%s", config.Config.EvergreenAPIURL, taskId)
@@ -250,11 +293,12 @@ func processLogsSequentially(sections []LogSection) (string, error) {
 
 func analyzeLogSection(ctx context.Context, client *azopenai.Client, section LogSection) AnalysisResult {
 	result := AnalysisResult{SectionID: section.ID}
-	prompt := fmt.Sprintf(logPrompt, section.Content)
+	prompt := fmt.Sprintf(analyzeLogInitialPrompt, section.Content)
 
+	var systemMessage = analyzeLogInitialSystemMessage + "\nTry to generate an hypothesis use a custom strategy or following one used by engineers of the CAR team.\n" + recepySystemMessage
 	chatMessages := []azopenai.ChatRequestMessageClassification{
 		&azopenai.ChatRequestSystemMessage{
-			Content: azopenai.NewChatRequestSystemMessageContent("You are a log analysis assistant. Analyze the log sections and provide concise, useful summaries focusing on errors, warnings, and other notable patterns."),
+			Content: azopenai.NewChatRequestSystemMessageContent(systemMessage),
 		},
 		&azopenai.ChatRequestSystemMessage{
 			Content: azopenai.NewChatRequestSystemMessageContent(prompt),
@@ -278,11 +322,12 @@ func analyzeLogSection(ctx context.Context, client *azopenai.Client, section Log
 
 func analyzeLogSectionWithContext(ctx context.Context, client *azopenai.Client, section LogSection, prevContext string) AnalysisResult {
 	result := AnalysisResult{SectionID: section.ID}
-	prompt := fmt.Sprintf(logPromptWithContext, prevContext, section.Content)
+	prompt := fmt.Sprintf(analyzeLogPromptWithContext, prevContext, section.Content)
 
+	var systemMessage = analyzeLogGeneralSystemMessage + "\nTry to use a custom strategy or one of the following one used by engineers of the CAR team.\n" + recepySystemMessage
 	chatMessages := []azopenai.ChatRequestMessageClassification{
 		&azopenai.ChatRequestSystemMessage{
-			Content: azopenai.NewChatRequestSystemMessageContent("You are a log analysis assistant. Analyze the log sections and provide concise, useful summaries focusing on errors, warnings, and other notable patterns. When possible, connect patterns and events to those seen in previous sections."),
+			Content: azopenai.NewChatRequestSystemMessageContent(systemMessage),
 		},
 		&azopenai.ChatRequestSystemMessage{
 			Content: azopenai.NewChatRequestSystemMessageContent(prompt),

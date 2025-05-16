@@ -1,5 +1,3 @@
-* TODO: Define the category of failures
-
 Engineers use the scientific method to investigate Build Failures:
 
   - First, generate an hypothesis of the failure
