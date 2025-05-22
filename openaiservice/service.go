@@ -50,7 +50,7 @@ func GetOpenAICompletion(messages []azopenai.ChatRequestMessageClassification, t
 }
 
 func calculateCost(usage *azopenai.CompletionsUsage) float64 {
-	// Assuming the cost is $2 per 1M tokens for the model.
+	// Assuming the cost is $2 per 1M tokens for the model
 	costPerInputToken := 2.0 / 1000000.0
 	// Assuming the cost is $8 per 1M tokens for the output
 	costPerOutputToken := 8.0 / 1000000.0
