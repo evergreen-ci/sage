@@ -6,4 +6,4 @@ parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 . $parent_path/../.env
 
 
-aws ecr create-repository --repository-name skunkworks/${APP}
+aws ecr create-repository --repository-name devprod-evergreen/parsley-ai-agent

@@ -1,9 +1,9 @@
 SHELL= /bin/bash
 include .env
 
-REGISTRY=795250896452.dkr.ecr.us-east-1.amazonaws.com/skunkworks/${APP}
+REGISTRY=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${APP}
 COMMIT_SHA=git-$(shell git rev-parse --verify HEAD | cut -c1-7)
-HELM_CMD = helm --kube-context=api.staging.corp.mongodb.com --namespace=skunkworks
+HELM_CMD = helm --kube-context=api.staging.corp.mongodb.com --namespace=devprod-evergreen
 HELM_UPGRADE = $(HELM_CMD) upgrade \
 					 --install \
 					 --version=4.17.3 \
@@ -12,11 +12,11 @@ HELM_UPGRADE = $(HELM_CMD) upgrade \
 					 --debug \
 					 ${APP} mongodb/web-app
 
-context:  ## Set the kubectl context to staging cluster and skunkworks namespace
+context:  ## Set the kubectl context to staging cluster and devprod-evergreen namespace
 	kubectl config use-context api.staging.corp.mongodb.com
-	kubectl config set-context api.staging.corp.mongodb.com --namespace=skunkworks
+	kubectl config set-context api.staging.corp.mongodb.com --namespace=devprod-evergreen
 
-login: ## Login to the AWS ECR for skunkworks. Login is valid for 12 hours
+login: ## Login to the AWS ECR for devprod-evergreen. Login is valid for 12 hours
 	./scripts/ecr-login.sh
 	
 create: login ## Creates your ECR docker repository
@@ -28,7 +28,7 @@ build: ## Build and tag your docker container
 	docker tag ${APP} ${REGISTRY}:${COMMIT_SHA}
 
 .PHONY: push
-push: build ## Push the image to skunkworks ECR
+push: build ## Push the image to devprod-evergreen ECR
 	docker push ${REGISTRY}:${COMMIT_SHA}
 
 .PHONY: helm-repo ## Update local cache of mongodb helm charts
@@ -46,7 +46,7 @@ install: helm-repo ## Install/upgrade deployment via helm.
 
 .PHONY: delete
 delete:
-	$(HELM_CMD) delete --namespace=skunkworks ${APP}
+	$(HELM_CMD) delete --namespace=devprod-evergreen ${APP}
 
 ## Useful playlists
 .PHONY: all
