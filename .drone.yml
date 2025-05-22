@@ -15,7 +15,7 @@ steps:
     settings:
       create_repository: true
       registry: 795250896452.dkr.ecr.us-east-1.amazonaws.com
-      repo: skunkworks/${DRONE_REPO_NAME}
+      repo: devprod-evergreen/${DRONE_REPO_NAME}
       tags:
         - git-${DRONE_COMMIT_SHA:0:7}
         - latest
@@ -33,9 +33,9 @@ steps:
       chart: mongodb/web-app
       chart_version: 4.24.2
       add_repos: [mongodb=https://10gen.github.io/helm-charts]
-      namespace: skunkworks
-      release: skunkworks-parsley-ai-agent-skunkworks
-      values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/skunkworks/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=parsley-ai-agent-skunkworks.skunkworks.staging.corp.mongodb.com
+      namespace: devprod-evergreen
+      release: devprod-evergreen-parsley-ai-agent-devprod-evergreen
+      values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=parsley-ai-agent-devprod-evergreen.devprod-evergreen.staging.corp.mongodb.com
       values_files: [ "environments/staging.yaml" ]
       api_server: https://api.staging.corp.mongodb.com
       kubernetes_token:
