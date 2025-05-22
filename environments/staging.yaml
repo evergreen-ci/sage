@@ -3,7 +3,7 @@ arch: "amd64"
 ingress:
   enabled: true
   hosts:
-    - parsley-ai-agent.devprod-evergreen.staging.corp.mongodb.com
+    - evergreen-ai-service.devprod-evergreen.staging.corp.mongodb.com
 service:
   targetPort: 8080
 mesh:

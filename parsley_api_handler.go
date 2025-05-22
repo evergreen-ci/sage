@@ -53,7 +53,7 @@ func ParsleyGinHandler(c *gin.Context) {
 			return
 		}
 		var sessionResp Session
-		result := mongoClient.Database("parsley-ai-agent-skunkworks").Collection("sessions").FindOne(c, bson.M{"_id": id})
+		result := mongoClient.Database("evergreen-ai-service-skunkworks").Collection("sessions").FindOne(c, bson.M{"_id": id})
 		if err := result.Decode(&sessionResp); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
@@ -97,7 +97,7 @@ func ParsleyGinHandler(c *gin.Context) {
 	update := bson.M{
 		"$set": sessionDoc,
 	}
-	_, err = mongoClient.Database("parsley-ai-agent-skunkworks").Collection("sessions").UpdateOne(c, query, update, &options.UpdateOptions{Upsert: utility.TruePtr()})
+	_, err = mongoClient.Database("evergreen-ai-service-skunkworks").Collection("sessions").UpdateOne(c, query, update, &options.UpdateOptions{Upsert: utility.TruePtr()})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert session into database"})
 		return

@@ -34,8 +34,8 @@ steps:
       chart_version: 4.24.2
       add_repos: [mongodb=https://10gen.github.io/helm-charts]
       namespace: devprod-evergreen
-      release: parsley-ai-agent
-      values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=parsley-ai-agent.devprod-evergreen.staging.corp.mongodb.com
+      release: evergreen-ai-service
+      values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=evergreen-ai-service.devprod-evergreen.staging.corp.mongodb.com
       values_files: [ "environments/staging.yaml" ]
       api_server: https://api.staging.corp.mongodb.com
       kubernetes_token:
