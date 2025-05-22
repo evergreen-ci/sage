@@ -8,6 +8,15 @@ service:
   targetPort: 8080
 mesh:
   enabled: true
+  
+services:
+  - name: http
+    ingress: true
+    port: 80
+    probes: true
+    protocol: TCP
+    targetPort: 8080
+    type: ClusterIP
 
 envSecrets:
   MONGO_URL: parsley-ai-secrets
