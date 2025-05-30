@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -11,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"os"
+	"time"
 
 	"evergreen-ai-service/config"
 	"evergreen-ai-service/evergreen"
@@ -97,15 +99,15 @@ func main() {
 		panic(err)
 	}
 	router := gin.Default()
-	//corsConfig := cors.Config{
-	//	AllowOrigins:     []string{"https://parsley-local.corp.mongodb.com:8444", "https://parsley-beta.corp.mongodb.com"},
-	//	AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-	//	AllowHeaders:     []string{"*"},
-	//	ExposeHeaders:    []string{"*"},
-	//	AllowCredentials: true,
-	//	MaxAge:           12 * time.Hour,
-	//}
-	//router.Use(cors.New(corsConfig))
+	corsConfig := cors.Config{
+		AllowOrigins:     []string{"https://parsley-local.corp.mongodb.com:8444", "https://parsley-beta.corp.mongodb.com"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"*"},
+		ExposeHeaders:    []string{"*"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
+	router.Use(cors.New(corsConfig))
 	router.GET("/", helloHandler)
 
 	router.POST("/parsley_ai", ParsleyGinHandler)
