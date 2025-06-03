@@ -18,8 +18,14 @@ services:
     targetPort: 8080
     type: ClusterIP
 
+env:
+  EVERGREEN_API_USER: parsley-ai-skunkworks
+  EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2
+  EVERGREEN_URL: https://evergreen.mongodb.com
+
 envSecrets:
   MONGO_URL: parsley-ai-secrets
   MONGO_USERNAME: parsley-ai-secrets
   MONGO_PASSWORD: parsley-ai-secrets
   OPENAI_KEY: parsley-ai-secrets
+  EVERGREEN_API_KEY: parsley-ai-secrets
