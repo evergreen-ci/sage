@@ -22,6 +22,7 @@ env:
   EVERGREEN_API_USER: parsley-ai-skunkworks
   EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2
   EVERGREEN_URL: https://evergreen.mongodb.com
+  OPENAI_ENDPOINT: "https://parsley-ai.openai.azure.com/"
 
 envSecrets:
   MONGO_URL: parsley-ai-secrets
