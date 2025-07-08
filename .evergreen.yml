@@ -17,7 +17,7 @@ post:
 
 buildvariants:
   - name: ubuntu2204-small
-    display_name: Ubuntu 22.04 Small
+    display_name: Ubuntu 22.04
     run_on:
       - ubuntu2204-small
     expansions:
