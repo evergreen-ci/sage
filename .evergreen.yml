@@ -27,12 +27,16 @@ buildvariants:
       node_version: 22.14.0
     tasks:
       - name: compile
-
+      - name: lint
 
 tasks:
   - name: compile
     commands:
       - func: yarn-build
+  - name: lint
+    commands:
+      - func: yarn-lint
+
 
 
 functions:
@@ -119,3 +123,12 @@ functions:
       script: |
         ${PREPARE_SHELL}
         yarn install
+  
+  yarn-lint:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        yarn eslint:strict

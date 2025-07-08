@@ -39,8 +39,6 @@ const languageOptions = {
       },
     },
   },
-  settings: {
-  },
 };
 
 // ESLint (@eslint/js) settings.
