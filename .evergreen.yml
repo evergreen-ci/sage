@@ -1,0 +1,134 @@
+command_type: test
+
+ignore:
+  - "*.md"
+  - ".github/*"
+
+pre:
+  - func: assume-ec2-role
+  - func: get-project
+  - func: setup-node
+  - func: yarn-install
+
+post:
+  - func: assume-ec2-role
+  - func: attach-mongod-logs
+  - func: attach-test-results
+
+buildvariants:
+  - name: ubuntu2204-small
+    display_name: Ubuntu 22.04
+    run_on:
+      - ubuntu2204-small
+    expansions:
+      mongodb_tools_url: https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2204-x86_64-100.11.0.tgz
+      mongodb_url_2204: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-8.0.4.tgz
+      mongosh_url_2204: https://downloads.mongodb.com/compass/mongosh-2.3.1-linux-x64.tgz
+      node_version: 22.14.0
+    tasks:
+      - name: compile
+      - name: lint
+
+tasks:
+  - name: compile
+    commands:
+      - func: yarn-build
+  - name: lint
+    commands:
+      - func: yarn-lint
+
+
+
+functions:
+  attach-test-results:
+    command: attach.xunit_results
+    params:
+      files:
+        - "./sage/bin/test/*.xml"
+
+  attach-mongod-logs:
+    command: s3.put
+    type: system
+    params:
+      aws_key: ${AWS_ACCESS_KEY_ID}
+      aws_secret: ${AWS_SECRET_ACCESS_KEY}
+      aws_session_token: ${AWS_SESSION_TOKEN}
+      local_file: "sage/bin/mongod-logs.txt"
+      remote_file: ${build_variant}/${task_id}/${execution}/mongod-logs.txt
+      bucket: evg-bucket-sage
+      content_type: text/plain
+      permissions: public-read
+      display_name: mongod-logs
+
+  assume-ec2-role:
+    command: ec2.assume_role
+    params:
+      role_arn: ${ASSUME_ROLE_ARN}
+
+  get-project:
+    command: git.get_project
+    type: setup
+    params:
+      directory: sage
+      shallow_clone: true
+
+  setup-node:
+    - command: subprocess.exec
+      params:
+        binary: bash
+        args:
+          - sage/.evergreen/scripts/prepare-shell.sh
+    - command: expansions.update
+      params:
+        file: expansion.yml
+    - command: shell.exec
+      params:
+        exec_timeout_secs: 60
+        shell: bash
+        script: |
+          ${PREPARE_SHELL}
+
+          # Fetch NVM and install it into this task's .nvm directory
+          # Once downloaded, source nvm and install yarn
+          git clone https://github.com/nvm-sh/nvm.git "$NVM_DIR"
+          cd "$NVM_DIR"
+          git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          cd -
+
+          # Retry the download for Node in case it flakes.
+          for i in {1..5}; do
+            nvm install --no-progress --default ${node_version}
+            [[ $? -eq 0 ]] && break
+            echo "Attempt $i of 5 to install Node failed"
+            sleep 10
+          done
+          npm install -g yarn
+          npm install -g env-cmd
+
+  yarn-build:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        yarn build
+
+  yarn-install:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        yarn install
+  
+  yarn-lint:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        yarn eslint:strict

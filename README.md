@@ -1,114 +1,90 @@
-# Evergreen AI Service
+# Sage - Evergreen AI Service
 
-This is a Go-based web server and AI assistant for Evergreen CI and log viewing.
-It supports local development, Docker, and deployment to Kubernetes via Helm.
+A TypeScript Express.js server for the Evergreen AI Service.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Go 1.18 or newer (recommended: Go 1.24+)
-- Docker
-- Make
-- (Optional) Helm, kubectl, and AWS CLI for deployment
+- Node.js (version 22 or higher)
+- Yarn package manager
 
-### Setup
+### Installation
 
-1. **Clone the repository**
-   ```sh
-   git clone <your-repo-url>
-   cd evergreen-ai-service
-   ```
-2. **Create a `.env` file**
-   ```sh
-   cp .env.example .env
-   # or manually create and fill in required secrets
-   ```
-3. **Install Go dependencies**
-   ```sh
-   go mod tidy
-   ```
+1. Clone the repository or navigate to the project directory
+2. Install dependencies using Yarn:
 
-## Running Locally
-
-### With Go
-
-```sh
-make run-local
+```bash
+yarn install
 ```
 
-### With Docker
+3. Set up environment variables:
 
-Build and run the container locally:
-
-```sh
-make run
+```bash
+cp env-example .env
 ```
 
-This will build the Docker image and run it, exposing port 8080.
+Edit the `.env` file with your specific configuration values.
 
-## Makefile Commands
+### Project Structure
 
-- `make run-local` – Run the server directly with Go (for development)
-- `make run` – Build and run the Docker container locally
-- `make build` – Build and tag the Docker image
-- `make push` – Push the Docker image to ECR
-- `make install` – Deploy/update the app in Kubernetes via Helm
-- `make dry-run` – Output a manifest of resources to be deployed (no changes)
-- `make delete` – Remove the deployment from Kubernetes
-- `make all` – Build, push, and install in sequence
-- `make login` – Login to AWS ECR
-- `make create` – Create the ECR repository
-- `make helm-repo` – Update local cache of MongoDB Helm charts
-- `make context` – Set kubectl context to staging
-
-## Environment Variables
-
-Set these in your `.env` file as needed:
-
-- `SECRET` – App secret
-- `MONGO_URL`, `MONGO_USERNAME`, `MONGO_PASSWORD` – MongoDB connection
-- `OPENAI_API_KEY` – For OpenAI integration
-- `CORS_ALLOWED_ORIGINS`, `CORS_ALLOWED_HEADERS` – CORS configuration
-- `APP` – Name of the app for Docker/Helm
-
-## Project Structure
-
-- `main.go` – Entry point
-- `config/` – Global config and logger
-- `openaiservice/` – OpenAI service integration
-- `Orchestrator/` – Orchestration logic
-- `evergreen/` – Evergreen API integration
-- `prompts/` – System prompts and recipes
-- `environments/` – Deployment configs
-- `scripts/` – Helper scripts for ECR, secrets, etc.
-
-## Example Request
-
-```sh
-curl http://localhost:8080/
+```
+sage/
+├── src/
+│   ├── config/
+│   │   └── index.ts          # Configuration management
+│   └── server.ts             # Main server file
+├── dist/                     # Compiled JavaScript (generated)
+├── env-example              # Environment variables template
+├── package.json
+├── tsconfig.json            # TypeScript configuration
+└── README.md
 ```
 
-## Parsley AI Endpoint
+### Configuration
 
-The `/parsley_ai` route provides AI-powered assistance for debugging Evergreen
-CI tasks using the Parsley assistant. This endpoint leverages system prompts and
-tools to help users analyze logs and resolve issues.
+The application uses environment variables for configuration. All configuration is managed through the `src/config/index.ts` file.
 
-### Example Request
+#### Environment Variables
 
-Send a POST request to `/parsley_ai` with a JSON body containing your message or
-task details:
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `PORT` | Server port | `3000` | No |
+| `NODE_ENV` | Environment (development/production) | `development` | Recommended |
 
-```sh
-curl -X POST http://localhost:8080/parsley_ai \
-  -H 'Content-Type: application/json' \
-  -d '{"message": "Help me debug task 12345 on execution 1"}'
+#### Configuration Features
+
+- **Type Safety**: All environment variables are properly typed
+- **Default Values**: Sensible defaults for all non-required variables
+- **Validation**: Automatic validation of required variables on startup
+
+### Running the Server
+
+#### Development Mode
+```bash
+yarn dev
+```
+This will start the server with ts-node-dev for automatic restarts on file changes and TypeScript compilation.
+
+#### Production Mode
+```bash
+yarn build
+yarn start
 ```
 
-The response will include AI-generated suggestions or debugging steps based on
-the provided input.
+#### Clean Build
+```bash
+yarn clean
+```
+Removes the `dist/` directory.
 
----
+The server will start on port 3000 by default (or the port specified in the `PORT` environment variable).
 
-Feel free to modify and extend this project as needed!
+### API Endpoints
+
+#### Root Endpoint
+- **GET** `/` - Returns a welcome message and server information
+
+#### Health Check
+- **GET** `/health` - Returns server health status and timestamp
+
