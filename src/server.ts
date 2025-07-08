@@ -16,7 +16,7 @@ app.get('/', (req: Request, res: Response) => {
     message: 'Welcome to Sage - Evergreen AI Service',
     version: '1.0.0',
     status: 'running',
-    environment: config.nodeEnv
+    environment: config.nodeEnv,
   });
 });
 
@@ -26,14 +26,16 @@ app.get('/health', (req: Request, res: Response) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     environment: config.nodeEnv,
-    version: '1.0.0'
+    version: '1.0.0',
   });
 });
 
 // Start server
 app.listen(config.port, () => {
   console.log(`🚀 Sage server is running on port ${config.port}`);
-  console.log(`📡 Health check available at http://localhost:${config.port}/health`);
+  console.log(
+    `📡 Health check available at http://localhost:${config.port}/health`
+  );
 });
 
-export default app; 
+export default app;
