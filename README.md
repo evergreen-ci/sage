@@ -71,13 +71,6 @@ This will start the server with ts-node-dev for automatic restarts on file chang
 yarn build
 yarn start
 ```
-This will compile TypeScript to JavaScript and run the compiled version.
-
-#### Build Only
-```bash
-yarn build
-```
-Compiles TypeScript files to the `dist/` directory.
 
 #### Clean Build
 ```bash
@@ -95,31 +88,3 @@ The server will start on port 3000 by default (or the port specified in the `POR
 #### Health Check
 - **GET** `/health` - Returns server health status and timestamp
 
-### Example Response
-
-```json
-{
-  "message": "Welcome to Sage - Evergreen AI Service",
-  "version": "1.0.0",
-  "status": "running",
-  "environment": "development"
-}
-```
-
-### Development
-
-The server includes:
-- TypeScript support with strict type checking
-- Environment variable configuration with dotenv
-- JSON request body parsing
-- URL-encoded form data parsing
-- Basic error handling
-- Health check endpoint
-
-### TypeScript Configuration
-
-The project uses strict TypeScript configuration with:
-- ES2020 target
-- CommonJS modules
-- Strict type checking enabled
-- Declaration files generation
