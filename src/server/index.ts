@@ -1,5 +1,5 @@
-import { config } from 'config';
 import express, { Application } from 'express';
+import { config } from 'config';
 import parsleyCompletionsRoute from './routes/completions/parsley';
 import healthRoute from './routes/health';
 import rootRoute from './routes/root';
