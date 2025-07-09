@@ -4,24 +4,12 @@ import parsleyCompletionsRoute from './routes/completions/parsley';
 import healthRoute from './routes/health';
 import rootRoute from './routes/root';
 
-const app: Application = express();
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Basic route
-app.get('/', rootRoute);
-
-// Health check endpoint
-app.get('/health', healthRoute);
-
 /**
  * `startServer` is a function that starts the server.
  */
 class SageServer {
   private app: Application;
-  private serverInstance: ReturnType<typeof app.listen> | null = null;
+  private serverInstance: ReturnType<Application['listen']> | null = null;
 
   constructor() {
     this.app = express();
