@@ -1,8 +1,17 @@
 import { Request, Response } from 'express';
+import { logInfo } from 'utils/logger';
 
 const parsleyCompletionsRoute = (req: Request, res: Response) => {
-  //  TODO: Implement the completions route
-  res.json({ message: 'Parsley Completions route' });
+  logInfo('Parsley completions request received', {
+    requestId: req.requestId,
+    body: req.body,
+  });
+
+  res.json({
+    message: 'Parsley completions endpoint',
+    requestId: req.requestId,
+    timestamp: new Date().toISOString(),
+  });
 };
 
 export default parsleyCompletionsRoute;

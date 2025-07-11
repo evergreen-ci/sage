@@ -1,3 +1,7 @@
 # Server Configuration
 PORT=3000
 NODE_ENV=development
+
+# Logging Configuration
+LOG_LEVEL=debug
+LOG_TO_FILE=true

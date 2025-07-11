@@ -1,6 +1,12 @@
 import express, { Application } from 'express';
+import { logInfo, logError, logWarn } from 'utils/logger';
 import { config } from 'config';
-import parsleyCompletionsRoute from './routes/completions/parsley';
+import {
+  requestIdMiddleware,
+  httpLoggingMiddleware,
+  errorLoggingMiddleware,
+} from './middlewares/logging';
+import { completionsRoute } from './routes';
 import healthRoute from './routes/health';
 import rootRoute from './routes/root';
 
@@ -15,9 +21,17 @@ class SageServer {
     this.app = express();
     this.setupMiddleware();
     this.setupRoutes();
+    this.setupErrorHandling();
   }
 
   private setupMiddleware() {
+    // Request ID middleware (must be first)
+    this.app.use(requestIdMiddleware);
+
+    // HTTP logging middleware
+    this.app.use(httpLoggingMiddleware);
+
+    // Basic Express middleware
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
   }
@@ -25,7 +39,12 @@ class SageServer {
   private setupRoutes() {
     this.app.get('/', rootRoute);
     this.app.get('/health', healthRoute);
-    this.app.post('/completions/parsley', parsleyCompletionsRoute);
+    this.app.use('/completions', completionsRoute);
+  }
+
+  private setupErrorHandling() {
+    // Error logging middleware (must be after routes)
+    this.app.use(errorLoggingMiddleware);
   }
 
   public start() {
@@ -33,9 +52,15 @@ class SageServer {
       console.warn('Server is already running.');
       return;
     }
+
+    logInfo('Starting Sage server', {
+      port: config.port,
+      nodeEnv: config.nodeEnv,
+    });
+
     this.serverInstance = this.app.listen(config.port, () => {
-      console.log(`🚀 Sage server is running on port ${config.port}`);
-      console.log(
+      logInfo(`🚀 Sage server is running on port ${config.port}`);
+      logInfo(
         `📡 Health check available at http://localhost:${config.port}/health`
       );
     });
@@ -43,15 +68,19 @@ class SageServer {
 
   public async stop(): Promise<void> {
     if (!this.serverInstance) {
-      console.warn('Server is not running.');
+      logWarn('Server is not running.');
       return;
     }
+
+    logInfo('Stopping Sage server');
+
     await new Promise<void>((resolve, reject) => {
       this.serverInstance!.close((err?: Error) => {
         if (err) {
+          logError('Error stopping server', err);
           reject(err);
         } else {
-          console.log('🛑 Sage server has been stopped.');
+          logInfo('🛑 Sage server has been stopped');
           resolve();
         }
       });

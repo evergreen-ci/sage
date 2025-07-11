@@ -216,6 +216,11 @@ const importConfig = {
             pattern: '@**',
             position: 'before',
           },
+          {
+            group: 'internal',
+            pattern: '(agent|config|server|utils)/**',
+            position: 'before',
+          },
         ],
         pathGroupsExcludedImportTypes: ['react'],
       },
