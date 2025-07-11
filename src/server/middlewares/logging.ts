@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import expressWinston from 'express-winston';
-import logger from 'utils/logger';
 import { v4 as uuidv4 } from 'uuid';
+import logger from 'utils/logger';
 
 // Extend Request type to include requestId
 declare global {
@@ -38,7 +38,7 @@ export const requestIdMiddleware = (
  */
 export const httpLoggingMiddleware = expressWinston.logger({
   winstonInstance: logger,
-  meta: true,
+  meta: false,
   msg: 'HTTP {{req.method}} {{req.url}} {{res.statusCode}} {{res.responseTime}}ms',
   expressFormat: false,
   colorize: false,

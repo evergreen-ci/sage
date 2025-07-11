@@ -1,5 +1,5 @@
-import { config } from 'config';
 import express, { Application } from 'express';
+import { config } from 'config';
 import { logInfo, logError, logWarn } from 'utils/logger';
 import {
   requestIdMiddleware,

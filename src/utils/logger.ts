@@ -1,6 +1,6 @@
-import { config } from 'config';
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
+import { config } from 'config';
 
 // Define log levels
 const logLevels = {
@@ -48,7 +48,9 @@ const productionFormat = winston.format.combine(
   })
 );
 
-// Define log format for development (colorized)
+/**
+ * This is a colorized log format for easy to read logs in development
+ */
 const developmentFormat = winston.format.combine(
   winston.format.timestamp({
     format: 'YYYY-MM-DD HH:mm:ss',
@@ -71,7 +73,7 @@ const developmentFormat = winston.format.combine(
   })
 );
 
-// Create console transport
+// Create console transport this will print to the console
 const consoleTransport = new winston.transports.Console({
   format:
     config.nodeEnv === 'production' ? productionFormat : developmentFormat,
@@ -140,11 +142,9 @@ export const withRequestId = (requestId: string) => logger.child({ requestId });
 /**
  * Returns a child logger with the given userId and optional email in its context.
  * @param userId - The user ID to include in the log context.
- * @param email - (Optional) The user's email to include in the log context.
- * @returns A winston child logger with userId and optionally email.
+ * @returns A winston child logger with userId.
  */
-export const withUser = (userId: string, email?: string) =>
-  logger.child({ userId, ...(email && { email }) });
+export const withUser = (userId: string) => logger.child({ userId });
 
 /**
  * Returns a child logger with operation name and timing duration in its context.
