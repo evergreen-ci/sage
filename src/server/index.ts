@@ -1,12 +1,12 @@
 import express, { Application } from 'express';
-import { config } from 'config';
 import { logInfo, logError, logWarn } from 'utils/logger';
+import { config } from 'config';
 import {
   requestIdMiddleware,
   httpLoggingMiddleware,
   errorLoggingMiddleware,
 } from './middlewares/logging';
-import parsleyCompletionsRoute from './routes/completions/parsley';
+import { completionsRoute } from './routes';
 import healthRoute from './routes/health';
 import rootRoute from './routes/root';
 
@@ -39,7 +39,7 @@ class SageServer {
   private setupRoutes() {
     this.app.get('/', rootRoute);
     this.app.get('/health', healthRoute);
-    this.app.post('/completions/parsley', parsleyCompletionsRoute);
+    this.app.use('/completions', completionsRoute);
   }
 
   private setupErrorHandling() {
