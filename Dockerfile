@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64 node:22
+FROM --platform=linux/amd64 node:22
 WORKDIR /app
 COPY package.json ./
 RUN yarn install
