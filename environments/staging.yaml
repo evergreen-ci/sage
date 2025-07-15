@@ -3,7 +3,7 @@ arch: "amd64"
 ingress:
   enabled: true
   hosts:
-    - evergreen-ai-service.devprod-evergreen.staging.corp.mongodb.com
+    - sage.devprod-evergreen.staging.corp.mongodb.com
 service:
   targetPort: 8080
 mesh:
