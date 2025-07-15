@@ -23,6 +23,7 @@ env:
   EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2
   EVERGREEN_URL: https://evergreen.mongodb.com
   OPENAI_ENDPOINT: "https://parsley-ai.openai.azure.com/"
+  PORT: 8080
 
 envSecrets:
   MONGO_URL: parsley-ai-secrets
