@@ -5,5 +5,4 @@ RUN yarn install
 COPY . .
 RUN yarn build
 EXPOSE 3000
-ENTRYPOINT ["node"]
-CMD ["/usr/local/bin/yarn", "start"]
+CMD ["yarn", "start"]
