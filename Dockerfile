@@ -1,8 +1,8 @@
-FROM node:22-alpine
+FROM --platform=linux/amd64 node:22
 WORKDIR /app
 COPY package.json ./
 RUN yarn install
 COPY . .
 RUN yarn build
 EXPOSE 3000
-CMD ["/usr/local/bin/node", "/usr/local/bin/yarn", "start"]
+CMD ["yarn", "start"]
