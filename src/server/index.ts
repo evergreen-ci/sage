@@ -1,6 +1,6 @@
 import express, { Application } from 'express';
-import { logInfo, logError, logWarn } from 'utils/logger';
 import { config } from 'config';
+import { logger } from 'utils/logger';
 import {
   requestIdMiddleware,
   httpLoggingMiddleware,
@@ -53,14 +53,14 @@ class SageServer {
       return;
     }
 
-    logInfo('Starting Sage server', {
+    logger.info('Starting Sage server', {
       port: config.port,
       nodeEnv: config.nodeEnv,
     });
 
     this.serverInstance = this.app.listen(config.port, () => {
-      logInfo(`🚀 Sage server is running on port ${config.port}`);
-      logInfo(
+      logger.info(`🚀 Sage server is running on port ${config.port}`);
+      logger.info(
         `📡 Health check available at http://localhost:${config.port}/health`
       );
     });
@@ -68,19 +68,19 @@ class SageServer {
 
   public async stop(): Promise<void> {
     if (!this.serverInstance) {
-      logWarn('Server is not running.');
+      logger.warn('Server is not running.');
       return;
     }
 
-    logInfo('Stopping Sage server');
+    logger.info('Stopping Sage server');
 
     await new Promise<void>((resolve, reject) => {
       this.serverInstance!.close((err?: Error) => {
         if (err) {
-          logError('Error stopping server', err);
+          logger.error('Error stopping server', err);
           reject(err);
         } else {
-          logInfo('🛑 Sage server has been stopped');
+          logger.info('🛑 Sage server has been stopped');
           resolve();
         }
       });

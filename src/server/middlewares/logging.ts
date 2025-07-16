@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import expressWinston from 'express-winston';
 import { v4 as uuidv4 } from 'uuid';
-import logger from 'utils/logger';
+import loggerInstance, { logger } from 'utils/logger';
 
 // Extend Request type to include requestId
 declare global {
@@ -37,7 +37,7 @@ export const requestIdMiddleware = (
  * Express-winston middleware for HTTP request logging
  */
 export const httpLoggingMiddleware = expressWinston.logger({
-  winstonInstance: logger,
+  winstonInstance: loggerInstance,
   meta: false,
   msg: 'HTTP {{req.method}} {{req.url}} {{res.statusCode}} {{res.responseTime}}ms',
   expressFormat: false,
@@ -58,7 +58,7 @@ export const httpLoggingMiddleware = expressWinston.logger({
  * Express-winston middleware for error logging
  */
 export const errorLoggingMiddleware = expressWinston.errorLogger({
-  winstonInstance: logger,
+  winstonInstance: loggerInstance,
   meta: true,
   msg: 'HTTP Error {{req.method}} {{req.url}} {{res.statusCode}}',
   dynamicMeta: (req: Request, res: Response) => ({
@@ -108,7 +108,7 @@ export const slowRequestMiddleware =
  * @returns Logger instance with request context
  */
 export const getRequestLogger = (req: Request) =>
-  logger.child({
+  loggerInstance.child({
     requestId: req.requestId,
     method: req.method,
     url: req.url,

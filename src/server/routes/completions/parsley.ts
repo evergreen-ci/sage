@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { logInfo } from 'utils/logger';
+import { logger } from 'utils/logger';
 
 const parsleyCompletionsRoute = (req: Request, res: Response) => {
-  logInfo('Parsley completions request received', {
+  logger.info('Parsley completions request received', {
     requestId: req.requestId,
     body: req.body,
   });
