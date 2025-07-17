@@ -214,7 +214,10 @@ const importConfig = {
           {
             group: 'external',
             pattern: '@**',
-            position: 'before',
+          },
+          {
+            group: 'internal',
+            pattern: '(agent|config|server|utils)/**',
           },
         ],
         pathGroupsExcludedImportTypes: ['react'],

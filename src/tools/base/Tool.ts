@@ -9,5 +9,5 @@ export abstract class Tool {
     this.description = description;
   }
 
-  abstract execute(input: string, context?: any): Promise<any>;
+  abstract execute(input: string, context?: unknown): Promise<unknown>;
 }
