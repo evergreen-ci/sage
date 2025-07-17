@@ -85,7 +85,10 @@ if (config.logging.logToFile) {
   transports.push(fileTransport, errorFileTransport);
 }
 
-const logger = winston.createLogger({
+/**
+ * Sage logger instance
+ */
+const loggerInstance = winston.createLogger({
   level: config.logging.logLevel,
   transports,
   // Handle uncaught exceptions
@@ -100,4 +103,4 @@ const logger = winston.createLogger({
   exitOnError: false,
 });
 
-export default logger;
+export default loggerInstance;
