@@ -8,7 +8,7 @@ import loggerInstance from './setup';
 const logError = (
   message: string,
   error?: Error | unknown,
-  meta?: Record<string, any>
+  meta?: Record<string, unknown>
 ) => {
   if (error instanceof Error) {
     loggerInstance.error(message, {
@@ -26,7 +26,7 @@ const logError = (
  * @param message - The warning message to log.
  * @param meta - (Optional) Additional metadata to include in the log.
  */
-const logWarn = (message: string, meta?: Record<string, any>) => {
+const logWarn = (message: string, meta?: Record<string, unknown>) => {
   loggerInstance.warn(message, meta);
 };
 
@@ -35,7 +35,7 @@ const logWarn = (message: string, meta?: Record<string, any>) => {
  * @param message - The info message to log.
  * @param meta - (Optional) Additional metadata to include in the log.
  */
-const logInfo = (message: string, meta?: Record<string, any>) => {
+const logInfo = (message: string, meta?: Record<string, unknown>) => {
   loggerInstance.info(message, meta);
 };
 
@@ -44,7 +44,7 @@ const logInfo = (message: string, meta?: Record<string, any>) => {
  * @param message - The debug message to log.
  * @param meta - (Optional) Additional metadata to include in the log.
  */
-const logDebug = (message: string, meta?: Record<string, any>) => {
+const logDebug = (message: string, meta?: Record<string, unknown>) => {
   loggerInstance.debug(message, meta);
 };
 
@@ -53,7 +53,7 @@ const logDebug = (message: string, meta?: Record<string, any>) => {
  * @param message - The HTTP message to log.
  * @param meta - (Optional) Additional metadata to include in the log.
  */
-const logHttp = (message: string, meta?: Record<string, any>) => {
+const logHttp = (message: string, meta?: Record<string, unknown>) => {
   loggerInstance.http(message, meta);
 };
 
@@ -68,7 +68,7 @@ const logAudit = (
   action: string,
   resource: string,
   userId?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ) => {
   loggerInstance.info('AUDIT', {
     action,
@@ -88,7 +88,7 @@ const logAudit = (
 const logSecurity = (
   event: string,
   severity: 'low' | 'medium' | 'high' | 'critical',
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 ) => {
   loggerInstance.warn('SECURITY', {
     event,

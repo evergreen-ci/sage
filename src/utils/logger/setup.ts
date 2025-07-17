@@ -11,7 +11,7 @@ const productionFormat = winston.format.combine(
   winston.format.json(),
   winston.format.printf(info => {
     const { level, message, stack, timestamp, ...extra } = info;
-    const logEntry: Record<string, any> = {
+    const logEntry: Record<string, unknown> = {
       timestamp,
       level,
       message,
