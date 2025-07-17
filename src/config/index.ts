@@ -7,6 +7,10 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 export interface Config {
   port: number;
   nodeEnv: string;
+  logging: {
+    logLevel: string;
+    logToFile: boolean;
+  };
 }
 
 /**
@@ -50,6 +54,10 @@ const getEnvNumber = (key: string, defaultValue: number): number => {
 export const config: Config = {
   port: getEnvNumber('PORT', 3000),
   nodeEnv: getEnvVar('NODE_ENV', 'development'),
+  logging: {
+    logLevel: getEnvVar('LOG_LEVEL', 'info'),
+    logToFile: getEnvVar('LOG_TO_FILE', 'true') === 'true',
+  },
 };
 
 /**
