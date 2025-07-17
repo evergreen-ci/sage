@@ -1,6 +1,6 @@
 import express, { Application } from 'express';
-import { config } from 'config';
-import { logger } from 'utils/logger';
+import { config } from '../config';
+import { logger } from '../utils/logger';
 import {
   requestIdMiddleware,
   httpLoggingMiddleware,
