@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import expressWinston from 'express-winston';
 import { v4 as uuidv4 } from 'uuid';
-import loggerInstance, { logger } from '../../utils/logger';
+import loggerInstance, { logger } from 'utils/logger';
 
 // Extend Request type to include requestId
 declare global {
