@@ -145,14 +145,11 @@ functions:
         ${PREPARE_SHELL}
         yarn start
 
-  yarn-start-and-kill:
+  yarn-health-check:
     command: shell.exec
     params:
       working_dir: sage
       shell: bash
       script: |
         ${PREPARE_SHELL}
-        yarn start &
-        SERVER_PID=$!
-        sleep 5
-        kill $SERVER_PID
+        sage/.evergreen/scripts/health-check.sh
