@@ -1,4 +1,5 @@
 import express, { Application } from 'express';
+import expressListEndpoints from 'express-list-endpoints';
 import { config } from 'config';
 import { logger } from 'utils/logger';
 import {
@@ -60,9 +61,11 @@ class SageServer {
 
     this.serverInstance = this.app.listen(config.port, () => {
       logger.info(`🚀 Sage server is running on port ${config.port}`);
-      logger.info(
-        `📡 Health check available at http://localhost:${config.port}/health`
-      );
+      const routes = expressListEndpoints(this.app);
+      logger.info('Available routes:');
+      routes.forEach(route => {
+        logger.info(`${route.methods.join(', ')} ${route.path}`);
+      });
     });
   }
 

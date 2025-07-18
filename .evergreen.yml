@@ -33,6 +33,7 @@ tasks:
   - name: compile
     commands:
       - func: yarn-build
+      - func: health-check
   - name: lint
     commands:
       - func: yarn-lint
@@ -132,3 +133,21 @@ functions:
       script: |
         ${PREPARE_SHELL}
         yarn eslint:strict
+
+  yarn-start:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        yarn start
+
+  health-check:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        ./scripts/health-check.sh
