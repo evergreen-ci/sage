@@ -150,4 +150,4 @@ functions:
       shell: bash
       script: |
         ${PREPARE_SHELL}
-        sage/.evergreen/scripts/health-check.sh
+        ./scripts/health-check.sh
