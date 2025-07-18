@@ -1,4 +1,5 @@
 import express, { Application } from 'express';
+import expressListEndpoints from 'express-list-endpoints';
 import { config } from 'config';
 import { logger } from 'utils/logger';
 import {
@@ -9,7 +10,6 @@ import {
 import { completionsRoute } from './routes';
 import healthRoute from './routes/health';
 import rootRoute from './routes/root';
-import expressListEndpoints from 'express-list-endpoints';
 
 /**
  * `startServer` is a function that starts the server.
@@ -63,7 +63,7 @@ class SageServer {
       logger.info(`🚀 Sage server is running on port ${config.port}`);
       const routes = expressListEndpoints(this.app);
       logger.info('Available routes:');
-      routes.forEach((route) => {
+      routes.forEach(route => {
         logger.info(`${route.methods.join(', ')} ${route.path}`);
       });
     });
