@@ -3,7 +3,7 @@ arch: "amd64"
 ingress:
   enabled: true
   hosts:
-    - evergreen-ai-service.devprod-evergreen.staging.corp.mongodb.com
+    - sage.devprod-evergreen.staging.corp.mongodb.com
 service:
   targetPort: 8080
 mesh:
@@ -23,6 +23,7 @@ env:
   EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2
   EVERGREEN_URL: https://evergreen.mongodb.com
   OPENAI_ENDPOINT: "https://parsley-ai.openai.azure.com/"
+  PORT: 8080
 
 envSecrets:
   MONGO_URL: parsley-ai-secrets
