@@ -9,8 +9,6 @@ pre:
   - func: get-project
   - func: setup-node
   - func: yarn-install
-  - func: yarn-start
-  - func: yarn-start-and-kill
 
 post:
   - func: assume-ec2-role
@@ -35,7 +33,7 @@ tasks:
   - name: compile
     commands:
       - func: yarn-build
-      - func: yarn-start-and-kill
+      - func: health-check
   - name: lint
     commands:
       - func: yarn-lint
@@ -145,7 +143,7 @@ functions:
         ${PREPARE_SHELL}
         yarn start
 
-  yarn-health-check:
+  health-check:
     command: shell.exec
     params:
       working_dir: sage
