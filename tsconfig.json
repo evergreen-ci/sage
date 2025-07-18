@@ -32,8 +32,15 @@
     "node_modules",
     "dist"
   ],
+  "paths": {
+    "src/*": ["./src/*"]
+  },
   "ts-node": {
-    // Do not forget to `npm i -D tsconfig-paths`
     "require": ["tsconfig-paths/register"]
+  },
+  "tsc-alias": {
+    "resolveFullPaths": true,
+    "verbose": false,
+    "basePath": "./src"
   }
 } 

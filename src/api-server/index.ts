@@ -9,6 +9,7 @@ import {
 import { completionsRoute } from './routes';
 import healthRoute from './routes/health';
 import rootRoute from './routes/root';
+import expressListEndpoints from 'express-list-endpoints';
 
 /**
  * `startServer` is a function that starts the server.
@@ -60,9 +61,11 @@ class SageServer {
 
     this.serverInstance = this.app.listen(config.port, () => {
       logger.info(`🚀 Sage server is running on port ${config.port}`);
-      logger.info(
-        `📡 Health check available at http://localhost:${config.port}/health`
-      );
+      const routes = expressListEndpoints(this.app);
+      logger.info('Available routes:');
+      routes.forEach((route) => {
+        logger.info(`${route.methods.join(', ')} ${route.path}`);
+      });
     });
   }
 
