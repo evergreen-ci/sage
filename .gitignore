@@ -82,3 +82,8 @@ Thumbs.db
 # Docker
 *.dockerignore
 
+# Mastra
+.mastra/
+
+# Cursor
+.cursor/
