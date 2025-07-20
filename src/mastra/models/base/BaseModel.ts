@@ -1,5 +1,5 @@
 import { createAzure } from '@ai-sdk/azure';
-import { config } from '../../config';
+import { config } from '../../../config';
 
 class GPTModel {
   private model: any;
