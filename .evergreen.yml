@@ -28,6 +28,7 @@ buildvariants:
     tasks:
       - name: compile
       - name: lint
+      - name: test
 
 tasks:
   - name: compile
