@@ -5,6 +5,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    outputFile: {
+      junit: './bin/test-results/junit.xml',
+    },
+    reporters: ['default', ...(process.env.CI === 'true' ? ['junit'] : [])],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

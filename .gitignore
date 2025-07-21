@@ -82,3 +82,5 @@ Thumbs.db
 # Docker
 *.dockerignore
 
+bin/
+build/
