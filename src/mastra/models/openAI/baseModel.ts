@@ -1,6 +1,6 @@
 import { createAzure } from '@ai-sdk/azure';
 import { LanguageModelV1 } from 'ai';
-import { logger } from 'utils/logger';
+import { logger } from '../../../utils/logger';
 import { config } from '../../../config';
 
 /**
