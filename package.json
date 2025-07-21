@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "evergreen-ai-service",
   "main": "dist/main.js",
-  "type": "module",
   "scripts": {
     "build": "tsc && tsc-alias",
     "start": "NODE_ENV=production node dist/main.js",
