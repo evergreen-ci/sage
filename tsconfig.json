@@ -23,7 +23,10 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": true,
+    "paths": {
+      "src/*": ["./src/*"]
+    }
   },
   "include": [
     "src/**/*"
@@ -32,9 +35,6 @@
     "node_modules",
     "dist"
   ],
-  "paths": {
-    "src/*": ["./src/*"]
-  },
   "ts-node": {
     "require": ["tsconfig-paths/register"]
   },
