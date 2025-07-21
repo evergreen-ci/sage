@@ -23,7 +23,11 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": true,
+    "types": ["vitest/globals"],
+    "paths": {
+      "src/*": ["./src/*"]
+    }
   },
   "include": [
     "src/**/*"
@@ -32,9 +36,6 @@
     "node_modules",
     "dist"
   ],
-  "paths": {
-    "src/*": ["./src/*"]
-  },
   "ts-node": {
     "require": ["tsconfig-paths/register"]
   },
