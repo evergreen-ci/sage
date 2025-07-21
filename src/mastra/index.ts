@@ -1,11 +1,11 @@
 import { Mastra } from '@mastra/core/mastra';
-import { PinoLogger } from '@mastra/loggers';
-import { parsleyAgent } from './agents/parsley-agent';
+import { WinstonMastraLogger } from '../utils/logger/winstonMastraLogger';
+import { parsleyAgent } from './agents/parsleyAgent';
 
-export const mastra = new Mastra({
+export const mastra: Mastra = new Mastra({
   workflows: {},
   agents: { parsleyAgent },
-  logger: new PinoLogger({
+  logger: new WinstonMastraLogger({
     name: 'Mastra',
     level: 'info',
   }),

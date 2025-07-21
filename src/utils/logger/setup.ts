@@ -1,6 +1,6 @@
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
-import { config } from 'config';
+import { config } from '../../config';
 
 // Define log format for production (JSON)
 const productionFormat = winston.format.combine(
