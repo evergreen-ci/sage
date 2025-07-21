@@ -8,7 +8,7 @@ platform:
 trigger:
   branch:
     - main
-    - khelif96:DEVPROD-19193
+    - DEVPROD-19193
 
 steps:
   - name: publish
