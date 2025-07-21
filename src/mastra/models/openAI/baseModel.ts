@@ -1,8 +1,13 @@
 import { createAzure } from '@ai-sdk/azure';
+import { LanguageModelV1 } from 'ai';
 import { config } from '../../../config';
 
+/**
+ * BaseModel is a class that creates a language model from an Azure OpenAI deployment.
+ * It is a wrapper around the Azure OpenAI SDK.
+ */
 class GPTModel {
-  private model: any;
+  private model: LanguageModelV1;
 
   constructor(deploymentName: string) {
     // Create Azure OpenAI client with Vercel AI SDK
@@ -20,6 +25,10 @@ class GPTModel {
 
   public getModel() {
     return this.model;
+  }
+
+  public getModelName() {
+    return this.model.modelId;
   }
 }
 
