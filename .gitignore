@@ -87,3 +87,10 @@ Thumbs.db
 
 # Cursor
 .cursor/
+
+# Build
+bin/
+build/
+
+# Node
+node_modules/

@@ -23,6 +23,7 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "exactOptionalPropertyTypes": true,
+    "types": ["vitest/globals"],
     "paths": {
       "src/*": ["./src/*"]
     }
