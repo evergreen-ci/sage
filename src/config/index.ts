@@ -80,8 +80,6 @@ export const config: Config = {
   },
 };
 
-console.log('config', config.aiModels.azure.openai);
-
 /**
  * `validateConfig` is a function to validate the required environment variables.
  */
