@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import { resolve } from 'path';
 
 // Load environment variables from .env file
-dotenv.config({ path: resolve(process.cwd(), '../../.env') });
+dotenv.config({ path: resolve(process.cwd(), '.env') });
 
 export interface Config {
   port: number;
@@ -79,6 +79,8 @@ export const config: Config = {
     },
   },
 };
+
+console.log('config', config.aiModels.azure.openai);
 
 /**
  * `validateConfig` is a function to validate the required environment variables.

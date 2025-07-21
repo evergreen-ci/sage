@@ -119,7 +119,7 @@ const tsEslintConfig = {
       ecmaFeatures: {
         jsx: true,
       },
-      project: ['./apps/*/tsconfig.json', './packages/*/tsconfig.json'],
+      project: ['./tsconfig.json'],
       tsConfigRootDir: import.meta.url,
     },
   },
