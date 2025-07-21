@@ -1,6 +1,7 @@
 import { createAzure } from '@ai-sdk/azure';
 import { LanguageModelV1 } from 'ai';
 import { config } from '../../../config';
+import { logger } from 'utils/logger';
 
 /**
  * BaseModel is a class that creates a language model from an Azure OpenAI deployment.
@@ -16,6 +17,11 @@ class GPTModel {
 
     const azureOpenAI = createAzure({
       apiKey: config.aiModels.azure.openai.apiKey,
+      resourceName,
+      apiVersion: config.aiModels.azure.openai.apiVersion,
+    });
+    logger.info('Azure OpenAI client created', {
+      deploymentName,
       resourceName,
       apiVersion: config.aiModels.azure.openai.apiVersion,
     });
