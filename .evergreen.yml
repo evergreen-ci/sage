@@ -37,6 +37,9 @@ tasks:
   - name: lint
     commands:
       - func: yarn-lint
+  - name: test
+    commands:
+      - func: yarn-test
 
 
 
@@ -151,3 +154,12 @@ functions:
       script: |
         ${PREPARE_SHELL}
         ./scripts/health-check.sh
+      
+  yarn-test:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        yarn test

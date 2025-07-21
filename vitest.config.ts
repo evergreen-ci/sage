@@ -6,7 +6,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     outputFile: {
-      junit: './bin/test-results/junit.xml',
+      junit: './bin/test/junit.xml',
     },
     reporters: ['default', ...(process.env.CI === 'true' ? ['junit'] : [])],
     coverage: {
@@ -20,6 +20,7 @@ export default defineConfig({
         '**/*.config.*',
         '**/test/**',
         '**/tests/**',
+        '**/*.test.ts',
       ],
     },
   },
