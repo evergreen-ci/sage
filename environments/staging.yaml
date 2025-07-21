@@ -18,6 +18,14 @@ services:
     targetPort: 8080
     type: ClusterIP
 
+resources:
+  requests:
+    cpu: 4
+    memory: 8Gi
+  limits:
+    cpu: 8
+    memory: 8Gi
+
 env:
   EVERGREEN_API_USER: parsley-ai-skunkworks
   EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2
