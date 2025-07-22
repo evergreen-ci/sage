@@ -24,6 +24,8 @@ const globalIgnores = {
     '**/temp',
     '**/tmp',
     '**/build',
+    '**/.mastra',
+    'vitest.config.ts',
   ],
 };
 
