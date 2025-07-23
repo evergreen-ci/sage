@@ -7,7 +7,7 @@ import { logger } from '../../../utils/logger';
  * BaseModel is a class that creates a language model from an Azure OpenAI deployment.
  * It is a wrapper around the Azure OpenAI SDK.
  */
-class GPTModel {
+class BaseModel {
   private model: LanguageModelV1;
 
   constructor(deploymentName: string) {
@@ -38,4 +38,4 @@ class GPTModel {
   }
 }
 
-export default GPTModel;
+export default BaseModel;
