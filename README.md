@@ -120,7 +120,7 @@ The project uses [Mastra](https://mastra.ai/en/docs/overview), a framework for b
 ### Running the Mastra Dev Server
 
 ```bash
-yarn dev:mastra
+yarn mastra:dev
 ```
 
 Launches a local Mastra server at `http://localhost:4111` for agent testing.
