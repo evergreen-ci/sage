@@ -21,6 +21,13 @@ export interface Config {
       };
     };
   };
+  evergreen: {
+    graphql: {
+      endpoint: string;
+      apiKey: string;
+      apiUser: string;
+    };
+  };
 }
 
 /**
@@ -76,6 +83,13 @@ export const config: Config = {
         apiVersion: getEnvVar('AZURE_OPENAI_API_VERSION', ''),
         defaultDeployment: getEnvVar('AZURE_OPENAI_DEFAULT_DEPLOYMENT', ''),
       },
+    },
+  },
+  evergreen: {
+    graphql: {
+      endpoint: getEnvVar('EVERGREEN_GRAPHQL_ENDPOINT', ''),
+      apiKey: getEnvVar('EVERGREEN_API_KEY', ''),
+      apiUser: getEnvVar('EVERGREEN_API_USER', ''),
     },
   },
 };
