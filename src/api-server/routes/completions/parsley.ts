@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
 import { mastra } from 'mastra';
 import { logger } from 'utils/logger';
+import z from 'zod';
+
+const parsleyCompletionsSchema = z.object({
+  message: z.string().min(1),
+});
 
 const parsleyCompletionsRoute = async (req: Request, res: Response) => {
   logger.info('Parsley completions request received', {
@@ -9,11 +14,18 @@ const parsleyCompletionsRoute = async (req: Request, res: Response) => {
   });
 
   // TODO: Add some input validation here
-  const { message } = req.body;
-
+  const { success, data } = parsleyCompletionsSchema.safeParse(req.body);
+  if (!success) {
+    logger.error('Invalid request body', {
+      requestId: req.requestId,
+      body: req.body,
+    });
+    res.status(400).json({ message: 'Invalid request body' });
+    return;
+  }
   try {
     const agent = mastra.getAgent('parsleyAgent');
-    const result = await agent.generate(`What can you do?: ${message}`);
+    const result = await agent.generate(`What can you do?: ${data.message}`);
     res.json({
       message: result.text,
       requestId: req.requestId,
