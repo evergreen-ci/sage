@@ -5,3 +5,8 @@ NODE_ENV=development
 # Logging Configuration
 LOG_LEVEL=debug
 LOG_TO_FILE=true
+
+# Azure OpenAI Configuration
+AZURE_OPENAI_API_KEY=
+AZURE_OPENAI_ENDPOINT=
+AZURE_OPENAI_API_VERSION=

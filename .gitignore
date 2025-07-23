@@ -82,5 +82,15 @@ Thumbs.db
 # Docker
 *.dockerignore
 
+# Mastra
+.mastra/
+
+# Cursor
+.cursor/
+
+# Build
 bin/
 build/
+
+# Node
+node_modules/

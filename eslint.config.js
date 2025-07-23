@@ -24,6 +24,8 @@ const globalIgnores = {
     '**/temp',
     '**/tmp',
     '**/build',
+    '**/.mastra',
+    'vitest.config.ts',
   ],
 };
 
@@ -119,7 +121,7 @@ const tsEslintConfig = {
       ecmaFeatures: {
         jsx: true,
       },
-      project: ['./apps/*/tsconfig.json', './packages/*/tsconfig.json'],
+      project: ['./tsconfig.json'],
       tsConfigRootDir: import.meta.url,
     },
   },

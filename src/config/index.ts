@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
-import path from 'path';
+import { resolve } from 'path';
 
 // Load environment variables from .env file
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config({ path: resolve(process.cwd(), '.env') });
 
 export interface Config {
   port: number;
@@ -10,6 +10,16 @@ export interface Config {
   logging: {
     logLevel: string;
     logToFile: boolean;
+  };
+  aiModels: {
+    azure: {
+      openai: {
+        apiKey: string;
+        endpoint: string;
+        apiVersion: string;
+        defaultDeployment: string;
+      };
+    };
   };
 }
 
@@ -57,6 +67,16 @@ export const config: Config = {
   logging: {
     logLevel: getEnvVar('LOG_LEVEL', 'info'),
     logToFile: getEnvVar('LOG_TO_FILE', 'true') === 'true',
+  },
+  aiModels: {
+    azure: {
+      openai: {
+        apiKey: getEnvVar('AZURE_OPENAI_API_KEY', ''),
+        endpoint: getEnvVar('AZURE_OPENAI_ENDPOINT', ''),
+        apiVersion: getEnvVar('AZURE_OPENAI_API_VERSION', ''),
+        defaultDeployment: getEnvVar('AZURE_OPENAI_DEFAULT_DEPLOYMENT', ''),
+      },
+    },
   },
 };
 

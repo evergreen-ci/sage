@@ -1,90 +1,134 @@
 # Sage - Evergreen AI Service
 
-A TypeScript Express.js server for the Evergreen AI Service.
+A TypeScript-based Express.js server powering the Evergreen AI Service.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (version 22 or higher)
-- Yarn package manager
+* Node.js v22 or higher
+* Yarn package manager
 
 ### Installation
 
-1. Clone the repository or navigate to the project directory
-2. Install dependencies using Yarn:
+1. Clone the repository or navigate to the project directory.
+2. Install dependencies:
 
-```bash
-yarn install
-```
-
+   ```bash
+   yarn install
+   ```
 3. Set up environment variables:
 
-```bash
-cp env-example .env
-```
+   ```bash
+   cp env-example .env
+   ```
 
-Edit the `.env` file with your specific configuration values.
+   Update the `.env` file with the necessary values. Refer to the team password manager or ask a teammate for credentials.
 
-### Project Structure
+---
+
+## Project Structure
 
 ```
 sage/
 ├── src/
+│   ├── api-server/
+│   │   ├── index.ts                  # API server setup
+│   │   ├── middlewares/             # Express middlewares
+│   │   │   ├── index.ts
+│   │   │   └── logging.ts
+│   │   ├── routes/                  # HTTP route handlers
+│   │   │   ├── completions/
+│   │   │   │   ├── index.ts
+│   │   │   │   └── parsley.ts
+│   │   │   ├── health.ts
+│   │   │   ├── index.ts
+│   │   │   └── root.ts
+│   │   └── types/
+│   │       └── index.ts
 │   ├── config/
-│   │   └── index.ts          # Configuration management
-│   └── server.ts             # Main server file
-├── dist/                     # Compiled JavaScript (generated)
-├── env-example              # Environment variables template
-├── package.json
-├── tsconfig.json            # TypeScript configuration
+│   │   └── index.ts                  # Environment config
+│   ├── db/
+│   │   └── connection.ts             # MongoDB connection
+│   ├── mastra/                       # Mastra agent framework
+│   │   ├── agents/
+│   │   │   └── parsleyAgent.ts
+│   │   ├── tools/
+│   │   │   └── some_tool.ts          # [Tools documentation](https://mastra.ai/en/docs/tools-mcp/overview)
+│   │   ├── workflows/
+│   │   │   └── some_workflow.ts      # [Workflows documentation](https://mastra.ai/en/docs/workflows/overview)
+│   │   ├── models/
+│   │   │   └── openAI/
+│   │   │       ├── baseModel.ts
+│   │   │       └── gpt41.ts
+│   │   └── index.ts                  # Mastra setup/exports
+│   ├── types/
+│   │   └── index.ts
+│   ├── utils/
+│   │   ├── logger/
+│   │   │   ├── index.ts
+│   │   │   ├── setup.ts
+│   │   │   ├── winstonMastraLogger.ts
+│   │   │   └── logger.test.ts
+│   │   └── index.ts
+│   ├── __tests__/                    # Unit and integration tests
+│   └── main.ts                       # App entry point
+├── environments/
+│   └── staging.yaml                  # Deployment configuration
+├── scripts/                          # Project automation scripts
+├── .drone.yml                        # Drone CI pipeline
+├── .evergreen.yml                    # Evergreen configuration
+├── env-example                       # Environment variable template
 └── README.md
 ```
 
-### Configuration
+---
 
-The application uses environment variables for configuration. All configuration is managed through the `src/config/index.ts` file.
+## Running the Server
 
-#### Environment Variables
+### Development
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `PORT` | Server port | `3000` | No |
-| `NODE_ENV` | Environment (development/production) | `development` | Recommended |
-
-#### Configuration Features
-
-- **Type Safety**: All environment variables are properly typed
-- **Default Values**: Sensible defaults for all non-required variables
-- **Validation**: Automatic validation of required variables on startup
-
-### Running the Server
-
-#### Development Mode
 ```bash
 yarn dev
 ```
-This will start the server with ts-node-dev for automatic restarts on file changes and TypeScript compilation.
 
-#### Production Mode
+Starts the server using `ts-node-dev`, with hot-reloading and TypeScript support. Default port: `3000` (or set via the `PORT` environment variable).
+
+### Production
+
 ```bash
 yarn build
 yarn start
 ```
 
-#### Clean Build
+Compiles the TypeScript code and starts the production server using Node.js.
+
+### Clean Build
+
 ```bash
 yarn clean
 ```
+
 Removes the `dist/` directory.
 
-The server will start on port 3000 by default (or the port specified in the `PORT` environment variable).
+---
 
-### API Endpoints
+## Working with Mastra Agents
 
-#### Root Endpoint
-- **GET** `/` - Returns a welcome message and server information
+The project uses [Mastra](https://mastra.ai/en/docs/overview), a framework for building agentic systems with tools and workflows.
 
-#### Health Check
-- **GET** `/health` - Returns server health status and timestamp
+### Running the Mastra Dev Server
 
+```bash
+yarn mastra:dev
+```
+
+Launches a local Mastra server at `http://localhost:4111` for agent testing.
+
+### Customizing Agents
+
+* **Agents**: Add or update agents in `src/mastra/agents`.
+* **Tools**: Place reusable tools in `src/mastra/tools`. Tools are composable functions an agent can call.
+* **Workflows**: Add workflows to `src/mastra/workflows`. Workflows define multi-step logic that agents can follow.
+
+All agents and workflows should be registered in `src/mastra/index.ts`.
