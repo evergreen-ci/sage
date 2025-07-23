@@ -30,15 +30,13 @@ env:
   EVERGREEN_API_USER: parsley-ai-skunkworks
   EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2
   EVERGREEN_URL: https://evergreen.mongodb.com
-  OPENAI_ENDPOINT: "https://parsley-ai.openai.azure.com/"
   AZURE_OPENAI_API_VERSION: 2024-02-15-preview
   PORT: 8080
 
 envSecrets:
-  MONGO_URL: parsley-ai-secrets
-  MONGO_USERNAME: parsley-ai-secrets
-  MONGO_PASSWORD: parsley-ai-secrets
-  OPENAI_KEY: parsley-ai-secrets
-  EVERGREEN_API_KEY: parsley-ai-secrets
   AZURE_OPENAI_API_KEY: parsley-ai-secrets
   AZURE_OPENAI_ENDPOINT: parsley-ai-secrets
+  EVERGREEN_API_KEY: parsley-ai-secrets
+  MONGO_PASSWORD: parsley-ai-secrets
+  MONGO_URL: parsley-ai-secrets
+  MONGO_USERNAME: parsley-ai-secrets
