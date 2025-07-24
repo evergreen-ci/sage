@@ -1,0 +1,30 @@
+# This is a query to get a task from evergreen.
+# It is used to get the task information for a given taskID and execution.
+# The taskID is the ID of the task to get.
+# The execution is the execution number of the task to get.
+# If the execution is not provided, the latest execution will be used.
+
+query GetTask($taskID: String!, $execution: Int) {
+  task(taskId: $taskID, execution: $execution) {
+    id
+    displayName
+    displayStatus
+    execution
+    patchNumber
+    versionMetadata {
+      id
+      isPatch
+      message
+      projectIdentifier
+      projectMetadata {
+        id
+      }
+      revision
+    }
+    details {
+      description
+      failingCommand
+      status
+    }
+  }
+}
