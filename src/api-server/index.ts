@@ -1,7 +1,7 @@
 import express, { Application } from 'express';
 import expressListEndpoints from 'express-list-endpoints';
-import { config } from 'config';
-import { logger } from 'utils/logger';
+import { config } from '../config';
+import { logger } from '../utils/logger';
 import {
   requestIdMiddleware,
   httpLoggingMiddleware,

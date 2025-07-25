@@ -2,10 +2,10 @@
   "name": "sage",
   "version": "1.0.0",
   "description": "evergreen-ai-service",
-  "main": "dist/main.js",
+  "main": "dist/src/main.js",
   "scripts": {
     "build": "tsc && tsc-alias",
-    "start": "NODE_ENV=production node dist/main.js",
+    "start": "NODE_ENV=production node dist/src/main.js",
     "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/main.ts",
     "clean": "rm -rf dist bin node_modules",
     "codegen": "graphql-codegen-esm --config graphql.config.ts",

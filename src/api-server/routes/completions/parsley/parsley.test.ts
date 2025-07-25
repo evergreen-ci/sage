@@ -34,7 +34,7 @@ describe('Parsley Completions Route', () => {
 
     const response = await request(app)
       .post('/completions/parsley')
-      .send({ message: 'Test prompt' });
+      .send({ message: 'Test prompt', taskID: '123', execution: 0 });
 
     expect(response.statusCode).toBe(200);
     expect(response.body).toHaveProperty('message', 'Test response');
@@ -74,7 +74,7 @@ describe('Parsley Completions Route', () => {
 
     const response = await request(app)
       .post('/completions/parsley')
-      .send({ message: 'Error test prompt' });
+      .send({ message: 'Error test prompt', taskID: '123', execution: 0 });
 
     expect(response.statusCode).toBe(500);
     expect(response.body).toHaveProperty('message');

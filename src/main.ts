@@ -1,5 +1,5 @@
-import server from 'api-server';
-import { validateConfig } from 'config';
+import server from './api-server';
+import { validateConfig } from './config';
 
 // Validate configuration on startup
 validateConfig();
