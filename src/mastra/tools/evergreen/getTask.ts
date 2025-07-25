@@ -1,3 +1,4 @@
+import { ToolExecutionContext } from '@mastra/core';
 import { z } from 'zod';
 import {
   createGraphQLTool,
@@ -11,7 +12,10 @@ const inputSchema = z.object({
   execution: z.number().nullable().optional(),
 });
 
-export const getTask = createGraphQLTool<typeof inputSchema>({
+export const getTask = createGraphQLTool<
+  typeof inputSchema,
+  ToolExecutionContext<typeof inputSchema>
+>({
   query: GET_TASK,
   id: 'Get Task Information',
   description: `Fetches the current task information for a given taskID, If no execution is provided, the latest execution will be used. Do not make up an execution number.`,
