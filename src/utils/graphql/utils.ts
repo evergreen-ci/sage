@@ -6,7 +6,7 @@ import {
 } from '@mastra/core';
 import { z } from 'zod';
 import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { getMastraResolvedPath } from '../file';
 import { logger } from '../logger';
 import { evergreenGraphQLClient } from './evergreenGraphQLClient';
 
@@ -16,11 +16,7 @@ import { evergreenGraphQLClient } from './evergreenGraphQLClient';
  * @returns The contents of the GraphQL file
  */
 export const loadGraphQLFile = (path: string) => {
-  // TODO: This is a hack to get the correct path to the GraphQL file
-  // When running in the mastra directory, we need to go up 2 levels to get to the src directory
-  // This is required due to a mismatch in how mastra and the express server handle module resolution
-  const isInMastra = process.cwd().includes('.mastra');
-  const resolvedPath = resolve(isInMastra ? '../../src' : './src', path);
+  const resolvedPath = getMastraResolvedPath(path);
   let file = '';
   try {
     file = readFileSync(resolvedPath, 'utf8');
