@@ -4,13 +4,13 @@ import { logger } from '../logger';
 /**
  * GraphQL query result type
  */
-interface GraphQLResponse<T = any> {
+interface GraphQLResponse<T = unknown> {
   data?: T;
   errors?: Array<{
     message: string;
     locations?: Array<{ line: number; column: number }>;
     path?: string[];
-    extensions?: Record<string, any>;
+    extensions?: Record<string, unknown>;
   }>;
 }
 
@@ -19,12 +19,16 @@ interface GraphQLResponse<T = any> {
  */
 interface GraphQLRequestOptions {
   query: string;
-  variables?: Record<string, any> | undefined;
+  variables?: Record<string, unknown> | undefined;
   operationName?: string | undefined;
 }
 
 /**
  * Evergreen GraphQL Client error class
+ * @param message - The error message
+ * @param errors - The errors returned from the GraphQL query
+ * @param statusCode - The status code of the response
+ * This class is used to throw errors when the GraphQL query fails and ensure that the error is logged appropriately
  */
 class EvergreenGraphQLError extends Error {
   public readonly errors: GraphQLResponse['errors'];
@@ -69,24 +73,15 @@ class EvergreenGraphQLClient {
    * @returns Promise resolving to the query result
    * @throws EvergreenGraphQLError if the request fails or contains GraphQL errors
    */
-  async executeQuery<T = any, V extends Record<string, any> = Record<string, any>>(
-    query: string,
-    variables?: V,
-    operationName?: string
-  ): Promise<T> {
+  async executeQuery<
+    T = unknown,
+    V extends Record<string, unknown> = Record<string, unknown>,
+  >(query: string, variables?: V, operationName?: string): Promise<T> {
     const requestBody: GraphQLRequestOptions = {
       query,
       ...(variables !== undefined && { variables }),
       ...(operationName !== undefined && { operationName }),
     };
-
-
-    logger.debug('Executing GraphQL query', {
-      operationName,
-      variables: variables ? Object.keys(variables) : undefined,
-      endpoint: this.endpoint,
-      requestBody,
-    });
 
     try {
       const response = await fetch(this.endpoint, {
@@ -148,29 +143,6 @@ class EvergreenGraphQLClient {
       );
     }
   }
-
-  /**
-   * Execute a mutation against the Evergreen API
-   * Alias for executeQuery for semantic clarity
-   * @param mutation - GraphQL mutation string
-   * @param variables - Optional variables for the mutation
-   * @param operationName - Optional operation name for debugging
-   * @returns Promise resolving to the mutation result data
-   */
-  async executeMutation<T = any>(
-    mutation: string,
-    variables?: Record<string, any>,
-    operationName?: string
-  ): Promise<T> {
-    return this.executeQuery<T>(mutation, variables, operationName);
-  }
 }
 
-// Export singleton instance
 export const evergreenGraphQLClient = new EvergreenGraphQLClient();
-
-// Export class for custom instances if needed
-export { EvergreenGraphQLClient, EvergreenGraphQLError };
-
-// Export types
-export type { GraphQLResponse, GraphQLRequestOptions };
