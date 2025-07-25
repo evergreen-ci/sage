@@ -1,4 +1,4 @@
-import { createTool, Tool } from '@mastra/core';
+import { createTool, Tool, ToolExecutionContext } from '@mastra/core';
 import { z } from 'zod';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
@@ -28,11 +28,13 @@ export const loadGraphQLFile = (path: string) => {
   return file;
 };
 
-interface GraphQLToolInput<TSchema extends z.ZodObject<any>>
-  extends Tool<TSchema> {
+interface GraphQLToolInput<
+  TSchema extends z.ZodObject<any>,
+  TExecutionContext extends ToolExecutionContext<TSchema>,
+> extends Tool<TSchema, undefined, TExecutionContext> {
   query: string;
   id: string;
-  inputSchema: z.ZodObject<any>;
+  inputSchema: TSchema;
   description: string;
 }
 
@@ -45,12 +47,15 @@ interface GraphQLToolInput<TSchema extends z.ZodObject<any>>
  * @param param0.description - The description of the tool
  * @returns A Mastra tool
  */
-export const createGraphQLTool = <TSchema extends z.ZodObject<any>>({
+export const createGraphQLTool = <
+  TSchema extends z.ZodObject<any>,
+  TExecutionContext extends ToolExecutionContext<TSchema>,
+>({
   description,
   id,
   inputSchema,
   query,
-}: Omit<GraphQLToolInput<TSchema>, 'execute'>) =>
+}: Omit<GraphQLToolInput<TSchema, TExecutionContext>, 'execute'>) =>
   createTool({
     id,
     inputSchema,
