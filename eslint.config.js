@@ -26,6 +26,8 @@ const globalIgnores = {
     '**/build',
     '**/.mastra',
     'vitest.config.ts',
+    'tsconfig.json',
+    'graphql.config.ts',
   ],
 };
 
