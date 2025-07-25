@@ -81,7 +81,7 @@ export const createGraphQLTool = <
           error:
             error instanceof Error
               ? error.message
-              : 'Unknown error occured when running the GraphQL query',
+              : 'Unknown error occurred when running the GraphQL query',
         };
       }
     },

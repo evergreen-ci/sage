@@ -10,7 +10,7 @@ import { logger } from '../logger';
  * This is used to determine if we are running in the mastra web app or the express server
  * @returns `true` if the current working directory is a mastra project, `false` otherwise
  */
-export const isMastra = process.cwd().includes('.mastra');
+export const isMastra = process.env.IS_MASTRA === 'true';
 logger.info(isMastra ? 'Started in mastra' : 'Started in express');
 
 /**
