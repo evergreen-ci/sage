@@ -1370,10 +1370,10 @@
   dependencies:
     "@lukeed/csprng" "^1.1.0"
 
-"@mastra/core@^0.10.15":
-  version "0.10.15"
-  resolved "https://registry.yarnpkg.com/@mastra/core/-/core-0.10.15.tgz#3d417d928952177656ab8e1e059fae9f071a0b16"
-  integrity sha512-TmNe71FyyxdjIy8J5gD/a33zsfaBiaiYYica33HPat5z8sBnn5DyTyswOaqgVJUCRcnEb98snOBphAVtN/y9VA==
+"@mastra/core@^0.11.1":
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/@mastra/core/-/core-0.11.1.tgz#45c2c5e29050e4a56c00c78985d257f7f69702e6"
+  integrity sha512-MnU2Rp389/8fvL4sanEbMS2GiRi/ys31KxYabpqrDUnYswfEIHHgB+uRPOF4jYkAYTEPBt+EPjP8rGGQTh3Cug==
   dependencies:
     "@ai-sdk/provider" "^1.1.3"
     "@ai-sdk/provider-utils" "^2.2.8"
@@ -1407,14 +1407,14 @@
     xstate "^5.19.4"
     zod-to-json-schema "^3.24.5"
 
-"@mastra/deployer@^0.10.15":
-  version "0.10.15"
-  resolved "https://registry.yarnpkg.com/@mastra/deployer/-/deployer-0.10.15.tgz#b76621fa7ddca0a6b4cf101a173fe53d7bbd3981"
-  integrity sha512-8v7KFEuQ2kADW/pkL58791vq3BOr8m0t4vlDoeSBpbs9pyuOQJE0y5cfX9FlSdAdtp3krFfbuXo6IDQbRN7rPQ==
+"@mastra/deployer@^0.11.1":
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/@mastra/deployer/-/deployer-0.11.1.tgz#67de58735eb2fbbf18dbf8417886df2f59ec15a1"
+  integrity sha512-JfCKPveWbQ24Bdq8xbC6mXuo43OA83H13MWEFYudM5iomYUmwZG+jG4Xb/ippggEFXx+la1NfONGFqXCkJNcpg==
   dependencies:
     "@babel/core" "^7.27.7"
     "@babel/helper-module-imports" "^7.27.1"
-    "@mastra/server" "^0.10.15"
+    "@mastra/server" "^0.11.1"
     "@neon-rs/load" "^0.1.82"
     "@rollup/plugin-alias" "^5.1.1"
     "@rollup/plugin-commonjs" "^28.0.6"
@@ -1437,25 +1437,25 @@
     typescript-paths "^1.5.1"
     zod "^3.25.67"
 
-"@mastra/libsql@^0.11.0":
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/@mastra/libsql/-/libsql-0.11.0.tgz#65bd868c6171605fab5ee29ea87c46ba28134960"
-  integrity sha512-bnSXI24nJNYbZAN4z6rNlE7Vs0BStKLTbOLffRf9au0AUKRg44TBzGnJve/JpprPDT9KfFrww+CgdCYPWnSh7Q==
+"@mastra/libsql@^0.11.2":
+  version "0.11.2"
+  resolved "https://registry.yarnpkg.com/@mastra/libsql/-/libsql-0.11.2.tgz#8089f2d3a0365b55ae92c8b2355d636cb19aba69"
+  integrity sha512-QuXC72L/Su5iH/44UA/8miMP2mmIFN/WAYxJgaSyJs5xXA7x1NGPGKwkF5VTiHkQIzuY3JJ3yNF1UlxdPN4iwg==
   dependencies:
     "@libsql/client" "^0.15.9"
 
-"@mastra/loggers@^0.10.3":
-  version "0.10.3"
-  resolved "https://registry.yarnpkg.com/@mastra/loggers/-/loggers-0.10.3.tgz#cd228afc595c9115cf81a140d878e77c0f2a92ee"
-  integrity sha512-71bAZlOVGbgrMpTYzFw+oOu0ljaDtJSBkAFM9xVTkiHn+K3AIYisJXxCLqMYiWzcIRyIoBQo1cINDXckLbhDAQ==
+"@mastra/loggers@^0.10.4":
+  version "0.10.4"
+  resolved "https://registry.yarnpkg.com/@mastra/loggers/-/loggers-0.10.4.tgz#189a60599762ccc9089c5dfe487a6292ccb15f89"
+  integrity sha512-AVrGeoS7gud2Wfl2KGAn8jofwoYFIzTKcySmgvfP8LdpEfOqlqKloAixIppVCGk0Uj411Th+EZyNlkzp1IsWiQ==
   dependencies:
     pino "^9.7.0"
     pino-pretty "^13.0.0"
 
-"@mastra/mcp@^0.10.6":
-  version "0.10.6"
-  resolved "https://registry.yarnpkg.com/@mastra/mcp/-/mcp-0.10.6.tgz#e868d03097b8fc2fc1f181626e3c765f4da89a94"
-  integrity sha512-NB8ihMacWu+el4y0qMB1gcZ+vB6A8KMgDgTMqaOIWbx5NT8I6xNaSDn1JyjjeGvO1Wgljy5vaW35CfqxQhjIdA==
+"@mastra/mcp@^0.10.7":
+  version "0.10.7"
+  resolved "https://registry.yarnpkg.com/@mastra/mcp/-/mcp-0.10.7.tgz#1ec0447b190baa089d00a3b9d71a2a19635faf6a"
+  integrity sha512-sR6eJ8xbbYdkGAAIp6m+WGi2mVyZUue+Ja9NTJDvh1NuaC/S46c2apgZaz2qDWXtOxR4EGGd/9+jC0BtL72Vew==
   dependencies:
     "@apidevtools/json-schema-ref-parser" "^14.1.0"
     "@modelcontextprotocol/sdk" "^1.13.0"
@@ -1465,10 +1465,10 @@
     uuid "^11.1.0"
     zod-from-json-schema "^0.0.5"
 
-"@mastra/memory@^0.11.3":
-  version "0.11.3"
-  resolved "https://registry.yarnpkg.com/@mastra/memory/-/memory-0.11.3.tgz#18185f46d7ac1535bbb047d76c56b3c407c0f857"
-  integrity sha512-MJny4YSZ0bMiEkghWyPHI29K2n3gpJ4c9cZ2beJsuI8YKpBla6fOkdk1oqcN+2A8wvFQcTghdk1U/0ApmjnLiA==
+"@mastra/memory@^0.11.5":
+  version "0.11.5"
+  resolved "https://registry.yarnpkg.com/@mastra/memory/-/memory-0.11.5.tgz#42eec929dfe61410bb3909be6ae81cbb73edf8b1"
+  integrity sha512-LW3Wxygm/Abw0Hku9rL/C4csia4APZiQ6JzoCNr9lbTQNFlfjHZRrB86R9zYH13VD0H5JKbWvgDR7Cw1HnXmBA==
   dependencies:
     "@upstash/redis" "^1.35.0"
     ai "^4.3.16"
@@ -1478,7 +1478,7 @@
     pg "^8.16.3"
     pg-pool "^3.10.1"
     postgres "^3.4.7"
-    redis "^4.7.1"
+    redis "^5.6.0"
     xxhash-wasm "^1.1.0"
     zod "^3.25.67"
     zod-to-json-schema "^3.24.5"
@@ -1492,10 +1492,10 @@
     zod-from-json-schema "^0.0.5"
     zod-to-json-schema "^3.24.5"
 
-"@mastra/server@^0.10.15":
-  version "0.10.15"
-  resolved "https://registry.yarnpkg.com/@mastra/server/-/server-0.10.15.tgz#ea2b333f1ddbbec9f0b899c5a7d622d56ec1a8a8"
-  integrity sha512-n8K+ZRYp3kwED1wuLbENl+Jg8+S41GrHIvXxhTS2gMzyQQIbkDacP+j82DVdGdWV06F27aGoG5ACc8OgoGxirg==
+"@mastra/server@^0.11.1":
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/@mastra/server/-/server-0.11.1.tgz#bceb20cc14d5c86c4412baf469a4d339be5264c8"
+  integrity sha512-Gj6ER5Tx6NiEwxWYs1enyU86B20R9p1D8izm5QB8qVjxafOaU43IOa7KQUyufEWQ50hRbQcWjXLAcPHinMLETA==
 
 "@modelcontextprotocol/sdk@^1.13.0":
   version "1.16.0"
@@ -3016,39 +3016,32 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@redis/bloom@1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@redis/bloom/-/bloom-1.2.0.tgz#d3fd6d3c0af3ef92f26767b56414a370c7b63b71"
-  integrity sha512-HG2DFjYKbpNmVXsa0keLHp/3leGJz1mjh09f2RLGGLQZzSHpkmZWuwJbAvo3QcRY8p80m5+ZdXZdYOSBLlp7Cg==
+"@redis/bloom@5.6.1":
+  version "5.6.1"
+  resolved "https://registry.yarnpkg.com/@redis/bloom/-/bloom-5.6.1.tgz#c77dee0167351d6415b112e1bcb41be1b1461077"
+  integrity sha512-5/22U76IMEfn6TeZ+uvjXspHw+ykBF0kpBa8xouzeHaQMXs/auqBUOEYzU2VKYDvnd2RSpPTyIg82oB7PpUgLg==
 
-"@redis/client@1.6.1":
-  version "1.6.1"
-  resolved "https://registry.yarnpkg.com/@redis/client/-/client-1.6.1.tgz#c4636b7cb34e96008a988409b7e787364ae761a2"
-  integrity sha512-/KCsg3xSlR+nCK8/8ZYSknYxvXHwubJrU82F3Lm1Fp6789VQ0/3RJKfsmRXjqfaTA++23CvC3hqmqe/2GEt6Kw==
+"@redis/client@5.6.1":
+  version "5.6.1"
+  resolved "https://registry.yarnpkg.com/@redis/client/-/client-5.6.1.tgz#12df9692548b553b0b841a58d3aa319469906b0d"
+  integrity sha512-bWHmSFIJ5w1Y4aHsYs46XMDHKQsBHFRhNcllYaBxz2Zl+lu+gbm5yI9BqxvKh48bLTs/Wx1Kns0gN2WIasE8MA==
   dependencies:
     cluster-key-slot "1.1.2"
-    generic-pool "3.9.0"
-    yallist "4.0.0"
 
-"@redis/graph@1.1.1":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@redis/graph/-/graph-1.1.1.tgz#8c10df2df7f7d02741866751764031a957a170ea"
-  integrity sha512-FEMTcTHZozZciLRl6GiiIB4zGm5z5F3F6a6FZCyrfxdKOhFlGkiAqlexWMBzCi4DcRoyiOsuLfW+cjlGWyExOw==
+"@redis/json@5.6.1":
+  version "5.6.1"
+  resolved "https://registry.yarnpkg.com/@redis/json/-/json-5.6.1.tgz#bd2493bab64a4cc7366d10a5f504934bc24fcac4"
+  integrity sha512-cTggVzPIVuiFeXcEcnTRiUzV7rmUvM9KUYxWiHyjsAVACTEUe4ifKkvzrij0H/z3ammU5tfGACffDB3olBwtVA==
 
-"@redis/json@1.0.7":
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/@redis/json/-/json-1.0.7.tgz#016257fcd933c4cbcb9c49cde8a0961375c6893b"
-  integrity sha512-6UyXfjVaTBTJtKNG4/9Z8PSpKE6XgSyEb8iwaqDcy+uKrd/DGYHTWkUdnQDyzm727V7p21WUMhsqz5oy65kPcQ==
+"@redis/search@5.6.1":
+  version "5.6.1"
+  resolved "https://registry.yarnpkg.com/@redis/search/-/search-5.6.1.tgz#98b224709ef0242f1ea9acf2bd1f4dab534c144b"
+  integrity sha512-+eOjx8O2YoKygjqkLpTHqcAq0zKLjior+ee2tRBx/3RSf1+OHxiC9Y6NstshQpvB1XHqTw9n7+f0+MsRJZrp0g==
 
-"@redis/search@1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@redis/search/-/search-1.2.0.tgz#50976fd3f31168f585666f7922dde111c74567b8"
-  integrity sha512-tYoDBbtqOVigEDMAcTGsRlMycIIjwMCgD8eR2t0NANeQmgK/lvxNAvYyb6bZDD4frHRhIHkJu2TBRvB0ERkOmw==
-
-"@redis/time-series@1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@redis/time-series/-/time-series-1.1.0.tgz#cba454c05ec201bd5547aaf55286d44682ac8eb5"
-  integrity sha512-c1Q99M5ljsIuc4YdaCwfUEXsofakb9c8+Zse2qxTadu8TalLXuAESzLvFAvNVbkmSlvlzIQOLpBCmWI9wTOt+g==
+"@redis/time-series@5.6.1":
+  version "5.6.1"
+  resolved "https://registry.yarnpkg.com/@redis/time-series/-/time-series-5.6.1.tgz#22609f7ba15e8771fb01f668a0a2c8638aec62c0"
+  integrity sha512-sd3q4jMJdoSO2akw1L9NrdFI1JJ6zeMgMUoTh4a34p9sY3AnOI4aDLCecy8L2IcPAP1oNR3TbLFJiCJDQ35QTA==
 
 "@repeaterjs/repeater@^3.0.4", "@repeaterjs/repeater@^3.0.6":
   version "3.0.6"
@@ -6147,11 +6140,6 @@ gcp-metadata@^6.0.0:
     google-logging-utils "^0.0.2"
     json-bigint "^1.0.0"
 
-generic-pool@3.9.0:
-  version "3.9.0"
-  resolved "https://registry.yarnpkg.com/generic-pool/-/generic-pool-3.9.0.tgz#36f4a678e963f4fdb8707eab050823abc4e8f5e4"
-  integrity sha512-hymDOu5B53XvN4QT9dBmZxPX4CWhBPPLguTZ9MMFeFa/Kg0xWVfylOVNlJji/E7yTZWFd/q9GO5TxDLq156D7g==
-
 gensync@^1.0.0-beta.2:
   version "1.0.0-beta.2"
   resolved "https://registry.yarnpkg.com/gensync/-/gensync-1.0.0-beta.2.tgz#32a6ee76c3d7f52d46b2b1ae5d93fea8580a25e0"
@@ -7362,16 +7350,16 @@ map-cache@^0.2.0:
   resolved "https://registry.yarnpkg.com/map-cache/-/map-cache-0.2.2.tgz#c32abd0bd6525d9b051645bb4f26ac5dc98a0dbf"
   integrity sha512-8y/eV9QQZCiyn1SprXSrCmqJN0yNRATe+PO8ztwqrvrbdRLA3eYJF0yaR0YayLWkMbsQSKWS9N2gPcGEc4UsZg==
 
-mastra@^0.10.13:
-  version "0.10.13"
-  resolved "https://registry.yarnpkg.com/mastra/-/mastra-0.10.13.tgz#394ebc5a950101538395478a5ea7a4243a724fd7"
-  integrity sha512-/X2lfKig6s0DSS7E0z1nDf29j+RxL+A0KQE+TimD1c1oV/laJtvSkGydBap50x2mFrsvOavUEae6jx07V9oiEQ==
+mastra@^0.10.15:
+  version "0.10.15"
+  resolved "https://registry.yarnpkg.com/mastra/-/mastra-0.10.15.tgz#9f03a09efc1f8b38e800b1f193e261c74b12f131"
+  integrity sha512-fOukN9ukfb1B4Nb+MSZfb3ZnH9zD+uqOfiqvWqusQ32WhzOASLx0KNvVyQrTeGzt6uZ9b5iaAcagQ6tnCs4cvw==
   dependencies:
     "@clack/prompts" "^0.11.0"
     "@lukeed/uuid" "^2.0.1"
-    "@mastra/deployer" "^0.10.15"
-    "@mastra/loggers" "^0.10.3"
-    "@mastra/mcp" "^0.10.6"
+    "@mastra/deployer" "^0.11.1"
+    "@mastra/loggers" "^0.10.4"
+    "@mastra/mcp" "^0.10.7"
     "@opentelemetry/auto-instrumentations-node" "^0.60.1"
     "@opentelemetry/core" "^2.0.1"
     "@opentelemetry/exporter-trace-otlp-grpc" "^0.202.0"
@@ -8434,17 +8422,16 @@ real-require@^0.2.0:
   resolved "https://registry.yarnpkg.com/real-require/-/real-require-0.2.0.tgz#209632dea1810be2ae063a6ac084fee7e33fba78"
   integrity sha512-57frrGM/OCTLqLOAh0mhVA9VBMHd+9U7Zb2THMGdBUoZVOtGbJzjxsYGDJ3A9AYYCP4hn6y1TVbaOfzWtm5GFg==
 
-redis@^4.7.1:
-  version "4.7.1"
-  resolved "https://registry.yarnpkg.com/redis/-/redis-4.7.1.tgz#08588a30936be0e7ad9c0f3e1ac6a85ccaf73e94"
-  integrity sha512-S1bJDnqLftzHXHP8JsT5II/CtHWQrASX5K96REjWjlmWKrviSOLWmM7QnRLstAWsu1VBBV1ffV6DzCvxNP0UJQ==
+redis@^5.6.0:
+  version "5.6.1"
+  resolved "https://registry.yarnpkg.com/redis/-/redis-5.6.1.tgz#582d0a2fc974e583f232a0a67df4a1ac2197d362"
+  integrity sha512-O9DwAvcBm/lrlkGE0A6gNBtUdA8J9oD9njeLYlLzmm+MGTR7nd7VkpspfXqeXFg3gm89zldDqckyaHhXfhY80g==
   dependencies:
-    "@redis/bloom" "1.2.0"
-    "@redis/client" "1.6.1"
-    "@redis/graph" "1.1.1"
-    "@redis/json" "1.0.7"
-    "@redis/search" "1.2.0"
-    "@redis/time-series" "1.1.0"
+    "@redis/bloom" "5.6.1"
+    "@redis/client" "5.6.1"
+    "@redis/json" "5.6.1"
+    "@redis/search" "5.6.1"
+    "@redis/time-series" "5.6.1"
 
 reflect.getprototypeof@^1.0.6, reflect.getprototypeof@^1.0.9:
   version "1.0.10"
@@ -10161,11 +10148,6 @@ y18n@^5.0.5:
   version "5.0.8"
   resolved "https://registry.yarnpkg.com/y18n/-/y18n-5.0.8.tgz#7f4934d0f7ca8c56f95314939ddcd2dd91ce1d55"
   integrity sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==
-
-yallist@4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/yallist/-/yallist-4.0.0.tgz#9bb92790d9c0effec63be73519e11a35019a3a72"
-  integrity sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==
 
 yallist@^3.0.2:
   version "3.1.1"
