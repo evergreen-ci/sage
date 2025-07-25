@@ -46,6 +46,11 @@ class EvergreenGraphQLError extends Error {
   }
 }
 
+type ExecuteQueryOptions = {
+  operationName?: string;
+  userID?: string;
+};
+
 /**
  * Evergreen GraphQL Client
  *
@@ -69,19 +74,29 @@ class EvergreenGraphQLClient {
    * Execute a GraphQL query against the Evergreen API
    * @param query - GraphQL query string or document
    * @param variables - Optional variables for the query
-   * @param operationName - Optional operation name
+   * @param options - Optional options for the query
+   * @param options.operationName - Optional operation name
    * @returns Promise resolving to the query result
    * @throws EvergreenGraphQLError if the request fails or contains GraphQL errors
    */
   async executeQuery<
     T = unknown,
     V extends Record<string, unknown> = Record<string, unknown>,
-  >(query: string, variables?: V, operationName?: string): Promise<T> {
+  >(query: string, variables?: V, options?: ExecuteQueryOptions): Promise<T> {
     const requestBody: GraphQLRequestOptions = {
       query,
       ...(variables !== undefined && { variables }),
-      ...(operationName !== undefined && { operationName }),
+      ...(options?.operationName !== undefined && {
+        operationName: options.operationName,
+      }),
     };
+
+    // This is a temporary measure to allow the API to run as a user
+    // TODO: Remove this once we have a proper authentication system
+    if (options?.userID) {
+      // TODO: DEVPROD-19200 - Use the same header as the API
+      this.headers['End-User'] = options.userID;
+    }
 
     try {
       const response = await fetch(this.endpoint, {
@@ -110,7 +125,7 @@ class EvergreenGraphQLClient {
       if (result.errors && result.errors.length > 0) {
         logger.error('GraphQL query returned errors', {
           errors: result.errors,
-          operationName,
+          operationName: options?.operationName,
         });
         throw new EvergreenGraphQLError(
           `GraphQL errors: ${result.errors.map(err => err.message).join(', ')}`,
@@ -119,11 +134,13 @@ class EvergreenGraphQLClient {
       }
 
       if (!result.data) {
-        logger.warn('GraphQL query returned no data', { operationName });
+        logger.warn('GraphQL query returned no data', {
+          operationName: options?.operationName,
+        });
       }
 
       logger.debug('GraphQL query executed successfully', {
-        operationName,
+        operationName: options?.operationName,
         hasData: !!result.data,
       });
 
@@ -135,7 +152,7 @@ class EvergreenGraphQLClient {
 
       logger.error('Unexpected error during GraphQL request', {
         error: error instanceof Error ? error.message : String(error),
-        operationName,
+        operationName: options?.operationName,
       });
 
       throw new EvergreenGraphQLError(

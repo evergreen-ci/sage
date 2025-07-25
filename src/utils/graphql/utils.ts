@@ -50,21 +50,33 @@ export const createGraphQLTool = <TSchema extends z.ZodObject<any>>({
   id,
   inputSchema,
   query,
-}: GraphQLToolInput<TSchema>) =>
+}: Omit<GraphQLToolInput<TSchema>, 'execute'>) =>
   createTool({
     id,
     inputSchema,
     description,
-    execute: async ({ context }) => {
+    execute: async ({ context, runtimeContext }) => {
+      const userID = runtimeContext.get('userID') as string;
+      if (typeof userID !== 'string') {
+        logger.warn('User ID was not supplied to the tool', { id, userID });
+      }
       try {
         const result = await evergreenGraphQLClient.executeQuery(
           query,
-          context
+          context,
+          {
+            userID,
+          }
         );
         return result;
       } catch (error) {
         logger.error(`Error executing GraphQL query: ${error}`);
-        throw error;
+        return {
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Unknown error occured when running the GraphQL query',
+        };
       }
     },
   });
