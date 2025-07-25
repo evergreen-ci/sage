@@ -1,19 +1,19 @@
 import request from 'supertest';
-import sageServer from '../../index';
+import sageServer from '../../../index';
 
 // Mock dependencies
 vi.mock('config', async () => {
-  const { createMockConfig } = await import('../../../test-utils/mocks');
+  const { createMockConfig } = await import('../../../../test-utils/mocks');
   return createMockConfig();
 });
 
 vi.mock('mastra', async () => {
-  const { createMockMastraAgent } = await import('../../../test-utils/mocks');
+  const { createMockMastraAgent } = await import('../../../../test-utils/mocks');
   return createMockMastraAgent();
 });
 
 vi.mock('utils/logger', async () => {
-  const { createMockLogger } = await import('../../../test-utils/mocks');
+  const { createMockLogger } = await import('../../../../test-utils/mocks');
   return createMockLogger();
 });
 

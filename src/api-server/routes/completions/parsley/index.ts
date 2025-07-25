@@ -1,11 +1,9 @@
+import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Request, Response } from 'express';
-import z from 'zod';
+import { z } from 'zod';
 import { mastra } from 'mastra';
 import { logger } from 'utils/logger';
-
-const parsleyCompletionsSchema = z.object({
-  message: z.string().min(1),
-});
+import { validateParsleyURLRequest } from './utils';
 
 const parsleyCompletionsRoute = async (req: Request, res: Response) => {
   logger.info('Parsley completions request received', {
@@ -13,27 +11,35 @@ const parsleyCompletionsRoute = async (req: Request, res: Response) => {
     body: req.body,
   });
 
-  const { data, success } = parsleyCompletionsSchema.safeParse(req.body);
-  if (!success) {
+  const { data, error } = validateParsleyURLRequest(req.body);
+  if (error) {
     logger.error('Invalid request body', {
       requestId: req.requestId,
-      body: req.body,
+      error: error.message,
     });
     res.status(400).json({ message: 'Invalid request body' });
     return;
   }
+
+  const runtimeContext = new RuntimeContext();
+  runtimeContext.set('taskID', data.taskID);
+  runtimeContext.set('execution', data.execution);
+  runtimeContext.set('sessionID', data.sessionID);
+  runtimeContext.set('userID', req.headers['x-user-id'] as string);
   try {
     const agent = mastra.getAgent('parsleyAgent');
-    const result = await agent.generate(`What can you do?: ${data.message}`);
+    const result = await agent.generate(data.message, {
+      runtimeContext,
+    });
     res.json({
       message: result.text,
       requestId: req.requestId,
       timestamp: new Date().toISOString(),
       completionUsage: result.usage,
     });
-  } catch (error) {
+  } catch (e) {
     logger.error('Error in parsley completions route', {
-      error,
+      error: e,
       requestId: req.requestId,
     });
     res.status(500).json({
