@@ -1,6 +1,5 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Request, Response } from 'express';
-import { z } from 'zod';
 import { mastra } from 'mastra';
 import { logger } from 'utils/logger';
 import { validateParsleyURLRequest } from './utils';

@@ -8,7 +8,9 @@ vi.mock('config', async () => {
 });
 
 vi.mock('mastra', async () => {
-  const { createMockMastraAgent } = await import('../../../../test-utils/mocks');
+  const { createMockMastraAgent } = await import(
+    '../../../../test-utils/mocks'
+  );
   return createMockMastraAgent();
 });
 
