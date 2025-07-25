@@ -1,4 +1,9 @@
-import { createTool, Tool, ToolExecutionContext } from '@mastra/core';
+import {
+  createTool,
+  Tool,
+  ToolAction,
+  ToolExecutionContext,
+} from '@mastra/core';
 import { z } from 'zod';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
@@ -84,4 +89,4 @@ export const createGraphQLTool = <
         };
       }
     },
-  });
+  }) as ToolAction<TSchema, any, TExecutionContext>;
