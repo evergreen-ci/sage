@@ -4285,6 +4285,51 @@ export type WorkstationSetupCommandInput = {
   directory?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type TaskHistoryQueryVariables = Exact<{
+  options: TaskHistoryOpts;
+}>;
+
+export type TaskHistoryQuery = {
+  __typename?: 'Query';
+  taskHistory: {
+    __typename?: 'TaskHistory';
+    pagination: {
+      __typename?: 'TaskHistoryPagination';
+      mostRecentTaskOrder: number;
+      oldestTaskOrder: number;
+    };
+    tasks: Array<{
+      __typename?: 'Task';
+      id: string;
+      activated: boolean;
+      canRestart: boolean;
+      canSchedule: boolean;
+      createTime?: Date | null;
+      displayStatus: string;
+      execution: number;
+      latestExecution: number;
+      order: number;
+      revision?: string | null;
+      tests: {
+        __typename?: 'TaskTestResult';
+        testResults: Array<{
+          __typename?: 'TestResult';
+          id: string;
+          status: string;
+          testFile: string;
+          logs: { __typename?: 'TestLog'; urlParsley?: string | null };
+        }>;
+      };
+      versionMetadata: {
+        __typename?: 'Version';
+        id: string;
+        author: string;
+        message: string;
+      };
+    }>;
+  };
+};
+
 export type GetTaskQueryVariables = Exact<{
   taskID: Scalars['String']['input'];
   execution?: InputMaybe<Scalars['Int']['input']>;
@@ -4299,6 +4344,7 @@ export type GetTaskQuery = {
     displayStatus: string;
     execution: number;
     patchNumber?: number | null;
+    buildVariant: string;
     versionMetadata: {
       __typename?: 'Version';
       id: string;

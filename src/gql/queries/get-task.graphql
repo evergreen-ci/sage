@@ -11,6 +11,7 @@ query GetTask($taskID: String!, $execution: Int) {
     displayStatus
     execution
     patchNumber
+    buildVariant
     versionMetadata {
       id
       isPatch

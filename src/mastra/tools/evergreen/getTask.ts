@@ -9,7 +9,7 @@ const GET_TASK = loadGraphQLFile('gql/queries/get-task.graphql');
 
 const inputSchema = z.object({
   taskID: z.string(),
-  execution: z.number().nullable().optional(),
+  execution: z.number().optional().nullable(),
 });
 
 export const getTask = createGraphQLTool<

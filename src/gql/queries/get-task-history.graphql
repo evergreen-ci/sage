@@ -1,0 +1,41 @@
+query TaskHistory($projectIdentifier: String!, $taskName: String!, $buildVariant: String!, $cursorParams: CursorParams!, $limit: Int) {
+  taskHistory(options: {
+    projectIdentifier: $projectIdentifier,
+    taskName: $taskName,
+    buildVariant: $buildVariant,
+    cursorParams: $cursorParams,
+    limit: $limit
+  }) {
+    pagination {
+      mostRecentTaskOrder
+      oldestTaskOrder
+    }
+    tasks {
+      id
+      activated
+      canRestart
+      canSchedule
+      createTime
+      displayStatus
+      execution
+      latestExecution
+      order
+      revision
+      tests(opts: { statuses: ["fail", "silentfail"] }) {
+        testResults {
+          id
+          logs {
+            urlParsley
+          }
+          status
+          testFile
+        }
+      }
+      versionMetadata {
+        id
+        author
+        message
+      }
+    }
+  }
+}
