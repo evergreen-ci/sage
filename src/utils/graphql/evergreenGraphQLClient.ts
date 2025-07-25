@@ -93,15 +93,15 @@ class EvergreenGraphQLClient {
 
     // This is a temporary measure to allow the API to run as a user
     // TODO: Remove this once we have a proper authentication system
+    const requestHeaders = { ...this.headers };
     if (options?.userID) {
       // TODO: DEVPROD-19200 - Use the same header as the API
-      this.headers['End-User'] = options.userID;
+      requestHeaders['End-User'] = options.userID;
     }
-
     try {
       const response = await fetch(this.endpoint, {
         method: 'POST',
-        headers: this.headers,
+        headers: requestHeaders,
         body: JSON.stringify(requestBody),
       });
 
