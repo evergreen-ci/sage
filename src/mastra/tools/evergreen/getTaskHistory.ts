@@ -27,18 +27,18 @@ export const getTaskHistory = createGraphQLTool<
 >({
   query: GET_TASK_HISTORY,
   id: 'Get Task History',
-  description: `Retrieves the task history for a specified project, task name, and build variant.
-  If you do not have access to the below fields, You must first request them from the getTask tool.
-  The projectIdentifier is the identifier of the project to get the task history for.
-  The taskName is the name of the task to get the history for.
-  The buildVariant is the build variant to get the history for.
+  description: `
+Retrieves the task history for a given \`projectIdentifier\`, \`taskName\`, and \`buildVariant\`.
 
-  These above can be found in the task details.
+If any of these fields are missing, you must first retrieve them using the \`getTask\` tool. These values can be found in the task details.
+
 Supports pagination via the \`cursorParams\` object:
-- \`cursorId\`: ID of the task to paginate from.
-- \`direction\`: 'AFTER' or 'BEFORE' to determine pagination direction.
-- \`includeCursor\`: Whether to include the cursor task in the results.
 
-The \`limit\` parameter sets the maximum number of tasks to return (default: 50).`,
+* \`cursorId\`: ID of the task to paginate from.
+* \`direction\`: \`'AFTER'\` or \`'BEFORE'\`, indicating the direction of pagination.
+* \`includeCursor\`: Whether to include the cursor task in the results.
+
+The optional \`limit\` parameter controls the number of tasks to return (default: 50).
+`,
   inputSchema,
 });
