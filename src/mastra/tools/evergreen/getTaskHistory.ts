@@ -1,9 +1,7 @@
 import { ToolExecutionContext } from '@mastra/core';
 import { z } from 'zod';
-import {
-  createGraphQLTool,
-  loadGraphQLFile,
-} from '../../../utils/graphql/utils';
+import { loadGraphQLFile } from '../../../utils/graphql/utils';
+import { createGraphQLTool } from '../utils/createGraphQLTool';
 
 const GET_TASK_HISTORY = loadGraphQLFile(
   'gql/queries/get-task-history.graphql'
