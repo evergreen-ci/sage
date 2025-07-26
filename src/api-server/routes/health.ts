@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { mastra } from 'mastra';
+import { mastra } from '../../mastra';
 
 const healthRoute = (req: Request, res: Response) => {
   // TODO: Add health check for the server

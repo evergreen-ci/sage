@@ -1,7 +1,7 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Request, Response } from 'express';
-import { mastra } from 'mastra';
-import { logger } from 'utils/logger';
+import { mastra } from '../../../../mastra';
+import { logger } from '../../../../utils/logger';
 import { validateParsleyURLRequest } from './utils';
 
 const parsleyCompletionsRoute = async (req: Request, res: Response) => {
