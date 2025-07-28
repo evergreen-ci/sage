@@ -95,7 +95,7 @@ class EvergreenGraphQLClient {
     // TODO: Remove this once we have a proper authentication system
     const requestHeaders = { ...this.headers };
     if (options?.userID) {
-      // TODO: DEVPROD-19200 - Use the same header as the API
+      // TODO: DEVPROD-19200 - Replace 'End-User' header with the appropriate header name and format as specified by the API documentation or ticket DEVPROD-19200.
       requestHeaders['End-User'] = options.userID;
     }
     try {
