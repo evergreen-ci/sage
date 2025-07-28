@@ -1,5 +1,6 @@
 import { Agent } from '@mastra/core/agent';
 import { gpt41Nano } from '../models/openAI/gpt41';
+import getTaskTool from '../tools/evergreen/getTask';
 
 export const parsleyAgent: Agent = new Agent({
   name: 'Parsley Agent',
@@ -11,6 +12,8 @@ export const parsleyAgent: Agent = new Agent({
     You are currently in the context of the following task:
 `,
   model: gpt41Nano,
-  tools: {},
+  tools: {
+    getTask: getTaskTool,
+  },
   workflows: {},
 });

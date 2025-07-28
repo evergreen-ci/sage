@@ -1,4 +1,4 @@
-query GetTask($taskID: String!, $execution: Int) {
+export default `query GetTask($taskID: String!, $execution: Int) {
   task(taskId: $taskID, execution: $execution) {
     id
     displayName
@@ -23,3 +23,4 @@ query GetTask($taskID: String!, $execution: Int) {
     }
   }
 }
+`;
