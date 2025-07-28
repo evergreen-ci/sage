@@ -34,7 +34,7 @@ env:
   PORT: 8080
   OTEL_SERVICE_NAME: sage-ai-service
   OTEL_ENABLED: true
-  OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector-web-app-4317.devprod-platform.svc.cluster.local:4317/v1/traces
+  OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector.staging.corp.mongodb.com:4317
   LOG_LEVEL: debug
 
 envSecrets:
