@@ -28,6 +28,14 @@ export const requestTracingMiddleware = (
   try {
     // Get the current active span
     const currentSpan = trace.getActiveSpan();
+    
+    // Debug logging
+    logger.debug('Trace middleware executed', {
+      hasActiveSpan: !!currentSpan,
+      path: req.path,
+      method: req.method,
+      requestId: req.requestId
+    });
 
     if (currentSpan) {
       // Add request-specific attributes to the span
@@ -95,6 +103,9 @@ export async function withSpan<T>(
   attributes?: Record<string, string | number | boolean>
 ): Promise<T> {
   const tracer = trace.getTracer('sage-service');
+  
+  // Console log for debugging
+  console.log('Creating custom span:', name, attributes);
 
   return tracer.startActiveSpan(name, async span => {
     try {
