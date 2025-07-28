@@ -40,14 +40,21 @@ class TracingService {
       const resource = defaultResource().merge(
         resourceFromAttributes(attributes)
       );
-
-      // Create a trace exporter
+      // Standard headers for HTTP
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Always use insecure option as requested
+      process.env.OTEL_EXPORTER_OTLP_INSECURE = 'true';
+      
+      logger.info('HTTP configured for OpenTelemetry collector with insecure option');
+      
+      // Create a trace exporter with proper configuration
       const traceExporter = new OTLPTraceExporter({
         url: config.tracing.endpoint,
+        headers: headers,
       });
-      
-      // Console log for debugging
-      console.log('OpenTelemetry exporter configured with URL:', config.tracing.endpoint);
 
       // Create a new SDK instance
       this.sdk = new NodeSDK({
