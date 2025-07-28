@@ -6,6 +6,11 @@ NODE_ENV=development
 LOG_LEVEL=debug
 LOG_TO_FILE=true
 
+# OpenTelemetry Configuration
+OTEL_ENABLED=true
+OTEL_SERVICE_NAME=sage-ai-service
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces
+
 # Azure OpenAI Configuration
 AZURE_OPENAI_API_KEY=
 AZURE_OPENAI_ENDPOINT=

@@ -32,6 +32,9 @@ env:
   EVERGREEN_URL: https://evergreen.mongodb.com
   AZURE_OPENAI_API_VERSION: 2024-02-15-preview
   PORT: 8080
+  OTEL_SERVICE_NAME: sage-ai-service
+  OTEL_ENABLED: true
+  OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector.staging.corp.mongodb.com:443/v1/traces
 
 envSecrets:
   AZURE_OPENAI_API_KEY: parsley-ai-secrets

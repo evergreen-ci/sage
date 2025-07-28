@@ -21,6 +21,11 @@ export interface Config {
       };
     };
   };
+  tracing: {
+    enabled: boolean;
+    serviceName: string;
+    endpoint: string;
+  };
 }
 
 /**
@@ -78,6 +83,11 @@ export const config: Config = {
       },
     },
   },
+  tracing: {
+    enabled: getEnvVar('OTEL_ENABLED', 'true') === 'true',
+    serviceName: getEnvVar('OTEL_SERVICE_NAME', 'sage-ai-service'),
+    endpoint: getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://localhost:4318/v1/traces'),
+  },
 };
 
 /**
@@ -85,6 +95,11 @@ export const config: Config = {
  */
 export const validateConfig = (): void => {
   const requiredVars = ['NODE_ENV'];
+  
+  // Log tracing configuration
+  if (config.tracing.enabled) {
+    console.log('OpenTelemetry tracing enabled with service name:', config.tracing.serviceName);
+  }
 
   for (const varName of requiredVars) {
     if (!process.env[varName]) {

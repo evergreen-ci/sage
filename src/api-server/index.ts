@@ -6,7 +6,8 @@ import {
   requestIdMiddleware,
   httpLoggingMiddleware,
   errorLoggingMiddleware,
-} from './middlewares/logging';
+  requestTracingMiddleware,
+} from './middlewares';
 import { completionsRoute } from './routes';
 import healthRoute from './routes/health';
 import rootRoute from './routes/root';
@@ -31,6 +32,9 @@ class SageServer {
 
     // HTTP logging middleware
     this.app.use(httpLoggingMiddleware);
+    
+    // Tracing middleware (adds span attributes)
+    this.app.use(requestTracingMiddleware);
 
     // Basic Express middleware
     this.app.use(express.json());
