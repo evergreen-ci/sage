@@ -5,7 +5,7 @@ import { NodeSDK } from '@opentelemetry/sdk-node';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 
 const traceExporter = new OTLPTraceExporter({
-  url: 'https://otel-collector.staging.corp.mongodb.com:443/v1/traces',
+  url: 'https://otel-collector.staging.corp.mongodb.com:443',
 });
 
 const sdk = new NodeSDK({
