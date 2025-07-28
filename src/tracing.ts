@@ -2,11 +2,14 @@ import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentation
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { NodeSDK } from '@opentelemetry/sdk-node';
+import { AlwaysOnSampler, ConsoleSpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 
 const traceExporter = new OTLPTraceExporter({
-  url: 'https://otel-collector.staging.corp.mongodb.com:443',
+  url: 'https://otel-collector.staging.corp.mongodb.com:443/v1/traces',
 });
+
+const consoleExporter = new ConsoleSpanExporter();
 
 const sdk = new NodeSDK({
   resource: resourceFromAttributes({
@@ -14,6 +17,8 @@ const sdk = new NodeSDK({
   }),
   traceExporter,
   instrumentations: [getNodeAutoInstrumentations()],
+  sampler: new AlwaysOnSampler(),
+  spanProcessor: new SimpleSpanProcessor(consoleExporter),
 });
 
 sdk.start(); 
