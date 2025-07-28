@@ -35,7 +35,7 @@ export class GraphQLClientError extends Error {
     super(message);
     this.name = 'GraphQLClientError';
     this.errors = errors;
-    this.statusCode = statusCode;
+    this.statusCode = statusCode ?? 500;
   }
 }
 

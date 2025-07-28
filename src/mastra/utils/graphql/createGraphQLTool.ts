@@ -41,7 +41,6 @@ export const createGraphQLTool = <
     description,
     execute: async ({ context, runtimeContext }) => {
       const userID = runtimeContext.get('userID') as string | undefined;
-      console.log(context, runtimeContext);
       if (!userID) {
         logger.warn(
           'User ID not available in RuntimeContext provided to GraphQL tool',
