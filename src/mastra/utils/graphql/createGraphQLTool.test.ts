@@ -63,7 +63,7 @@ describe('createGraphQLTool', () => {
       query,
       context,
       expect.objectContaining({
-        headers: { 'end-user-header-id': 'user-123' },
+        userID: 'user-123',
       })
     );
   });

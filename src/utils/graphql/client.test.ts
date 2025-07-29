@@ -4,7 +4,7 @@ const mockFetch = vi.fn();
 globalThis.fetch = mockFetch as unknown as typeof fetch;
 
 const endpoint = 'https://example.com/graphql';
-const client = new GraphQLClient(endpoint, {
+const client = new GraphQLClient(endpoint, 'test-user-id-header', {
   'X-Custom-Header': 'default-value',
 });
 

@@ -44,6 +44,7 @@ export class GraphQLClientError extends Error {
 interface ExecuteQueryOptions {
   operationName?: string;
   headers?: Record<string, string>;
+  userID?: string;
 }
 
 /**
@@ -52,14 +53,20 @@ interface ExecuteQueryOptions {
 export class GraphQLClient {
   private readonly endpoint: string;
   private readonly defaultHeaders: Record<string, string>;
-
-  constructor(endpoint: string, headers?: Record<string, string>) {
+  private readonly userIDHeader: string;
+  constructor(
+    endpoint: string,
+    userIDHeader: string,
+    headers?: Record<string, string>
+  ) {
     this.endpoint = endpoint;
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       Accept: 'application/json',
+      [userIDHeader]: '',
       ...headers,
     };
+    this.userIDHeader = userIDHeader;
   }
 
   /**
@@ -83,6 +90,7 @@ export class GraphQLClient {
     const headers = {
       ...this.defaultHeaders,
       ...options?.headers,
+      [this.userIDHeader]: options?.userID ?? '',
     };
 
     try {

@@ -25,6 +25,7 @@ export interface Config {
     graphqlEndpoint: string;
     apiUser: string;
     apiKey: string;
+    userIDHeader: string;
   };
 }
 
@@ -87,6 +88,7 @@ export const config: Config = {
     graphqlEndpoint: getEnvVar('EVERGREEN_GRAPHQL_ENDPOINT', ''),
     apiUser: getEnvVar('EVERGREEN_API_USER', ''),
     apiKey: getEnvVar('EVERGREEN_API_KEY', ''),
+    userIDHeader: getEnvVar('END_USER_HEADER_ID', 'end-user-header-id'),
   },
 };
 
