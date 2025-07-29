@@ -28,6 +28,7 @@
     "@mastra/libsql": "^0.11.0",
     "@mastra/loggers": "^0.10.3",
     "@mastra/memory": "^0.11.3",
+    "@mastra/mongodb": "^0.12.2",
     "ai": "^4.3.19",
     "dotenv": "^17.1.0",
     "express": "^4.18.2",
