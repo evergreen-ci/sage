@@ -11,6 +11,9 @@ export interface Config {
     logLevel: string;
     logToFile: boolean;
   };
+  db: {
+    mongodbUri: string;
+  };
   aiModels: {
     azure: {
       openai: {
@@ -70,6 +73,9 @@ const getEnvNumber = (key: string, defaultValue: number): number => {
 export const config: Config = {
   port: getEnvNumber('PORT', 3000),
   nodeEnv: getEnvVar('NODE_ENV', 'development'),
+  db: {
+    mongodbUri: getEnvVar('MONGODB_URI', 'mongodb://localhost:27017'),
+  },
   logging: {
     logLevel: getEnvVar('LOG_LEVEL', 'info'),
     logToFile: getEnvVar('LOG_TO_FILE', 'true') === 'true',
