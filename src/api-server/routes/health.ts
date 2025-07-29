@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
+import { db } from 'db/connection';
 import { mastra } from 'mastra';
 
-const healthRoute = (req: Request, res: Response) => {
+const healthRoute = async (req: Request, res: Response) => {
   // TODO: Add health check for the server
   const agents = mastra.getAgents();
   if (!agents || Object.keys(agents).length === 0) {
@@ -25,12 +26,27 @@ const healthRoute = (req: Request, res: Response) => {
     }
   }
 
+  const dbHealth = await db.ping();
+  if (!dbHealth) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Database is not healthy',
+    });
+    return;
+  }
+
+  const dbStats = await db.dbStats();
+
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     agents: {
       count: agentNames.length,
       names: agentNames,
+    },
+    db: {
+      status: dbHealth ? 'healthy' : 'unhealthy',
+      stats: dbStats,
     },
   });
 };
