@@ -1,0 +1,26 @@
+export default `query GetTask($taskID: String!, $execution: Int) {
+  task(taskId: $taskID, execution: $execution) {
+    id
+    displayName
+    displayStatus
+    execution
+    patchNumber
+    buildVariant
+    versionMetadata {
+      id
+      isPatch
+      message
+      projectIdentifier
+      projectMetadata {
+        id
+      }
+      revision
+    }
+    details {
+      description
+      failingCommand
+      status
+    }
+  }
+}
+`;
