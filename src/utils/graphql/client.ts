@@ -1,3 +1,5 @@
+import logger from '../logger';
+
 /**
  * GraphQL query result type
  */
@@ -120,7 +122,7 @@ export class GraphQLClient {
       }
 
       if (!result.data) {
-        console.warn('GraphQL query returned no data');
+        logger.warn('GraphQL query returned no data');
       }
 
       return result.data as T;
