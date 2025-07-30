@@ -9,6 +9,7 @@
     "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/main.ts",
     "clean": "rm -rf dist bin node_modules",
     "codegen": "graphql-codegen-esm --config graphql.config.ts",
+    "e2e": "vitest run src/e2e",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
