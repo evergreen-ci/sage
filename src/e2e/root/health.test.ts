@@ -1,7 +1,7 @@
 import request from 'supertest';
-import sageServer from '../../api-server';
+import setupTestAppServer from '../setup';
 
-const app = sageServer.getApp();
+const app = setupTestAppServer();
 
 describe('Health check', () => {
   it('should return a 200 status code', async () => {
