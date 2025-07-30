@@ -39,6 +39,7 @@ describe('Parsley Completions Route', () => {
     expect(response.body).toHaveProperty('requestId');
     expect(response.body).toHaveProperty('timestamp');
     expect(response.body).toHaveProperty('completionUsage', { tokens: 15 });
+    expect(response.body).toHaveProperty('sessionId', '123');
   });
 
   it('should reject empty message', async () => {

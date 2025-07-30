@@ -59,6 +59,16 @@ export const createMockMastraAgent = (
   mastra: {
     getAgent: vi.fn().mockReturnValue({
       generate: vi.fn().mockResolvedValue(generateResponse),
+      getMemory: vi.fn().mockResolvedValue({
+        getThreadById: vi.fn().mockResolvedValue({
+          id: '123',
+          resourceId: '123',
+        }),
+        createThread: vi.fn().mockResolvedValue({
+          id: '123',
+          resourceId: '123',
+        }),
+      }),
     }),
   },
 });
