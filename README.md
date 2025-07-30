@@ -8,6 +8,8 @@ A TypeScript-based Express.js server powering the Evergreen AI Service.
 
 * Node.js v22 or higher
 * Yarn package manager
+* MongoDB instance installed and running
+* Azure OpenAI key
 
 ### Installation
 
