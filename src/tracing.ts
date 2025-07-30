@@ -44,7 +44,6 @@ https.request = function (
   }
 
   const isOtel =
-    url.hostname === 'otel-collector.staging.corp.mongodb.com' &&
     url.pathname === '/v1/traces' &&
     (method || '').toUpperCase() === 'POST';
   let req: ClientRequest;
