@@ -60,7 +60,7 @@ tasks:
       - func: symlink
       - func: yarn-build
       - func: wait-for-evergreen
-      - func: health-check
+      - func: yarn-e2e
 
 
 
@@ -240,6 +240,15 @@ functions:
       script: |
         ${PREPARE_SHELL}
         yarn start
+
+  yarn-e2e:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        yarn e2e
 
   health-check:
     command: shell.exec
