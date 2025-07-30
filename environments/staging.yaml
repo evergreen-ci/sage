@@ -9,9 +9,6 @@ service:
 mesh:
   enabled: true
 
-labels:
-  app: sage
-
 services:
   - name: http
     ingress: true
