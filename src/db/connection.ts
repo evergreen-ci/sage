@@ -2,6 +2,11 @@
 import { MongoClient } from 'mongodb';
 import { config } from '../config';
 import logger from '../utils/logger';
+import { SAGE_DB } from './constants';
+
+type DBStats = {
+  ok: number;
+};
 
 /**
  * The Database class is a singleton that manages the connection to the MongoDB database.
@@ -63,15 +68,15 @@ class Database {
 
   public async ping(): Promise<boolean> {
     try {
-      await this.client.db('admin').command({ ping: 1 });
+      await this.client.db(SAGE_DB).command({ ping: 1 });
       return true;
     } catch {
       return false;
     }
   }
 
-  public async dbStats(): Promise<any> {
-    return this.client.db('admin').command({ dbStats: 1 });
+  public async dbStats(): Promise<DBStats> {
+    return this.client.db(SAGE_DB).command({ dbStats: 1 }) as Promise<DBStats>;
   }
 }
 

@@ -44,9 +44,8 @@ const healthRoute = async (req: Request, res: Response) => {
       count: agentNames.length,
       names: agentNames,
     },
-    db: {
+    database: {
       status: dbHealth ? 'healthy' : 'unhealthy',
-      stats: dbStats,
     },
   });
 };
