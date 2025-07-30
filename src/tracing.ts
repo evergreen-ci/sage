@@ -12,7 +12,7 @@ import type { RequestOptions, ClientRequest, IncomingMessage } from 'http';
 import https from 'https';
 import { URL } from 'url';
 
-// Patch https.request to log OTEL trace POSTs
+// Patch https.request to log OTEL trace POSTs.
 const originalRequest = https.request;
 https.request = function (
   urlOrOptions: string | URL | RequestOptions,
