@@ -13,7 +13,7 @@ spec:
       - "cluster.local/ns/devprod-evergreen/sa/sage-sa"
     workloadSelector:
       matchLabels:
-        app: sage
+        release: sage
   requestedPaths:
     - methods:
         - POST
