@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { db } from 'db/connection';
 import { mastra } from 'mastra';
+import { db } from '../../db/connection';
 
 const healthRoute = async (req: Request, res: Response) => {
   // TODO: Add health check for the server
@@ -45,7 +45,7 @@ const healthRoute = async (req: Request, res: Response) => {
       names: agentNames,
     },
     database: {
-      status: dbHealth ? 'healthy' : 'unhealthy',
+      status: dbStats.ok === 1 ? 'healthy' : 'unhealthy',
     },
   });
 };

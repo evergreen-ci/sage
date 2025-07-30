@@ -1,8 +1,8 @@
 import express, { Application } from 'express';
 import expressListEndpoints from 'express-list-endpoints';
 import { config } from 'config';
-import { db } from 'db/connection';
 import { logger } from 'utils/logger';
+import { db } from '../db/connection';
 import {
   requestIdMiddleware,
   httpLoggingMiddleware,
