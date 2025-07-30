@@ -137,7 +137,7 @@ https.request = function (
 };
 
 const traceExporter = new OTLPTraceExporter({
-  url: 'http://otel-collector.staging.corp.mongodb.com:443/v1/traces',
+  url: 'http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces',
 });
 
 const consoleExporter = new ConsoleSpanExporter();
