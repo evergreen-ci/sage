@@ -28,6 +28,7 @@ const globalIgnores = {
     'vitest.config.ts',
     'tsconfig.json',
     'graphql.config.ts',
+    'evergreen/**',
   ],
 };
 
