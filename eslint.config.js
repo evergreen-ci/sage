@@ -28,6 +28,7 @@ const globalIgnores = {
     'vitest.config.ts',
     'tsconfig.json',
     'graphql.config.ts',
+    'evergreen/**',
   ],
 };
 
@@ -51,7 +52,7 @@ const eslintConfig = {
   plugins: {
     '@eslint/js': eslint,
   },
-  files: ['**/*.js?(x)', '**/*.ts?(x)'],
+  files: ['src/**/*.js?(x)', 'src/**/*.ts?(x)'],
   rules: {
     ...eslint.configs.recommended.rules,
     'array-callback-return': [ERROR, { allowImplicit: true }],

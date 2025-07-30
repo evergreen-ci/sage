@@ -1,5 +1,12 @@
 command_type: test
 
+modules:
+  - name: evergreen
+    owner: evergreen-ci
+    repo: evergreen
+    branch: main
+    auto_update: true
+
 ignore:
   - "*.md"
   - ".github/*"
@@ -25,22 +32,35 @@ buildvariants:
       mongodb_url_2204: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-8.0.4.tgz
       mongosh_url_2204: https://downloads.mongodb.com/compass/mongosh-2.3.1-linux-x64.tgz
       node_version: 22.14.0
+      goroot: /opt/golang/go1.24
+    modules:
+      - evergreen
     tasks:
       - name: compile
       - name: lint
       - name: test
+      - name: e2e
 
 tasks:
   - name: compile
     commands:
       - func: yarn-build
-      - func: health-check
   - name: lint
     commands:
       - func: yarn-lint
   - name: test
     commands:
       - func: yarn-test
+  - name: e2e
+    commands:
+      - func: setup-mongodb
+      - func: run-make-background
+        vars:
+          target: local-evergreen
+      - func: symlink
+      - func: yarn-build
+      - func: wait-for-evergreen
+      - func: health-check
 
 
 
@@ -77,6 +97,64 @@ functions:
       directory: sage
       shallow_clone: true
 
+  run-make-background:
+    command: subprocess.exec
+    params:
+      working_dir: sage/evergreen
+      binary: make
+      args: ["${make_args|}", "${target}"]
+      background: true
+      env:
+        SETTINGS_OVERRIDE: file
+        GOROOT: ${goroot}
+
+  setup-mongodb:
+    - command: subprocess.exec
+      type: setup
+      params:
+        env:
+          gobin: ${goroot}/bin/go
+          MONGODB_URL: ${mongodb_url_2204}
+          MONGODB_DECOMPRESS: ${decompress}
+        working_dir: sage/evergreen
+        command: make get-mongodb
+    - command: subprocess.exec
+      type: setup
+      params:
+        env:
+          gobin: ${goroot}/bin/go
+          MONGOSH_URL: ${mongosh_url_2204}
+          MONGOSH_DECOMPRESS: ${decompress}
+        working_dir: sage/evergreen
+        command: make get-mongosh
+    - command: shell.exec
+      type: setup
+      params:
+        background: true
+        # Turn off silent to enable DB logging for debugging purposes
+        silent: true
+        working_dir: sage/evergreen
+        shell: bash
+        script: | 
+          mkdir -p bin
+          make start-mongod > bin/mongod-logs.txt 2>&1
+    - command: subprocess.exec
+      type: setup
+      params:
+        working_dir: sage/evergreen
+        command: make configure-mongod
+    - command: shell.exec
+      type: setup
+      params:
+        shell: bash
+        script: |
+          ${PREPARE_SHELL}
+          cd $PROJECT_DIRECTORY
+          mkdir mongodb-tools && cd mongodb-tools
+          curl ${mongodb_tools_url} -o mongodb-tools.tgz
+          ${decompress} mongodb-tools.tgz
+          mv ./mongodb-*/bin/* .
+  
   setup-node:
     - command: subprocess.exec
       params:
@@ -110,6 +188,22 @@ functions:
           done
           npm install -g yarn
           npm install -g env-cmd
+
+  symlink:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ln -s ${workdir}/evergreen/graphql/schema ${workdir}/sdlschema
+
+  wait-for-evergreen:
+    command: shell.exec
+    type: setup
+    params:
+      exec_timeout_secs: 600
+      working_dir: sage
+      script: ./scripts/wait-for-evergreen.sh
 
   yarn-build:
     command: shell.exec
