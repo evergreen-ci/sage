@@ -12,7 +12,7 @@ import healthRoute from './routes/health';
 import rootRoute from './routes/root';
 
 /**
- * `startServer` is a function that starts the server
+ * `startServer` is a function that starts the server.
  */
 class SageServer {
   private app: Application;
