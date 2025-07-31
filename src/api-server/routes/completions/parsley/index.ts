@@ -13,6 +13,6 @@ router.post('/', createConversationRoute);
 router.post('/:conversationId/messages', addMessageRoute);
 
 // Route to get messages for a conversation
-router.get('/:conversationId', getMessagesRoute);
+router.get('/:conversationId/messages', getMessagesRoute);
 
 export default router;

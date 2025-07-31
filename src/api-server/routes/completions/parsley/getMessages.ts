@@ -1,3 +1,4 @@
+import { CoreMessage } from '@mastra/core';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
@@ -8,17 +9,17 @@ const getMessagesParamsSchema = z.object({
 });
 
 type GetMessagesOutput = {
-  messages: {
-    role: 'user' | 'assistant';
-    content: string;
-  }[];
+  messages: CoreMessage[];
 };
 
 type ErrorResponse = {
   message: string;
 };
 
-const getMessagesRoute = async (req: Request, res: Response) => {
+const getMessagesRoute = async (
+  req: Request,
+  res: Response<GetMessagesOutput | ErrorResponse>
+) => {
   logger.info('Get messages request received', {
     requestId: req.requestId,
     body: req.body,
@@ -37,8 +38,16 @@ const getMessagesRoute = async (req: Request, res: Response) => {
   const { conversationId } = paramsData;
 
   try {
-    const memory = await mastra.getMemory();
-    const thread = await memory?.getThreadById({ threadId: conversationId });
+    const agent = mastra.getAgent('parsleyAgent');
+    const memory = await agent.getMemory();
+    if (!memory) {
+      logger.error('Memory not found', {
+        requestId: req.requestId,
+      });
+      res.status(500).json({ message: 'Memory not found' });
+      return;
+    }
+    const thread = await memory.getThreadById({ threadId: conversationId });
     if (!thread) {
       logger.error('Thread not found', {
         requestId: req.requestId,
@@ -48,8 +57,10 @@ const getMessagesRoute = async (req: Request, res: Response) => {
       return;
     }
 
-    // const messages = await thread.getMessages();
-    res.status(200).json({ messages });
+    const messages = await memory.query({
+      threadId: conversationId,
+    });
+    res.status(200).json({ messages: messages.messages });
   } catch (error) {
     logger.error('Error in get messages route', {
       error,
