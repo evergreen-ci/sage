@@ -16,7 +16,7 @@ pre:
   - func: get-project
   - func: setup-node
   - func: yarn-install
-
+  - func: setup-env
 post:
   - func: assume-ec2-role
   - func: attach-mongod-logs
@@ -60,7 +60,7 @@ tasks:
       - func: symlink
       - func: yarn-build
       - func: wait-for-evergreen
-      - func: health-check
+      - func: yarn-e2e
 
 
 
@@ -97,6 +97,15 @@ functions:
       directory: sage
       shallow_clone: true
 
+  health-check:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        ./scripts/health-check.sh
+
   run-make-background:
     command: subprocess.exec
     params:
@@ -107,6 +116,16 @@ functions:
       env:
         SETTINGS_OVERRIDE: file
         GOROOT: ${goroot}
+
+  setup-env:
+    - command: shell.exec
+      type: setup
+      params:
+        working_dir: sage
+        shell: bash
+        script: |
+          ${PREPARE_SHELL}
+          mv env-example .env
 
   setup-mongodb:
     - command: subprocess.exec
@@ -241,15 +260,19 @@ functions:
         ${PREPARE_SHELL}
         yarn start
 
-  health-check:
+  yarn-e2e:
     command: shell.exec
     params:
+      env:
+        AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION}
+        AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
+        AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
       working_dir: sage
       shell: bash
       script: |
         ${PREPARE_SHELL}
-        ./scripts/health-check.sh
-      
+        yarn e2e
+
   yarn-test:
     command: shell.exec
     params:
@@ -258,3 +281,5 @@ functions:
       script: |
         ${PREPARE_SHELL}
         yarn test
+
+      

@@ -101,15 +101,26 @@ export const config: Config = {
 
 /**
  * `validateConfig` is a function to validate the required environment variables.
+ * @returns An array of error messages if any of the required environment variables are not set, otherwise undefined.
  */
-export const validateConfig = (): void => {
-  const requiredVars = ['NODE_ENV'];
+export const validateConfig = (): string[] | undefined => {
+  const requiredVars = [
+    'NODE_ENV',
+    'AZURE_OPENAI_API_VERSION',
+    'AZURE_OPENAI_API_KEY',
+    'AZURE_OPENAI_ENDPOINT',
+    'EVERGREEN_GRAPHQL_ENDPOINT',
+    'EVERGREEN_API_USER',
+    'EVERGREEN_API_KEY',
+  ];
 
+  const errors: string[] = [];
   for (const varName of requiredVars) {
     if (!process.env[varName]) {
-      console.warn(`Warning: ${varName} environment variable is not set`);
+      errors.push(`Warning: ${varName} environment variable is not set`);
     }
   }
+  return errors.length > 0 ? errors : undefined;
 };
 
 export { getEnvVar };
