@@ -1,12 +1,26 @@
 import { defineConfig } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths'
 
-const isE2E = process.env.E2E === 'true';
 export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: isE2E ? ['src/e2e/**/*.test.ts'] : ['src/**/*.test.ts', '!src/e2e/**/*.test.ts'],
+    projects: [
+       {
+        extends: true,
+        test: {
+          include: ['src/e2e/**/*.test.ts'],
+          name: { label: 'e2e', color: 'blue' },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: { label: 'unit', color: 'green' },
+          include: ['src/**/*.test.ts', '!src/e2e/**/*.test.ts'],
+        }
+      }
+    ],
     exclude: [],
     outputFile: {
       junit: './bin/test/junit.xml',
