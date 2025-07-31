@@ -1,8 +1,7 @@
 import { MongoDBStore } from '@mastra/mongodb';
 import { config } from '../../../config';
-import { SAGE_DB } from '../../../db/constants';
 
 export const memoryStore = new MongoDBStore({
-  dbName: SAGE_DB,
+  dbName: config.db.dbName,
   url: config.db.mongodbUri,
 });
