@@ -25,6 +25,8 @@ const parsleyCompletionsRoute = async (req: Request, res: Response) => {
   try {
     const agent = mastra.getAgent('parsleyAgent');
     const result = await agent.generate(`What can you do?: ${data.message}`);
+    const mastraLogger = mastra.getLogger();
+    mastraLogger.info("info log", { agent: agent });
     res.json({
       message: result.text,
       requestId: req.requestId,
