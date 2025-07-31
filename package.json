@@ -9,7 +9,7 @@
     "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/main.ts",
     "clean": "rm -rf dist bin node_modules",
     "codegen": "graphql-codegen-esm --config graphql.config.ts",
-    "e2e": "yarn test --project e2e",
+    "e2e": "vitest --project e2e",
     "test": "vitest --project unit",
     "test:ui": "yarn test --ui",
     "test:run": "yarn test run",
