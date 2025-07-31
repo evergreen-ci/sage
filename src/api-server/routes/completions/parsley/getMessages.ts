@@ -54,7 +54,7 @@ const getMessagesRoute = async (
         requestId: req.requestId,
         conversationId,
       });
-      res.status(404).json({ message: 'Thread not found' });
+      res.status(404).json({ message: 'Conversation not found' });
       return;
     }
 

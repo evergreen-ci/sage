@@ -22,7 +22,7 @@ type AddMessageOutput = {
     completionTokens: number;
     totalTokens: number;
   };
-  sessionId: string;
+  conversationId: string;
 };
 
 type ErrorResponse = {
@@ -43,7 +43,7 @@ const addMessageRoute = async (
     res.status(400).json({ message: 'Invalid request params' });
     return;
   }
-  const { conversationId } = paramsData;
+  const { conversationId: conversationIdParam } = paramsData;
 
   const { data: messageData, success: messageSuccess } =
     addMessageInputSchema.safeParse(req.body);
@@ -55,6 +55,8 @@ const addMessageRoute = async (
     res.status(400).json({ message: 'Invalid request body' });
     return;
   }
+  let conversationId =
+    conversationIdParam === 'null' ? null : conversationIdParam;
   try {
     const agent = mastra.getAgent(PARSLEY_AGENT_NAME);
     const memory = await agent.getMemory();
@@ -62,7 +64,7 @@ const addMessageRoute = async (
 
     // If the conversationId is not null, we use the existing thread
     // If the conversationId is null, we create a new thread
-    if (conversationId !== 'null') {
+    if (conversationId) {
       // Populate session ID if provided
       const thread = await memory?.getThreadById({ threadId: conversationId });
       if (thread) {
@@ -78,12 +80,12 @@ const addMessageRoute = async (
           resource: thread.resourceId,
         };
       } else {
-        logger.error('Session not found', {
+        logger.error('Conversation not found', {
           requestId: req.requestId,
-          sessionId: conversationId,
+          conversationId: conversationId,
         });
         res.status(404).json({
-          message: 'Session not found',
+          message: 'Conversation not found',
         });
         return;
       }
@@ -105,7 +107,7 @@ const addMessageRoute = async (
       };
     }
 
-    const sessionId =
+    conversationId =
       typeof memoryOptions.thread === 'string'
         ? memoryOptions.thread
         : memoryOptions.thread.id;
@@ -119,7 +121,7 @@ const addMessageRoute = async (
       requestId: req.requestId,
       timestamp: new Date().toISOString(),
       completionUsage: result.usage,
-      sessionId,
+      conversationId: conversationId,
     });
   } catch (error) {
     logger.error('Error in add message route', {
