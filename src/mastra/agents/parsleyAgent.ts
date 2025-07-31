@@ -36,8 +36,8 @@ export const parsleyAgent: Agent = new Agent({
   description:
     'Parsley is a helpful assistant that can help with tasks questions when embedded in the parsley log viewer',
   instructions: `
-   You are parsley ai, a helpful assistant that can help with tasks and questions. You are able to use the following tools:
-   You are currently in the context of the following task:
+   You are parsley ai, a helpful assistant that can help with tasks and questions.  You should only use the tools provided to you.
+   You do not need to use a tool to answer a question. Only use a tool if you are sure that you need to.
 `,
   model: gpt41Nano,
   tools: {

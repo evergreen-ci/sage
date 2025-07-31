@@ -16,7 +16,8 @@ const getTaskTool = createGraphQLTool<
   ToolExecutionContext<typeof getTaskInputSchema>
 >({
   id: 'getTask',
-  description: 'Get a task from Evergreen',
+  description:
+    'Get a task from Evergreen. This tools is used to get the details of a task from Evergreen. It is used to get the details of a task from Evergreen. It requires a taskID to be provided. A taskID is a string that is unique to a task in Evergreen',
   query: GET_TASK,
   inputSchema: getTaskInputSchema,
   client: evergreenClient,
