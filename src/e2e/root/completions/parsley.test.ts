@@ -1,8 +1,21 @@
+import { TABLE_THREADS, TABLE_MESSAGES } from '@mastra/core/storage';
 import request from 'supertest';
+import { memoryStore } from '../../../mastra/utils/memory';
 import setupTestAppServer from '../../setup';
 import { getMessageContent } from '../../utils';
 
 const app = setupTestAppServer();
+
+afterAll(async () => {
+  console.log('Clearing tables');
+  try {
+    await memoryStore.clearTable({ tableName: TABLE_THREADS });
+    await memoryStore.clearTable({ tableName: TABLE_MESSAGES });
+    console.log('Tables cleared');
+  } catch (error) {
+    console.error('Error clearing tables', error);
+  }
+});
 
 describe('completions/parsley/conversations/:conversationId/messages', () => {
   const endpoint =

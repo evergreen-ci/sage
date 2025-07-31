@@ -2,7 +2,6 @@
 import { MongoClient } from 'mongodb';
 import { config } from '../config';
 import logger from '../utils/logger';
-import { SAGE_DB } from './constants';
 
 type DBStats = {
   ok: number;
@@ -68,7 +67,7 @@ class Database {
 
   public async ping(): Promise<boolean> {
     try {
-      await this.client.db(SAGE_DB).command({ ping: 1 });
+      await this.client.db(config.db.dbName).command({ ping: 1 });
       return true;
     } catch {
       return false;
@@ -76,7 +75,9 @@ class Database {
   }
 
   public async dbStats(): Promise<DBStats> {
-    return this.client.db(SAGE_DB).command({ dbStats: 1 }) as Promise<DBStats>;
+    return this.client
+      .db(config.db.dbName)
+      .command({ dbStats: 1 }) as Promise<DBStats>;
   }
 }
 
