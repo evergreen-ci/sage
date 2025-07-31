@@ -60,29 +60,49 @@ const addMessageRoute = async (
     const memory = await agent.getMemory();
     let memoryOptions: AgentMemoryOption;
 
-    // Populate session ID if provided
-    const thread = await memory?.getThreadById({ threadId: conversationId });
-    if (thread) {
-      logger.debug('Found existing thread', {
-        requestId: req.requestId,
-        threadId: thread.id,
-        resourceId: thread.resourceId,
+    // If the conversationId is not null, we use the existing thread
+    // If the conversationId is null, we create a new thread
+    if (conversationId !== 'null') {
+      // Populate session ID if provided
+      const thread = await memory?.getThreadById({ threadId: conversationId });
+      if (thread) {
+        logger.debug('Found existing thread', {
+          requestId: req.requestId,
+          threadId: thread.id,
+          resourceId: thread.resourceId,
+        });
+        memoryOptions = {
+          thread: {
+            id: thread.id,
+          },
+          resource: thread.resourceId,
+        };
+      } else {
+        logger.error('Session not found', {
+          requestId: req.requestId,
+          sessionId: conversationId,
+        });
+        res.status(404).json({
+          message: 'Session not found',
+        });
+        return;
+      }
+    } else {
+      const newThread = await memory?.createThread({
+        resourceId: 'parsley_completions',
       });
+      if (!newThread) {
+        res.status(500).json({
+          message: 'Failed to create new thread',
+        });
+        return;
+      }
       memoryOptions = {
         thread: {
-          id: thread.id,
+          id: newThread.id,
         },
-        resource: thread.resourceId,
+        resource: newThread.resourceId,
       };
-    } else {
-      logger.error('Session not found', {
-        requestId: req.requestId,
-        sessionId: conversationId,
-      });
-      res.status(404).json({
-        message: 'Session not found',
-      });
-      return;
     }
 
     const sessionId =
