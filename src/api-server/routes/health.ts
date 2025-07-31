@@ -23,7 +23,7 @@ const healthRoute = (req: Request, res: Response) => {
   }
 
   const agentNames = Object.keys(agents);
-  const errors = [];
+  const errors: string[] = [];
   for (const agent of agentNames) {
     const agentModel = agents[agent]?.getModel();
     if (!agentModel) {
