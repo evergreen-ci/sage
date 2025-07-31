@@ -13,3 +13,8 @@ AZURE_OPENAI_API_VERSION=
 
 # OpenTelemetry Collector Endpoint
 OTEL_COLLECTOR_URL=http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
+
+# Evergreen Configuration
+EVERGREEN_GRAPHQL_ENDPOINT=
+EVERGREEN_API_USER=
+EVERGREEN_API_KEY= 

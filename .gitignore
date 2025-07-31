@@ -94,3 +94,6 @@ build/
 
 # Node
 node_modules/
+
+# graphql/
+sdlschema
