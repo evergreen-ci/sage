@@ -241,6 +241,10 @@ functions:
     params:
       working_dir: sage
       shell: bash
+      env:
+        AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION}
+        AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
+        AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
       script: |
         ${PREPARE_SHELL}
         yarn start

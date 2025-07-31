@@ -1,8 +1,18 @@
 import { Request, Response } from 'express';
+import { validateConfig } from 'config';
 import { mastra } from 'mastra';
 
 const healthRoute = (req: Request, res: Response) => {
-  // TODO: Add health check for the server
+  const configErrors = validateConfig();
+  if (configErrors) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Some config variables are not set',
+      errors: configErrors,
+    });
+    return;
+  }
+
   const agents = mastra.getAgents();
   if (!agents || Object.keys(agents).length === 0) {
     res.status(500).json({
@@ -13,16 +23,21 @@ const healthRoute = (req: Request, res: Response) => {
   }
 
   const agentNames = Object.keys(agents);
-
+  const errors = [];
   for (const agent of agentNames) {
     const agentModel = agents[agent]?.getModel();
     if (!agentModel) {
-      res.status(500).json({
-        status: 'error',
-        message: `Agent ${agent} is not ready`,
-      });
-      return;
+      errors.push(`Agent ${agent} is not ready`);
     }
+  }
+
+  if (errors.length > 0) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Some agents are not ready',
+      errors: errors,
+    });
+    return;
   }
 
   res.json({
