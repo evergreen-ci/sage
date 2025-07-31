@@ -14,6 +14,7 @@ export interface Config {
   };
   db: {
     mongodbUri: string;
+    dbName: string;
   };
   aiModels: {
     azure: {
@@ -77,6 +78,10 @@ export const config: Config = {
   nodeEnv: getEnvVar('NODE_ENV', 'development'),
   db: {
     mongodbUri: getEnvVar('MONGODB_URI', 'mongodb://localhost:27017'),
+    dbName:
+      getEnvVar('NODE_ENV', 'development') === 'test'
+        ? 'sage-test'
+        : getEnvVar('MONGODB_DB_NAME', 'sage'),
   },
   deploymentEnv: getEnvVar('DEPLOYMENT_ENV', 'staging'),
   logging: {
