@@ -2,6 +2,7 @@ import { CoreMessage } from '@mastra/core';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
+import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
 import { logger } from 'utils/logger';
 
 const getMessagesParamsSchema = z.object({
@@ -38,7 +39,7 @@ const getMessagesRoute = async (
   const { conversationId } = paramsData;
 
   try {
-    const agent = mastra.getAgent('parsleyAgent');
+    const agent = mastra.getAgent(PARSLEY_AGENT_NAME);
     const memory = await agent.getMemory();
     if (!memory) {
       logger.error('Memory not found', {

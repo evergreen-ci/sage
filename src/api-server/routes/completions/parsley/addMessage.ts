@@ -2,6 +2,7 @@ import { AgentMemoryOption } from '@mastra/core/agent';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
+import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
 import { logger } from 'utils/logger';
 
 const addMessageInputSchema = z.object({
@@ -55,7 +56,7 @@ const addMessageRoute = async (
     return;
   }
   try {
-    const agent = mastra.getAgent('parsleyAgent');
+    const agent = mastra.getAgent(PARSLEY_AGENT_NAME);
     const memory = await agent.getMemory();
     let memoryOptions: AgentMemoryOption;
 
