@@ -34,6 +34,7 @@ env:
   PORT: 8080
   OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
   DEPLOYMENT_ENV: staging
+  OTEL_EXPORTER_OTLP_ENDPOINT: https://api.braintrust.dev/otel
 
 
 envSecrets:
@@ -43,6 +44,7 @@ envSecrets:
   MONGO_PASSWORD: parsley-ai-secrets
   MONGO_URL: parsley-ai-secrets
   MONGO_USERNAME: parsley-ai-secrets
+  OTEL_EXPORTER_OTLP_HEADERS: parsley-ai-secrets
 
 serviceAccount:
   enabled: true
