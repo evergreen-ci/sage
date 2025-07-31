@@ -33,6 +33,7 @@ env:
   AZURE_OPENAI_API_VERSION: 2024-02-15-preview
   PORT: 8080
   OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
+  DEPLOYMENT_ENV: staging
 
 
 envSecrets:

@@ -13,7 +13,7 @@ const traceExporter = new OTLPTraceExporter({
 const sdk = new NodeSDK({
   resource: resourceFromAttributes({
     [ATTR_SERVICE_NAME]: 'sage',
-    ['environment']: 'staging',
+    ['environment']: getEnvVar('DEPLOYMENT_ENV', 'staging'),
   }),
   traceExporter: traceExporter,
   instrumentations: [getNodeAutoInstrumentations()],

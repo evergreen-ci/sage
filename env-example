@@ -10,3 +10,6 @@ LOG_TO_FILE=true
 AZURE_OPENAI_API_KEY=
 AZURE_OPENAI_ENDPOINT=
 AZURE_OPENAI_API_VERSION=
+
+# OpenTelemetry Collector Endpoint
+OTEL_COLLECTOR_URL=http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
