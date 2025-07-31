@@ -7,7 +7,10 @@ import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { getEnvVar } from 'config';
 
 const traceExporter = new OTLPTraceExporter({
-  url: getEnvVar('OTEL_COLLECTOR_URL', 'http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces'),
+  url: getEnvVar(
+    'OTEL_COLLECTOR_URL',
+    'http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces'
+  ),
 });
 
 const sdk = new NodeSDK({
