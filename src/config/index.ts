@@ -105,7 +105,6 @@ export const validateConfig = (): string[] | undefined => {
     'EVERGREEN_GRAPHQL_ENDPOINT',
     'EVERGREEN_API_USER',
     'EVERGREEN_API_KEY',
-    'END_USER_HEADER_ID',
   ];
 
   const errors = [];
