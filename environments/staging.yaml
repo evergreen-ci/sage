@@ -32,7 +32,7 @@ env:
   EVERGREEN_URL: https://evergreen.mongodb.com
   AZURE_OPENAI_API_VERSION: 2024-02-15-preview
   PORT: 8080
-  LOG_LEVEL: debug
+  OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
 
 
 envSecrets:

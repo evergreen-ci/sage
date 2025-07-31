@@ -8,7 +8,6 @@ platform:
 trigger:
   branch:
     - main
-    - DEVPROD-19196-1
 
 steps:
   - name: publish

@@ -92,3 +92,5 @@ export const validateConfig = (): void => {
     }
   }
 };
+
+export { getEnvVar };
