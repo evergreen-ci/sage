@@ -1,3 +1,4 @@
+import './tracing';
 import server from 'api-server';
 import { validateConfig } from 'config';
 

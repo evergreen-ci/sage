@@ -7,6 +7,7 @@ dotenv.config({ path: resolve(process.cwd(), '.env') });
 export interface Config {
   port: number;
   nodeEnv: string;
+  deploymentEnv: string;
   logging: {
     logLevel: string;
     logToFile: boolean;
@@ -27,6 +28,7 @@ export interface Config {
     apiKey: string;
     userIDHeader: string;
   };
+  otelCollectorURL: string;
 }
 
 /**
@@ -70,6 +72,7 @@ const getEnvNumber = (key: string, defaultValue: number): number => {
 export const config: Config = {
   port: getEnvNumber('PORT', 3000),
   nodeEnv: getEnvVar('NODE_ENV', 'development'),
+  deploymentEnv: getEnvVar('DEPLOYMENT_ENV', 'staging'),
   logging: {
     logLevel: getEnvVar('LOG_LEVEL', 'info'),
     logToFile: getEnvVar('LOG_TO_FILE', 'true') === 'true',
@@ -90,6 +93,10 @@ export const config: Config = {
     apiKey: getEnvVar('EVERGREEN_API_KEY', ''),
     userIDHeader: getEnvVar('END_USER_HEADER_ID', 'end-user-header-id'),
   },
+  otelCollectorURL: getEnvVar(
+    'OTEL_COLLECTOR_URL',
+    'http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces'
+  ),
 };
 
 /**
@@ -104,3 +111,5 @@ export const validateConfig = (): void => {
     }
   }
 };
+
+export { getEnvVar };
