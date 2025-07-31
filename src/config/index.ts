@@ -107,7 +107,7 @@ export const validateConfig = (): string[] | undefined => {
     'EVERGREEN_API_KEY',
   ];
 
-  const errors = [];
+  const errors: string[] = [];
   for (const varName of requiredVars) {
     if (!process.env[varName]) {
       errors.push(`Warning: ${varName} environment variable is not set`);
