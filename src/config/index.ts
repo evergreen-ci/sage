@@ -81,7 +81,7 @@ export const config: Config = {
     dbName:
       getEnvVar('NODE_ENV', 'development') === 'test'
         ? 'sage-test'
-        : getEnvVar('MONGODB_DB_NAME', 'sage'),
+        : getEnvVar('DB_NAME', 'sage'),
   },
   deploymentEnv: getEnvVar('DEPLOYMENT_ENV', 'staging'),
   logging: {
