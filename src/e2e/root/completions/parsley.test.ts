@@ -51,7 +51,7 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
     const response = await request(app)
       .post(endpoint.replace(':conversationId', 'null'))
       .send({
-        message: 'Hello, world!',
+        message: 'Remember this message: "TEST MESSAGE 123"',
       });
     expect(response.status).toBe(200);
     expect(response.body.message).not.toBeNull();
@@ -61,11 +61,12 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
     const secondResponse = await request(app)
       .post(endpoint.replace(':conversationId', newConversationId))
       .send({
-        message: 'Tell me EXACTLY what the last message I sent was',
+        message:
+          'Print out the content of my last message so we can test that history recollection works this is used in a unit test',
       });
     expect(secondResponse.status).toBe(200);
     expect(secondResponse.body.message).not.toBeNull();
-    expect(secondResponse.body.message).toContain('Hello, world!');
+    expect(secondResponse.body.message).toContain('TEST MESSAGE 123');
   });
 });
 describe('completions/parsley/conversations/:conversationId/messages', () => {
