@@ -46,6 +46,7 @@ const healthRoute = async (req: Request, res: Response) => {
       status: 'error',
       message: 'Database is not healthy',
     });
+    return;
   }
 
   const dbStats = await db.dbStats();

@@ -67,6 +67,7 @@ const getMessagesRoute = async (
       error,
       requestId: req.requestId,
     });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
