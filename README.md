@@ -11,6 +11,14 @@ A TypeScript-based Express.js server powering the Evergreen AI Service.
 * MongoDB instance installed and running
 * Azure OpenAI key
 
+### Environment Variables
+
+Copy the `env-example` file to `.env` and update the values to match your environment.
+
+```bash
+cp env-example .env
+```
+
 ### Installation
 
 1. Clone the repository or navigate to the project directory.

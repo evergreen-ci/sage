@@ -34,15 +34,13 @@ env:
   PORT: 8080
   OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
   DEPLOYMENT_ENV: staging
-
+  DB_NAME: sage
 
 envSecrets:
   AZURE_OPENAI_API_KEY: parsley-ai-secrets
   AZURE_OPENAI_ENDPOINT: parsley-ai-secrets
   EVERGREEN_API_KEY: parsley-ai-secrets
-  MONGO_PASSWORD: parsley-ai-secrets
-  MONGO_URL: parsley-ai-secrets
-  MONGO_USERNAME: parsley-ai-secrets
+  MONGODB_URI: parsley-ai-secrets
 
 serviceAccount:
   enabled: true
