@@ -77,7 +77,7 @@ export const config: Config = {
   port: getEnvNumber('PORT', 3000),
   nodeEnv: getEnvVar('NODE_ENV', 'development'),
   db: {
-    mongodbUri: getEnvVar('MONGODB_URI', 'mongodb://localhost:27017'),
+    mongodbUri: getEnvVar('MONGODB_URL', 'mongodb://localhost:27017'),
     dbName:
       getEnvVar('NODE_ENV', 'development') === 'test'
         ? 'sage-test'

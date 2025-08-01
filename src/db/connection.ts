@@ -1,4 +1,3 @@
-// TODO: DEVPROD-19199 create a connection to the database
 import { MongoClient } from 'mongodb';
 import { config } from '../config';
 import logger from '../utils/logger';
