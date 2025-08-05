@@ -27,7 +27,7 @@ resources:
     memory: 8Gi
 
 env:
-  EVERGREEN_API_USER: parsley-ai-skunkworks
+  EVERGREEN_API_USER: sage
   EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2
   EVERGREEN_URL: https://evergreen.mongodb.com
   EVERGREEN_GRAPHQL_ENDPOINT: https://evergreen.mongodb.com/mcp/graphql/query
