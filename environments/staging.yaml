@@ -48,6 +48,7 @@ envSecrets:
   MONGO_URL: parsley-ai-secrets
   MONGO_USERNAME: parsley-ai-secrets
   OTEL_EXPORTER_OTLP_HEADERS: parsley-ai-secrets
+  BRAINTRUST_API_KEY: parsley-ai-secrets
 
 serviceAccount:
   enabled: true

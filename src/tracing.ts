@@ -1,23 +1,21 @@
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { resourceFromAttributes } from '@opentelemetry/resources';
-import { NodeSDK } from '@opentelemetry/sdk-node';
-import { AlwaysOnSampler } from '@opentelemetry/sdk-trace-base';
-import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
-import { config } from 'config';
+import {NodeSDK} from '@mastra/core/telemetry/otel-vendor';
+import {BraintrustSpanProcessor} from "braintrust";
+import {config} from 'config';
 
-const traceExporter = new OTLPTraceExporter({
-  url: config.otelCollectorURL,
+// const traceExporter = new OTLPTraceExporter({
+//   url: config.otelCollectorURL,
+// });
+
+const spanProcessor = new BraintrustSpanProcessor({
+    apiKey: config.braintrust.apiKey,
+    parent: config.braintrust.parent,
+    filterAISpans: true,
 });
 
 const sdk = new NodeSDK({
-  resource: resourceFromAttributes({
-    [ATTR_SERVICE_NAME]: 'sage',
-    ['environment']: config.deploymentEnv,
-  }),
-  traceExporter: traceExporter,
-  instrumentations: [getNodeAutoInstrumentations()],
-  sampler: new AlwaysOnSampler(),
+    serviceName: "sage",
+    spanProcessor,
 });
+
 
 sdk.start();
