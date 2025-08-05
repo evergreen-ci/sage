@@ -6,9 +6,9 @@ import getMessagesRoute from './getMessages';
 const router = express.Router();
 
 // Route to add a new message to a conversation and get a response
-router.post('/:conversationId/messages', addMessageRoute);
+router.post('/messages', addMessageRoute);
 
 // Route to get messages for a conversation
-router.get('/:conversationId/messages', getMessagesRoute);
+router.get('/messages', getMessagesRoute);
 
 export default router;
