@@ -62,7 +62,7 @@ export type AbortInfo = {
   newVersion: Scalars['String']['output'];
   prClosed: Scalars['Boolean']['output'];
   taskDisplayName: Scalars['String']['output'];
-  taskID: Scalars['String']['output'];
+  taskId: Scalars['String']['output'];
   user: Scalars['String']['output'];
 };
 
@@ -2262,7 +2262,7 @@ export type PodEventLogData = {
   reason?: Maybe<Scalars['String']['output']>;
   task?: Maybe<Task>;
   taskExecution?: Maybe<Scalars['Int']['output']>;
-  taskID?: Maybe<Scalars['String']['output']>;
+  taskId?: Maybe<Scalars['String']['output']>;
   taskStatus?: Maybe<Scalars['String']['output']>;
 };
 
@@ -4396,7 +4396,7 @@ export type WorkstationSetupCommandInput = {
 };
 
 export type GetTaskQueryVariables = Exact<{
-  taskID: Scalars['String']['input'];
+  taskId: Scalars['String']['input'];
   execution?: InputMaybe<Scalars['Int']['input']>;
 }>;
 

@@ -1,5 +1,5 @@
-export default `query GetTask($taskID: String!, $execution: Int) {
-  task(taskId: $taskID, execution: $execution) {
+export default `query GetTask($taskId: String!, $execution: Int) {
+  task(taskId: $taskId, execution: $execution) {
     id
     displayName
     displayStatus

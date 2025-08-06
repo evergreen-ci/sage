@@ -6,7 +6,7 @@ import evergreenClient from './graphql/evergreenClient';
 import GET_TASK_FILES from './graphql/get-task-files';
 
 const getTaskInputSchema = z.object({
-  taskID: z.string(),
+  taskId: z.string(),
   execution: z.number().optional(),
 });
 
@@ -17,7 +17,7 @@ const getTaskFilesTool = createGraphQLTool<
 >({
   id: 'getTaskFiles',
   description:
-    'Get the files of a task from Evergreen. This tool is used to get files for a task from Evergreen. It requires a taskID to be provided. A taskID is a string that is unique to a task in Evergreen',
+    'Get the files of a task from Evergreen. This tool is used to get files for a task from Evergreen. It requires a taskId to be provided. A taskId is a string that is unique to a task in Evergreen',
   query: GET_TASK_FILES,
   inputSchema: getTaskInputSchema,
   client: evergreenClient,
