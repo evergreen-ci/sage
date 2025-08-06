@@ -14,7 +14,7 @@ const addMessageParamsSchema = z.object({
 });
 
 type AddMessageOutput = {
-  message: string;
+  content: string;
   requestId: string;
   timestamp: string;
   completionUsage: {
@@ -22,7 +22,13 @@ type AddMessageOutput = {
     completionTokens: number;
     totalTokens: number;
   };
-  conversationId: string;
+  metadata: {
+    conversationId: string;
+  };
+  references: Array<{
+    title: string;
+    url: string;
+  }>;
 };
 
 type ErrorResponse = {
@@ -114,14 +120,26 @@ const addMessageRoute = async (
 
     const result = await agent.generate(messageData.message, {
       memory: memoryOptions,
+      output: z.object({
+        text: z.string(),
+        references: z.array(
+          z.object({
+            title: z.string(),
+            url: z.string(),
+          })
+        ),
+      }),
     });
 
     res.json({
-      message: result.text,
+      content: result.object.text,
       requestId: req.requestId,
       timestamp: new Date().toISOString(),
       completionUsage: result.usage,
-      conversationId: conversationId,
+      references: result.object.references,
+      metadata: {
+        conversationId,
+      },
     });
   } catch (error) {
     logger.error('Error in add message route', {
