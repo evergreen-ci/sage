@@ -4400,6 +4400,204 @@ export type GetTaskQueryVariables = Exact<{
   execution?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
+export type VersionQuery = {
+  __typename?: 'Query';
+  version: {
+    __typename?: 'Version';
+    id: string;
+    activated?: boolean | null;
+    author: string;
+    authorEmail: string;
+    createTime: Date;
+    errors: Array<string>;
+    finishTime?: Date | null;
+    ignored: boolean;
+    isPatch: boolean;
+    message: string;
+    order: number;
+    project: string;
+    projectIdentifier: string;
+    repo: string;
+    requester: string;
+    revision: string;
+    startTime?: Date | null;
+    status: string;
+    taskCount?: number | null;
+    warnings: Array<string>;
+    baseVersion?: { __typename?: 'Version'; id: string } | null;
+    externalLinksForMetadata: Array<{
+      __typename?: 'ExternalLinkForMetadata';
+      displayName: string;
+      url: string;
+    }>;
+    gitTags?: Array<{
+      __typename?: 'GitTag';
+      pusher: string;
+      tag: string;
+    }> | null;
+    manifest?: {
+      __typename?: 'Manifest';
+      id: string;
+      branch: string;
+      isBase: boolean;
+      moduleOverrides?: { [key: string]: any } | null;
+      modules?: any | null;
+      project: string;
+      revision: string;
+    } | null;
+    parameters: Array<{ __typename?: 'Parameter'; key: string; value: string }>;
+    patch?: {
+      __typename?: 'Patch';
+      id: string;
+      alias?: string | null;
+      patchNumber: number;
+      childPatches?: Array<{
+        __typename?: 'Patch';
+        id: string;
+        githash: string;
+        projectIdentifier: string;
+        status: string;
+        parameters: Array<{
+          __typename?: 'Parameter';
+          key: string;
+          value: string;
+        }>;
+        versionFull?: {
+          __typename?: 'Version';
+          id: string;
+          status: string;
+          baseVersion?: { __typename?: 'Version'; id: string } | null;
+        } | null;
+      }> | null;
+      githubPatchData?: {
+        __typename?: 'GithubPatch';
+        headHash?: string | null;
+        prNumber?: number | null;
+      } | null;
+    } | null;
+    previousVersion?: {
+      __typename?: 'Version';
+      id: string;
+      revision: string;
+    } | null;
+    projectMetadata?: {
+      __typename?: 'Project';
+      id: string;
+      branch: string;
+      owner: string;
+      repo: string;
+    } | null;
+    versionTiming?: {
+      __typename?: 'VersionTiming';
+      makespan?: number | null;
+      timeTaken?: number | null;
+    } | null;
+    upstreamProject?: {
+      __typename?: 'UpstreamProject';
+      owner: string;
+      project: string;
+      repo: string;
+      revision: string;
+      triggerID: string;
+      triggerType: string;
+      task?: { __typename?: 'Task'; id: string; execution: number } | null;
+      version?: { __typename?: 'Version'; id: string } | null;
+    } | null;
+  };
+};
+
+export type TaskHistoryQuery = {
+  __typename?: 'Query';
+  taskHistory: {
+    __typename?: 'TaskHistory';
+    pagination: {
+      __typename?: 'TaskHistoryPagination';
+      mostRecentTaskOrder: number;
+      oldestTaskOrder: number;
+    };
+    tasks: Array<{
+      __typename?: 'Task';
+      id: string;
+      activated: boolean;
+      canRestart: boolean;
+      canSchedule: boolean;
+      createTime?: Date | null;
+      displayStatus: string;
+      execution: number;
+      latestExecution: number;
+      order: number;
+      revision?: string | null;
+      tests: {
+        __typename?: 'TaskTestResult';
+        testResults: Array<{
+          __typename?: 'TestResult';
+          id: string;
+          status: string;
+          testFile: string;
+          logs: { __typename?: 'TestLog'; urlParsley?: string | null };
+        }>;
+      };
+      versionMetadata: {
+        __typename?: 'Version';
+        id: string;
+        author: string;
+        message: string;
+      };
+    }>;
+  };
+};
+
+export type TaskTestsQuery = {
+  __typename?: 'Query';
+  task?: {
+    __typename?: 'Task';
+    id: string;
+    execution: number;
+    tests: {
+      __typename?: 'TaskTestResult';
+      filteredTestCount: number;
+      totalTestCount: number;
+      testResults: Array<{
+        __typename?: 'TestResult';
+        id: string;
+        baseStatus?: string | null;
+        duration?: number | null;
+        status: string;
+        testFile: string;
+        logs: {
+          __typename?: 'TestLog';
+          url?: string | null;
+          urlParsley?: string | null;
+          urlRaw?: string | null;
+        };
+      }>;
+    };
+  } | null;
+};
+
+export type TaskFilesQuery = {
+  __typename?: 'Query';
+  task?: {
+    __typename?: 'Task';
+    id: string;
+    execution: number;
+    files: {
+      __typename?: 'TaskFiles';
+      groupedFiles: Array<{
+        __typename?: 'GroupedFiles';
+        execution: number;
+        taskId: string;
+        taskName?: string | null;
+        files?: Array<{
+          __typename?: 'File';
+          link: string;
+          name: string;
+        }> | null;
+      }>;
+    };
+  } | null;
+};
+
 export type GetTaskQuery = {
   __typename?: 'Query';
   task?: {
