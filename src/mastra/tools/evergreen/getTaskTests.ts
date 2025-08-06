@@ -18,12 +18,14 @@ const TestSortOptionsSchema = z.object({
   sortBy: TestSortCategoryEnum,
 });
 
+const StatusEnum = z.enum(['fail', 'pass']);
+
 const getTaskTestsInputSchema = z.object({
   id: z.string(),
   execution: z.number().optional(),
   pageNum: z.number().optional(),
   limitNum: z.number().optional(),
-  statusList: z.array(z.string()),
+  statusList: z.array(StatusEnum),
   sort: z.array(TestSortOptionsSchema).optional(),
   testName: z.string(),
 });
