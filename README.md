@@ -142,3 +142,56 @@ Launches a local Mastra server at `http://localhost:4111` for agent testing.
 * **Workflows**: Add workflows to `src/mastra/workflows`. Workflows define multi-step logic that agents can follow.
 
 All agents and workflows should be registered in `src/mastra/index.ts`.
+
+---
+
+## GraphQL Setup
+
+Sage relies on Evergreen’s GraphQL schema for both query linting and type
+generation. To keep the schema in sync with Evergreen, create a local symlink
+to the Evergreen repository’s `graphql/schema` directory.
+
+### 1. Symlink the GraphQL schema
+
+Run the following command **from the root of the Sage repository**, replacing
+`<path_to_evergreen_repo>` with the absolute path to your local Evergreen
+checkout:
+
+```bash
+ln -s <path_to_evergreen_repo>/graphql/schema sdlschema
+```
+
+This creates a folder-level symlink named `sdlschema/` that Sage’s ESLint and
+GraphQL Code Generator will pick up automatically.
+
+### 2. GraphQL Query Linting
+
+With the schema symlinked, ESLint will validate your `.ts`, `.gql`, and
+`.graphql` files against the Evergreen schema during development. You can run a
+manual lint pass at any time with:
+
+```bash
+yarn lint
+```
+
+### 3. GraphQL Type Generation
+
+We use [`@graphql-codegen`](https://www.graphql-code-generator.com/) to generate
+TypeScript types for queries, mutations, and their variables. The generated
+types live in `src/gql/generated/types.ts`.
+
+Run the generator after editing or adding GraphQL operations:
+
+```bash
+yarn codegen
+```
+
+If the schema or your operations change, re-run `yarn codegen` to keep the
+types up to date. The command will also run Prettier on the generated file.
+
+### Troubleshooting
+
+• If ESLint or codegen cannot find the schema, verify the `sdlschema` symlink
+  path and that the Evergreen repository is on the expected branch.  
+• If dependencies appear out of date, try `yarn install` or `yarn clean` followed
+  by `yarn install` to refresh `node_modules`.
