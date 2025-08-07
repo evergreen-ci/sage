@@ -23,7 +23,7 @@ const evergreenTestLogsSchema = z.object({
 });
 
 /**
- * Validates the log metadata for the add message route to ensure is is passed the correct type of log metadata for task logs
+ * Validates the log metadata for the add message route to ensure it is passed the correct type of log metadata for task logs
  * @param logMetadata - The log metadata to validate
  * @returns The validated log metadata
  */
