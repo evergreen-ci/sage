@@ -1,32 +1,35 @@
 import { createWorkflow, createStep } from '@mastra/core';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
-import taskHistoryToolAdapter from '../tools/workflow/taskHistoryToolAdapter';
 import taskToolAdapter from '../tools/workflow/taskToolAdapter';
+import versionToolAdapter from '../tools/workflow/versionToolAdapter';
 
 // Define the workflow input schema - only needs taskId and optional execution
 const workflowInputSchema = z.object({
   taskId: z.string(),
   execution: z.number().optional(),
+  includeNeverActivatedTasks: z.boolean().optional(),
 });
 
 // Define the workflow output schema
 const workflowOutputSchema = z.object({
   task: z.any(),
-  history: z.any(),
+  version: z.any(),
   error: z.string().optional(),
 });
 
 // Create a step that retrieves task information
 const getTaskStep = createStep({
-  id: 'get-task-for-history',
+  id: 'get-task-for-version',
   description: 'Get task information from Evergreen',
   inputSchema: z.object({
     taskId: z.string(),
     execution: z.number().optional(),
+    includeNeverActivatedTasks: z.boolean().optional(),
   }),
   outputSchema: z.object({
     taskData: z.any(),
+    includeNeverActivatedTasks: z.boolean().optional(),
   }),
   execute: async ({ inputData }) => {
     // Check if the tool has an execute function
@@ -35,6 +38,7 @@ const getTaskStep = createStep({
         taskData: {
           error: 'taskToolAdapter.execute is not defined',
         },
+        includeNeverActivatedTasks: inputData.includeNeverActivatedTasks,
       };
     }
 
@@ -52,30 +56,32 @@ const getTaskStep = createStep({
 
     return {
       taskData: result,
+      includeNeverActivatedTasks: inputData.includeNeverActivatedTasks,
     };
   },
 });
 
-// Create a step that retrieves task history using data from the task
-const getTaskHistoryStep = createStep({
-  id: 'get-task-history',
-  description: 'Get task history from Evergreen using task data',
+// Create a step that retrieves version information using data from the task
+const getVersionStep = createStep({
+  id: 'get-version',
+  description: 'Get version information from Evergreen using task data',
   inputSchema: z.object({
     taskData: z.any(),
+    includeNeverActivatedTasks: z.boolean().optional(),
   }),
   outputSchema: z.object({
     taskData: z.any(),
-    historyData: z.any(),
+    versionData: z.any(),
   }),
   execute: async ({ inputData }) => {
-    const { taskData } = inputData;
+    const { taskData, includeNeverActivatedTasks } = inputData;
     
     // Check if there's an error in task data
     if (taskData?.error) {
       return {
         taskData,
-        historyData: {
-          error: 'Cannot fetch history: task data has error',
+        versionData: {
+          error: 'Cannot fetch version: task data has error',
         },
       };
     }
@@ -86,34 +92,30 @@ const getTaskHistoryStep = createStep({
     if (!task) {
       return {
         taskData,
-        historyData: {
-          error: 'Cannot fetch history: task data is missing',
+        versionData: {
+          error: 'Cannot fetch version: task data is missing',
         },
       };
     }
     
-    // Extract required fields from the task response
-    const taskId = task.id;
-    const displayName = task.displayName;
-    const buildVariant = task.buildVariant;
-    const projectIdentifier = task.projectIdentifier;
+    // Extract the versionMetadata.id from the task response
+    const versionId = task.versionMetadata?.id;
     
-    // Validate required fields
-    if (!taskId || !displayName || !buildVariant || !projectIdentifier) {
+    if (!versionId) {
       return {
         taskData,
-        historyData: {
-          error: `Cannot fetch history: missing required fields (id: ${taskId}, displayName: ${displayName}, buildVariant: ${buildVariant}, projectIdentifier: ${projectIdentifier})`,
+        versionData: {
+          error: 'Cannot fetch version: versionMetadata.id is missing from task',
         },
       };
     }
     
     // Check if the tool has an execute function
-    if (!taskHistoryToolAdapter.execute) {
+    if (!versionToolAdapter.execute) {
       return {
         taskData,
-        historyData: {
-          error: 'taskHistoryToolAdapter.execute is not defined',
+        versionData: {
+          error: 'versionToolAdapter.execute is not defined',
         },
       };
     }
@@ -121,28 +123,18 @@ const getTaskHistoryStep = createStep({
     // Create a new RuntimeContext
     const runtimeContext = new RuntimeContext();
 
-    // Create cursor params using the task id
-    const cursorParams = {
-      cursorId: taskId,
-      direction: 'BEFORE' as const,
-      includeCursor: true, // Changed to true as per the example
-    };
-
-    // Execute the taskHistoryToolAdapter with data from the task
-    const historyResult = await taskHistoryToolAdapter.execute({
+    // Execute the versionToolAdapter with the version ID
+    const versionResult = await versionToolAdapter.execute({
       context: {
-        taskName: displayName, // Use displayName as taskName
-        buildVariant: buildVariant,
-        projectIdentifier: projectIdentifier,
-        cursorParams,
-        limit: 10, // Default limit
+        id: versionId,
+        includeNeverActivatedTasks: includeNeverActivatedTasks,
       },
       runtimeContext,
     });
 
     return {
       taskData,
-      historyData: historyResult,
+      versionData: versionResult,
     };
   },
 });
@@ -150,47 +142,47 @@ const getTaskHistoryStep = createStep({
 // Create a step to format the combined results
 const formatResultsStep = createStep({
   id: 'format-results',
-  description: 'Format the task and history data for output',
+  description: 'Format the task and version data for output',
   inputSchema: z.object({
     taskData: z.any(),
-    historyData: z.any(),
+    versionData: z.any(),
   }),
   outputSchema: workflowOutputSchema,
   execute: async ({ inputData }) => {
-    const { taskData, historyData } = inputData;
+    const { taskData, versionData } = inputData;
 
     // Check if there's an error in either dataset
-    if (taskData?.error || historyData?.error) {
+    if (taskData?.error || versionData?.error) {
       return {
         task: taskData?.error ? null : taskData,
-        history: historyData?.error ? null : historyData,
-        error: taskData?.error || historyData?.error,
+        version: versionData?.error ? null : versionData,
+        error: taskData?.error || versionData?.error,
       };
     }
 
     // Return formatted data
     return {
       task: taskData,
-      history: historyData,
+      version: versionData,
       error: undefined,
     };
   },
 });
 
 // Create the workflow
-export const taskWithHistoryWorkflow = createWorkflow({
-  id: 'task-with-history-workflow',
-  description: 'Workflow to retrieve task information and its history from Evergreen',
+export const versionWorkflow = createWorkflow({
+  id: 'version-workflow',
+  description: 'Workflow to retrieve task information and its version from Evergreen',
   inputSchema: workflowInputSchema,
   outputSchema: workflowOutputSchema,
 })
   // First step: get the task
   .then(getTaskStep)
-  // Second step: get the task history using task data
-  .then(getTaskHistoryStep)
+  // Second step: get the version using task data
+  .then(getVersionStep)
   // Third step: format the results
   .then(formatResultsStep)
   // Commit the workflow
   .commit();
 
-export default taskWithHistoryWorkflow;
+export default versionWorkflow;
