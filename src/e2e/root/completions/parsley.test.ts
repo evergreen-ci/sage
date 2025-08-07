@@ -29,7 +29,14 @@ describe('POST /completions/parsley/conversations/:conversationId/messages', () 
     log_type: LogTypes.EVERGREEN_TASK_LOGS,
     origin: TaskLogOrigin.Task,
   };
-  it('sending a message will return a completion and create a new thread', async () => {
+  it('should validate the logMetadata', async () => {
+    const response = await request(app)
+      .post(endpoint.replace(':conversationId', conversationId))
+      .send({ logMetadata: { ...logMetadata, log_type: 'INVALID' } });
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Invalid request body');
+  });
+  it('sending a message will return a completion and create a new thread and store the log metadata', async () => {
     const response = await request(app)
       .post(endpoint.replace(':conversationId', conversationId))
       .send({
@@ -37,15 +44,17 @@ describe('POST /completions/parsley/conversations/:conversationId/messages', () 
         logMetadata,
       });
     expect(response.status).toBe(200);
+
     expect(response.body.message).not.toBeNull();
     expect(response.body.conversationId).not.toBeNull();
-  });
-  it('should validate the logMetadata', async () => {
-    const response = await request(app)
-      .post(endpoint.replace(':conversationId', conversationId))
-      .send({ logMetadata: { ...logMetadata, log_type: 'INVALID' } });
-    expect(response.status).toBe(400);
-    expect(response.body.message).toBe('Invalid request body');
+    const thread = await memoryStore.getThreadById({
+      threadId: response.body.conversationId,
+    });
+    expect(thread).not.toBeNull();
+    expect(thread?.metadata?.log_type).toBe(logMetadata.log_type);
+    expect(thread?.metadata?.task_id).toBe(logMetadata.task_id);
+    expect(thread?.metadata?.execution).toBe(logMetadata.execution);
+    expect(thread?.metadata?.origin).toBe(logMetadata.origin);
   });
   it('should return a 400 status code if the message is not provided', async () => {
     const response = await request(app)
