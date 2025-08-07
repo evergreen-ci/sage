@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
 import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
+import { LogTypes } from 'types/parsley';
 import { logger } from 'utils/logger';
 import { logMetadataSchema } from './validators';
 
@@ -92,8 +93,27 @@ const addMessageRoute = async (
         return;
       }
     } else {
+      const { logMetadata } = messageData;
+      const metadata: Record<string, string | number> = {
+        task_id: logMetadata.task_id,
+        execution: logMetadata.execution,
+        log_type: logMetadata.log_type,
+      };
+
+      switch (logMetadata.log_type) {
+        case LogTypes.EVERGREEN_TEST_LOGS:
+          metadata.test_id = logMetadata.test_id;
+          break;
+        case LogTypes.EVERGREEN_TASK_LOGS:
+          metadata.origin = logMetadata.origin;
+          break;
+        default:
+          break;
+      }
+
       const newThread = await memory?.createThread({
         resourceId: 'parsley_completions',
+        metadata,
       });
       if (!newThread) {
         res.status(500).json({
