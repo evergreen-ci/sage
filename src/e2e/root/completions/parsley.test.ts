@@ -1,5 +1,7 @@
 import { TABLE_THREADS, TABLE_MESSAGES } from '@mastra/core/storage';
 import request from 'supertest';
+import { LogTypes } from 'types/parsley';
+import { TaskLogOrigin } from 'types/task';
 import { memoryStore } from '../../../mastra/utils/memory';
 import setupTestAppServer from '../../setup';
 import { getMessageContent } from '../../utils';
@@ -17,32 +19,47 @@ afterAll(async () => {
   }
 });
 
-describe('completions/parsley/conversations/:conversationId/messages', () => {
+describe('POST /completions/parsley/conversations/:conversationId/messages', () => {
   const endpoint =
     '/completions/parsley/conversations/:conversationId/messages';
   const conversationId = 'null';
+  const logMetadata = {
+    task_id: '123',
+    execution: 1,
+    log_type: LogTypes.EVERGREEN_TASK_LOGS,
+    origin: TaskLogOrigin.Task,
+  };
   it('sending a message will return a completion and create a new thread', async () => {
     const response = await request(app)
       .post(endpoint.replace(':conversationId', conversationId))
       .send({
         message: 'Hello, world!',
+        logMetadata,
       });
     expect(response.status).toBe(200);
     expect(response.body.message).not.toBeNull();
     expect(response.body.conversationId).not.toBeNull();
   });
-  it('should return a 400 status code if the message is not provided', async () => {
+  it('should validate the logMetadata', async () => {
     const response = await request(app)
       .post(endpoint.replace(':conversationId', conversationId))
-      .send({});
+      .send({ logMetadata: { ...logMetadata, log_type: 'INVALID' } });
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Invalid request body');
   });
-  it('should return a 400 status code if the conversationId is not null and the conversation does not exist', async () => {
+  it('should return a 400 status code if the message is not provided', async () => {
+    const response = await request(app)
+      .post(endpoint.replace(':conversationId', conversationId))
+      .send({ logMetadata });
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Invalid request body');
+  });
+  it('should return a 404 status code if the conversationId is not null and the conversation does not exist', async () => {
     const response = await request(app)
       .post(endpoint.replace(':conversationId', '123'))
       .send({
         message: 'Hello, world!',
+        logMetadata,
       });
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Conversation not found');
@@ -52,6 +69,7 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
       .post(endpoint.replace(':conversationId', 'null'))
       .send({
         message: 'Remember this message: "TEST MESSAGE 123"',
+        logMetadata,
       });
     expect(response.status).toBe(200);
     expect(response.body.message).not.toBeNull();
@@ -63,15 +81,23 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
       .send({
         message:
           'Print out the content of my last message so we can test that history recollection works this is used in a unit test',
+        logMetadata,
       });
     expect(secondResponse.status).toBe(200);
     expect(secondResponse.body.message).not.toBeNull();
     expect(secondResponse.body.message).toContain('TEST MESSAGE 123');
   });
 });
-describe('completions/parsley/conversations/:conversationId/messages', () => {
+
+describe('GET /completions/parsley/conversations/:conversationId/messages', () => {
   const endpoint =
     '/completions/parsley/conversations/:conversationId/messages';
+  const logMetadata = {
+    task_id: '123',
+    execution: 1,
+    log_type: LogTypes.EVERGREEN_TASK_LOGS,
+    origin: TaskLogOrigin.Task,
+  };
   it('should return a 404 status code if the conversationId is not null and the conversation does not exist', async () => {
     const response = await request(app)
       .get(endpoint.replace(':conversationId', '123'))
@@ -88,6 +114,7 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
       .post(endpoint.replace(':conversationId', conversationId))
       .send({
         message: firstMessage,
+        logMetadata,
       });
     expect(response.status).toBe(200);
     expect(response.body.message).not.toBeNull();
