@@ -7,7 +7,6 @@ import getTaskHistoryTool from '../tools/evergreen/getTaskHistory';
 import getTaskTestsTool from '../tools/evergreen/getTaskTests';
 import getVersionTool from '../tools/evergreen/getVersion';
 import { memoryStore } from '../utils/memory';
-import { taskWorkflow } from '../workflows/taskWorkflow';
 
 const parsleyMemory = new Memory({
   storage: memoryStore,
@@ -45,15 +44,13 @@ export const parsleyAgent: Agent = new Agent({
    You do not need to use a tool to answer a question. Only use a tool if you are sure that you need to.
 `,
   model: gpt41Nano,
-  // tools: {
-  //   getTask: getTaskTool,
-  //   getTaskFiles: getTaskFilesTool,
-  //   getTaskHistory: getTaskHistoryTool,
-  //   getTaskTests: getTaskTestsTool,
-  //   getVersion: getVersionTool,
-  // },
-  memory: parsleyMemory,
-  workflows: {
-    taskWorkflow,
+  tools: {
+    getTask: getTaskTool,
+    getTaskFiles: getTaskFilesTool,
+    getTaskHistory: getTaskHistoryTool,
+    getTaskTests: getTaskTestsTool,
+    getVersion: getVersionTool,
   },
+  memory: parsleyMemory,
+  workflows: {},
 });
