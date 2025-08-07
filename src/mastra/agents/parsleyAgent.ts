@@ -7,7 +7,8 @@ import getTaskHistoryTool from '../tools/evergreen/getTaskHistory';
 import getTaskTestsTool from '../tools/evergreen/getTaskTests';
 import getVersionTool from '../tools/evergreen/getVersion';
 import { memoryStore } from '../utils/memory';
-import taskWorkflow from "../workflows/taskWorkflow";
+import taskWorkflow from '../workflows/taskWorkflow';
+import taskWithHistoryWorkflow from "../workflows/taskWithHistoryWorkflow";
 
 const parsleyMemory = new Memory({
   storage: memoryStore,
@@ -53,5 +54,8 @@ export const parsleyAgent: Agent = new Agent({
   //   getVersion: getVersionTool,
   // },
   memory: parsleyMemory,
-  workflows: {taskWorkflow},
+  workflows: { 
+    taskWorkflow,
+    taskWithHistoryWorkflow,
+  },
 });
