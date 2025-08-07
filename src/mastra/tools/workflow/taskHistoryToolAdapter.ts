@@ -1,6 +1,11 @@
 import { createTool } from '@mastra/core';
+import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
-import getTaskHistoryTool from '../evergreen/getTaskHistory';
+import { TaskHistoryQuery } from '../../../gql/generated/types';
+import { GraphQLClient } from '../../../utils/graphql/client';
+import logger from '../../../utils/logger';
+import evergreenClient from '../evergreen/graphql/evergreenClient';
+import GET_TASK_HISTORY from '../evergreen/graphql/get-task-history';
 
 const TaskHistoryDirectionEnum = z.enum(['AFTER', 'BEFORE']);
 
@@ -30,19 +35,48 @@ const taskHistoryToolAdapter = createTool({
   inputSchema: TaskHistoryOptsSchema,
   execute: async ({ context, runtimeContext }) => {
     try {
-      // Call the getTaskHistoryTool's execute function with proper context
-      if (getTaskHistoryTool.execute) {
-        // Return the result directly
-        return await getTaskHistoryTool.execute({
-          context,
-          runtimeContext,
-        });
+      const userID = runtimeContext.get('userID') as string | undefined;
+      if (!userID) {
+        logger.warn(
+          'User ID not available in RuntimeContext provided to taskHistoryToolAdapter'
+        );
       }
-      throw new Error('getTaskHistoryTool.execute is not defined');
+
+      // The GraphQL query expects the parameters wrapped in an "options" object
+      const variables = {
+        options: context,
+      };
+
+      // Execute the GraphQL query directly with properly formatted variables
+      const result = await evergreenClient.executeQuery<TaskHistoryQuery>(
+        GET_TASK_HISTORY,
+        variables,
+        {
+          userID: userID ?? '',
+        }
+      );
+
+      return result;
     } catch (error) {
-      console.error('Error executing getTaskHistoryTool:', error);
+      logger.error('Error executing taskHistoryToolAdapter:', error);
+
+      if (error instanceof Error) {
+        const errorMessage = error.message;
+        // Check if it's a GraphQL error with additional details
+        if ('errors' in error && 'statusCode' in error) {
+          return {
+            error: errorMessage,
+            graphqlErrors: (error as any).errors,
+            statusCode: (error as any).statusCode,
+          };
+        }
+        return {
+          error: errorMessage,
+        };
+      }
+
       return {
-        error: error instanceof Error ? error.message : String(error),
+        error: String(error),
       };
     }
   },
