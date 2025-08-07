@@ -4,9 +4,11 @@ import z from 'zod';
 import { mastra } from 'mastra';
 import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
 import { logger } from 'utils/logger';
+import { logMetadataSchema } from './validators';
 
 const addMessageInputSchema = z.object({
   message: z.string().min(1),
+  logMetadata: logMetadataSchema,
 });
 
 const addMessageParamsSchema = z.object({
