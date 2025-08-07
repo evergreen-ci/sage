@@ -6,6 +6,7 @@ export default `query GetTask($taskId: String!, $execution: Int) {
     execution
     patchNumber
     buildVariant
+    projectIdentifier
     versionMetadata {
       id
       isPatch

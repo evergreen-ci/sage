@@ -4,14 +4,10 @@ import { z } from 'zod';
 import taskHistoryToolAdapter from '../tools/workflow/taskHistoryToolAdapter';
 import taskToolAdapter from '../tools/workflow/taskToolAdapter';
 
-// Define the workflow input schema
+// Define the workflow input schema - only needs taskId and optional execution
 const workflowInputSchema = z.object({
   taskId: z.string(),
   execution: z.number().optional(),
-  projectIdentifier: z.string(),
-  buildVariant: z.string(),
-  taskName: z.string(),
-  limit: z.number().optional(),
 });
 
 // Define the workflow output schema
@@ -23,23 +19,14 @@ const workflowOutputSchema = z.object({
 
 // Create a step that retrieves task information
 const getTaskStep = createStep({
-  id: 'get-task-with-history',
+  id: 'get-task-for-history',
   description: 'Get task information from Evergreen',
   inputSchema: z.object({
     taskId: z.string(),
     execution: z.number().optional(),
-    projectIdentifier: z.string(),
-    buildVariant: z.string(),
-    taskName: z.string(),
-    limit: z.number().optional(),
   }),
   outputSchema: z.object({
     taskData: z.any(),
-    taskId: z.string(),
-    projectIdentifier: z.string(),
-    buildVariant: z.string(),
-    taskName: z.string(),
-    limit: z.number().optional(),
   }),
   execute: async ({ inputData }) => {
     // Check if the tool has an execute function
@@ -48,11 +35,6 @@ const getTaskStep = createStep({
         taskData: {
           error: 'taskToolAdapter.execute is not defined',
         },
-        taskId: inputData.taskId,
-        projectIdentifier: inputData.projectIdentifier,
-        buildVariant: inputData.buildVariant,
-        taskName: inputData.taskName,
-        limit: inputData.limit,
       };
     }
 
@@ -70,36 +52,66 @@ const getTaskStep = createStep({
 
     return {
       taskData: result,
-      taskId: inputData.taskId,
-      projectIdentifier: inputData.projectIdentifier,
-      buildVariant: inputData.buildVariant,
-      taskName: inputData.taskName,
-      limit: inputData.limit,
     };
   },
 });
 
-// Create a step that retrieves task history
+// Create a step that retrieves task history using data from the task
 const getTaskHistoryStep = createStep({
   id: 'get-task-history',
-  description: 'Get task history from Evergreen',
+  description: 'Get task history from Evergreen using task data',
   inputSchema: z.object({
     taskData: z.any(),
-    taskId: z.string(),
-    projectIdentifier: z.string(),
-    buildVariant: z.string(),
-    taskName: z.string(),
-    limit: z.number().optional(),
   }),
   outputSchema: z.object({
     taskData: z.any(),
     historyData: z.any(),
   }),
   execute: async ({ inputData }) => {
+    const { taskData } = inputData;
+    
+    // Check if there's an error in task data
+    if (taskData?.error) {
+      return {
+        taskData,
+        historyData: {
+          error: 'Cannot fetch history: task data has error',
+        },
+      };
+    }
+    
+    // Extract the task object from the response
+    const task = taskData?.task;
+    
+    if (!task) {
+      return {
+        taskData,
+        historyData: {
+          error: 'Cannot fetch history: task data is missing',
+        },
+      };
+    }
+    
+    // Extract required fields from the task response
+    const taskId = task.id;
+    const displayName = task.displayName;
+    const buildVariant = task.buildVariant;
+    const projectIdentifier = task.projectIdentifier;
+    
+    // Validate required fields
+    if (!taskId || !displayName || !buildVariant || !projectIdentifier) {
+      return {
+        taskData,
+        historyData: {
+          error: `Cannot fetch history: missing required fields (id: ${taskId}, displayName: ${displayName}, buildVariant: ${buildVariant}, projectIdentifier: ${projectIdentifier})`,
+        },
+      };
+    }
+    
     // Check if the tool has an execute function
     if (!taskHistoryToolAdapter.execute) {
       return {
-        taskData: inputData.taskData,
+        taskData,
         historyData: {
           error: 'taskHistoryToolAdapter.execute is not defined',
         },
@@ -109,27 +121,27 @@ const getTaskHistoryStep = createStep({
     // Create a new RuntimeContext
     const runtimeContext = new RuntimeContext();
 
-    // Create cursor params for the history query
+    // Create cursor params using the task id
     const cursorParams = {
-      cursorId: inputData.taskId,
+      cursorId: taskId,
       direction: 'BEFORE' as const,
-      includeCursor: false,
+      includeCursor: true, // Changed to true as per the example
     };
 
-    // Execute the taskHistoryToolAdapter with the provided context
+    // Execute the taskHistoryToolAdapter with data from the task
     const historyResult = await taskHistoryToolAdapter.execute({
       context: {
-        projectIdentifier: inputData.projectIdentifier,
-        buildVariant: inputData.buildVariant,
-        taskName: inputData.taskName,
+        taskName: displayName, // Use displayName as taskName
+        buildVariant: buildVariant,
+        projectIdentifier: projectIdentifier,
         cursorParams,
-        limit: inputData.limit,
+        limit: 10, // Default limit
       },
       runtimeContext,
     });
 
     return {
-      taskData: inputData.taskData,
+      taskData,
       historyData: historyResult,
     };
   },
@@ -145,7 +157,7 @@ const formatResultsStep = createStep({
   }),
   outputSchema: workflowOutputSchema,
   execute: async ({ inputData }) => {
-    const { historyData, taskData } = inputData;
+    const { taskData, historyData } = inputData;
 
     // Check if there's an error in either dataset
     if (taskData?.error || historyData?.error) {
@@ -168,14 +180,13 @@ const formatResultsStep = createStep({
 // Create the workflow
 export const taskWithHistoryWorkflow = createWorkflow({
   id: 'task-with-history-workflow',
-  description:
-    'Workflow to retrieve task information and its history from Evergreen',
+  description: 'Workflow to retrieve task information and its history from Evergreen',
   inputSchema: workflowInputSchema,
   outputSchema: workflowOutputSchema,
 })
-  // First step: get the task with all input data
+  // First step: get the task
   .then(getTaskStep)
-  // Second step: get the task history (data is already passed through from previous step)
+  // Second step: get the task history using task data
   .then(getTaskHistoryStep)
   // Third step: format the results
   .then(formatResultsStep)
