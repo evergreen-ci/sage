@@ -1,15 +1,13 @@
 import { ToolExecutionContext } from '@mastra/core';
 import { z } from 'zod';
-import {
-  TaskHistoryQuery,
-} from '../../../gql/generated/types';
+import { TaskHistoryQuery } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
 import evergreenClient from './graphql/evergreenClient';
 import GET_TASK_HISTORY from './graphql/get-task-history';
 
 const TaskHistoryDirectionEnum = z.enum(['AFTER', 'BEFORE']);
 
-const CursorParamsSchema = z.object({
+export const CursorParamsSchema = z.object({
   cursorId: z.string(),
   direction: TaskHistoryDirectionEnum,
   includeCursor: z.boolean(),

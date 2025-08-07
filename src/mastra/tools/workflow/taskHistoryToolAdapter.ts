@@ -1,19 +1,10 @@
 import { createTool } from '@mastra/core';
-import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
 import { TaskHistoryQuery } from '../../../gql/generated/types';
-import { GraphQLClient } from '../../../utils/graphql/client';
 import logger from '../../../utils/logger';
+import { CursorParamsSchema } from '../evergreen/getTaskHistory';
 import evergreenClient from '../evergreen/graphql/evergreenClient';
 import GET_TASK_HISTORY from '../evergreen/graphql/get-task-history';
-
-const TaskHistoryDirectionEnum = z.enum(['AFTER', 'BEFORE']);
-
-const CursorParamsSchema = z.object({
-  cursorId: z.string(),
-  direction: TaskHistoryDirectionEnum,
-  includeCursor: z.boolean(),
-});
 
 const TaskHistoryOptsSchema = z.object({
   buildVariant: z.string(),
