@@ -1,7 +1,7 @@
 import { createWorkflow, createStep } from '@mastra/core';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
-import taskTestsToolAdapter from '../tools/workflow/taskTestsToolAdapter';
+import { taskTestsToolAdapter } from '../tools/workflowAdapters';
 
 const workflowInputSchema = z.object({
   taskId: z.string(),
