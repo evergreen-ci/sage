@@ -18,8 +18,8 @@ afterAll(async () => {
 });
 
 describe('completions/parsley/messages', () => {
-  const createEndpoint = '/completions/parsley/messages';
-  const messageEndpoint = '/completions/parsley/:conversationId/messages';
+  const createEndpoint = '/completions/parsley/conversations/messages';
+  const messageEndpoint = '/completions/parsley/conversations/:conversationId/messages';
 
   it('sending a message will return a completion and create a new thread', async () => {
     const response = await request(app).post(createEndpoint).send({
@@ -64,8 +64,8 @@ describe('completions/parsley/messages', () => {
   });
 });
 describe('completions/parsley/:conversationId/messages', () => {
-  const createEndpoint = '/completions/parsley/messages';
-  const messageEndpoint = '/completions/parsley/:conversationId/messages';
+  const createEndpoint = '/completions/parsley/conversations/messages';
+  const messageEndpoint = '/completions/parsley/conversations/:conversationId/messages';
 
   it('should return a 404 status code if the conversationId does not exist when getting messages', async () => {
     const response = await request(app)
