@@ -17,49 +17,44 @@ afterAll(async () => {
   }
 });
 
-describe('completions/parsley/conversations/:conversationId/messages', () => {
-  const endpoint =
+describe('completions/parsley/conversations', () => {
+  const createEndpoint = '/completions/parsley/conversations';
+  const messageEndpoint =
     '/completions/parsley/conversations/:conversationId/messages';
-  const conversationId = 'null';
+
   it('sending a message will return a completion and create a new thread', async () => {
-    const response = await request(app)
-      .post(endpoint.replace(':conversationId', conversationId))
-      .send({
-        message: 'Hello, world!',
-      });
+    const response = await request(app).post(createEndpoint).send({
+      message: 'Hello, world!',
+    });
     expect(response.status).toBe(200);
     expect(response.body.message).not.toBeNull();
     expect(response.body.conversationId).not.toBeNull();
   });
-  it('should return a 400 status code if the message is not provided', async () => {
-    const response = await request(app)
-      .post(endpoint.replace(':conversationId', conversationId))
-      .send({});
+  it('should return a 400 status code if the message is not provided when creating conversation', async () => {
+    const response = await request(app).post(createEndpoint).send({});
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Invalid request body');
   });
-  it('should return a 400 status code if the conversationId is not null and the conversation does not exist', async () => {
+  it('should return a 404 status code if the conversationId does not exist', async () => {
     const response = await request(app)
-      .post(endpoint.replace(':conversationId', '123'))
+      .post(messageEndpoint.replace(':conversationId', '123'))
       .send({
         message: 'Hello, world!',
       });
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Conversation not found');
   });
-  it('should remember the previous messages if the conversationId is not null', async () => {
-    const response = await request(app)
-      .post(endpoint.replace(':conversationId', 'null'))
-      .send({
-        message: 'Remember this message: "TEST MESSAGE 123"',
-      });
+  it('should remember the previous messages if the conversationId is valid', async () => {
+    const response = await request(app).post(createEndpoint).send({
+      message: 'Remember this message: "TEST MESSAGE 123"',
+    });
     expect(response.status).toBe(200);
     expect(response.body.message).not.toBeNull();
     expect(response.body.conversationId).not.toBeNull();
     const newConversationId = response.body.conversationId;
 
     const secondResponse = await request(app)
-      .post(endpoint.replace(':conversationId', newConversationId))
+      .post(messageEndpoint.replace(':conversationId', newConversationId))
       .send({
         message:
           'Print out the content of my last message so we can test that history recollection works this is used in a unit test',
@@ -69,26 +64,23 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
     expect(secondResponse.body.message).toContain('TEST MESSAGE 123');
   });
 });
-describe('completions/parsley/conversations/:conversationId/messages', () => {
-  const endpoint =
+describe('completions/parsley/:conversationId/messages', () => {
+  const createEndpoint = '/completions/parsley/conversations';
+  const messageEndpoint =
     '/completions/parsley/conversations/:conversationId/messages';
-  it('should return a 404 status code if the conversationId is not null and the conversation does not exist', async () => {
+
+  it('should return a 404 status code if the conversationId does not exist when getting messages', async () => {
     const response = await request(app)
-      .get(endpoint.replace(':conversationId', '123'))
-      .send({
-        message: 'Hello, world!',
-      });
+      .get(messageEndpoint.replace(':conversationId', '123'))
+      .send({});
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Conversation not found');
   });
   it('should return the messages for a conversation', async () => {
-    const conversationId = 'null';
     const firstMessage = 'Hello, world!';
-    const response = await request(app)
-      .post(endpoint.replace(':conversationId', conversationId))
-      .send({
-        message: firstMessage,
-      });
+    const response = await request(app).post(createEndpoint).send({
+      message: firstMessage,
+    });
     expect(response.status).toBe(200);
     expect(response.body.message).not.toBeNull();
     expect(response.body.conversationId).not.toBeNull();
@@ -96,7 +88,7 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
     const newConversationId = response.body.conversationId;
 
     const messagesResponse = await request(app)
-      .get(endpoint.replace(':conversationId', newConversationId))
+      .get(messageEndpoint.replace(':conversationId', newConversationId))
       .send({});
     expect(messagesResponse.status).toBe(200);
     expect(messagesResponse.body.messages).not.toBeNull();

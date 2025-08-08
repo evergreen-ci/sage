@@ -27,11 +27,11 @@ const getMessagesRoute = async (
   });
 
   const { data: paramsData, success: paramsSuccess } =
-    getMessagesParamsSchema.safeParse(req.query);
+    getMessagesParamsSchema.safeParse(req.params);
   if (!paramsSuccess) {
     logger.error('Invalid request params', {
       requestId: req.requestId,
-      query: req.query,
+      params: req.params,
     });
     res.status(400).json({ message: 'Invalid request params' });
     return;
