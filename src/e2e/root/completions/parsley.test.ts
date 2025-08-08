@@ -17,8 +17,8 @@ afterAll(async () => {
   }
 });
 
-describe('completions/parsley/messages', () => {
-  const createEndpoint = '/completions/parsley/conversations/messages';
+describe('completions/parsley/conversations', () => {
+  const createEndpoint = '/completions/parsley/conversations';
   const messageEndpoint =
     '/completions/parsley/conversations/:conversationId/messages';
 
@@ -65,7 +65,7 @@ describe('completions/parsley/messages', () => {
   });
 });
 describe('completions/parsley/:conversationId/messages', () => {
-  const createEndpoint = '/completions/parsley/conversations/messages';
+  const createEndpoint = '/completions/parsley/conversations';
   const messageEndpoint =
     '/completions/parsley/conversations/:conversationId/messages';
 

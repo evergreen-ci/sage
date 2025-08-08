@@ -23,7 +23,7 @@ export type ErrorResponse = {
 };
 
 // Route to add a conversation and get a response
-router.post('/messages', createConversationRoute);
+router.post('', createConversationRoute);
 
 // Route to add a new message to a conversation and get a response
 router.post('/:conversationId/messages', addMessageRoute);
