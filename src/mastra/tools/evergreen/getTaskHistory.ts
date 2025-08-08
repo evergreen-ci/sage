@@ -33,6 +33,7 @@ const getTaskHistoryTool = createGraphQLTool<
   query: GET_TASK_HISTORY,
   inputSchema: TaskHistoryOptsSchema,
   client: evergreenClient,
+  transformVariables: context => ({ options: context }),
 });
 
 export default getTaskHistoryTool;

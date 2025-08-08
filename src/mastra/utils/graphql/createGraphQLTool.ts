@@ -13,6 +13,7 @@ interface GraphQLToolInputParams<TSchema extends z.ZodObject<any>> {
   inputSchema: TSchema;
   client: GraphQLClient;
   outputSchema?: z.ZodType<any>;
+  transformVariables?: (context: z.infer<TSchema>) => Record<string, unknown>;
 }
 
 /**
@@ -24,6 +25,7 @@ interface GraphQLToolInputParams<TSchema extends z.ZodObject<any>> {
  * @param param0.inputSchema - The input schema for the tool
  * @param param0.client - The GraphQL client to use
  * @param param0.outputSchema - Optional output schema for workflow compatibility
+ * @param param0.transformVariables - Optional function to transform context into GraphQL variables
  * @returns A typed Mastra tool that can be used in both agents and workflows
  */
 export const createGraphQLTool = <
@@ -37,6 +39,7 @@ export const createGraphQLTool = <
   inputSchema,
   outputSchema = z.any(),
   query,
+  transformVariables,
 }: GraphQLToolInputParams<TSchema>) =>
   createTool({
     id,
@@ -53,7 +56,10 @@ export const createGraphQLTool = <
       }
 
       try {
-        const result = await client.executeQuery<TResult>(query, context, {
+        const variables = transformVariables
+          ? transformVariables(context)
+          : context;
+        const result = await client.executeQuery<TResult>(query, variables, {
           userID: userID ?? '',
         });
         return result;
