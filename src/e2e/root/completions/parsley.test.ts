@@ -21,16 +21,6 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
   const endpoint =
     '/completions/parsley/conversations/:conversationId/messages';
   const conversationId = 'null';
-  it('sending a message will return a completion and create a new thread', async () => {
-    const response = await request(app)
-      .post(endpoint.replace(':conversationId', conversationId))
-      .send({
-        message: 'Hello, world!',
-      });
-    expect(response.status).toBe(200);
-    expect(response.body.message).not.toBeNull();
-    expect(response.body.conversationId).not.toBeNull();
-  });
   it('should return a 400 status code if the message is not provided', async () => {
     const response = await request(app)
       .post(endpoint.replace(':conversationId', conversationId))
@@ -67,6 +57,22 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
     expect(secondResponse.status).toBe(200);
     expect(secondResponse.body.message).not.toBeNull();
     expect(secondResponse.body.message).toContain('TEST MESSAGE 123');
+  });
+});
+describe('completions/parsley/conversations/messages', () => {
+  const endpoint = '/completions/parsley/conversations/messages';
+  it('sending a message will return a completion and create a new thread', async () => {
+    const response = await request(app).post(endpoint).send({
+      message: 'Hello, world!',
+    });
+    expect(response.status).toBe(200);
+    expect(response.body.message).not.toBeNull();
+    expect(response.body.conversationId).not.toBeNull();
+  });
+  it('should return a 400 status code if the message is not provided', async () => {
+    const response = await request(app).post(endpoint).send({});
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Invalid request body');
   });
 });
 describe('completions/parsley/conversations/:conversationId/messages', () => {
