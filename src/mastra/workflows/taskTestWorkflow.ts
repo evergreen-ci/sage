@@ -15,7 +15,7 @@ const workflowOutputSchema = z.object({
 
 const getTaskTestsStep = createStep({
   id: 'get-task-tests',
-  description: 'Get task information from Evergreen',
+  description: 'Get tests information from Evergreen for a task',
   inputSchema: z.object({
     taskId: z.string(),
     execution: z.number().optional(),
@@ -73,7 +73,7 @@ const formatTaskTestsStep = createStep({
 export const taskTestWorkflow = createWorkflow({
   id: 'task-tests-workflow',
   description:
-    'Workflow to retrieve and process Evergreen task tests information',
+    'Workflow to retrieve and process Evergreen tests information for a task',
   inputSchema: workflowInputSchema,
   outputSchema: workflowOutputSchema,
 })

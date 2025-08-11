@@ -5,6 +5,8 @@ import { memoryStore } from '../utils/memory';
 import historyWorkflow from '../workflows/historyWorkflow';
 import taskWorkflow from '../workflows/taskWorkflow';
 import versionWorkflow from '../workflows/versionWorkflow';
+import taskTestWorkflow from "../workflows/taskTestWorkflow";
+import taskFilesWorkflow from "../workflows/taskFilesWorkflow";
 
 const parsleyMemory = new Memory({
   storage: memoryStore,
@@ -47,5 +49,7 @@ export const parsleyAgent: Agent = new Agent({
     taskWorkflow,
     historyWorkflow,
     versionWorkflow,
+    taskTestWorkflow,
+    taskFilesWorkflow,
   },
 });
