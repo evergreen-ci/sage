@@ -11,10 +11,11 @@ import getVersionTool from '../evergreen/getVersion';
  * Creates a workflow adapter for a given tool
  * This is a factory function that creates simple tool adapters
  * that just pass through the context to the underlying tool
- * @param tool
- * @param options
- * @param options.id
- * @param options.description
+ * @param tool - The tool to create an adapter for
+ * @param options - Configuration options for the adapter
+ * @param options.id - Optional custom ID for the adapter
+ * @param options.description - Optional custom description for the adapter
+ * @returns A tool action that can be used in workflows
  */
 function createToolAdapter<TSchema extends z.ZodObject<any>>(
   tool: ToolAction<TSchema, any, any>,
