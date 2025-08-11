@@ -64,7 +64,7 @@ describe('completions/parsley/conversations', () => {
     expect(secondResponse.body.message).toContain('TEST MESSAGE 123');
   });
 });
-describe('completions/parsley/:conversationId/messages', () => {
+describe('completions/parsley/conversations/:conversationId/messages', () => {
   const createEndpoint = '/completions/parsley/conversations';
   const messageEndpoint =
     '/completions/parsley/conversations/:conversationId/messages';
