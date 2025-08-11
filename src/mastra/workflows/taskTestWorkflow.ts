@@ -6,6 +6,8 @@ import { taskTestsToolAdapter } from '../tools/workflowAdapters';
 const workflowInputSchema = z.object({
   taskId: z.string(),
   execution: z.number().optional(),
+  statusList: z.array(z.enum(['fail', 'pass'])).optional(),
+  testName: z.string().optional(),
 });
 
 const workflowOutputSchema = z.object({
@@ -19,6 +21,8 @@ const getTaskTestsStep = createStep({
   inputSchema: z.object({
     taskId: z.string(),
     execution: z.number().optional(),
+    statusList: z.array(z.enum(['fail', 'pass'])).optional(),
+    testName: z.string().optional(),
   }),
   outputSchema: z.object({
     data: z.any(),
@@ -35,8 +39,10 @@ const getTaskTestsStep = createStep({
 
     const result = await taskTestsToolAdapter.execute({
       context: {
-        taskId: inputData.taskId,
+        id: inputData.taskId,
         execution: inputData.execution,
+        statusList: inputData.statusList || ['fail', 'pass'],
+        testName: inputData.testName || '',
       },
       runtimeContext,
     });
