@@ -15,7 +15,7 @@ const workflowOutputSchema = z.object({
 
 const getTaskFilesStep = createStep({
   id: 'get-task-files',
-  description: 'Get task information from Evergreen',
+  description: 'Get task files from Evergreen',
   inputSchema: z.object({
     taskId: z.string(),
     execution: z.number().optional(),
