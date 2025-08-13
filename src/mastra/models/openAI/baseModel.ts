@@ -1,5 +1,5 @@
 import { createAzure } from '@ai-sdk/azure';
-import { LanguageModelV1 } from 'ai';
+import { LanguageModelV2 } from '@ai-sdk/provider';
 import { config } from '../../../config';
 import { logger } from '../../../utils/logger';
 
@@ -8,7 +8,7 @@ import { logger } from '../../../utils/logger';
  * It is a wrapper around the Azure OpenAI SDK.
  */
 class BaseModel {
-  private model: LanguageModelV1;
+  private model: LanguageModelV2;
 
   constructor(deploymentName: string) {
     // Create Azure OpenAI client with Vercel AI SDK
