@@ -97,7 +97,7 @@ export const config: Config = {
       openai: {
         apiKey: getEnvVar('AZURE_OPENAI_API_KEY', ''),
         endpoint: getEnvVar('AZURE_OPENAI_ENDPOINT', ''),
-        apiVersion: getEnvVar('AZURE_OPENAI_API_VERSION', ''),
+        apiVersion: 'preview',
         defaultDeployment: getEnvVar('AZURE_OPENAI_DEFAULT_DEPLOYMENT', ''),
       },
     },
@@ -125,7 +125,6 @@ export const config: Config = {
 export const validateConfig = (): string[] | undefined => {
   const requiredVars = [
     'NODE_ENV',
-    'AZURE_OPENAI_API_VERSION',
     'AZURE_OPENAI_API_KEY',
     'AZURE_OPENAI_ENDPOINT',
     'EVERGREEN_GRAPHQL_ENDPOINT',
