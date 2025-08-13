@@ -264,6 +264,7 @@ functions:
     command: shell.exec
     params:
       env:
+        AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION}
         AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
         AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
       working_dir: sage
