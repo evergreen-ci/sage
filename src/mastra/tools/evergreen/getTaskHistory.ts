@@ -14,12 +14,14 @@ export const CursorParamsSchema = z.object({
 });
 
 const TaskHistoryOptsSchema = z.object({
-  buildVariant: z.string(),
-  cursorParams: CursorParamsSchema,
-  date: z.union([z.string().datetime(), z.date()]).optional(), // Accepts ISO string or Date
-  limit: z.number().optional(),
-  projectIdentifier: z.string(),
-  taskName: z.string(),
+  options: z.object({
+    buildVariant: z.string(),
+    cursorParams: CursorParamsSchema,
+    date: z.union([z.string().datetime(), z.date()]).optional(), // Accepts ISO string or Date
+    limit: z.number().optional(),
+    projectIdentifier: z.string(),
+    taskName: z.string(),
+  });
 });
 
 const getTaskHistoryTool = createGraphQLTool<
