@@ -118,11 +118,13 @@ const getTaskHistoryStep = createStep({
 
     const historyResult = await taskHistoryToolAdapter.execute({
       context: {
-        taskName: displayName,
-        buildVariant: buildVariant,
-        projectIdentifier: projectIdentifier,
-        cursorParams,
-        limit: 30,
+        options: {
+          taskName: displayName,
+          buildVariant: buildVariant,
+          projectIdentifier: projectIdentifier,
+          cursorParams,
+          limit: 30,
+        },
       },
       runtimeContext,
     });
