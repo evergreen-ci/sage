@@ -41,14 +41,12 @@ const getMessagesRoute = async (
 
   const apiUser = req.headers['api-user'] as string | undefined;
   const apiKey = req.headers['api-key'] as string | undefined;
-  const userID = req.headers['end-user-header-id'] as string | undefined;
 
   logger.debug('Get messages authentication', {
     requestId: req.requestId,
     conversationId,
     apiUser,
     hasApiKey: !!apiKey,
-    userID,
   });
 
   try {
