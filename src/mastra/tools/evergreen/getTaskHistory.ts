@@ -21,7 +21,7 @@ const TaskHistoryOptsSchema = z.object({
     limit: z.number().optional(),
     projectIdentifier: z.string(),
     taskName: z.string(),
-  });
+  }),
 });
 
 const getTaskHistoryTool = createGraphQLTool<
