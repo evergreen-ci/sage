@@ -36,7 +36,20 @@ const getMessagesRoute = async (
     res.status(400).json({ message: 'Invalid request params' });
     return;
   }
+
   const { conversationId } = paramsData;
+
+  const apiUser = req.headers['api-user'] as string | undefined;
+  const apiKey = req.headers['api-key'] as string | undefined;
+  const userID = req.headers['end-user-header-id'] as string | undefined;
+
+  logger.debug('Get messages authentication', {
+    requestId: req.requestId,
+    conversationId,
+    apiUser,
+    hasApiKey: !!apiKey,
+    userID,
+  });
 
   try {
     const agent = mastra.getAgent(PARSLEY_AGENT_NAME);
@@ -56,6 +69,27 @@ const getMessagesRoute = async (
       });
       res.status(404).json({ message: 'Conversation not found' });
       return;
+    }
+
+    if (thread.metadata) {
+      const threadApiUser = thread.metadata.apiUser as string | undefined;
+      const threadApiKey = thread.metadata.apiKey as string | undefined;
+
+      const apiUserMatches = (apiUser || '') === (threadApiUser || '');
+      const apiKeyMatches = (apiKey || '') === (threadApiKey || '');
+
+      if (!apiUserMatches || !apiKeyMatches) {
+        logger.error('Unauthorized access attempt', {
+          requestId: req.requestId,
+          conversationId,
+          providedApiUser: apiUser,
+          threadApiUser,
+          apiUserMatches,
+          apiKeyMatches,
+        });
+        res.status(401).json({ message: 'Unauthorized' });
+        return;
+      }
     }
 
     const messages = await memory.query({

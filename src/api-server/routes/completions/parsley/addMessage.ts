@@ -1,3 +1,4 @@
+import { LanguageModelV2Usage } from '@ai-sdk/provider';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Request, Response } from 'express';
 import z from 'zod';
@@ -39,6 +40,19 @@ const addMessageRoute = async (
     res.status(400).json({ message: 'Invalid request params' });
     return;
   }
+
+  const runtimeContext = new RuntimeContext();
+
+  const apiUser = req.headers['api-user'] as string | undefined;
+  const apiKey = req.headers['api-key'] as string | undefined;
+
+  if (apiUser) {
+    runtimeContext.set('apiUser', apiUser);
+  }
+  if (apiKey) {
+    runtimeContext.set('apiKey', apiKey);
+  }
+
   const { conversationId: conversationIdParam } = paramsData;
 
   const { data: messageData, success: messageSuccess } =
@@ -88,6 +102,10 @@ const addMessageRoute = async (
     } else {
       const newThread = await memory?.createThread({
         resourceId: 'parsley_completions',
+        metadata: {
+          apiUser: apiUser || '',
+          apiKey: apiKey || '',
+        },
       });
       if (!newThread) {
         res.status(500).json({
@@ -107,23 +125,6 @@ const addMessageRoute = async (
       typeof memoryOptions.thread === 'string'
         ? memoryOptions.thread
         : memoryOptions.thread.id;
-
-    const runtimeContext = new RuntimeContext();
-
-    const apiUser = req.headers['api-user'] as string | undefined;
-    const apiKey = req.headers['api-key'] as string | undefined;
-
-    if (apiUser) {
-      runtimeContext.set('apiUser', apiUser);
-    }
-    if (apiKey) {
-      runtimeContext.set('apiKey', apiKey);
-    }
-
-    const userID = req.headers['end-user-header-id'] as string | undefined;
-    if (userID) {
-      runtimeContext.set('userID', userID);
-    }
 
     const result = await agent.generate(messageData.message, {
       memory: memoryOptions,
