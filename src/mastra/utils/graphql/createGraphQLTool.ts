@@ -48,9 +48,21 @@ export const createGraphQLTool = <
         );
       }
 
+      const apiUser = runtimeContext.get('apiUser') as string | undefined;
+      const apiKey = runtimeContext.get('apiKey') as string | undefined;
+
+      const headers: Record<string, string> = {};
+      if (apiUser) {
+        headers['Api-User'] = apiUser;
+      }
+      if (apiKey) {
+        headers['Api-Key'] = apiKey;
+      }
+
       try {
         const result = await client.executeQuery<TResult>(query, context, {
           userID: userID ?? '',
+          headers,
         });
         return result;
       } catch (error) {
