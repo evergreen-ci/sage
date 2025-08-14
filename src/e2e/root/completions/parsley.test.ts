@@ -148,14 +148,12 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
     const { GraphQLClient } = await import('../../../utils/graphql/client');
     const originalExecuteQuery = GraphQLClient.prototype.executeQuery;
 
-    const executeQueryMock = vi
-      .fn()
-      .mockImplementation(async (query, variables) => {
-        if (query.includes('query GetTask')) {
-          return mockTaskData;
-        }
-        return {};
-      });
+    const executeQueryMock = vi.fn().mockImplementation(async query => {
+      if (query.includes('query GetTask')) {
+        return mockTaskData;
+      }
+      return {};
+    });
 
     GraphQLClient.prototype.executeQuery = executeQueryMock;
 
