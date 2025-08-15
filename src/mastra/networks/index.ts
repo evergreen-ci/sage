@@ -1,0 +1,1 @@
+export { parsleyNetwork } from './parsleyNetwork';

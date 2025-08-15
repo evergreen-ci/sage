@@ -1,9 +1,9 @@
 import express from 'express';
-import parsleyRouter from './parsley';
+import parsleyNetworkRouter from './parsley';
 
 // export express router
 const completionsRouter = express.Router();
 
-completionsRouter.use('/parsley/conversations', parsleyRouter);
+completionsRouter.use('/parsley/conversations', parsleyNetworkRouter);
 
 export default completionsRouter;
