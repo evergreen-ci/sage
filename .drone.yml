@@ -8,6 +8,7 @@ platform:
 trigger:
   branch:
     - main
+    - auth-log
 
 steps:
   - name: publish
