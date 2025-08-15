@@ -5,18 +5,9 @@ import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
 import evergreenClient from './graphql/evergreenClient';
 import GET_TASK_HISTORY from './graphql/get-task-history';
 
-const TaskHistoryDirectionEnum = z.enum(['AFTER', 'BEFORE']);
-
-export const CursorParamsSchema = z.object({
-  cursorId: z.string(),
-  direction: TaskHistoryDirectionEnum,
-  includeCursor: z.boolean(),
-});
-
 const TaskHistoryOptsSchema = z.object({
   options: z.object({
     buildVariant: z.string(),
-    cursorParams: CursorParamsSchema,
     date: z.union([z.string().datetime(), z.date()]).optional(), // Accepts ISO string or Date
     limit: z.number().optional(),
     projectIdentifier: z.string(),
@@ -35,7 +26,6 @@ const getTaskHistoryTool = createGraphQLTool<
   query: GET_TASK_HISTORY,
   inputSchema: TaskHistoryOptsSchema,
   client: evergreenClient,
-  transformVariables: context => ({ options: context }),
 });
 
 export default getTaskHistoryTool;
