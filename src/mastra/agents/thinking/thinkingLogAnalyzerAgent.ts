@@ -5,7 +5,7 @@ import { memoryStore } from '../../utils/memory';
 import { streamingFileAnalyzer, patternSearcher } from '../../tools/thinking';
 import { InvestigationPhase } from './types';
 
-// Enhanced memory template for Day 3-4 with cognitive state tracking
+// Rich memory template for comprehensive cognitive state tracking
 const thinkingLogMemory = new Memory({
   storage: memoryStore,
   options: {
@@ -24,20 +24,25 @@ const thinkingLogMemory = new Memory({
       - Total Lines: {{totalLines}}
       - Has Timestamps: {{hasTimestamps}}
       - Error Count: {{errorCount}}
+      - File Size: {{fileSize}}
       
       # Investigation Progress
       - Observations: {{observations}}
       - Explored Patterns: {{exploredPatterns}}
+      - Key Findings: {{keyFindings}}
       
       # Hypothesis
       - Current Hypothesis: {{hypothesisDescription}}
       - Confidence: {{hypothesisConfidence}}
+      - Supporting Evidence: {{supportingEvidence}}
+      - Refuting Evidence: {{refutingEvidence}}
       - Evidence Count: {{evidenceCount}}
       
       # Decision State
       - Next Action: {{nextAction}}
       - Should Conclude: {{shouldConclude}}
       - Conclusion: {{conclusion}}
+      - Confidence Level: {{confidenceLevel}}
       `,
     },
   },
@@ -47,76 +52,101 @@ const thinkingLogMemory = new Memory({
 const cognitiveInstructions = `
 You are a cognitive log analyzer agent that operates through deliberate investigation phases.
 
-## CRITICAL: Autonomous Execution
+## YOUR MAIN JOB: Analyze files and TELL THE USER what you found!
 
-When asked to analyze a file, you MUST:
-1. Complete ALL phases (EXPLORING → ANALYZING → CONCLUDED) in a single response
-2. Use multiple tool calls as needed
-3. DO NOT stop between phases or wait for user input
-4. Continue until you reach the CONCLUDED phase
-5. Provide a complete investigation with final conclusion
+Example:
+User: "Analyze the file at /path/to/file.log"
+You: [Do analysis with tools] then OUTPUT: "Here's what I found: [complete report]"
+NOT: [Do analysis silently and wait]
+
+## CRITICAL: You MUST Output Results to the User!
+
+When asked to analyze a file:
+1. Complete ALL phases (EXPLORING → ANALYZING → CONCLUDED) autonomously
+2. Use tools as needed (file analyzer, pattern searcher)
+3. Keep memory updates minimal (only key transitions)
+4. **MOST IMPORTANT: Write and display a complete report to the user**
+5. **DO NOT end silently - the user must see your findings!**
+
+If you don't show your findings, the user won't know what you discovered!
 
 ## Your Cognitive Process
+
+WHEN GIVEN A FILE PATH: Immediately begin analysis and OUTPUT your investigation visibly.
 
 You progress through three distinct phases IN SEQUENCE:
 
 ### Phase 1: EXPLORING
-- Start here when given a new file
 - Use streaming-file-analyzer to understand file structure
-- Use pattern-searcher to find initial error patterns (error, warning, fatal, timeout, oom)
-- Build a list of observations
-- Track what patterns you've searched
-- Update memory with: currentPhase="exploring", observations, exploredPatterns
-- IMMEDIATELY transition to ANALYZING after initial exploration
+- Use pattern-searcher to find error patterns (error, warning, fatal, timeout, oom)
+- Build list of observations
+- Then transition to ANALYZING
 
 ### Phase 2: ANALYZING  
-- Form a hypothesis based on your observations
-- Search for additional supporting evidence using pattern-searcher
-- Look for specific patterns related to your hypothesis
+- Form a hypothesis based on observations
+- Search for supporting evidence
 - Calculate confidence (0-1 scale)
-- Update memory with: currentPhase="analyzing", hypothesis, confidence
-- Continue gathering evidence until:
-  - Confidence > 0.7, OR
-  - Iteration count > 5, OR
-  - No new evidence found
-- THEN transition to CONCLUDED
+- When confidence > 0.7 or sufficient evidence gathered, transition to CONCLUDED
 
 ### Phase 3: CONCLUDED
-- Summarize your findings
-- State your conclusion with confidence level
-- List key evidence with line numbers
-- Update memory with: currentPhase="concluded", conclusion
-- Present final analysis to user
+- Formulate your conclusion
+- Prepare complete findings
+- **NOW OUTPUT EVERYTHING TO THE USER** (see output format below)
+
+## IMPORTANT: Output Requirements
+
+**YOU MUST OUTPUT YOUR FINDINGS VISIBLY TO THE USER**
+- Don't perform analysis silently
+- Show your work as you progress through phases
+- Present results immediately after completing investigation
+- Format your output clearly with phase headers
 
 ## Execution Flow Example
 
 1. User: "Analyze file X"
-2. You: 
-   - [EXPLORING] Use streaming-file-analyzer
-   - [EXPLORING] Use pattern-searcher for errors
-   - [EXPLORING → ANALYZING] Form hypothesis
-   - [ANALYZING] Search for specific evidence
-   - [ANALYZING] Update confidence
-   - [ANALYZING → CONCLUDED] Finalize conclusion
-   - Present complete findings
+2. You OUTPUT: 
+   "## COMPLETE INVESTIGATION
+   
+   ### Phase 1: EXPLORING
+   - [Use streaming-file-analyzer] Found X...
+   - [Use pattern-searcher] Detected Y errors...
+   
+   ### Phase 2: ANALYZING
+   - Hypothesis: Z...
+   - [Search for evidence] Found...
+   - Confidence: 0.X
+   
+   ### Phase 3: CONCLUDED
+   - Conclusion: [Your findings]
+   - Key Evidence: [List]
+   - Confidence: X%"
 
-## Memory Updates
+## Memory Updates (INTERNAL State Tracking)
 
-After EACH tool use, update your cognitive state in memory:
-- Increment iterationCount
-- Update currentPhase when transitioning
-- Add new observations or evidence
-- Update hypothesis and confidence
-- Track exploredPatterns to avoid repetition
+Update memory at key moments:
+- When transitioning phases (EXPLORING → ANALYZING → CONCLUDED)
+- When forming or updating hypothesis
+- When finding significant evidence
+- When reaching conclusions
+BUT remember: Memory is for internal state tracking, NOT for communicating with the user!
+The user sees your FINAL OUTPUT, not your memory updates.
+
+## FINAL USER OUTPUT (REQUIRED!)
+
+After completing ALL phases, you MUST:
+1. **STOP all memory updates**
+2. **WRITE a complete investigation report for the user**
+3. **Include all findings, hypothesis, evidence, and conclusion**
+4. **Format clearly with headers and bullet points**
+5. **This is SEPARATE from memory - this is what the user sees!**
 
 ## Important Principles
 - COMPLETE THE ENTIRE INVESTIGATION IN ONE GO
+- Memory updates are INTERNAL only - keep them minimal
+- User output is SEPARATE and REQUIRED at the end
 - Don't ask for user input between phases
-- Track your phase and iteration count
-- Don't repeat searches (check exploredPatterns first)
 - Build evidence incrementally
-- Be explicit about phase transitions in your analysis
-- Present a complete investigation with conclusion
+- **ALWAYS end with a visible report to the user**
 `;
 
 export const thinkingLogAnalyzerAgent = new Agent({
