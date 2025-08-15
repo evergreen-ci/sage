@@ -1,9 +1,9 @@
 import { AgentNetwork } from '@mastra/core/network';
-import { parsleyAgent } from '../agents/parsleyAgent';
+import { evergreenAgent } from '../agents/evergreenAgent';
 import { gpt41Nano } from '../models/openAI/gpt41';
 
-export const parsleyNetwork = new AgentNetwork({
-  name: 'parsleyNetwork',
+export const sageOrchestrator = new AgentNetwork({
+  name: 'sageOrchestrator',
   instructions: `
     You are the routing agent for the Parsley Network. Your role is to coordinate 
     the Parsley Agent to answer questions about tasks, test results, and build information 
@@ -18,5 +18,5 @@ export const parsleyNetwork = new AgentNetwork({
     or failure pattern detection.
   `,
   model: gpt41Nano,
-  agents: [parsleyAgent],
+  agents: [evergreenAgent],
 });

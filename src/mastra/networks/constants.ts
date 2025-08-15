@@ -1,3 +1,3 @@
-const PARSLEY_NETWORK_NAME = 'parsleyNetwork';
+const ORCHESTRATOR_NAME = 'sageOrchestrator';
 
-export { PARSLEY_NETWORK_NAME };
+export { ORCHESTRATOR_NAME };

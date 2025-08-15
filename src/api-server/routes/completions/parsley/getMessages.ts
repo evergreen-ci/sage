@@ -2,7 +2,7 @@ import { CoreMessage } from '@mastra/core';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
-import { PARSLEY_NETWORK_NAME } from 'mastra/networks/constants';
+import { ORCHESTRATOR_NAME } from 'mastra/networks/constants';
 import { logger } from 'utils/logger';
 
 const getMessagesParamsSchema = z.object({
@@ -39,11 +39,11 @@ const getMessagesRoute = async (
   const { conversationId } = paramsData;
 
   try {
-    const network = mastra.getNetwork(PARSLEY_NETWORK_NAME);
+    const network = mastra.getNetwork(ORCHESTRATOR_NAME);
     if (!network) {
       logger.error('Network not found', {
         requestId: req.requestId,
-        networkName: PARSLEY_NETWORK_NAME,
+        networkName: ORCHESTRATOR_NAME,
       });
       res.status(500).json({ message: 'Network not found' });
       return;

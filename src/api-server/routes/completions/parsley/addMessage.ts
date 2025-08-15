@@ -2,7 +2,7 @@ import { LanguageModelV2Usage } from '@ai-sdk/provider';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
-import { PARSLEY_NETWORK_NAME } from 'mastra/networks/constants';
+import { ORCHESTRATOR_NAME } from 'mastra/networks/constants';
 import { logger } from 'utils/logger';
 
 const addMessageInputSchema = z.object({
@@ -55,11 +55,11 @@ const addMessageRoute = async (
   let conversationId =
     conversationIdParam === 'null' ? null : conversationIdParam;
   try {
-    const network = mastra.getNetwork(PARSLEY_NETWORK_NAME);
+    const network = mastra.getNetwork(ORCHESTRATOR_NAME);
     if (!network) {
       logger.error('Network not found', {
         requestId: req.requestId,
-        networkName: PARSLEY_NETWORK_NAME,
+        networkName: ORCHESTRATOR_NAME,
       });
       res.status(500).json({ message: 'Network not found' });
       return;
