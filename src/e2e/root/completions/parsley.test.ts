@@ -8,7 +8,7 @@ import { getMessageContent } from '../../utils';
 const app = setupTestAppServer();
 
 afterAll(async () => {
-  console.log('Clearing tables');
+  console.log('Clearing tables for network tests');
   try {
     await memoryStore.clearTable({ tableName: TABLE_THREADS });
     await memoryStore.clearTable({ tableName: TABLE_MESSAGES });
@@ -18,20 +18,22 @@ afterAll(async () => {
   }
 }, 30000);
 
-describe('completions/parsley/conversations/:conversationId/messages', () => {
+describe('completions/parsley-network/conversations/:conversationId/messages', () => {
   const endpoint =
-    '/completions/parsley/conversations/:conversationId/messages';
+    '/completions/parsley-network/conversations/:conversationId/messages';
   const conversationId = 'null';
+
   it('sending a message will return a completion and create a new thread', async () => {
     const response = await request(app)
       .post(endpoint.replace(':conversationId', conversationId))
       .send({
-        message: 'Hello, world!',
+        message: 'Hello from network!',
       });
     expect(response.status).toBe(200);
     expect(response.body.message).not.toBeNull();
     expect(response.body.conversationId).not.toBeNull();
   });
+
   it('should return a 400 status code if the message is not provided', async () => {
     const response = await request(app)
       .post(endpoint.replace(':conversationId', conversationId))
@@ -39,20 +41,22 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Invalid request body');
   });
-  it('should return a 400 status code if the conversationId is not null and the conversation does not exist', async () => {
+
+  it('should return a 404 status code if the conversationId is not null and the conversation does not exist', async () => {
     const response = await request(app)
-      .post(endpoint.replace(':conversationId', '123'))
+      .post(endpoint.replace(':conversationId', 'non-existent-123'))
       .send({
         message: 'Hello, world!',
       });
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Conversation not found');
   });
+
   it('should remember the previous messages if the conversationId is not null', async () => {
     const response = await request(app)
       .post(endpoint.replace(':conversationId', 'null'))
       .send({
-        message: 'Remember this message: "TEST MESSAGE 123"',
+        message: 'Remember this message: "NETWORK TEST 456"',
       });
     expect(response.status).toBe(200);
     expect(response.body.message).not.toBeNull();
@@ -67,24 +71,39 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
       });
     expect(secondResponse.status).toBe(200);
     expect(secondResponse.body.message).not.toBeNull();
-    expect(secondResponse.body.message).toContain('TEST MESSAGE 123');
+    expect(secondResponse.body.message).toContain('NETWORK TEST 456');
+  });
+
+  it('should optionally include agent interaction summary', async () => {
+    const response = await request(app)
+      .post(endpoint.replace(':conversationId', 'null'))
+      .send({
+        message: 'What tasks are available?',
+      });
+    expect(response.status).toBe(200);
+    expect(response.body.message).not.toBeNull();
+    // Agent interaction summary may or may not be present
+    if (response.body.agentInteractionSummary) {
+      expect(typeof response.body.agentInteractionSummary).toBe('string');
+    }
   });
 });
-describe('completions/parsley/conversations/:conversationId/messages', () => {
+
+describe('completions/parsley-network/conversations/:conversationId/messages GET', () => {
   const endpoint =
-    '/completions/parsley/conversations/:conversationId/messages';
-  it('should return a 404 status code if the conversationId is not null and the conversation does not exist', async () => {
+    '/completions/parsley-network/conversations/:conversationId/messages';
+
+  it('should return a 404 status code if the conversationId does not exist', async () => {
     const response = await request(app)
-      .get(endpoint.replace(':conversationId', '123'))
-      .send({
-        message: 'Hello, world!',
-      });
+      .get(endpoint.replace(':conversationId', 'non-existent-456'))
+      .send({});
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Conversation not found');
   });
+
   it('should return the messages for a conversation', async () => {
     const conversationId = 'null';
-    const firstMessage = 'Hello, world!';
+    const firstMessage = 'Hello from network GET test!';
     const response = await request(app)
       .post(endpoint.replace(':conversationId', conversationId))
       .send({
@@ -101,7 +120,6 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
       .send({});
     expect(messagesResponse.status).toBe(200);
     expect(messagesResponse.body.messages).not.toBeNull();
-    console.log(messagesResponse.body);
     expect(messagesResponse.body.messages.length).toBe(2);
     expect(getMessageContent(messagesResponse.body.messages[0])).toBe(
       firstMessage
@@ -112,33 +130,33 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
   });
 });
 
-describe('completions/parsley/conversations/:conversationId/messages with taskWorkflow', () => {
+describe('completions/parsley-network with taskWorkflow through network routing', () => {
   const endpoint =
-    '/completions/parsley/conversations/:conversationId/messages';
+    '/completions/parsley-network/conversations/:conversationId/messages';
 
-  it('should use taskWorkflow to fetch task details from evergreenClient and return information to the user', async () => {
+  it('should route through network to use taskWorkflow and fetch task details', async () => {
     // Mock the evergreenClient's executeQuery method
     const mockTaskData = {
       task: {
-        id: 'task_123',
-        displayName: 'Test Task',
+        id: 'network_task_789',
+        displayName: 'Network Test Task',
         displayStatus: 'succeeded',
         execution: 0,
-        patchNumber: 12345,
+        patchNumber: 54321,
         buildVariant: 'ubuntu2204',
-        projectIdentifier: 'test-project',
+        projectIdentifier: 'network-test-project',
         versionMetadata: {
-          id: 'version_123',
+          id: 'version_789',
           isPatch: false,
-          message: 'Test commit message',
-          projectIdentifier: 'test-project',
+          message: 'Network test commit message',
+          projectIdentifier: 'network-test-project',
           projectMetadata: {
-            id: 'project_123',
+            id: 'project_789',
           },
-          revision: 'abcdef123456',
+          revision: 'fedcba654321',
         },
         details: {
-          description: 'Task completed successfully',
+          description: 'Network task completed successfully',
           failingCommand: null,
           status: 'success',
         },
@@ -161,7 +179,7 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
       const response = await request(app)
         .post(endpoint.replace(':conversationId', 'null'))
         .send({
-          message: 'Use taskWorkflow to get task task_123',
+          message: 'Use taskWorkflow to get task network_task_789',
         })
         .timeout(30000);
 
@@ -182,7 +200,7 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
       expect(taskQueryCall).toBeDefined();
       if (taskQueryCall) {
         expect(taskQueryCall[1]).toMatchObject({
-          taskId: 'task_123',
+          taskId: 'network_task_789',
         });
       }
 

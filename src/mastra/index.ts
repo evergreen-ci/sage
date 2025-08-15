@@ -1,6 +1,7 @@
 import { Mastra } from '@mastra/core/mastra';
 import { WinstonMastraLogger } from '../utils/logger/winstonMastraLogger';
 import { parsleyAgent } from './agents/parsleyAgent';
+import { parsleyNetwork } from './networks';
 import {
   historyWorkflow,
   taskWorkflow,
@@ -18,6 +19,7 @@ export const mastra: Mastra = new Mastra({
     taskFilesWorkflow,
   },
   agents: { parsleyAgent },
+  networks: { parsleyNetwork },
   logger: new WinstonMastraLogger({
     name: 'Mastra',
     level: 'info',

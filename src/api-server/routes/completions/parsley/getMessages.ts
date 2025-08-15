@@ -2,7 +2,7 @@ import { CoreMessage } from '@mastra/core';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
-import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
+import { PARSLEY_NETWORK_NAME } from 'mastra/networks/constants';
 import { logger } from 'utils/logger';
 
 const getMessagesParamsSchema = z.object({
@@ -21,7 +21,7 @@ const getMessagesRoute = async (
   req: Request,
   res: Response<GetMessagesOutput | ErrorResponse>
 ) => {
-  logger.info('Get messages request received', {
+  logger.info('Get messages request received for network', {
     requestId: req.requestId,
     body: req.body,
   });
@@ -39,8 +39,18 @@ const getMessagesRoute = async (
   const { conversationId } = paramsData;
 
   try {
-    const agent = mastra.getAgent(PARSLEY_AGENT_NAME);
-    const memory = await agent.getMemory();
+    const network = mastra.getNetwork(PARSLEY_NETWORK_NAME);
+    if (!network) {
+      logger.error('Network not found', {
+        requestId: req.requestId,
+        networkName: PARSLEY_NETWORK_NAME,
+      });
+      res.status(500).json({ message: 'Network not found' });
+      return;
+    }
+
+    const routingAgent = network.getRoutingAgent();
+    const memory = await routingAgent.getMemory();
     if (!memory) {
       logger.error('Memory not found', {
         requestId: req.requestId,
@@ -63,7 +73,7 @@ const getMessagesRoute = async (
     });
     res.status(200).json({ messages: messages.messages });
   } catch (error) {
-    logger.error('Error in get messages route', {
+    logger.error('Error in get messages route for network', {
       error,
       requestId: req.requestId,
     });
