@@ -3,8 +3,9 @@ import { Memory } from '@mastra/memory';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { memoryStore } from '../../utils/memory';
 import { streamingFileAnalyzer, patternSearcher } from '../../tools/thinking';
+import { InvestigationPhase } from './types';
 
-// Minimal memory template for Day 1-2
+// Enhanced memory template for Day 3-4 with cognitive state tracking
 const thinkingLogMemory = new Memory({
   storage: memoryStore,
   options: {
@@ -12,58 +13,98 @@ const thinkingLogMemory = new Memory({
       scope: 'thread',
       enabled: true,
       template: `
+      # Cognitive State
+      - Current Phase: {{currentPhase}}
+      - Iteration: {{iterationCount}}
+      - Max Iterations: {{maxIterations}}
+      
       # File Context
       - File Path: {{filePath}}
       - File Type: {{fileType}}
-      - File Structure: {{fileStructure}}
+      - Total Lines: {{totalLines}}
+      - Has Timestamps: {{hasTimestamps}}
+      - Error Count: {{errorCount}}
       
-      # Observations
-      - Key Patterns Found: {{keyPatterns}}
-      - Anomalies Detected: {{anomalies}}
-      - Areas Investigated: {{areasInvestigated}}
+      # Investigation Progress
+      - Observations: {{observations}}
+      - Explored Patterns: {{exploredPatterns}}
       
-      # Analysis Progress
-      - Current Focus: {{currentFocus}}
-      - Findings Summary: {{findingsSummary}}
+      # Hypothesis
+      - Current Hypothesis: {{hypothesisDescription}}
+      - Confidence: {{hypothesisConfidence}}
+      - Evidence Count: {{evidenceCount}}
+      
+      # Decision State
+      - Next Action: {{nextAction}}
+      - Should Conclude: {{shouldConclude}}
+      - Conclusion: {{conclusion}}
       `,
     },
   },
 });
 
-// Minimal instructions for Day 1-2 - just basic analysis capability
-const minimalInstructions = `
-You are a thinking log analyzer agent with the ability to analyze log files iteratively.
+// Cognitive instructions for Day 3-4 with phase awareness
+const cognitiveInstructions = `
+You are a cognitive log analyzer agent that operates through deliberate investigation phases.
 
-## Your Task
-Analyze the provided log file to understand its structure, identify patterns, and find any issues or anomalies.
+## Your Cognitive Process
 
-## Your Process (Minimal Version)
+You progress through three distinct phases:
 
-1. **File Analysis**: 
-   - Use the streaming-file-analyzer to understand the file structure
-   - Identify the log format, timestamp patterns, and general structure
-   - Note any obvious issues or patterns
+### Phase 1: EXPLORING
+- Start here when given a new file
+- Use streaming-file-analyzer to understand file structure
+- Use pattern-searcher to find initial error patterns
+- Build a list of observations
+- Track what patterns you've searched
+- Update memory with: currentPhase="exploring", observations, exploredPatterns
+- Transition to ANALYZING when you have enough initial data
 
-2. **Pattern Search**:
-   - Use the pattern-searcher to find specific patterns or errors
-   - Search for common error keywords: error, exception, failed, fatal, warning
-   - Look for any unusual patterns or anomalies
+### Phase 2: ANALYZING  
+- Form a hypothesis based on your observations
+- Look for supporting evidence
+- Calculate confidence (0-1 scale)
+- Update memory with: currentPhase="analyzing", hypothesis, confidence
+- Transition to CONCLUDED when:
+  - Confidence > 0.7, OR
+  - Iteration count > 5, OR
+  - No new evidence found
 
-3. **Summary**:
-   - Provide a clear summary of what you found
-   - Highlight any critical issues
-   - Suggest areas that might need deeper investigation
+### Phase 3: CONCLUDED
+- Summarize your findings
+- State your conclusion with confidence level
+- List key evidence
+- Update memory with: currentPhase="concluded", conclusion
+
+## Memory Updates
+
+After EACH tool use, update your cognitive state in memory:
+- Increment iterationCount
+- Update currentPhase if transitioning
+- Add new observations or evidence
+- Update hypothesis and confidence
+- Set nextAction for transparency
+
+## Decision Making
+
+Before each action, consider:
+1. What phase am I in?
+2. What have I already explored? (check exploredPatterns)
+3. What's my current hypothesis and confidence?
+4. Should I transition to the next phase?
 
 ## Important Principles
-- Be efficient with file reading (use streaming tools)
-- Focus on finding actionable insights
-- Be explicit about what you found and what you're uncertain about
+- Always track your phase and iteration count
+- Don't repeat searches (check exploredPatterns first)
+- Build evidence incrementally
+- Be explicit about phase transitions
+- Know when you have enough information (don't over-analyze)
 `;
 
 export const thinkingLogAnalyzerAgent = new Agent({
   name: 'Thinking Log Analyzer Agent',
   description: 'A cognitive agent that can iteratively analyze log files to identify issues and patterns',
-  instructions: minimalInstructions,
+  instructions: cognitiveInstructions,
   model: gpt41,
   tools: {
     'streaming-file-analyzer': streamingFileAnalyzer,
