@@ -5,9 +5,11 @@ import * as readline from 'node:readline';
 
 interface PatternMatch {
   pattern: string;
+  patternKey?: string;
   line: number;
   content: string;
   context: string[];
+  where: string;
 }
 
 interface SearchResult {
@@ -15,8 +17,19 @@ interface SearchResult {
   totalMatches: number;
   searchCompleted: boolean;
   patternsFound: string[];
+  totals: Record<string, number>;
   summary: string;
 }
+
+// Consolidated pattern definitions with synonyms
+const CONSOLIDATED_PATTERNS: Record<string, RegExp> = {
+  error: /\b(error|err|failed?|failure)\b/i,
+  warning: /\b(warn|warning)\b/i,
+  exception: /\b(exception|traceback|stack\s*trace)\b/i,
+  fatal: /\b(fatal|panic|crash)\b/i,
+  timeout: /\b(timeout|timed?\s*out)\b/i,
+  refused: /\b(refused|rejected|denied)\b/i,
+};
 
 async function searchPatternsStreaming(
   filePath: string,
@@ -26,12 +39,23 @@ async function searchPatternsStreaming(
 ): Promise<SearchResult> {
   const matches: PatternMatch[] = [];
   const patternsFound: Set<string> = new Set();
+  const totals: Record<string, number> = {};
   let totalMatches = 0;
   let lineNumber = 0;
   let searchCompleted = true;
   
   // Convert patterns to RegExp objects, handling both regex and literal strings
   const regexPatterns = patterns.map(pattern => {
+    // Check if this is a known consolidated pattern key
+    const patternLower = pattern.toLowerCase();
+    if (CONSOLIDATED_PATTERNS[patternLower]) {
+      return { 
+        original: pattern, 
+        patternKey: patternLower,
+        regex: CONSOLIDATED_PATTERNS[patternLower] 
+      };
+    }
+    
     try {
       // Check if pattern looks like a regex (starts and ends with /)
       if (pattern.startsWith('/') && pattern.endsWith('/')) {
@@ -78,11 +102,16 @@ async function searchPatternsStreaming(
       }
       
       // Check each pattern against the current line
-      for (const { original, regex } of regexPatterns) {
+      for (const patternObj of regexPatterns) {
+        const { original, regex, patternKey } = patternObj as any;
         regex.lastIndex = 0; // Reset regex state
         if (regex.test(line)) {
           totalMatches++;
           patternsFound.add(original);
+          
+          // Track totals using patternKey if available, otherwise use original
+          const countKey = patternKey || original;
+          totals[countKey] = (totals[countKey] || 0) + 1;
           
           // Only store detailed match if under the limit
           if (matches.length < maxMatches) {
@@ -93,9 +122,11 @@ async function searchPatternsStreaming(
             
             const match: PatternMatch = {
               pattern: original,
+              patternKey,
               line: lineNumber,
               content: line.trim(),
               context: [...beforeContext],
+              where: `line ${lineNumber}`,
             };
             
             // Store match to add after context
@@ -149,15 +180,21 @@ async function searchPatternsStreaming(
   // Generate summary
   let summary = '';
   if (totalMatches === 0) {
-    summary = 'No matches found for any of the provided patterns.';
+    summary = 'No error patterns found.';
   } else if (totalMatches === 1) {
     summary = `Found 1 match for pattern "${patternsFound.values().next().value}".`;
   } else {
-    const patternList = Array.from(patternsFound).join(', ');
+    // Create a concise summary with totals
+    const totalsSummary = Object.entries(totals)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([key, count]) => `${key}:${count}`)
+      .join(', ');
+    
     if (searchCompleted) {
-      summary = `Found ${totalMatches} total matches across patterns: ${patternList}`;
+      summary = `Found ${totalMatches} matches: ${totalsSummary}`;
     } else {
-      summary = `Found at least ${totalMatches} matches (search truncated) across patterns: ${patternList}`;
+      summary = `Found ${totalMatches}+ matches (truncated): ${totalsSummary}`;
     }
   }
 
@@ -166,6 +203,7 @@ async function searchPatternsStreaming(
     totalMatches,
     searchCompleted,
     patternsFound: Array.from(patternsFound),
+    totals,
     summary,
   };
 }

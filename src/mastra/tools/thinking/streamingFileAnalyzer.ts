@@ -12,17 +12,21 @@ interface FileAnalysis {
     sampleSize: number;
     hasTimestamps: boolean;
     timestampFormat?: string;
+    sampleTimestamp?: string;
     errorPatterns: string[];
     lineLength: { min: number; max: number; avg: number };
+    sampling: 'full-file' | 'partial';
   };
 }
 
 async function analyzeFileStreaming(filePath: string, sampleSize: number = 1000): Promise<FileAnalysis> {
-  const observations: string[] = [];
+  const observationSet = new Set<string>();
+  const note = (obs: string) => observationSet.add(obs);
   const errorPatterns: string[] = [];
   let totalLines = 0;
   let hasTimestamps = false;
   let timestampFormat: string | undefined;
+  let sampleTimestamp: string | undefined;
   let fileType = 'unknown';
   let structure = 'unstructured';
   
@@ -35,7 +39,7 @@ async function analyzeFileStreaming(filePath: string, sampleSize: number = 1000)
     // Check if file exists
     const stats = fs.statSync(filePath);
     const fileSizeMB = stats.size / (1024 * 1024);
-    observations.push(`File size: ${fileSizeMB.toFixed(2)} MB`);
+    note(`File size: ${fileSizeMB.toFixed(2)} MB`);
 
     // Create readline interface for streaming
     const fileStream = fs.createReadStream(filePath, { encoding: 'utf-8' });
@@ -84,7 +88,11 @@ async function analyzeFileStreaming(filePath: string, sampleSize: number = 1000)
             if (pattern.test(line)) {
               hasTimestamps = true;
               timestampFormat = pattern.source;
-              observations.push('Timestamps detected in log entries');
+              if (!sampleTimestamp) {
+                const match = line.match(pattern);
+                if (match) sampleTimestamp = match[0];
+              }
+              note('Timestamps detected in log entries');
               break;
             }
           }
@@ -129,25 +137,32 @@ async function analyzeFileStreaming(filePath: string, sampleSize: number = 1000)
     }
 
     // Add observations based on analysis
-    observations.push(`Analyzed ${Math.min(totalLines, sampleSize)} lines out of approximately ${totalLines} total lines`);
+    const sampledLines = Math.min(totalLines, sampleSize);
+    const sampling = totalLines <= sampleSize ? 'full-file' : 'partial';
+    
+    if (sampling === 'full-file') {
+      note(`Analyzed entire file: ${totalLines} lines`);
+    } else {
+      note(`Analyzed ${sampledLines} lines out of ${totalLines} total lines`);
+    }
     
     if (errorPatterns.length > 0) {
-      observations.push(`Found error indicators: ${errorPatterns.slice(0, 5).join(', ')}`);
+      note(`Found error indicators: ${errorPatterns.slice(0, 5).join(', ')}`);
     }
     
     if (hasTimestamps) {
-      observations.push('File appears to have chronological entries');
+      note('File appears to have chronological entries');
     }
     
     const avgLineLength = lines.length > 0 ? Math.round(totalLineLength / lines.length) : 0;
     if (maxLineLength > 1000) {
-      observations.push('File contains very long lines (possible stack traces or data dumps)');
+      note('File contains very long lines (possible stack traces or data dumps)');
     }
     
     // Check for patterns in line structure
     const jsonLineCount = lines.filter(l => l.trim().startsWith('{') || l.trim().startsWith('[')).length;
     if (jsonLineCount > lines.length * 0.8) {
-      observations.push('Majority of lines appear to be JSON formatted');
+      note('Majority of lines appear to be JSON formatted');
     }
     
     // Check for stack traces
@@ -155,7 +170,7 @@ async function analyzeFileStreaming(filePath: string, sampleSize: number = 1000)
       l.includes('\tat ') || l.includes('  at ') || l.includes('Traceback') || l.includes('goroutine')
     ).length;
     if (stackTraceIndicators > 0) {
-      observations.push('Stack traces detected in file');
+      note('Stack traces detected in file');
     }
 
     const metadata: FileAnalysis['metadata'] = {
@@ -168,16 +183,21 @@ async function analyzeFileStreaming(filePath: string, sampleSize: number = 1000)
         max: maxLineLength,
         avg: avgLineLength,
       },
+      sampling,
     };
     
     if (timestampFormat !== undefined) {
       metadata.timestampFormat = timestampFormat;
     }
+    
+    if (sampleTimestamp !== undefined) {
+      metadata.sampleTimestamp = sampleTimestamp;
+    }
 
     return {
       fileType,
       structure,
-      observations,
+      observations: [...observationSet],
       metadata,
     };
   } catch (error: any) {
