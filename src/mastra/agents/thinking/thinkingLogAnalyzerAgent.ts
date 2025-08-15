@@ -48,7 +48,7 @@ const thinkingLogMemory = new Memory({
   },
 });
 
-// Cognitive instructions for Day 3-4 with autonomous loop execution
+// Cognitive instructions for autonomous investigation loop
 const cognitiveInstructions = `
 You are a cognitive log analyzer agent that operates through deliberate investigation phases.
 

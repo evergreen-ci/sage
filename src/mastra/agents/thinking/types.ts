@@ -5,7 +5,7 @@
 
 /**
  * Investigation phases for the cognitive loop
- * Day 3-4: Using simplified 3-phase system
+ * Using a 3-phase system for iterative analysis
  */
 export enum InvestigationPhase {
   EXPLORING = 'exploring',        // Initial reconnaissance and data gathering
@@ -24,7 +24,7 @@ export interface Evidence {
 }
 
 /**
- * Simplified hypothesis for Day 3-4
+ * Hypothesis structure for tracking investigation theories
  */
 export interface Hypothesis {
   description: string;
@@ -35,7 +35,7 @@ export interface Hypothesis {
 
 /**
  * Cognitive state structure for memory tracking
- * Simplified version for Day 3-4 implementation
+ * Tracks the agent's investigation progress and findings
  */
 export interface CognitiveState {
   // Core State
