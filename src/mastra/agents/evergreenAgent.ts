@@ -10,7 +10,7 @@ import {
   versionWorkflow,
 } from '../workflows';
 
-const parsleyMemory = new Memory({
+const evergreenMemory = new Memory({
   storage: memoryStore,
   options: {
     workingMemory: {
@@ -37,16 +37,16 @@ const parsleyMemory = new Memory({
   },
 });
 
-export const parsleyAgent: Agent = new Agent({
-  name: 'Parsley Agent',
+export const evergreenAgent: Agent = new Agent({
+  name: 'Evergreen Agent',
   description:
-    'Parsley is a helpful assistant that can help with tasks questions when embedded in the parsley log viewer',
+    'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources when embedded in the parsley log viewer',
   instructions: `
-   You are parsley ai, a helpful assistant that can help with tasks and questions.  You should only use the tools provided to you.
+   You are Evergreen ai, a helpful assistant that can help with tasks and questions about Evergreen resources. You should only use the tools and workflows provided to you.
    You do not need to use a tool to answer a question. Only use a tool if you are sure that you need to.
 `,
   model: gpt41Nano,
-  memory: parsleyMemory,
+  memory: evergreenMemory,
   workflows: {
     taskWorkflow,
     historyWorkflow,

@@ -2,7 +2,7 @@ import { LanguageModelV2Usage } from '@ai-sdk/provider';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
-import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
+import { ORCHESTRATOR_NAME } from 'mastra/networks/constants';
 import { logger } from 'utils/logger';
 
 const addMessageInputSchema = z.object({
@@ -19,6 +19,7 @@ type AddMessageOutput = {
   timestamp: string;
   completionUsage: LanguageModelV2Usage;
   conversationId: string;
+  agentInteractionSummary?: string;
 };
 
 type ErrorResponse = {
@@ -54,8 +55,24 @@ const addMessageRoute = async (
   let conversationId =
     conversationIdParam === 'null' ? null : conversationIdParam;
   try {
-    const agent = mastra.getAgent(PARSLEY_AGENT_NAME);
-    const memory = await agent.getMemory();
+    const network = mastra.getNetwork(ORCHESTRATOR_NAME);
+    if (!network) {
+      logger.error('Network not found', {
+        requestId: req.requestId,
+        networkName: ORCHESTRATOR_NAME,
+      });
+      res.status(500).json({ message: 'Network not found' });
+      return;
+    }
+
+    const routingAgent = network.getAgents()[0];
+    if (!routingAgent) {
+      logger.error('Invalid network agents', {
+        requestId: req.requestId,
+      });
+      return;
+    }
+    const memory = await routingAgent.getMemory();
     let memoryOptions;
 
     // If the conversationId is not null, we use the existing thread
@@ -87,7 +104,7 @@ const addMessageRoute = async (
       }
     } else {
       const newThread = await memory?.createThread({
-        resourceId: 'parsley_completions',
+        resourceId: 'parsley_network_completions',
       });
       if (!newThread) {
         res.status(500).json({
@@ -108,9 +125,11 @@ const addMessageRoute = async (
         ? memoryOptions.thread
         : memoryOptions.thread.id;
 
-    const result = await agent.generate(messageData.message, {
+    const result = await network.generate(messageData.message, {
       memory: memoryOptions,
     });
+
+    const agentInteractionSummary = network.getAgentInteractionSummary();
 
     res.json({
       message: result.text,
@@ -118,9 +137,10 @@ const addMessageRoute = async (
       timestamp: new Date().toISOString(),
       completionUsage: result.usage,
       conversationId: conversationId,
+      ...(agentInteractionSummary && { agentInteractionSummary }),
     });
   } catch (error) {
-    logger.error('Error in add message route', {
+    logger.error('Error in add message route for network', {
       error,
       requestId: req.requestId,
     });

@@ -62,7 +62,7 @@ sage/
 │   │   └── connection.ts             # MongoDB connection
 │   ├── mastra/                       # Mastra agent framework
 │   │   ├── agents/
-│   │   │   └── parsleyAgent.ts
+│   │   │   └── evergreenAgent.ts
 │   │   ├── tools/
 │   │   │   └── some_tool.ts          # [Tools documentation](https://mastra.ai/en/docs/tools-mcp/overview)
 │   │   ├── workflows/
