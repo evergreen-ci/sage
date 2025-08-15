@@ -3,7 +3,7 @@ import { parsleyAgent } from '../agents/parsleyAgent';
 import { gpt41Nano } from '../models/openAI/gpt41';
 
 export const parsleyNetwork = new AgentNetwork({
-  name: 'Parsley Network',
+  name: 'parsleyNetwork',
   instructions: `
     You are the routing agent for the Parsley Network. Your role is to coordinate 
     the Parsley Agent to answer questions about tasks, test results, and build information 
