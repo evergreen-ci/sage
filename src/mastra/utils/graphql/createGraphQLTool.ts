@@ -3,7 +3,7 @@ import { z } from 'zod';
 import {
   GraphQLClient,
   GraphQLClientError,
-} from '../../../utils/graphql/client'; // adjust path
+} from '../../../utils/graphql/client';
 import logger from '../../../utils/logger';
 
 interface GraphQLToolInputParams<TSchema extends z.ZodObject<any>> {
@@ -12,6 +12,7 @@ interface GraphQLToolInputParams<TSchema extends z.ZodObject<any>> {
   query: string;
   inputSchema: TSchema;
   client: GraphQLClient;
+  outputSchema?: z.ZodType<any>;
 }
 
 /**
@@ -22,7 +23,8 @@ interface GraphQLToolInputParams<TSchema extends z.ZodObject<any>> {
  * @param param0.query - The GraphQL query to execute
  * @param param0.inputSchema - The input schema for the tool
  * @param param0.client - The GraphQL client to use
- * @returns A typed Mastra tool
+ * @param param0.outputSchema - Optional output schema for workflow compatibility
+ * @returns A typed Mastra tool that can be used in both agents and workflows
  */
 export const createGraphQLTool = <
   TSchema extends z.ZodObject<any>,
@@ -33,11 +35,13 @@ export const createGraphQLTool = <
   description,
   id,
   inputSchema,
+  outputSchema = z.any(),
   query,
 }: GraphQLToolInputParams<TSchema>) =>
   createTool({
     id,
     inputSchema,
+    outputSchema,
     description,
     execute: async ({ context, runtimeContext }) => {
       const userID = runtimeContext.get('userID') as string | undefined;
@@ -49,7 +53,8 @@ export const createGraphQLTool = <
       }
 
       try {
-        const result = await client.executeQuery<TResult>(query, context, {
+        const variables = context;
+        const result = await client.executeQuery<TResult>(query, variables, {
           userID: userID ?? '',
         });
         return result;
@@ -85,4 +90,4 @@ export const createGraphQLTool = <
         };
       }
     },
-  }) as ToolAction<TSchema, undefined, TExecutionContext>;
+  }) as ToolAction<TSchema, typeof outputSchema, TExecutionContext>;
