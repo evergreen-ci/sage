@@ -48,10 +48,13 @@ const getMessagesRoute = async (
       res.status(500).json({ message: 'Network not found' });
       return;
     }
-    const routingAgent = network.getRoutingAgent();
-    logger.info('checking RA')
-    logger.info(routingAgent.name)
-    logger.info(routingAgent.id)
+    const routingAgent = network.getAgents()[0];
+    if (!routingAgent) {
+      logger.error('Invalid network agents', {
+        requestId: req.requestId,
+      });
+      return;
+    }
     const memory = await routingAgent.getMemory();
     if (!memory) {
       logger.error('Memory not found', {

@@ -65,7 +65,13 @@ const addMessageRoute = async (
       return;
     }
 
-    const routingAgent = network.getRoutingAgent();
+    const routingAgent = network.getAgents()[0];
+    if (!routingAgent) {
+      logger.error('Invalid network agents', {
+        requestId: req.requestId,
+      });
+      return;
+    }
     const memory = await routingAgent.getMemory();
     let memoryOptions;
 
