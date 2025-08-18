@@ -142,3 +142,9 @@ Launches a local Mastra server at `http://localhost:4111` for agent testing.
 * **Workflows**: Add workflows to `src/mastra/workflows`. Workflows define multi-step logic that agents can follow.
 
 All agents and workflows should be registered in `src/mastra/index.ts`.
+
+## Deployment
+
+### Staging Deploys
+
+To deploy your changes to Sage's staging environment, make changes on a new branch. Update the .drone.yml's `trigger` field to include your branch name, commit, and push up to GitHub. A Drone build will be kicked off automatically.
