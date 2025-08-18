@@ -58,10 +58,10 @@ export const createGraphQLTool = <
 
       try {
         const variables = context;
-          const result = await client.executeQuery<TResult>(query, context, {
-              userID: userId ?? '',
-              headers,
-          });
+        const result = await client.executeQuery<TResult>(query, context, {
+          userID: userId ?? '',
+          headers,
+        });
         return result;
       } catch (error) {
         const baseError = {
