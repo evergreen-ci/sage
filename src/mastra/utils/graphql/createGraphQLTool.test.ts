@@ -11,18 +11,18 @@ const mockClient = {
 };
 
 const inputSchema = z.object({
-  taskID: z.string(),
+  taskId: z.string(),
 });
 
 const query = `
-  query GetTask($taskID: String!) {
-    task(id: $taskID) {
+  query GetTask($taskId: String!) {
+    task(id: $taskId) {
       id
     }
   }
 `;
 
-const context = { taskID: 'abc123' };
+const context = { taskId: 'abc123' };
 
 const makeRuntimeContext = (userID?: string) => {
   const runtimeContext = new RuntimeContext();

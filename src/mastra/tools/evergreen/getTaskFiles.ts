@@ -1,26 +1,26 @@
 import { ToolExecutionContext } from '@mastra/core';
 import { z } from 'zod';
-import { GetTaskQuery } from '../../../gql/generated/types';
+import { TaskFilesQuery } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
 import evergreenClient from './graphql/evergreenClient';
-import GET_TASK from './graphql/get-task';
+import GET_TASK_FILES from './graphql/get-task-files';
 
 const getTaskInputSchema = z.object({
   taskId: z.string(),
   execution: z.number().optional(),
 });
 
-const getTaskTool = createGraphQLTool<
+const getTaskFilesTool = createGraphQLTool<
   typeof getTaskInputSchema,
-  GetTaskQuery,
+  TaskFilesQuery,
   ToolExecutionContext<typeof getTaskInputSchema>
 >({
-  id: 'getTask',
+  id: 'getTaskFiles',
   description:
-    'Get a task from Evergreen. This tool is used to get the details of a task from Evergreen. It is used to get the details of a task from Evergreen. It requires a taskId to be provided. A taskId is a string that is unique to a task in Evergreen',
-  query: GET_TASK,
+    'Get the files of a task from Evergreen. This tool is used to get files for a task from Evergreen. It requires a taskId to be provided. A taskId is a string that is unique to a task in Evergreen',
+  query: GET_TASK_FILES,
   inputSchema: getTaskInputSchema,
   client: evergreenClient,
 });
 
-export default getTaskTool;
+export default getTaskFilesTool;
