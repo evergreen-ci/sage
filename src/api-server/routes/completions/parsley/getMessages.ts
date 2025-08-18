@@ -1,9 +1,13 @@
 import { CoreMessage } from '@mastra/core';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
 import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
 import { logger } from 'utils/logger';
+import {
+  AuthenticatedRequest,
+  extractUserIdFromKanopyHeader,
+} from '../../../middlewares/authentication';
 
 const getMessagesParamsSchema = z.object({
   conversationId: z.string().min(1),
@@ -18,7 +22,7 @@ type ErrorResponse = {
 };
 
 const getMessagesRoute = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<GetMessagesOutput | ErrorResponse>
 ) => {
   logger.info('Get messages request received', {
@@ -39,14 +43,28 @@ const getMessagesRoute = async (
 
   const { conversationId } = paramsData;
 
-  const apiUser = req.headers['api-user'] as string | undefined;
-  const apiKey = req.headers['api-key'] as string | undefined;
+  const kanopyAuthHeader = req.headers['X-Kanopy-Internal-Authorization'] as
+    | string
+    | undefined;
+  const userId = kanopyAuthHeader
+    ? extractUserIdFromKanopyHeader(kanopyAuthHeader)
+    : null;
+
+  const authenticatedUserId = req.userId || userId;
+
+  if (!authenticatedUserId) {
+    logger.error('No authentication provided', {
+      requestId: req.requestId,
+      conversationId,
+    });
+    res.status(401).json({ message: 'Authentication required' });
+    return;
+  }
 
   logger.debug('Get messages authentication', {
     requestId: req.requestId,
     conversationId,
-    apiUser,
-    hasApiKey: !!apiKey,
+    userId: authenticatedUserId,
   });
 
   try {
@@ -70,24 +88,25 @@ const getMessagesRoute = async (
     }
 
     if (thread.metadata) {
-      const threadApiUser = thread.metadata.apiUser as string | undefined;
-      const threadApiKey = thread.metadata.apiKey as string | undefined;
+      const threadOwner = thread.metadata.userId as string | undefined;
 
-      const apiUserMatches = (apiUser || '') === (threadApiUser || '');
-      const apiKeyMatches = (apiKey || '') === (threadApiKey || '');
-
-      if (!apiUserMatches || !apiKeyMatches) {
+      if (threadOwner && threadOwner !== authenticatedUserId) {
         logger.error('Unauthorized access attempt', {
           requestId: req.requestId,
           conversationId,
-          providedApiUser: apiUser,
-          threadApiUser,
-          apiUserMatches,
-          apiKeyMatches,
+          authenticatedUserId,
+          threadOwner,
         });
-        res.status(401).json({ message: 'Unauthorized' });
+        res.status(403).json({ message: 'Access denied to this conversation' });
         return;
       }
+    } else {
+      logger.error('Thread has no metadata, denying access', {
+        requestId: req.requestId,
+        conversationId,
+      });
+      res.status(403).json({ message: 'Access denied to this conversation' });
+      return;
     }
 
     const messages = await memory.query({

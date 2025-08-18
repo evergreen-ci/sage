@@ -1,10 +1,14 @@
 import { LanguageModelV2Usage } from '@ai-sdk/provider';
 import { RuntimeContext } from '@mastra/core/runtime-context';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
 import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
 import { logger } from 'utils/logger';
+import {
+  AuthenticatedRequest,
+  extractUserIdFromKanopyHeader,
+} from '../../../middlewares/authentication';
 
 const addMessageInputSchema = z.object({
   message: z.string().min(1),
@@ -27,7 +31,7 @@ type ErrorResponse = {
 };
 
 const addMessageRoute = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<AddMessageOutput | ErrorResponse>
 ) => {
   const { data: paramsData, success: paramsSuccess } =
@@ -43,15 +47,21 @@ const addMessageRoute = async (
 
   const runtimeContext = new RuntimeContext();
 
-  const apiUser = req.headers['api-user'] as string | undefined;
-  const apiKey = req.headers['api-key'] as string | undefined;
+  const kanopyAuthHeader = req.headers['X-Kanopy-Internal-Authorization'] as
+    | string
+    | undefined;
+  const userId = kanopyAuthHeader
+    ? extractUserIdFromKanopyHeader(kanopyAuthHeader)
+    : null;
 
-  if (apiUser) {
-    runtimeContext.set('apiUser', apiUser);
-  }
-  if (apiKey) {
-    runtimeContext.set('apiKey', apiKey);
-  }
+  const authenticatedUserId = req.userId || userId || 'anonymous';
+
+  runtimeContext.set('userId', authenticatedUserId);
+
+  logger.debug('User context set for request', {
+    userId: authenticatedUserId,
+    requestId: req.requestId,
+  });
 
   const { conversationId: conversationIdParam } = paramsData;
 
@@ -103,8 +113,7 @@ const addMessageRoute = async (
       const newThread = await memory?.createThread({
         resourceId: 'parsley_completions',
         metadata: {
-          apiUser: apiUser || '',
-          apiKey: apiKey || '',
+          userId: authenticatedUserId,
         },
       });
       if (!newThread) {

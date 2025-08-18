@@ -40,28 +40,21 @@ export const createGraphQLTool = <
     inputSchema,
     description,
     execute: async ({ context, runtimeContext }) => {
-      const userID = runtimeContext.get('userID') as string | undefined;
-      if (!userID) {
+      const userId = runtimeContext.get('userId') as string | undefined;
+      if (!userId) {
         logger.warn(
           'User ID not available in RuntimeContext provided to GraphQL tool',
           { id }
         );
       }
-
-      const apiUser = runtimeContext.get('apiUser') as string | undefined;
-      const apiKey = runtimeContext.get('apiKey') as string | undefined;
-
       const headers: Record<string, string> = {};
-      if (apiUser) {
-        headers['Api-User'] = apiUser;
-      }
-      if (apiKey) {
-        headers['Api-Key'] = apiKey;
+      if (userId) {
+        headers['X-Authenticated-User'] = userId;
       }
 
       try {
         const result = await client.executeQuery<TResult>(query, context, {
-          userID: userID ?? '',
+          userID: userId ?? '',
           headers,
         });
         return result;
@@ -69,7 +62,7 @@ export const createGraphQLTool = <
         const baseError = {
           id,
           context,
-          userID,
+          userId,
           error: error instanceof Error ? error.message : String(error),
         };
 
