@@ -26,6 +26,7 @@ export async function authenticateKanopyToken(
   next: NextFunction
 ): Promise<void> {
   try {
+    // Headers in Express are case-insensitive, accessing with lowercase
     const internalAuthHeader = req.headers[
       'x-kanopy-internal-authorization'
     ] as string;
@@ -34,15 +35,17 @@ export async function authenticateKanopyToken(
       logger.warn('Missing x-kanopy-internal-authorization header', {
         requestId: req.headers['x-request-id'],
         path: req.path,
+        headers: Object.keys(req.headers),
       });
       req.isAuthenticated = false;
       return next();
     }
 
+    // Remove 'Bearer ' prefix if present
     const token = internalAuthHeader.replace(/^Bearer\s+/i, '');
 
     if (!token) {
-      logger.warn('Empty authentication token', {
+      logger.warn('Empty authentication token after removing Bearer prefix', {
         requestId: req.headers['x-request-id'],
         path: req.path,
       });
@@ -50,12 +53,12 @@ export async function authenticateKanopyToken(
       return next();
     }
 
-    try {
-      const jwksEndpoint =
-        config.deploymentEnv === 'production'
-          ? 'https://login.corp.mongodb.com/.well-known/jwks.json'
-          : 'https://login.staging.corp.mongodb.com/.well-known/jwks.json';
+    const jwksEndpoint =
+      config.deploymentEnv === 'production'
+        ? 'https://login.corp.mongodb.com/.well-known/jwks.json'
+        : 'https://login.staging.corp.mongodb.com/.well-known/jwks.json';
 
+    try {
       const JWKS = createRemoteJWKSet(new URL(jwksEndpoint));
 
       const { payload } = (await jwtVerify(token, JWKS, {
@@ -73,9 +76,13 @@ export async function authenticateKanopyToken(
       next();
     } catch (jwtError) {
       logger.error('JWT validation failed', {
-        error: jwtError,
+        error: jwtError instanceof Error ? jwtError.message : String(jwtError),
+        errorDetails: jwtError,
         requestId: req.headers['x-request-id'],
         path: req.path,
+        jwksEndpoint,
+        tokenLength: token.length,
+        deploymentEnv: config.deploymentEnv,
       });
       req.isAuthenticated = false;
       return next();
@@ -92,7 +99,7 @@ export async function authenticateKanopyToken(
 
 /**
  * Simple extraction of user ID from Kanopy header without full JWT validation
- * Use this when you trust that Kanopy has already validated the token
+ * Use this when you trust that Kanopy has already validated the internalAuthHeader
  * @param authHeader - The authorization header string
  * @returns The user ID or null if extraction fails
  */
@@ -107,7 +114,6 @@ export function extractUserIdFromKanopyHeader(
     // Remove 'Bearer ' prefix if present
     const token = authHeader.replace(/^Bearer\s+/i, '');
 
-    // Split JWT and decode payload (middle part)
     const parts = token.split('.');
     if (parts.length !== 3) {
       logger.warn('Invalid JWT format');
