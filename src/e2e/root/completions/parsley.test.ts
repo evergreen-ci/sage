@@ -152,51 +152,33 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
     '/completions/parsley/conversations/:conversationId/messages';
 
   it('should use taskWorkflow to fetch task details from evergreenClient and return information to the user', async () => {
-    // Mock the evergreenClient's executeQuery method
-    const mockTaskData = {
-      task: {
-        id: 'task_123',
-        displayName: 'Test Task',
-        displayStatus: 'succeeded',
-        execution: 0,
-        patchNumber: 12345,
-        buildVariant: 'ubuntu2204',
-        projectIdentifier: 'test-project',
-        versionMetadata: {
-          id: 'version_123',
-          isPatch: false,
-          message: 'Test commit message',
-          projectIdentifier: 'test-project',
-          projectMetadata: {
-            id: 'project_123',
-          },
-          revision: 'abcdef123456',
-        },
-        details: {
-          description: 'Task completed successfully',
-          failingCommand: null,
-          status: 'success',
-        },
-      },
-    };
-
     const { GraphQLClient } = await import('../../../utils/graphql/client');
-    const originalExecuteQuery = GraphQLClient.prototype.executeQuery;
-
-    const executeQueryMock = vi.fn().mockImplementation(async query => {
-      if (query.includes('query GetTask')) {
-        return mockTaskData;
-      }
-      return {};
-    });
-
-    GraphQLClient.prototype.executeQuery = executeQueryMock;
+    const executeQuerySpy = vi
+      .spyOn(GraphQLClient.prototype, 'executeQuery')
+      .mockImplementation(async query => {
+        if (query.includes('query GetTask')) {
+          return {
+            task: {
+              id: 'task_123',
+              displayName: 'Test Task',
+              displayStatus: 'succeeded',
+            },
+          };
+        }
+        return {};
+      });
 
     try {
       const response = await request(app)
         .post(endpoint.replace(':conversationId', 'null'))
         .send({
           message: 'Use taskWorkflow to get task task_123',
+          logMetadata: {
+            task_id: 'task_123',
+            execution: 0,
+            log_type: LogTypes.EVERGREEN_TASK_LOGS,
+            origin: TaskLogOrigin.Task,
+          },
         })
         .timeout(30000);
 
@@ -207,11 +189,11 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
       expect(response.status).toBe(200);
       expect(response.body.message).not.toBeNull();
       expect(response.body.conversationId).not.toBeNull();
-      expect(executeQueryMock).toHaveBeenCalled();
+      expect(executeQuerySpy).toHaveBeenCalled();
 
-      const { calls } = executeQueryMock.mock;
+      const { calls } = executeQuerySpy.mock;
       const taskQueryCall = calls.find(
-        call => call[0] && call[0].includes('query GetTask')
+        (call: any) => call[0] && call[0].includes('query GetTask')
       );
 
       expect(taskQueryCall).toBeDefined();
@@ -224,7 +206,7 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
       const responseMessage = response.body.message.toLowerCase();
       expect(responseMessage).toContain('task');
     } finally {
-      GraphQLClient.prototype.executeQuery = originalExecuteQuery;
+      executeQuerySpy.mockRestore();
     }
   }, 30000);
 });
