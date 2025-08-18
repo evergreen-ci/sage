@@ -123,6 +123,18 @@ export const config: Config = {
  * @returns An array of error messages if any of the required environment variables are not set, otherwise undefined.
  */
 export const validateConfig = (): string[] | undefined => {
+  if (
+    process.env.NODE_ENV !== 'test' &&
+    process.env.NODE_ENV !== 'development'
+  ) {
+    const warningMsg = `
+================================================================================
+  ⚠️  WARNING: RUNNING against "${process.env.NODE_ENV}" environment! BE CAREFUL! ⚠️
+================================================================================
+`;
+    console.warn(warningMsg);
+  }
+
   const requiredVars = [
     'NODE_ENV',
     'AZURE_OPENAI_API_KEY',
