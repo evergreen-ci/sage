@@ -54,13 +54,14 @@ const addMessageRoute = async (
     ? extractUserIdFromKanopyHeader(kanopyAuthHeader)
     : null;
 
-  const authenticatedUserId = req.userId || userId || 'anonymous';
+  const authenticatedUserId = req.userId || userId || '';
 
   runtimeContext.set('userId', authenticatedUserId);
 
   logger.debug('User context set for request', {
     userId: authenticatedUserId,
     requestId: req.requestId,
+    header: kanopyAuthHeader,
   });
 
   const { conversationId: conversationIdParam } = paramsData;
