@@ -5,8 +5,16 @@ import { mastra } from 'mastra';
 import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
 import { logger } from 'utils/logger';
 
+// Objects and strings are both valid inputs to agent.stream, so accept either.
 const addMessageInputSchema = z.object({
-  messages: z.array(z.any()),
+  message: z.union([
+    z.string(),
+    // This object mimics a UIMessage.
+    z.object({
+      role: z.string(),
+      parts: z.array(z.any()),
+    }),
+  ]),
 });
 
 const addMessageParamsSchema = z.object({
@@ -108,7 +116,7 @@ const addMessageRoute = async (
         ? memoryOptions.thread
         : memoryOptions.thread.id;
 
-    const stream = await agent.stream(messageData.messages, {
+    const stream = await agent.stream(messageData.message, {
       memory: memoryOptions,
     });
 
