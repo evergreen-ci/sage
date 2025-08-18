@@ -191,7 +191,9 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
       }
 
       const responseMessage = response.body.message.toLowerCase();
-      expect(responseMessage).toContain('task');
+      // TODO: Right now this returns an error message because we can't query the task details from evergreenClient since the test environment only uses prod variables.
+      // We need to enable support for local testing of this test suite.
+      expect(responseMessage).toContain('task_123');
     } finally {
       executeQuerySpy.mockRestore();
     }
