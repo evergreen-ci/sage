@@ -153,20 +153,7 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
 
   it('should use taskWorkflow to fetch task details from evergreenClient and return information to the user', async () => {
     const { GraphQLClient } = await import('../../../utils/graphql/client');
-    const executeQuerySpy = vi
-      .spyOn(GraphQLClient.prototype, 'executeQuery')
-      .mockImplementation(async query => {
-        if (query.includes('query GetTask')) {
-          return {
-            task: {
-              id: 'task_123',
-              displayName: 'Test Task',
-              displayStatus: 'succeeded',
-            },
-          };
-        }
-        return {};
-      });
+    const executeQuerySpy = vi.spyOn(GraphQLClient.prototype, 'executeQuery');
 
     try {
       const response = await request(app)
