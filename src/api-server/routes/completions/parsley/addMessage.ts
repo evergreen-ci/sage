@@ -1,20 +1,21 @@
 import { LanguageModelV2Usage } from '@ai-sdk/provider';
+import { validateUIMessages } from 'ai';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
 import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
 import { logger } from 'utils/logger';
 
-// Objects and strings are both valid inputs to agent.stream, so accept either.
+// Full validation is handled by validateUIMessage
+const uiMessageSchema = z.object({
+  id: z.string(),
+  role: z.enum(['user', 'assistant', 'system']),
+  parts: z.array(z.any()),
+});
+
+// UIMessage arrays and strings are both valid inputs to agent.stream, so accept either.
 const addMessageInputSchema = z.object({
-  message: z.union([
-    z.string(),
-    // This object mimics a UIMessage.
-    z.object({
-      role: z.string(),
-      parts: z.array(z.any()),
-    }),
-  ]),
+  message: z.union([z.string(), uiMessageSchema]),
 });
 
 const addMessageParamsSchema = z.object({
@@ -59,6 +60,26 @@ const addMessageRoute = async (
     res.status(400).json({ message: 'Invalid request body' });
     return;
   }
+
+  let validatedMessage;
+  try {
+    if (typeof messageData.message === 'string') {
+      validatedMessage = messageData.message;
+    } else {
+      validatedMessage = await validateUIMessages({
+        // append the new message to the previous messages:
+        messages: [messageData.message],
+      });
+    }
+  } catch (error) {
+    logger.error('Invalid UIMessage request params', {
+      requestId: req.requestId,
+      params: req.params,
+    });
+    res.status(400).json({ message: 'Invalid UIMessage request params' });
+    return;
+  }
+
   let conversationId =
     conversationIdParam === 'null' ? null : conversationIdParam;
   try {
@@ -116,7 +137,7 @@ const addMessageRoute = async (
         ? memoryOptions.thread
         : memoryOptions.thread.id;
 
-    const stream = await agent.stream(messageData.message, {
+    const stream = await agent.stream(validatedMessage, {
       memory: memoryOptions,
     });
 

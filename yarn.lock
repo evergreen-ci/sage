@@ -19,6 +19,14 @@
     "@ai-sdk/provider" "2.0.0"
     "@ai-sdk/provider-utils" "3.0.1"
 
+"@ai-sdk/gateway@1.0.7":
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/gateway/-/gateway-1.0.7.tgz#8a2a735037209d571480140a7919f32ae08cea81"
+  integrity sha512-Athrq7OARuNc0iHZJP6InhSQ53tImCc990vMWyR1UHaZgPZJbXjKhIMiOj54F0I0Nlemx48V4fHYUTfLkJotnQ==
+  dependencies:
+    "@ai-sdk/provider" "2.0.0"
+    "@ai-sdk/provider-utils" "3.0.3"
+
 "@ai-sdk/openai@2.0.10", "@ai-sdk/openai@^2.0.10":
   version "2.0.10"
   resolved "https://registry.yarnpkg.com/@ai-sdk/openai/-/openai-2.0.10.tgz#a4bf719ec2c939d60c0ae48887fd625e14ce1edb"
@@ -40,6 +48,16 @@
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/@ai-sdk/provider-utils/-/provider-utils-3.0.1.tgz#f1c229506420c3eaa60df15c9fc9a15b0b75d516"
   integrity sha512-/iP1sKc6UdJgGH98OCly7sWJKv+J9G47PnTjIj40IJMUQKwDrUMyf7zOOfRtPwSuNifYhSoJQ4s1WltI65gJ/g==
+  dependencies:
+    "@ai-sdk/provider" "2.0.0"
+    "@standard-schema/spec" "^1.0.0"
+    eventsource-parser "^3.0.3"
+    zod-to-json-schema "^3.24.1"
+
+"@ai-sdk/provider-utils@3.0.3":
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/provider-utils/-/provider-utils-3.0.3.tgz#87e507d3d08c793a427a2ab15d786122d96b0c41"
+  integrity sha512-kAxIw1nYmFW1g5TvE54ZB3eNtgZna0RnLjPUp1ltz1+t9xkXJIuDT4atrwfau9IbS0BOef38wqrI8CjFfQrxhw==
   dependencies:
     "@ai-sdk/provider" "2.0.0"
     "@standard-schema/spec" "^1.0.0"
@@ -4504,7 +4522,17 @@ aggregate-error@^3.0.0:
     clean-stack "^2.0.0"
     indent-string "^4.0.0"
 
-ai@^5.0.10, ai@latest:
+ai@^5.0.15:
+  version "5.0.15"
+  resolved "https://registry.yarnpkg.com/ai/-/ai-5.0.15.tgz#227cd4a043bc897fe3e45bf0e43600c7e2131dae"
+  integrity sha512-EX5hF+NVFm6R11mvdZRbg6eJEjyMlniI4/xOnyTh4VtDQ457lhIgi3kDGrHW3/qw9ELon9m2e7AK3g5z5sLwsQ==
+  dependencies:
+    "@ai-sdk/gateway" "1.0.7"
+    "@ai-sdk/provider" "2.0.0"
+    "@ai-sdk/provider-utils" "3.0.3"
+    "@opentelemetry/api" "1.9.0"
+
+ai@latest:
   version "5.0.10"
   resolved "https://registry.yarnpkg.com/ai/-/ai-5.0.10.tgz#f959b8909283643f0a09454181a78b3e40d02df3"
   integrity sha512-oPvaifsnHZzT3I07qI9jgWDOGpXDAFSXJ54rgpeHSq6qKQlQ3vwaCgQz861wb+5iJ/kk+B/qm3i5Yfghc/+XSw==
