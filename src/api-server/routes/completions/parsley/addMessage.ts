@@ -1,4 +1,4 @@
-import { AgentMemoryOption } from '@mastra/core/agent';
+import { LanguageModelV2Usage } from '@ai-sdk/provider';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
@@ -20,11 +20,7 @@ type AddMessageOutput = {
   message: string;
   requestId: string;
   timestamp: string;
-  completionUsage: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-  };
+  completionUsage: LanguageModelV2Usage;
   conversationId: string;
 };
 
@@ -63,7 +59,7 @@ const addMessageRoute = async (
   try {
     const agent = mastra.getAgent(PARSLEY_AGENT_NAME);
     const memory = await agent.getMemory();
-    let memoryOptions: AgentMemoryOption;
+    let memoryOptions;
 
     // If the conversationId is not null, we use the existing thread
     // If the conversationId is null, we create a new thread

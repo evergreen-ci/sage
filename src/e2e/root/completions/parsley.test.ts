@@ -17,7 +17,7 @@ afterAll(async () => {
   } catch (error) {
     console.error('Error clearing tables', error);
   }
-});
+}, 30000);
 
 describe('POST /completions/parsley/conversations/:conversationId/messages', () => {
   const endpoint =
@@ -145,4 +145,86 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
       secondMessage
     );
   });
+});
+
+describe('completions/parsley/conversations/:conversationId/messages with taskWorkflow', () => {
+  const endpoint =
+    '/completions/parsley/conversations/:conversationId/messages';
+
+  it('should use taskWorkflow to fetch task details from evergreenClient and return information to the user', async () => {
+    // Mock the evergreenClient's executeQuery method
+    const mockTaskData = {
+      task: {
+        id: 'task_123',
+        displayName: 'Test Task',
+        displayStatus: 'succeeded',
+        execution: 0,
+        patchNumber: 12345,
+        buildVariant: 'ubuntu2204',
+        projectIdentifier: 'test-project',
+        versionMetadata: {
+          id: 'version_123',
+          isPatch: false,
+          message: 'Test commit message',
+          projectIdentifier: 'test-project',
+          projectMetadata: {
+            id: 'project_123',
+          },
+          revision: 'abcdef123456',
+        },
+        details: {
+          description: 'Task completed successfully',
+          failingCommand: null,
+          status: 'success',
+        },
+      },
+    };
+
+    const { GraphQLClient } = await import('../../../utils/graphql/client');
+    const originalExecuteQuery = GraphQLClient.prototype.executeQuery;
+
+    const executeQueryMock = vi.fn().mockImplementation(async query => {
+      if (query.includes('query GetTask')) {
+        return mockTaskData;
+      }
+      return {};
+    });
+
+    GraphQLClient.prototype.executeQuery = executeQueryMock;
+
+    try {
+      const response = await request(app)
+        .post(endpoint.replace(':conversationId', 'null'))
+        .send({
+          message: 'Use taskWorkflow to get task task_123',
+        })
+        .timeout(30000);
+
+      if (response.status !== 200) {
+        console.log('Response error:', response.body);
+      }
+
+      expect(response.status).toBe(200);
+      expect(response.body.message).not.toBeNull();
+      expect(response.body.conversationId).not.toBeNull();
+      expect(executeQueryMock).toHaveBeenCalled();
+
+      const { calls } = executeQueryMock.mock;
+      const taskQueryCall = calls.find(
+        call => call[0] && call[0].includes('query GetTask')
+      );
+
+      expect(taskQueryCall).toBeDefined();
+      if (taskQueryCall) {
+        expect(taskQueryCall[1]).toMatchObject({
+          taskId: 'task_123',
+        });
+      }
+
+      const responseMessage = response.body.message.toLowerCase();
+      expect(responseMessage).toContain('task');
+    } finally {
+      GraphQLClient.prototype.executeQuery = originalExecuteQuery;
+    }
+  }, 30000);
 });
