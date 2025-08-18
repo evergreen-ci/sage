@@ -6,7 +6,7 @@ import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
 import { logger } from 'utils/logger';
 
 const addMessageInputSchema = z.object({
-  message: z.string().min(1),
+  messages: z.array(z.any()),
 });
 
 const addMessageParamsSchema = z.object({
@@ -108,17 +108,11 @@ const addMessageRoute = async (
         ? memoryOptions.thread
         : memoryOptions.thread.id;
 
-    const result = await agent.generate(messageData.message, {
+    const stream = await agent.stream(messageData.messages, {
       memory: memoryOptions,
     });
 
-    res.json({
-      message: result.text,
-      requestId: req.requestId,
-      timestamp: new Date().toISOString(),
-      completionUsage: result.usage,
-      conversationId: conversationId,
-    });
+    stream.pipeUIMessageStreamToResponse(res);
   } catch (error) {
     logger.error('Error in add message route', {
       error,
