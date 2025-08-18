@@ -5,8 +5,8 @@ const authHeaderRoute = (req: Request, res: Response) => {
   const userHeader = req.headers['"X-Kanopy-Authorization"'];
 
   res.json({
-    'X-Kanopy-Internal-Authorization': authHeader || null,
-    'X-Kanopy-Authorization': userHeader || null,
+    'x-kanopy-internal-authorization': authHeader || null,
+    'x-kanopy-authorization': userHeader || null,
     restHeaders: req.headers,
   });
 };
