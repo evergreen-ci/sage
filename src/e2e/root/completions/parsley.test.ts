@@ -159,9 +159,11 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
       const response = await request(app)
         .post(endpoint.replace(':conversationId', 'null'))
         .send({
-          message: 'Use taskWorkflow to get task task_123',
+          message:
+            'In this test, use taskWorkflow to fetch the task evg_lint_generate_lint_ecbbf17f49224235d43416ea55566f3b1894bbf7_25_03_21_21_09_20. Return only the task status as the output, with no extra text.',
           logMetadata: {
-            task_id: 'task_123',
+            task_id:
+              'evg_lint_generate_lint_ecbbf17f49224235d43416ea55566f3b1894bbf7_25_03_21_21_09_20',
             execution: 0,
             log_type: LogTypes.EVERGREEN_TASK_LOGS,
             origin: TaskLogOrigin.Task,
@@ -186,14 +188,14 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
       expect(taskQueryCall).toBeDefined();
       if (taskQueryCall) {
         expect(taskQueryCall[1]).toMatchObject({
-          taskId: 'task_123',
+          taskId:
+            'evg_lint_generate_lint_ecbbf17f49224235d43416ea55566f3b1894bbf7_25_03_21_21_09_20',
         });
       }
 
       const responseMessage = response.body.message.toLowerCase();
-      // TODO: Right now this returns an error message because we can't query the task details from evergreenClient since the test environment only uses prod variables.
-      // We need to enable support for local testing of this test suite.
-      expect(responseMessage).toContain('task_123');
+
+      expect(responseMessage).toContain('failed');
     } finally {
       executeQuerySpy.mockRestore();
     }
