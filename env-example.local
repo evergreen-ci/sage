@@ -1,0 +1,6 @@
+# Evergreen Configuration
+EVERGREEN_API_URL=localhost:9090/rest/v2
+EVERGREEN_URL=localhost:9090
+EVERGREEN_GRAPHQL_ENDPOINT=localhost:9090/mcp/graphql/query
+END_USER_HEADER_ID=sage
+
