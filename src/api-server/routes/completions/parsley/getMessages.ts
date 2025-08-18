@@ -43,7 +43,7 @@ const getMessagesRoute = async (
 
   const { conversationId } = paramsData;
 
-  const kanopyAuthHeader = req.headers['X-Kanopy-Internal-Authorization'] as
+  const kanopyAuthHeader = req.headers['x-kanopy-internal-authorization'] as
     | string
     | undefined;
   const userId = kanopyAuthHeader

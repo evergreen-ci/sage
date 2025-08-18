@@ -61,7 +61,7 @@ const healthRoute = async (req: Request, res: Response) => {
     database: {
       status: dbStats.ok === 1 ? 'healthy!' : 'unhealthy',
     },
-    authHeader: req.headers['X-Kanopy-Internal-Authorization'],
+    authHeader: req.headers['x-kanopy-internal-authorization'],
   });
 };
 

@@ -27,11 +27,11 @@ export async function authenticateKanopyToken(
 ): Promise<void> {
   try {
     const internalAuthHeader = req.headers[
-      'X-Kanopy-Internal-Authorization'
+      'x-kanopy-internal-authorization'
     ] as string;
 
     if (!internalAuthHeader) {
-      logger.warn('Missing X-Kanopy-Internal-Authorization header', {
+      logger.warn('Missing x-kanopy-internal-authorization header', {
         requestId: req.headers['x-request-id'],
         path: req.path,
       });
