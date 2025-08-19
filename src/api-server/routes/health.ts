@@ -52,16 +52,15 @@ const healthRoute = async (req: Request, res: Response) => {
   const dbStats = await db.dbStats();
 
   res.json({
-    status: 'healthy!',
+    status: 'healthy',
     timestamp: new Date().toISOString(),
     agents: {
       count: agentNames.length,
       names: agentNames,
     },
     database: {
-      status: dbStats.ok === 1 ? 'healthy!' : 'unhealthy',
+      status: dbStats.ok === 1 ? 'healthy' : 'unhealthy',
     },
-    authHeader: req.headers['x-kanopy-internal-authorization'],
   });
 };
 
