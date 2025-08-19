@@ -26,13 +26,6 @@ export interface Config {
       };
     };
   };
-  auth: {
-    kanopy: {
-      jwksEndpoint: string;
-      issuer: string;
-      validateAudience: boolean;
-    };
-  };
   evergreen: {
     graphqlEndpoint: string;
     apiUser: string;
@@ -82,30 +75,11 @@ const getEnvNumber = (key: string, defaultValue: number): number => {
 };
 
 /**
- * Determine the environment based on deployment env or node env
- * @returns The determined environment
- */
-const determineEnvironment = (): 'development' | 'staging' | 'production' => {
-  const deploymentEnv = getEnvVar('DEPLOYMENT_ENV', 'staging').toLowerCase();
-  const nodeEnv = getEnvVar('NODE_ENV', 'development').toLowerCase();
-
-  if (deploymentEnv === 'production' || nodeEnv === 'production') {
-    return 'production';
-  } else if (deploymentEnv === 'staging' || nodeEnv === 'staging') {
-    return 'staging';
-  }
-  return 'development';
-};
-
-const environment = determineEnvironment();
-
-/**
  * `config` is the configuration object for the application.
  */
 export const config: Config = {
   port: getEnvNumber('PORT', 3000),
   nodeEnv: getEnvVar('NODE_ENV', 'development'),
-  deploymentEnv: getEnvVar('DEPLOYMENT_ENV', 'staging'),
   db: {
     mongodbUri: getEnvVar('MONGODB_URI', 'mongodb://localhost:27017'),
     dbName:
@@ -113,19 +87,10 @@ export const config: Config = {
         ? 'sage-test'
         : getEnvVar('DB_NAME', 'sage'),
   },
+  deploymentEnv: getEnvVar('DEPLOYMENT_ENV', 'staging'),
   logging: {
     logLevel: getEnvVar('LOG_LEVEL', 'info'),
     logToFile: getEnvVar('LOG_TO_FILE', 'true') === 'true',
-  },
-  auth: {
-    kanopy: {
-      jwksEndpoint:
-        environment === 'production'
-          ? 'https://login.corp.mongodb.com/.well-known/jwks.json'
-          : 'https://login.staging.corp.mongodb.com/.well-known/jwks.json',
-      issuer: 'login.corp.mongodb.com',
-      validateAudience: false,
-    },
   },
   aiModels: {
     azure: {
