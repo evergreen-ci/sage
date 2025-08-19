@@ -5,7 +5,6 @@ interface RequestContext {
   requestId?: string;
 }
 
-// Create an async local storage instance for request context
 export const requestContextStorage = new AsyncLocalStorage<RequestContext>();
 
 /**
