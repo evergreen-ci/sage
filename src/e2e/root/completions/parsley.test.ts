@@ -150,7 +150,8 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
 describe('completions/parsley/conversations/:conversationId/messages with taskWorkflow', () => {
   const endpoint =
     '/completions/parsley/conversations/:conversationId/messages';
-
+  const taskId =
+    'evg_lint_generate_lint_ecbbf17f49224235d43416ea55566f3b1894bbf7_25_03_21_21_09_20';
   it('should use taskWorkflow to fetch task details from evergreenClient and return information to the user', async () => {
     const { GraphQLClient } = await import('../../../utils/graphql/client');
     const executeQuerySpy = vi.spyOn(GraphQLClient.prototype, 'executeQuery');
@@ -159,11 +160,9 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
       const response = await request(app)
         .post(endpoint.replace(':conversationId', 'null'))
         .send({
-          message:
-            'In this test, use taskWorkflow to fetch the task evg_lint_generate_lint_ecbbf17f49224235d43416ea55566f3b1894bbf7_25_03_21_21_09_20. Return only the task status as the output, with no extra text.',
+          message: `In this test, use taskWorkflow to fetch the task ${taskId}. Return only the task status as the output, with no extra text.`,
           logMetadata: {
-            task_id:
-              'evg_lint_generate_lint_ecbbf17f49224235d43416ea55566f3b1894bbf7_25_03_21_21_09_20',
+            task_id: taskId,
             execution: 0,
             log_type: LogTypes.EVERGREEN_TASK_LOGS,
             origin: TaskLogOrigin.Task,
@@ -188,8 +187,7 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
       expect(taskQueryCall).toBeDefined();
       if (taskQueryCall) {
         expect(taskQueryCall[1]).toMatchObject({
-          taskId:
-            'evg_lint_generate_lint_ecbbf17f49224235d43416ea55566f3b1894bbf7_25_03_21_21_09_20',
+          taskId,
         });
       }
 

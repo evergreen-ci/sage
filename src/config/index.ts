@@ -125,7 +125,7 @@ export const validateConfig = (): string[] | undefined => {
   ) {
     const warningMsg = `
 ================================================================================
-  ⚠️  WARNING: RUNNING against "${process.env.NODE_ENV}" environment! BE CAREFUL! ⚠️
+  ⚠️  WARNING: Running against "${process.env.NODE_ENV}" environment! BE CAREFUL! ⚠️
 ================================================================================
 `;
     console.warn(warningMsg);
