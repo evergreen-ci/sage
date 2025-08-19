@@ -6,8 +6,8 @@ import { mastra } from 'mastra';
 import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
 import { LogTypes } from 'types/parsley';
 import { logger } from 'utils/logger';
-import { extractUserIdFromKanopyHeader } from '../../../middlewares/authentication';
 import { runWithRequestContext } from '../../../../mastra/utils/requestContext';
+import { extractUserIdFromKanopyHeader } from '../../../middlewares/authentication';
 import { logMetadataSchema } from './validators';
 
 const addMessageInputSchema = z.object({
@@ -158,12 +158,11 @@ const addMessageRoute = async (
     // Run the agent generation with request context
     const result = await runWithRequestContext(
       { userId: authenticatedUserId, requestId: req.requestId },
-      async () => {
-        return await agent.generate(messageData.message, {
+      async () =>
+        await agent.generate(messageData.message, {
           memory: memoryOptions,
           runtimeContext,
-        });
-      }
+        })
     );
 
     res.json({

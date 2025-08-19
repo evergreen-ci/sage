@@ -51,7 +51,7 @@ export const createGraphQLTool = <
           { id }
         );
       }
-      
+
       // Pass the authenticated user ID to Evergreen via custom header
       const headers: Record<string, string> = {};
       if (userId) {
