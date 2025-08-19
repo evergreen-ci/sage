@@ -9,16 +9,16 @@ LOG_TO_FILE=true
 # Azure OpenAI Configuration
 AZURE_OPENAI_API_KEY=
 AZURE_OPENAI_ENDPOINT=
-AZURE_OPENAI_API_VERSION=
 
 # OpenTelemetry Collector Endpoint
 OTEL_COLLECTOR_URL=
 
 # Evergreen Configuration
-EVERGREEN_GRAPHQL_ENDPOINT=http://localhost:9090/mcp/graphql/query
+EVERGREEN_API_URL=localhost:9090/rest/v2
+EVERGREEN_URL=localhost:9090
+EVERGREEN_GRAPHQL_ENDPOINT=localhost:9090/mcp/graphql/query
 EVERGREEN_API_USER=sage
 EVERGREEN_API_KEY=mysecret
-END_USER_HEADER_ID=sage
 
 # MongoDB Configuration
 MONGODB_URI=mongodb://localhost:27017

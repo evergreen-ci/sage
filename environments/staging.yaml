@@ -27,21 +27,24 @@ resources:
     memory: 8Gi
 
 env:
-  EVERGREEN_API_USER: parsley-ai-skunkworks
+  EVERGREEN_API_USER: sage
   EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2
   EVERGREEN_URL: https://evergreen.mongodb.com
   EVERGREEN_GRAPHQL_ENDPOINT: https://evergreen.mongodb.com/mcp/graphql/query
-  AZURE_OPENAI_API_VERSION: 2024-02-15-preview
   PORT: 8080
   OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
   DEPLOYMENT_ENV: staging
   DB_NAME: sage
+  OTEL_EXPORTER_OTLP_ENDPOINT: https://api.braintrust.dev/otel
+
 
 envSecrets:
   AZURE_OPENAI_API_KEY: parsley-ai-secrets
   AZURE_OPENAI_ENDPOINT: parsley-ai-secrets
   EVERGREEN_API_KEY: parsley-ai-secrets
   MONGODB_URI: parsley-ai-secrets
+  OTEL_EXPORTER_OTLP_HEADERS: parsley-ai-secrets
+  BRAINTRUST_API_KEY: parsley-ai-secrets
 
 serviceAccount:
   enabled: true

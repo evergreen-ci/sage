@@ -19,6 +19,11 @@ Copy the `env-example` file to `.env` and update the values to match your enviro
 cp env-example .env
 ```
 
+Copy the `env.example.local` file to `.env.<deployment-environment>.local` and update the values to match your environment. You should do this for all remote environments you plan to run against.
+```bash
+cp .env.example.local .env.<deployment-environment>.local
+```
+
 ### Installation
 
 1. Clone the repository or navigate to the project directory.
@@ -197,3 +202,9 @@ types up to date. The command will also run Prettier on the generated file.
   path and that the Evergreen repository is on the expected branch.  
 - If dependencies appear out of date, try `yarn install` or `yarn clean` followed
   by `yarn install` to refresh `node_modules`.
+  
+## Deployment
+
+### Staging Deploys
+
+To deploy your changes to Sage's staging environment, make changes on a new branch. Update the .drone.yml's `trigger` field to include your branch name, commit, and push up to GitHub. A Drone build will be kicked off automatically.

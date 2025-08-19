@@ -1,8 +1,8 @@
-import dotenv from 'dotenv';
-import { resolve } from 'path';
+import dotenvFlow from 'dotenv-flow';
 
-// Load environment variables from .env file
-dotenv.config({ path: resolve(process.cwd(), '.env') });
+dotenvFlow.config({
+  node_env: process.env.DEPLOYMENT_ENV || 'local',
+});
 
 export interface Config {
   port: number;
@@ -33,6 +33,10 @@ export interface Config {
     userIDHeader: string;
   };
   otelCollectorURL: string;
+  braintrust: {
+    apiKey: string;
+    parent: string;
+  };
 }
 
 /**
@@ -93,7 +97,7 @@ export const config: Config = {
       openai: {
         apiKey: getEnvVar('AZURE_OPENAI_API_KEY', ''),
         endpoint: getEnvVar('AZURE_OPENAI_ENDPOINT', ''),
-        apiVersion: getEnvVar('AZURE_OPENAI_API_VERSION', ''),
+        apiVersion: 'preview',
         defaultDeployment: getEnvVar('AZURE_OPENAI_DEFAULT_DEPLOYMENT', ''),
       },
     },
@@ -108,6 +112,10 @@ export const config: Config = {
     'OTEL_COLLECTOR_URL',
     'http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces'
   ),
+  braintrust: {
+    apiKey: getEnvVar('BRAINTRUST_API_KEY', ''),
+    parent: getEnvVar('BRAINTRUST_PARENT', 'project_name:dev-prod-team'),
+  },
 };
 
 /**
@@ -115,9 +123,20 @@ export const config: Config = {
  * @returns An array of error messages if any of the required environment variables are not set, otherwise undefined.
  */
 export const validateConfig = (): string[] | undefined => {
+  if (
+    process.env.DEPLOYMENT_ENV !== 'test' &&
+    process.env.DEPLOYMENT_ENV !== 'local'
+  ) {
+    const warningMsg = `
+================================================================================
+  ⚠️  WARNING: Running against "${process.env.DEPLOYMENT_ENV}" environment! BE CAREFUL! ⚠️
+================================================================================
+`;
+    console.warn(warningMsg);
+  }
+
   const requiredVars = [
     'NODE_ENV',
-    'AZURE_OPENAI_API_VERSION',
     'AZURE_OPENAI_API_KEY',
     'AZURE_OPENAI_ENDPOINT',
     'EVERGREEN_GRAPHQL_ENDPOINT',

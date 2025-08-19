@@ -1,8 +1,14 @@
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { gpt41Nano } from '../models/openAI/gpt41';
-import getTaskTool from '../tools/evergreen/getTask';
 import { memoryStore } from '../utils/memory';
+import {
+  historyWorkflow,
+  taskFilesWorkflow,
+  taskTestWorkflow,
+  taskWorkflow,
+  versionWorkflow,
+} from '../workflows';
 
 const parsleyMemory = new Memory({
   storage: memoryStore,
@@ -40,9 +46,12 @@ export const parsleyAgent: Agent = new Agent({
    You do not need to use a tool to answer a question. Only use a tool if you are sure that you need to.
 `,
   model: gpt41Nano,
-  tools: {
-    getTask: getTaskTool,
-  },
   memory: parsleyMemory,
-  workflows: {},
+  workflows: {
+    taskWorkflow,
+    historyWorkflow,
+    versionWorkflow,
+    taskTestWorkflow,
+    taskFilesWorkflow,
+  },
 });
