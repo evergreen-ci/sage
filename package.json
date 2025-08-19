@@ -6,9 +6,9 @@
   "scripts": {
     "build": "tsc && tsc-alias",
     "start": "NODE_ENV=production node dist/main.js",
-    "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/main.ts",
-    "dev:staging": "NODE_ENV=staging yarn dev",
-    "dev:prod": "NODE_ENV=production yarn dev",
+    "dev": "NODE_ENV=development ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/main.ts",
+    "dev:staging": "DEPLOYMENT_ENV=staging yarn dev",
+    "dev:prod": "DEPLOYMENT_ENV=production yarn dev",
     "clean": "rm -rf dist bin node_modules",
     "codegen": "graphql-codegen-esm --config graphql.config.ts",
     "e2e": "vitest --project e2e",

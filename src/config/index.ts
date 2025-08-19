@@ -1,4 +1,8 @@
-import 'dotenv-flow/config';
+import dotenvFlow from 'dotenv-flow';
+
+dotenvFlow.config({
+  node_env: process.env.DEPLOYMENT_ENV || 'local',
+});
 
 export interface Config {
   port: number;
@@ -120,12 +124,12 @@ export const config: Config = {
  */
 export const validateConfig = (): string[] | undefined => {
   if (
-    process.env.NODE_ENV !== 'test' &&
-    process.env.NODE_ENV !== 'development'
+    process.env.DEPLOYMENT_ENV !== 'test' &&
+    process.env.DEPLOYMENT_ENV !== 'local'
   ) {
     const warningMsg = `
 ================================================================================
-  ⚠️  WARNING: Running against "${process.env.NODE_ENV}" environment! BE CAREFUL! ⚠️
+  ⚠️  WARNING: Running against "${process.env.DEPLOYMENT_ENV}" environment! BE CAREFUL! ⚠️
 ================================================================================
 `;
     console.warn(warningMsg);
