@@ -3,11 +3,11 @@ import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
-import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
+import { PARSLEY_AGENT_NAME, USER_ID } from 'mastra/agents/constants';
 import { LogTypes } from 'types/parsley';
 import { logger } from 'utils/logger';
 import { runWithRequestContext } from '../../../../mastra/utils/requestContext';
-import { extractUserIdFromKanopyHeader } from '../../../middlewares/authentication';
+import { getUserIdFromRequest } from '../../../middlewares/authentication';
 import { logMetadataSchema } from './validators';
 
 const addMessageInputSchema = z.object({
@@ -46,23 +46,27 @@ const addMessageRoute = async (
     return;
   }
 
+  const { conversationId: conversationIdParam } = paramsData;
+
   const runtimeContext = new RuntimeContext();
 
-  const kanopyAuthHeader = req.headers['x-kanopy-internal-authorization'] as
-    | string
-    | undefined;
-  const authenticatedUserId = kanopyAuthHeader
-    ? extractUserIdFromKanopyHeader(kanopyAuthHeader) || ''
-    : process.env.USER_NAME; // This could be a config value and passed in when you start the server
+  const authenticatedUserId = getUserIdFromRequest(req);
 
-  runtimeContext.set('userId', authenticatedUserId);
+  if (!authenticatedUserId) {
+    logger.error('No authentication provided', {
+      requestId: req.requestId,
+      conversationId: conversationIdParam,
+    });
+    res.status(401).json({ message: 'Authentication required' });
+    return;
+  }
+
+  runtimeContext.set(USER_ID, authenticatedUserId);
 
   logger.debug('User context set for request', {
     userId: authenticatedUserId,
     requestId: req.requestId,
   });
-
-  const { conversationId: conversationIdParam } = paramsData;
 
   const { data: messageData, success: messageSuccess } =
     addMessageInputSchema.safeParse(req.body);

@@ -1,3 +1,5 @@
+import { Request } from 'express';
+import { KANOPY_AUTH_HEADER } from '../../mastra/agents/constants';
 import { logger } from '../../utils/logger';
 
 interface KanopyJWTClaims {
@@ -37,4 +39,20 @@ export function extractUserIdFromKanopyHeader(
     logger.error('Failed to extract user ID from Kanopy header', { error });
     return null;
   }
+}
+
+/**
+ * Extracts the user ID from the Kanopy authentication header in the request
+ * @param req - The Express request object
+ * @returns The user ID or null if no header is present or extraction fails
+ */
+export function getUserIdFromRequest(req: Request): string | null {
+  const kanopyAuthHeader = req.headers[KANOPY_AUTH_HEADER] as
+    | string
+    | undefined;
+
+  if (!kanopyAuthHeader) {
+    return process.env.USER_NAME || null;
+  }
+  return extractUserIdFromKanopyHeader(kanopyAuthHeader);
 }
