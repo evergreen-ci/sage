@@ -53,6 +53,7 @@ const getMessagesRoute = async (
       logger.error('Invalid network agents', {
         requestId: req.requestId,
       });
+      res.status(500).json({ message: 'Routing agent not found' });
       return;
     }
     const memory = await routingAgent.getMemory();
