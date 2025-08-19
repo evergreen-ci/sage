@@ -5,8 +5,6 @@ interface KanopyJWTClaims {
 }
 
 /**
- * Simple extraction of user ID from Kanopy header without full JWT validation
- * Use this when you trust that Kanopy has already validated the internalAuthHeader
  * @param authHeader - The authorization header string
  * @returns The user ID or null if extraction fails
  */

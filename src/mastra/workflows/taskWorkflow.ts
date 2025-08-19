@@ -36,11 +36,8 @@ const getTaskStep = createStep({
     }
     const runtimeContext = new RuntimeContext();
 
-    // Get userId from request context if available
     const requestContext = getRequestContext();
     const userId = inputData.userId || requestContext?.userId;
-
-    // Pass the userId to the runtime context if available
     if (userId) {
       runtimeContext.set('userId', userId);
     }

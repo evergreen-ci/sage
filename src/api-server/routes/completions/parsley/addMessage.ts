@@ -114,7 +114,6 @@ const addMessageRoute = async (
         userId: authenticatedUserId,
       };
 
-      // If logMetadata is provided, add it to the thread metadata
       if (logMetadata) {
         metadata.task_id = logMetadata.task_id;
         metadata.execution = logMetadata.execution;
@@ -155,7 +154,6 @@ const addMessageRoute = async (
         ? memoryOptions.thread
         : memoryOptions.thread.id;
 
-    // Run the agent generation with request context
     const result = await runWithRequestContext(
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>

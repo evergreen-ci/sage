@@ -2,6 +2,7 @@ import { createWorkflow, createStep } from '@mastra/core';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
 import { taskToolAdapter, versionToolAdapter } from '../tools/workflowAdapters';
+import { getRequestContext } from '../utils/requestContext';
 
 const workflowInputSchema = z.object({
   taskId: z.string(),
@@ -38,6 +39,12 @@ const getTaskStep = createStep({
     }
 
     const runtimeContext = new RuntimeContext();
+    
+    // Get userId from request context if available
+    const requestContext = getRequestContext();
+    if (requestContext?.userId) {
+      runtimeContext.set('userId', requestContext.userId);
+    }
 
     const result = await taskToolAdapter.execute({
       context: {
@@ -110,6 +117,12 @@ const getVersionStep = createStep({
     }
 
     const runtimeContext = new RuntimeContext();
+    
+    // Get userId from request context if available
+    const requestContext = getRequestContext();
+    if (requestContext?.userId) {
+      runtimeContext.set('userId', requestContext.userId);
+    }
 
     const versionResult = await versionToolAdapter.execute({
       context: {
