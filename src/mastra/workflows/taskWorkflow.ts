@@ -29,11 +29,7 @@ const getTaskStep = createStep({
   }),
   execute: async ({ inputData }) => {
     if (!taskToolAdapter.execute) {
-      return {
-        data: {
-          error: 'taskToolAdapter.execute is not defined',
-        },
-      };
+      throw new Error('taskToolAdapter.execute is not defined');
     }
     const runtimeContext = new RuntimeContext();
 
@@ -68,14 +64,10 @@ const formatTaskStep = createStep({
     const { data } = inputData;
 
     if (data?.error) {
-      return {
-        task: null,
-        error: data.error,
-      };
+      throw new Error(data.error);
     }
     return {
       task: data,
-      error: undefined,
     };
   },
 });

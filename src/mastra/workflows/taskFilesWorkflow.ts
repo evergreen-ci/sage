@@ -27,11 +27,7 @@ const getTaskFilesStep = createStep({
   }),
   execute: async ({ inputData }) => {
     if (!taskFilesToolAdapter.execute) {
-      return {
-        data: {
-          error: 'taskFilesToolAdapter.execute is not defined',
-        },
-      };
+      throw new Error('taskFilesToolAdapter.execute is not defined');
     }
     const runtimeContext = new RuntimeContext();
 
@@ -65,14 +61,10 @@ const formatTaskFilesStep = createStep({
     const { data } = inputData;
 
     if (data?.error) {
-      return {
-        taskFiles: null,
-        error: data.error,
-      };
+      throw new Error(data.error);
     }
     return {
       taskFiles: data,
-      error: undefined,
     };
   },
 });
