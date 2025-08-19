@@ -1,6 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
-import { jwtVerify, createRemoteJWKSet } from 'jose';
-import { config } from '../../config';
+import { Request } from 'express';
 import { logger } from '../../utils/logger';
 
 export interface AuthenticatedRequest extends Request {
@@ -10,91 +8,6 @@ export interface AuthenticatedRequest extends Request {
 
 interface KanopyJWTClaims {
   sub: string;
-}
-
-/**
- * Extract and validate the Kanopy Internal Authorization header
- * This header contains a JWT that has been validated by CorpSecure at the edge
- * @param req - The Express request object
- * @param res - The Express response object
- * @param next - The Express next function
- * @returns Promise resolving to void
- */
-export async function authenticateKanopyToken(
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  try {
-    // Headers in Express are case-insensitive, accessing with lowercase
-    const internalAuthHeader = req.headers[
-      'x-kanopy-internal-authorization'
-    ] as string;
-
-    if (!internalAuthHeader) {
-      logger.warn('Missing x-kanopy-internal-authorization header', {
-        requestId: req.headers['x-request-id'],
-        path: req.path,
-        headers: Object.keys(req.headers),
-      });
-      req.isAuthenticated = false;
-      return next();
-    }
-
-    // Remove 'Bearer ' prefix if present
-    const token = internalAuthHeader.replace(/^Bearer\s+/i, '');
-
-    if (!token) {
-      logger.warn('Empty authentication token after removing Bearer prefix', {
-        requestId: req.headers['x-request-id'],
-        path: req.path,
-      });
-      req.isAuthenticated = false;
-      return next();
-    }
-
-    const jwksEndpoint =
-      config.deploymentEnv === 'production'
-        ? 'https://login.corp.mongodb.com/.well-known/jwks.json'
-        : 'https://login.staging.corp.mongodb.com/.well-known/jwks.json';
-
-    try {
-      const JWKS = createRemoteJWKSet(new URL(jwksEndpoint));
-
-      const { payload } = (await jwtVerify(token, JWKS, {
-        issuer: 'login.corp.mongodb.com',
-      })) as { payload: KanopyJWTClaims };
-
-      req.userId = payload.sub;
-      req.isAuthenticated = true;
-
-      logger.debug('User authenticated via Kanopy token', {
-        userId: req.userId,
-        requestId: req.headers['x-request-id'],
-      });
-
-      next();
-    } catch (jwtError) {
-      logger.error('JWT validation failed', {
-        error: jwtError instanceof Error ? jwtError.message : String(jwtError),
-        errorDetails: jwtError,
-        requestId: req.headers['x-request-id'],
-        path: req.path,
-        jwksEndpoint,
-        tokenLength: token.length,
-        deploymentEnv: config.deploymentEnv,
-      });
-      req.isAuthenticated = false;
-      return next();
-    }
-  } catch (error) {
-    logger.error('Authentication middleware error', {
-      error,
-      requestId: req.headers['x-request-id'],
-    });
-    req.isAuthenticated = false;
-    next();
-  }
 }
 
 /**
@@ -111,10 +24,7 @@ export function extractUserIdFromKanopyHeader(
       return null;
     }
 
-    // Remove 'Bearer ' prefix if present
-    const token = authHeader.replace(/^Bearer\s+/i, '');
-
-    const parts = token.split('.');
+    const parts = authHeader.split('.');
     if (parts.length !== 3) {
       logger.warn('Invalid JWT format');
       return null;

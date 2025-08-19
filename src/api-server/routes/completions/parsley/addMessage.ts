@@ -64,7 +64,6 @@ const addMessageRoute = async (
   logger.debug('User context set for request', {
     userId: authenticatedUserId,
     requestId: req.requestId,
-    header: kanopyAuthHeader,
   });
 
   const { conversationId: conversationIdParam } = paramsData;
