@@ -1,15 +1,12 @@
 import { LanguageModelV2Usage } from '@ai-sdk/provider';
 import { RuntimeContext } from '@mastra/core/runtime-context';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
 import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
 import { LogTypes } from 'types/parsley';
 import { logger } from 'utils/logger';
-import {
-  AuthenticatedRequest,
-  extractUserIdFromKanopyHeader,
-} from '../../../middlewares/authentication';
+import { extractUserIdFromKanopyHeader } from '../../../middlewares/authentication';
 import { logMetadataSchema } from './validators';
 
 const addMessageInputSchema = z.object({
@@ -34,7 +31,7 @@ type ErrorResponse = {
 };
 
 const addMessageRoute = async (
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response<AddMessageOutput | ErrorResponse>
 ) => {
   const { data: paramsData, success: paramsSuccess } =
@@ -53,11 +50,9 @@ const addMessageRoute = async (
   const kanopyAuthHeader = req.headers['x-kanopy-internal-authorization'] as
     | string
     | undefined;
-  const userId = kanopyAuthHeader
-    ? extractUserIdFromKanopyHeader(kanopyAuthHeader)
-    : null;
-
-  const authenticatedUserId = req.userId || userId || '';
+  const authenticatedUserId = kanopyAuthHeader
+    ? extractUserIdFromKanopyHeader(kanopyAuthHeader) || ''
+    : '';
 
   runtimeContext.set('userId', authenticatedUserId);
 

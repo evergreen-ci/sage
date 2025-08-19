@@ -1,13 +1,10 @@
 import { CoreMessage } from '@mastra/core';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
 import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
 import { logger } from 'utils/logger';
-import {
-  AuthenticatedRequest,
-  extractUserIdFromKanopyHeader,
-} from '../../../middlewares/authentication';
+import { extractUserIdFromKanopyHeader } from '../../../middlewares/authentication';
 
 const getMessagesParamsSchema = z.object({
   conversationId: z.string().min(1),
@@ -22,7 +19,7 @@ type ErrorResponse = {
 };
 
 const getMessagesRoute = async (
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response<GetMessagesOutput | ErrorResponse>
 ) => {
   logger.info('Get messages request received', {
@@ -46,11 +43,9 @@ const getMessagesRoute = async (
   const kanopyAuthHeader = req.headers['x-kanopy-internal-authorization'] as
     | string
     | undefined;
-  const userId = kanopyAuthHeader
+  const authenticatedUserId = kanopyAuthHeader
     ? extractUserIdFromKanopyHeader(kanopyAuthHeader)
     : null;
-
-  const authenticatedUserId = req.userId || userId;
 
   if (!authenticatedUserId) {
     logger.error('No authentication provided', {

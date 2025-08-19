@@ -5,9 +5,8 @@ const evergreenClient = new GraphQLClient(
   config.evergreen.graphqlEndpoint,
   config.evergreen.userIDHeader,
   {
-    // Include Evergreen API credentials if configured
-    ...(config.evergreen.apiUser && { 'Api-User': config.evergreen.apiUser }),
-    ...(config.evergreen.apiKey && { 'Api-Key': config.evergreen.apiKey }),
+    'Api-User': config.evergreen.apiUser,
+    'Api-Key': config.evergreen.apiKey,
   }
 );
 

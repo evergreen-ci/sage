@@ -1,10 +1,4 @@
-import { Request } from 'express';
 import { logger } from '../../utils/logger';
-
-export interface AuthenticatedRequest extends Request {
-  userId?: string | undefined;
-  isAuthenticated?: boolean | undefined;
-}
 
 interface KanopyJWTClaims {
   sub: string;
