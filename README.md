@@ -19,6 +19,11 @@ Copy the `env-example` file to `.env` and update the values to match your enviro
 cp env-example .env
 ```
 
+Copy the `env.example.local` file to `.env.<deployment-environment>.local` and update the values to match your environment. You should do this for all remote environments you plan to run against.
+```bash
+cp .env.example.local .env.<deployment-environment>.local
+```
+
 ### Installation
 
 1. Clone the repository or navigate to the project directory.

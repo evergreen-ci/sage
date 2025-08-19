@@ -163,8 +163,9 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
 
 describe('completions/parsley-network with taskWorkflow through network routing', () => {
   const endpoint =
-    '/completions/parsley-network/conversations/:conversationId/messages';
-
+    '/completions/parsley/conversations/:conversationId/messages';
+  const taskId =
+    'evg_lint_generate_lint_ecbbf17f49224235d43416ea55566f3b1894bbf7_25_03_21_21_09_20';
   it('should use taskWorkflow to fetch task details from evergreenClient and return information to the user', async () => {
     const { GraphQLClient } = await import('../../../utils/graphql/client');
     const executeQuerySpy = vi.spyOn(GraphQLClient.prototype, 'executeQuery');
@@ -173,9 +174,9 @@ describe('completions/parsley-network with taskWorkflow through network routing'
       const response = await request(app)
         .post(endpoint.replace(':conversationId', 'null'))
         .send({
-          message: 'Use taskWorkflow to get task network_task_789',
+          message: `In this test, use taskWorkflow to fetch the task ${taskId}. Return only the task status as the output, with no extra text.`,
           logMetadata: {
-            task_id: 'network_task_789',
+            task_id: taskId,
             execution: 0,
             log_type: LogTypes.EVERGREEN_TASK_LOGS,
             origin: TaskLogOrigin.Task,
@@ -200,14 +201,13 @@ describe('completions/parsley-network with taskWorkflow through network routing'
       expect(taskQueryCall).toBeDefined();
       if (taskQueryCall) {
         expect(taskQueryCall[1]).toMatchObject({
-          taskId: 'network_task_789',
+          taskId,
         });
       }
 
       const responseMessage = response.body.message.toLowerCase();
-      // TODO: Right now this returns an error message because we can't query the task details from evergreenClient since the test environment only uses prod variables.
-      // We need to enable support for local testing of this test suite.
-      expect(responseMessage).toContain('task_123');
+
+      expect(responseMessage).toContain('failed');
     } finally {
       executeQuerySpy.mockRestore();
     }

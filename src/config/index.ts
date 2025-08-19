@@ -1,8 +1,8 @@
-import dotenv from 'dotenv';
-import { resolve } from 'path';
+import dotenvFlow from 'dotenv-flow';
 
-// Load environment variables from .env file
-dotenv.config({ path: resolve(process.cwd(), '.env') });
+dotenvFlow.config({
+  node_env: process.env.DEPLOYMENT_ENV || 'local',
+});
 
 export interface Config {
   port: number;
@@ -123,6 +123,18 @@ export const config: Config = {
  * @returns An array of error messages if any of the required environment variables are not set, otherwise undefined.
  */
 export const validateConfig = (): string[] | undefined => {
+  if (
+    process.env.DEPLOYMENT_ENV !== 'test' &&
+    process.env.DEPLOYMENT_ENV !== 'local'
+  ) {
+    const warningMsg = `
+================================================================================
+  ⚠️  WARNING: Running against "${process.env.DEPLOYMENT_ENV}" environment! BE CAREFUL! ⚠️
+================================================================================
+`;
+    console.warn(warningMsg);
+  }
+
   const requiredVars = [
     'NODE_ENV',
     'AZURE_OPENAI_API_KEY',

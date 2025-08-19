@@ -29,12 +29,7 @@ const getTaskStep = createStep({
   }),
   execute: async ({ inputData }) => {
     if (!taskToolAdapter.execute) {
-      return {
-        taskData: {
-          error: 'taskToolAdapter.execute is not defined',
-        },
-        includeNeverActivatedTasks: inputData.includeNeverActivatedTasks,
-      };
+      throw new Error('taskToolAdapter.execute is not defined');
     }
 
     const runtimeContext = new RuntimeContext();
@@ -69,44 +64,25 @@ const getVersionStep = createStep({
     const { includeNeverActivatedTasks, taskData } = inputData;
 
     if (taskData?.error) {
-      return {
-        taskData,
-        versionData: {
-          error: 'Cannot fetch version: task data has error',
-        },
-      };
+      throw new Error('Cannot fetch version: task data has error');
     }
 
     const task = taskData?.task;
 
     if (!task) {
-      return {
-        taskData,
-        versionData: {
-          error: 'Cannot fetch version: task data is missing',
-        },
-      };
+      throw new Error('Cannot fetch version: task data is missing');
     }
 
     const versionId = task.versionMetadata?.id;
 
     if (!versionId) {
-      return {
-        taskData,
-        versionData: {
-          error:
-            'Cannot fetch version: versionMetadata.id is missing from task',
-        },
-      };
+      throw new Error(
+        'Cannot fetch version: versionMetadata.id is missing from task'
+      );
     }
 
     if (!versionToolAdapter.execute) {
-      return {
-        taskData,
-        versionData: {
-          error: 'versionToolAdapter.execute is not defined',
-        },
-      };
+      throw new Error('versionToolAdapter.execute is not defined');
     }
 
     const runtimeContext = new RuntimeContext();

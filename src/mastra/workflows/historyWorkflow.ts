@@ -29,11 +29,7 @@ const getTaskStep = createStep({
   }),
   execute: async ({ inputData }) => {
     if (!taskToolAdapter.execute) {
-      return {
-        taskData: {
-          error: 'taskToolAdapter.execute is not defined',
-        },
-      };
+      throw new Error('taskToolAdapter.execute is not defined');
     }
 
     const runtimeContext = new RuntimeContext();
@@ -66,23 +62,13 @@ const getTaskHistoryStep = createStep({
     const { taskData } = inputData;
 
     if (taskData?.error) {
-      return {
-        taskData,
-        historyData: {
-          error: 'Cannot fetch history: task data has error',
-        },
-      };
+      throw new Error('Cannot fetch history: task data has error');
     }
 
     const task = taskData?.task;
 
     if (!task) {
-      return {
-        taskData,
-        historyData: {
-          error: 'Cannot fetch history: task data is missing',
-        },
-      };
+      throw new Error('Cannot fetch history: task data is missing');
     }
 
     const taskId = task.id;
@@ -91,21 +77,13 @@ const getTaskHistoryStep = createStep({
     const { projectIdentifier } = task;
 
     if (!taskId || !displayName || !buildVariant || !projectIdentifier) {
-      return {
-        taskData,
-        historyData: {
-          error: `Cannot fetch history: missing required fields (id: ${taskId}, displayName: ${displayName}, buildVariant: ${buildVariant}, projectIdentifier: ${projectIdentifier})`,
-        },
-      };
+      throw new Error(
+        `Cannot fetch history: missing required fields (id: ${taskId}, displayName: ${displayName}, buildVariant: ${buildVariant}, projectIdentifier: ${projectIdentifier})`
+      );
     }
 
     if (!taskHistoryToolAdapter.execute) {
-      return {
-        taskData,
-        historyData: {
-          error: 'taskHistoryToolAdapter.execute is not defined',
-        },
-      };
+      throw new Error('taskHistoryToolAdapter.execute is not defined');
     }
 
     const runtimeContext = new RuntimeContext();
@@ -148,17 +126,12 @@ const formatResultsStep = createStep({
     const { historyData, taskData } = inputData;
 
     if (taskData?.error || historyData?.error) {
-      return {
-        task: taskData?.error ? null : taskData,
-        history: historyData?.error ? null : historyData,
-        error: taskData?.error || historyData?.error,
-      };
+      throw new Error(taskData?.error || historyData?.error);
     }
 
     return {
       task: taskData,
       history: historyData,
-      error: undefined,
     };
   },
 });
