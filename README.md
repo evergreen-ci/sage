@@ -149,7 +149,7 @@ All agents and workflows should be registered in `src/mastra/index.ts`.
 
 Sage relies on Evergreen’s GraphQL schema for both query linting and type
 generation. To keep the schema in sync with Evergreen, create a local symlink
-to the Evergreen repository’s `graphql/schema` directory.
+to the [Evergreen repository’s `graphql/schema`](https://github.com/evergreen-ci/evergreen/tree/master/graphql/schema) directory.
 
 ### 1. Symlink the GraphQL schema
 
