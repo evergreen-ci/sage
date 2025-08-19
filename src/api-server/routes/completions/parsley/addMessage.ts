@@ -14,7 +14,7 @@ import { logMetadataSchema } from './validators';
 
 const addMessageInputSchema = z.object({
   message: z.string().min(1),
-  logMetadata: logMetadataSchema,
+  logMetadata: logMetadataSchema.optional(),
 });
 
 const addMessageParamsSchema = z.object({
@@ -115,21 +115,25 @@ const addMessageRoute = async (
     } else {
       const { logMetadata } = messageData;
       const metadata: Record<string, string | number> = {
-        task_id: logMetadata.task_id,
-        execution: logMetadata.execution,
-        log_type: logMetadata.log_type,
         userId: authenticatedUserId,
       };
 
-      switch (logMetadata.log_type) {
-        case LogTypes.EVERGREEN_TEST_LOGS:
-          metadata.test_id = logMetadata.test_id;
-          break;
-        case LogTypes.EVERGREEN_TASK_LOGS:
-          metadata.origin = logMetadata.origin;
-          break;
-        default:
-          break;
+      // If logMetadata is provided, add it to the thread metadata
+      if (logMetadata) {
+        metadata.task_id = logMetadata.task_id;
+        metadata.execution = logMetadata.execution;
+        metadata.log_type = logMetadata.log_type;
+
+        switch (logMetadata.log_type) {
+          case LogTypes.EVERGREEN_TEST_LOGS:
+            metadata.test_id = logMetadata.test_id;
+            break;
+          case LogTypes.EVERGREEN_TASK_LOGS:
+            metadata.origin = logMetadata.origin;
+            break;
+          default:
+            break;
+        }
       }
 
       const newThread = await memory?.createThread({

@@ -51,13 +51,14 @@ export const createGraphQLTool = <
           { id }
         );
       }
+      
+      // Pass the authenticated user ID to Evergreen via custom header
       const headers: Record<string, string> = {};
       if (userId) {
-        headers['X-Authenticated-User'] = userId;
+        headers['x-authenticated-sage-user'] = userId;
       }
 
       try {
-        const variables = context;
         const result = await client.executeQuery<TResult>(query, context, {
           userID: userId ?? '',
           headers,
