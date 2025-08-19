@@ -193,5 +193,7 @@ types up to date. The command will also run Prettier on the generated file.
 
 • If ESLint or codegen cannot find the schema, verify the `sdlschema` symlink
   path and that the Evergreen repository is on the expected branch.  
-• If dependencies appear out of date, try `yarn install` or `yarn clean` followed
+- If ESLint or codegen cannot find the schema, verify the `sdlschema` symlink
+  path and that the Evergreen repository is on the expected branch.  
+- If dependencies appear out of date, try `yarn install` or `yarn clean` followed
   by `yarn install` to refresh `node_modules`.
