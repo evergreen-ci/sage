@@ -9,7 +9,7 @@ import { getMessageContent } from '../../utils';
 const app = setupTestAppServer();
 
 afterAll(async () => {
-  console.log('Clearing tables for network tests');
+  console.log('Clearing tables for tests');
   try {
     await memoryStore.clearTable({ tableName: TABLE_THREADS });
     await memoryStore.clearTable({ tableName: TABLE_MESSAGES });
@@ -21,7 +21,7 @@ afterAll(async () => {
 
 describe('completions/parsley/conversations/:conversationId/messages', () => {
   const endpoint =
-    '/completions/parsley-network/conversations/:conversationId/messages';
+    '/completions/parsley/conversations/:conversationId/messages';
   const conversationId = 'null';
   const logMetadata = {
     task_id: '123',
@@ -96,7 +96,7 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
       });
     expect(secondResponse.status).toBe(200);
     expect(secondResponse.body.message).not.toBeNull();
-    expect(secondResponse.body.message).toContain('NETWORK TEST 456');
+    expect(secondResponse.body.message).toContain('TEST 456');
   });
 
   it('should optionally include agent interaction summary', async () => {
@@ -133,7 +133,7 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
 
   it('should return the messages for a conversation', async () => {
     const conversationId = 'null';
-    const firstMessage = 'Hello from network GET test!';
+    const firstMessage = 'Hello from GET test!';
     const response = await request(app)
       .post(endpoint.replace(':conversationId', conversationId))
       .send({
@@ -161,7 +161,7 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
   });
 });
 
-describe('completions/parsley-network with taskWorkflow through network routing', () => {
+describe('completions/parsley with taskWorkflow through routing', () => {
   const endpoint =
     '/completions/parsley/conversations/:conversationId/messages';
   const taskId =
