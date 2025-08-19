@@ -38,7 +38,7 @@ const getTaskStep = createStep({
     }
 
     const runtimeContext = new RuntimeContext();
-    
+
     // Get userId from request context if available
     const requestContext = getRequestContext();
     if (requestContext?.userId) {
@@ -116,7 +116,7 @@ const getTaskHistoryStep = createStep({
     }
 
     const runtimeContext = new RuntimeContext();
-    
+
     // Get userId from request context if available
     const requestContext = getRequestContext();
     if (requestContext?.userId) {
