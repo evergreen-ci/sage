@@ -53,7 +53,7 @@ const addMessageRoute = async (
     | undefined;
   const authenticatedUserId = kanopyAuthHeader
     ? extractUserIdFromKanopyHeader(kanopyAuthHeader) || ''
-    : '';
+    : process.env.USER_NAME; // This could be a config value and passed in when you start the server
 
   runtimeContext.set('userId', authenticatedUserId);
 
