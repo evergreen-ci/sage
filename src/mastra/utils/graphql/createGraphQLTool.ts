@@ -68,7 +68,7 @@ export const createGraphQLTool = <
         const baseError = {
           id,
           context,
-          userId,
+          userID: userId,
           error: error instanceof Error ? error.message : String(error),
         };
 
