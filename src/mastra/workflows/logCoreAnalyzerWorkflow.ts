@@ -52,7 +52,7 @@ const ChunkedSchema = z.object({
 const countTokens = (s: string) => encode(s).length;
 
 // Chunking configuration for GPT-4.1 nano (Assume max 128k context, but may be 1M)
-const CHUNK_SIZE = 30_000;  // Optimal size for GPT-4 models
+const CHUNK_SIZE = 3000;  // Optimal size for GPT-4 models
 const OVERLAP_TOKENS = 1000;  // Overlap to maintain context between chunks
 const GPT_DEFAULT_TOKENIZER = "o200k_base"; // Tokenizer for GPT-4 TODO: auto selection based on model
 
@@ -71,7 +71,7 @@ const chunkStep = createStep({
       maxSize: CHUNK_SIZE,
       overlap: OVERLAP_TOKENS
     });
-    console.log
+    logger.debug("Chunking complete", { chunkCount: chunks.length });
     return { chunks, contextHint };
   }
 });
@@ -87,7 +87,7 @@ const LoopStateSchema = z.object({
 });
 
 const LoopStateOutputSchema = z.object({
-        updated: z.literal(true),
+        updated: z.boolean(),
         summary: z.string(),
         evidence: z.array(z.string()).optional()
       })
@@ -122,6 +122,9 @@ const initialStep = createStep({
   execute: async ({ inputData }) => {
     const { chunks, contextHint } = inputData;
     const first = chunks[0]?.text ?? "";
+    logger.debug("Initial chunk for analysis", { first: first.slice(0, 100), contextHint });
+    logger.debug("Chunk length", { length: first.length });
+    logger.debug("Calling LLM for initial summary");
     
     const result = await logAnalyzerAgent.generate(
         USER_INITIAL_PROMPT(first, contextHint), 
@@ -140,7 +143,7 @@ const initialStep = createStep({
 
 const USER_REFINE = (existing: string, chunk: string, hint?: string) =>
   `Refine the existing summary with ONLY *material* additions or corrections from the new chunk.
-If the chunk adds nothing substantive, return {"updated": false, "summary": "<unchanged>"}.
+If the chunk adds nothing substantive, return {"updated": false, "summary": "<unchanged>", "evidence": []}.
 
 ${hint ? `Context hint:\n${hint}\n` : ""}
 
@@ -168,6 +171,7 @@ const refineStep = createStep({
       throw new Error("No more chunks to process");
     }
 
+    logger.debug("Refine step for chunk #:", { current: idx+1, total: chunks.length });
     const result = await logAnalyzerAgent.generate(
         USER_REFINE(existingSummary, chunk, contextHint), 
         {
@@ -220,9 +224,11 @@ const finalizeStep = createStep({
   outputSchema: ResultSchema,
   execute: async ({ inputData }) => {
     const { summary } = inputData;
+    logger.debug("Generating final summary", { summary: summary.slice(0, 100) });
     const finalRes = await logAnalyzerAgent.generate(
       USER_FINALIZE_PROMPT(summary),
     );
+    logger.debug("Final summary generated", { length: finalRes.text.length });
     return {
       report: finalRes.text,
     };
@@ -242,4 +248,3 @@ export const logCoreAnalyzer = createWorkflow({
   .dowhile(refineStep, async ({ inputData }) => inputData.idx < inputData.chunks.length)
   .then(finalizeStep)
   .commit();
-
