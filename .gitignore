@@ -94,6 +94,7 @@ build/
 
 # Node
 node_modules/
+.nvmrc
 
 # graphql/
 sdlschema
