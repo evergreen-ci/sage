@@ -26,7 +26,7 @@ const context = { taskId: 'abc123' };
 
 const makeRuntimeContext = (userID?: string) => {
   const runtimeContext = new RuntimeContext();
-  runtimeContext.set('userID', userID);
+  runtimeContext.set('userId', userID);
   return runtimeContext;
 };
 
