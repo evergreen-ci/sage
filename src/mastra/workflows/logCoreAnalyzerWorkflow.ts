@@ -93,7 +93,8 @@ const LoopStateOutputSchema = z.object({
         evidence: z.array(z.string()).optional()
       })
 
-// Define the log analyzer agent
+// Define the log analyzer agent for chunked processing
+// Ultimately, the first call should be 4.1, and all other iterations should use nano
 const logAnalyzerAgent = new Agent({
   name: "log-analyzer-agent",
   description: "Analyzes and summarizes technical text chunks (logs, code, configs, telemetry, build output)",
@@ -199,20 +200,59 @@ const refineStep = createStep({
 // Step 4: Final report
 
 const ResultSchema = z.object({
-  report: z.string(),
+  markdown: z.string(),
+  filePath: z.string().optional(),
 });
 
 const MAX_FINAL_SUMMARY_TOKENS = 2048;
 
-const USER_FINALIZE_PROMPT = (summary: string) =>
-  `Rewrite the accumulated summary into a clean technical report with sections:
-1) Overview
-2) Key Entities/Modules
-3) Timeline / Key Events (chronological)
-4) Anomalies / Errors (with likely causes)
-5) Metrics / Counts (if present)
-6) Open Questions / Next Actions
+// Define the report formatter agent for final markdown output
+// Could probably be a simple LLM call and not an agent
+const reportFormatterAgent = new Agent({
+  name: "report-formatter-agent",
+  description: "Formats technical summaries into clean markdown reports",
+  instructions: `You are a senior engineer creating clean, well-formatted technical reports.
+You respond ONLY with properly formatted Markdown text - no JSON wrapper, no additional fields.
+- Use proper Markdown headers (#, ##, ###)
+- Use **bold** for emphasis and \`code\` for technical terms
+- Create tables with | pipes | where appropriate
+- Use bullet points and numbered lists effectively
+- Keep the report concise but comprehensive`,
+  model: gpt41,
+});
 
+const USER_FINALIZE_PROMPT = (summary: string) =>
+  `Rewrite the accumulated summary into a clean technical report formatted as Markdown.
+
+Use the following structure with proper Markdown headers:
+# Technical Analysis Report
+
+## Overview
+(Concise summary of the situation)
+
+## Key Entities/Modules
+- Use bullet points
+- Include identifiers and technical names
+
+## Timeline / Key Events
+(Chronological list with clear sequence)
+
+## Anomalies / Errors
+### Error 1 Title
+- **Description:** ...
+- **Evidence:** ...
+- **Likely Cause:** ...
+
+## Metrics / Counts
+| Metric | Value |
+|--------|-------|
+| ... | ... |
+
+## Open Questions / Next Actions
+- [ ] Action item 1
+- [ ] Action item 2
+
+Format with proper Markdown: use **bold** for emphasis, \`code\` for technical terms, proper headers (#, ##, ###), tables where appropriate.
 Keep it <= ${MAX_FINAL_SUMMARY_TOKENS} tokens; compress without losing facts.
 
 Source material:
@@ -220,18 +260,56 @@ Source material:
 
 const finalizeStep = createStep({
   id: "finalize",
-  description: "Normalize and format final report",
+  description: "Normalize and format final report as markdown",
   inputSchema: LoopStateSchema,
-  outputSchema: ResultSchema,
+  outputSchema: z.object({
+    markdown: z.string(),
+  }),
   execute: async ({ inputData }) => {
     const { summary } = inputData;
-    logger.debug("Generating final summary", { summary: summary.slice(0, 100) });
-    const finalRes = await logAnalyzerAgent.generate(
+    logger.debug("Generating final markdown report", { summary: summary.slice(0, 100) });
+    const finalRes = await reportFormatterAgent.generate(
       USER_FINALIZE_PROMPT(summary),
     );
-    logger.debug("Final summary generated", { length: finalRes.text.length });
+    logger.debug("Final markdown report generated", { length: finalRes.text.length });
+    
     return {
-      report: finalRes.text,
+      markdown: finalRes.text,
+    };
+  }
+});
+
+// Step 5: Save markdown report to disk
+const presentationStep = createStep({
+  id: "save-report",
+  description: "Save markdown report to disk with timestamp",
+  inputSchema: z.object({
+    markdown: z.string(),
+  }),
+  outputSchema: ResultSchema,
+  execute: async ({ inputData }) => {
+    const { markdown } = inputData;
+    
+    // Create reports directory if it doesn't exist
+    const reportsDir = path.join(process.cwd(), 'reports');
+    try {
+      await fs.mkdir(reportsDir, { recursive: true });
+    } catch (err) {
+      logger.debug("Reports directory creation", { error: err });
+    }
+    
+    // Generate timestamp for filename
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const filename = `report-${timestamp}.md`;
+    const filePath = path.join(reportsDir, filename);
+    
+    // Save markdown file
+    await fs.writeFile(filePath, markdown, 'utf8');
+    logger.info("Report saved", { filePath });
+    
+    return {
+      markdown,
+      filePath,
     };
   }
 });
@@ -248,4 +326,5 @@ export const logCoreAnalyzer = createWorkflow({
   // sequential refine until idx == chunks.length
   .dowhile(refineStep, async ({ inputData }) => inputData.idx < inputData.chunks.length)
   .then(finalizeStep)
+  .then(presentationStep)
   .commit();
