@@ -7,6 +7,7 @@ import {
   versionWorkflow,
   taskFilesWorkflow,
   taskTestWorkflow,
+  refineSummarizeFile
 } from './workflows';
 
 export const mastra: Mastra = new Mastra({
@@ -16,6 +17,7 @@ export const mastra: Mastra = new Mastra({
     versionWorkflow,
     taskTestWorkflow,
     taskFilesWorkflow,
+    refineSummarizeFile
   },
   agents: { parsleyAgent },
   logger: new WinstonMastraLogger({
