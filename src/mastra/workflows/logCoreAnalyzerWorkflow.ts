@@ -52,8 +52,9 @@ const ChunkedSchema = z.object({
 const countTokens = (s: string) => encode(s).length;
 
 // Chunking configuration for GPT-4.1 nano (Assume max 128k context, but may be 1M)
-const CHUNK_SIZE = 3000;  // Optimal size for GPT-4 models
-const OVERLAP_TOKENS = 1000;  // Overlap to maintain context between chunks
+// TODO: hyperparameters below, need to find a right balance. Currently just for quick prototyping
+const CHUNK_SIZE = 9000;  // Optimal size for GPT-4 models
+const OVERLAP_TOKENS = 300;  // Overlap to maintain context between chunks
 const GPT_DEFAULT_TOKENIZER = "o200k_base"; // Tokenizer for GPT-4 TODO: auto selection based on model
 
 const chunkStep = createStep({
