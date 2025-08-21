@@ -1,7 +1,6 @@
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { gpt41Nano } from '../models/openAI/gpt41';
-import { memoryStore } from '../utils/memory';
 import {
   historyWorkflow,
   taskFilesWorkflow,
@@ -9,8 +8,10 @@ import {
   taskWorkflow,
   versionWorkflow,
 } from '../workflows';
+import { memoryStore } from '../utils/memory';
 
 const evergreenAgentMemory = new Memory({
+  storage: memoryStore,
   options: {
     workingMemory: {
       // TODO: Memory is scoped to the thread, so we will only recall from the current chat window.

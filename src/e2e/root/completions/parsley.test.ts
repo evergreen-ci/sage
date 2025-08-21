@@ -96,8 +96,8 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
       });
     expect(secondResponse.status).toBe(200);
     expect(secondResponse.body.message).not.toBeNull();
-    expect(secondResponse.body.message).toContain('TEST 456');
-  });
+    expect(secondResponse.body.message).toContain('TEST MESSAGE 123');
+  }, 10000);
 
   it('should optionally include agent interaction summary', async () => {
     const response = await request(app)

@@ -173,6 +173,8 @@ const addMessageRoute = async (
       async () =>
         await network.generate(messageData.message, {
           runtimeContext,
+          threadId: memoryOptions.thread.id,
+          resourceId: memoryOptions.resource,
         })
     );
 
