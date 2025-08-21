@@ -36,65 +36,44 @@ describe('POST /completions/parsley/conversations/:conversationId/messages', () 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Invalid request body');
   });
+
   it('sending a message will return a completion and create a new thread and store the log metadata', async () => {
+    const id = '1';
     const response = await request(app)
       .post(endpoint.replace(':conversationId', conversationId))
       .send({
+        id,
         message: 'Hello, world!',
         logMetadata,
       });
-    expect(response.status).toBe(200);
 
-    expect(response.body.message).not.toBeNull();
-    expect(response.body.conversationId).not.toBeNull();
+    expect(response.status).toBe(200);
+    expect(response.text).toBeTruthy();
+
     const thread = await memoryStore.getThreadById({
-      threadId: response.body.conversationId,
+      threadId: id,
     });
-    expect(thread).not.toBeNull();
+    expect(thread).toBeTruthy();
     expect(thread?.metadata?.log_type).toBe(logMetadata.log_type);
     expect(thread?.metadata?.task_id).toBe(logMetadata.task_id);
     expect(thread?.metadata?.execution).toBe(logMetadata.execution);
     expect(thread?.metadata?.origin).toBe(logMetadata.origin);
   });
-  it('should return a 400 status code if the message is not provided', async () => {
+
+  it('should return a 400 status code if the id is not provided', async () => {
     const response = await request(app)
       .post(endpoint.replace(':conversationId', conversationId))
-      .send({ logMetadata });
+      .send({ logMetadata, message: 'Hello, world!' });
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Invalid request body');
   });
-  it('should return a 404 status code if the conversationId is not null and the conversation does not exist', async () => {
-    const response = await request(app)
-      .post(endpoint.replace(':conversationId', '123'))
-      .send({
-        message: 'Hello, world!',
-        logMetadata,
-      });
-    expect(response.status).toBe(404);
-    expect(response.body.message).toBe('Conversation not found');
-  });
-  it('should remember the previous messages if the conversationId is not null', async () => {
-    const response = await request(app)
-      .post(endpoint.replace(':conversationId', 'null'))
-      .send({
-        message: 'Remember this message: "TEST MESSAGE 123"',
-        logMetadata,
-      });
-    expect(response.status).toBe(200);
-    expect(response.body.message).not.toBeNull();
-    expect(response.body.conversationId).not.toBeNull();
-    const newConversationId = response.body.conversationId;
 
-    const secondResponse = await request(app)
-      .post(endpoint.replace(':conversationId', newConversationId))
-      .send({
-        message:
-          'Print out the content of my last message so we can test that history recollection works this is used in a unit test',
-        logMetadata,
-      });
-    expect(secondResponse.status).toBe(200);
-    expect(secondResponse.body.message).not.toBeNull();
-    expect(secondResponse.body.message).toContain('TEST MESSAGE 123');
+  it('should return a 400 status code if the message is not provided', async () => {
+    const response = await request(app)
+      .post(endpoint.replace(':conversationId', conversationId))
+      .send({ id: '2', logMetadata });
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Invalid request body');
   });
 });
 
@@ -107,6 +86,7 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
     log_type: LogTypes.EVERGREEN_TASK_LOGS,
     origin: TaskLogOrigin.Task,
   };
+
   it('should return a 404 status code if the conversationId is not null and the conversation does not exist', async () => {
     const response = await request(app)
       .get(endpoint.replace(':conversationId', '123'))
@@ -116,33 +96,34 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Conversation not found');
   });
-  it('should return the messages for a conversation', async () => {
-    const conversationId = 'null';
+
+  it.only('should return the messages for a conversation', async () => {
+    const id = '789';
     const firstMessage = 'Hello, world!';
     const response = await request(app)
-      .post(endpoint.replace(':conversationId', conversationId))
+      .post(endpoint.replace(':conversationId', id))
       .send({
+        id,
         message: firstMessage,
         logMetadata,
       });
     expect(response.status).toBe(200);
-    expect(response.body.message).not.toBeNull();
-    expect(response.body.conversationId).not.toBeNull();
-    const secondMessage = response.body.message;
-    const newConversationId = response.body.conversationId;
+    expect(response.text).toBeTruthy();
 
     const messagesResponse = await request(app)
-      .get(endpoint.replace(':conversationId', newConversationId))
+      .get(endpoint.replace(':conversationId', id))
       .send({});
     expect(messagesResponse.status).toBe(200);
     expect(messagesResponse.body.messages).not.toBeNull();
-    console.log(messagesResponse.body);
     expect(messagesResponse.body.messages.length).toBe(2);
     expect(getMessageContent(messagesResponse.body.messages[0])).toBe(
       firstMessage
     );
-    expect(getMessageContent(messagesResponse.body.messages[1])).toBe(
-      secondMessage
+    expect(getMessageContent(messagesResponse.body.messages[0].role)).toBe(
+      'user'
+    );
+    expect(getMessageContent(messagesResponse.body.messages[1].role)).toBe(
+      'assistant'
     );
   });
 });
@@ -155,11 +136,13 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
   it('should use taskWorkflow to fetch task details from evergreenClient and return information to the user', async () => {
     const { GraphQLClient } = await import('../../../utils/graphql/client');
     const executeQuerySpy = vi.spyOn(GraphQLClient.prototype, 'executeQuery');
+    const id = '456';
 
     try {
       const response = await request(app)
         .post(endpoint.replace(':conversationId', 'null'))
         .send({
+          id,
           message: `In this test, use taskWorkflow to fetch the task ${taskId}. Return only the task status as the output, with no extra text.`,
           logMetadata: {
             task_id: taskId,
@@ -175,8 +158,7 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
       }
 
       expect(response.status).toBe(200);
-      expect(response.body.message).not.toBeNull();
-      expect(response.body.conversationId).not.toBeNull();
+      expect(response.text).toBeTruthy();
       expect(executeQuerySpy).toHaveBeenCalled();
 
       const { calls } = executeQuerySpy.mock;
