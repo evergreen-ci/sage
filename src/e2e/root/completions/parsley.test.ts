@@ -97,7 +97,7 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
     expect(response.body.message).toBe('Conversation not found');
   });
 
-  it.only('should return the messages for a conversation', async () => {
+  it('should return the messages for a conversation', async () => {
     const id = '789';
     const firstMessage = 'Hello, world!';
     const response = await request(app)
@@ -119,12 +119,8 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
     expect(getMessageContent(messagesResponse.body.messages[0])).toBe(
       firstMessage
     );
-    expect(getMessageContent(messagesResponse.body.messages[0].role)).toBe(
-      'user'
-    );
-    expect(getMessageContent(messagesResponse.body.messages[1].role)).toBe(
-      'assistant'
-    );
+    expect(messagesResponse.body.messages[0].role).toBe('user');
+    expect(messagesResponse.body.messages[1].role).toBe('assistant');
   });
 });
 
@@ -173,7 +169,7 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
         });
       }
 
-      const responseMessage = response.body.message.toLowerCase();
+      const responseMessage = response.text.toLowerCase();
 
       expect(responseMessage).toContain('failed');
     } finally {
