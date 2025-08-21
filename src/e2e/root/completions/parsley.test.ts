@@ -8,6 +8,8 @@ import { getMessageContent } from '../../utils';
 
 const app = setupTestAppServer();
 
+const chatEndpoint = '/completions/parsley/conversations/chat';
+
 afterAll(async () => {
   console.log('Clearing tables');
   try {
@@ -19,10 +21,7 @@ afterAll(async () => {
   }
 }, 30000);
 
-describe('POST /completions/parsley/conversations/:conversationId/messages', () => {
-  const endpoint =
-    '/completions/parsley/conversations/:conversationId/messages';
-  const conversationId = 'null';
+describe('POST /completions/parsley/conversations/chat', () => {
   const logMetadata = {
     task_id: '123',
     execution: 1,
@@ -31,7 +30,7 @@ describe('POST /completions/parsley/conversations/:conversationId/messages', () 
   };
   it('should validate the logMetadata', async () => {
     const response = await request(app)
-      .post(endpoint.replace(':conversationId', conversationId))
+      .post(chatEndpoint)
       .send({ logMetadata: { ...logMetadata, log_type: 'INVALID' } });
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Invalid request body');
@@ -39,13 +38,11 @@ describe('POST /completions/parsley/conversations/:conversationId/messages', () 
 
   it('sending a message will return a completion and create a new thread and store the log metadata', async () => {
     const id = '1';
-    const response = await request(app)
-      .post(endpoint.replace(':conversationId', conversationId))
-      .send({
-        id,
-        message: 'Hello, world!',
-        logMetadata,
-      });
+    const response = await request(app).post(chatEndpoint).send({
+      id,
+      message: 'Hello, world!',
+      logMetadata,
+    });
 
     expect(response.status).toBe(200);
     expect(response.text).toBeTruthy();
@@ -62,7 +59,7 @@ describe('POST /completions/parsley/conversations/:conversationId/messages', () 
 
   it('should return a 400 status code if the id is not provided', async () => {
     const response = await request(app)
-      .post(endpoint.replace(':conversationId', conversationId))
+      .post(chatEndpoint)
       .send({ logMetadata, message: 'Hello, world!' });
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Invalid request body');
@@ -70,7 +67,7 @@ describe('POST /completions/parsley/conversations/:conversationId/messages', () 
 
   it('should return a 400 status code if the message is not provided', async () => {
     const response = await request(app)
-      .post(endpoint.replace(':conversationId', conversationId))
+      .post(chatEndpoint)
       .send({ id: '2', logMetadata });
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Invalid request body');
@@ -100,13 +97,11 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
   it('should return the messages for a conversation', async () => {
     const id = '789';
     const firstMessage = 'Hello, world!';
-    const response = await request(app)
-      .post(endpoint.replace(':conversationId', id))
-      .send({
-        id,
-        message: firstMessage,
-        logMetadata,
-      });
+    const response = await request(app).post(chatEndpoint).send({
+      id,
+      message: firstMessage,
+      logMetadata,
+    });
     expect(response.status).toBe(200);
     expect(response.text).toBeTruthy();
 
@@ -125,8 +120,6 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
 });
 
 describe('completions/parsley/conversations/:conversationId/messages with taskWorkflow', () => {
-  const endpoint =
-    '/completions/parsley/conversations/:conversationId/messages';
   const taskId =
     'evg_lint_generate_lint_ecbbf17f49224235d43416ea55566f3b1894bbf7_25_03_21_21_09_20';
   it('should use taskWorkflow to fetch task details from evergreenClient and return information to the user', async () => {
@@ -136,7 +129,7 @@ describe('completions/parsley/conversations/:conversationId/messages with taskWo
 
     try {
       const response = await request(app)
-        .post(endpoint.replace(':conversationId', 'null'))
+        .post(chatEndpoint)
         .send({
           id,
           message: `In this test, use taskWorkflow to fetch the task ${taskId}. Return only the task status as the output, with no extra text.`,

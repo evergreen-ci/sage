@@ -18,30 +18,14 @@ const addMessageInputSchema = z.object({
   message: z.union([z.string(), uiMessageSchema]),
 });
 
-const addMessageParamsSchema = z.object({
-  conversationId: z.string().min(1),
-});
-
 type ErrorResponse = {
   message: string;
 };
 
-const addMessageRoute = async (
+const chatRoute = async (
   req: Request,
   res: Response<ReadableStream | ErrorResponse>
 ) => {
-  const { success: paramsSuccess } = addMessageParamsSchema.safeParse(
-    req.params
-  );
-  if (!paramsSuccess) {
-    logger.error('Invalid request params', {
-      requestId: req.requestId,
-      params: req.params,
-    });
-    res.status(400).json({ message: 'Invalid request params' });
-    return;
-  }
-
   const runtimeContext = new RuntimeContext();
 
   const authenticatedUserId = getUserIdFromRequest(req);
@@ -176,4 +160,4 @@ const addMessageRoute = async (
   }
 };
 
-export default addMessageRoute;
+export default chatRoute;
