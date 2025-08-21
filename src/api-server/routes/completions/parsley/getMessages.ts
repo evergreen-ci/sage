@@ -1,5 +1,5 @@
 import { CoreMessage } from '@mastra/core';
-import { RuntimeContext } from '@mastra/core/dist/runtime-context';
+import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
