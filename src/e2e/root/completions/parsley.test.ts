@@ -79,7 +79,7 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
     const response = await request(app)
       .post(endpoint.replace(':conversationId', 'null'))
       .send({
-        message: 'Remember this message: "TEST MESSAGE 123"',
+        message: 'Remember this Evergreen task: "123"',
         logMetadata,
       });
     expect(response.status).toBe(200);
@@ -91,12 +91,12 @@ describe('completions/parsley/conversations/:conversationId/messages', () => {
       .post(endpoint.replace(':conversationId', newConversationId))
       .send({
         message:
-          'Print out the content of my last message so we can test that history recollection works this is used in a unit test',
+          'Print out the Evergreen task I gave you in my last message so we can test that recollection works this is used in a unit test',
         logMetadata,
       });
     expect(secondResponse.status).toBe(200);
     expect(secondResponse.body.message).not.toBeNull();
-    expect(secondResponse.body.message).toContain('TEST MESSAGE 123');
+    expect(secondResponse.body.message).toContain('123');
   }, 10000);
 
   it('should optionally include agent interaction summary', async () => {
