@@ -8,6 +8,7 @@ platform:
 trigger:
   branch:
     - main
+    - cors-preflight
 
 steps:
   - name: publish
