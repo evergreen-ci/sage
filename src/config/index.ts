@@ -1,8 +1,8 @@
-import dotenv from 'dotenv';
-import { resolve } from 'path';
+import dotenvFlow from 'dotenv-flow';
 
-// Load environment variables from .env file
-dotenv.config({ path: resolve(process.cwd(), '.env') });
+dotenvFlow.config({
+  node_env: process.env.DEPLOYMENT_ENV || 'local',
+});
 
 export interface Config {
   port: number;
@@ -97,7 +97,7 @@ export const config: Config = {
       openai: {
         apiKey: getEnvVar('AZURE_OPENAI_API_KEY', ''),
         endpoint: getEnvVar('AZURE_OPENAI_ENDPOINT', ''),
-        apiVersion: getEnvVar('AZURE_OPENAI_API_VERSION', ''),
+        apiVersion: 'preview',
         defaultDeployment: getEnvVar('AZURE_OPENAI_DEFAULT_DEPLOYMENT', ''),
       },
     },
