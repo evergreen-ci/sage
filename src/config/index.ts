@@ -97,7 +97,7 @@ export const config: Config = {
       openai: {
         apiKey: getEnvVar('AZURE_OPENAI_API_KEY', ''),
         endpoint: getEnvVar('AZURE_OPENAI_ENDPOINT', ''),
-        apiVersion: 'preview',
+        apiVersion: getEnvVar('AZURE_OPENAI_API_VERSION', ''),
         defaultDeployment: getEnvVar('AZURE_OPENAI_DEFAULT_DEPLOYMENT', ''),
       },
     },
