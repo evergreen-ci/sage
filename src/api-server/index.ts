@@ -13,6 +13,11 @@ import { completionsRoute } from './routes';
 import healthRoute from './routes/health';
 import rootRoute from './routes/root';
 
+const corsOptions = {
+  credentials: true,
+  origin: true,
+};
+
 /**
  * `startServer` is a function that starts the server.
  */
@@ -37,12 +42,12 @@ class SageServer {
     // Basic Express middleware
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-    this.app.use(cors());
+    this.app.use(cors(corsOptions));
   }
 
   private setupRoutes() {
     // Enable CORS pre-flight requests for Kanopy headers
-    this.app.options('*', cors());
+    this.app.options('*', cors(corsOptions));
     this.app.get('/', rootRoute);
     this.app.get('/health', healthRoute);
     this.app.use('/completions', completionsRoute);
