@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { validateConfig } from 'config';
+import { config, validateConfig } from 'config';
 import { mastra } from 'mastra';
 import { db } from '../../db/connection';
 
@@ -54,6 +54,7 @@ const healthRoute = async (req: Request, res: Response) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
+    downstreamEvergreen: config.evergreen.graphqlEndpoint,
     agents: {
       count: agentNames.length,
       names: agentNames,

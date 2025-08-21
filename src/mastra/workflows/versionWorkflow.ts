@@ -1,7 +1,9 @@
 import { createWorkflow, createStep } from '@mastra/core';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
+import { USER_ID } from '../agents/constants';
 import { taskToolAdapter, versionToolAdapter } from '../tools/workflowAdapters';
+import { getRequestContext } from '../utils/requestContext';
 
 const workflowInputSchema = z.object({
   taskId: z.string(),
@@ -29,15 +31,15 @@ const getTaskStep = createStep({
   }),
   execute: async ({ inputData }) => {
     if (!taskToolAdapter.execute) {
-      return {
-        taskData: {
-          error: 'taskToolAdapter.execute is not defined',
-        },
-        includeNeverActivatedTasks: inputData.includeNeverActivatedTasks,
-      };
+      throw new Error('taskToolAdapter.execute is not defined');
     }
 
     const runtimeContext = new RuntimeContext();
+
+    const requestContext = getRequestContext();
+    if (requestContext?.userId) {
+      runtimeContext.set(USER_ID, requestContext.userId);
+    }
 
     const result = await taskToolAdapter.execute({
       context: {
@@ -69,47 +71,33 @@ const getVersionStep = createStep({
     const { includeNeverActivatedTasks, taskData } = inputData;
 
     if (taskData?.error) {
-      return {
-        taskData,
-        versionData: {
-          error: 'Cannot fetch version: task data has error',
-        },
-      };
+      throw new Error('Cannot fetch version: task data has error');
     }
 
     const task = taskData?.task;
 
     if (!task) {
-      return {
-        taskData,
-        versionData: {
-          error: 'Cannot fetch version: task data is missing',
-        },
-      };
+      throw new Error('Cannot fetch version: task data is missing');
     }
 
     const versionId = task.versionMetadata?.id;
 
     if (!versionId) {
-      return {
-        taskData,
-        versionData: {
-          error:
-            'Cannot fetch version: versionMetadata.id is missing from task',
-        },
-      };
+      throw new Error(
+        'Cannot fetch version: versionMetadata.id is missing from task'
+      );
     }
 
     if (!versionToolAdapter.execute) {
-      return {
-        taskData,
-        versionData: {
-          error: 'versionToolAdapter.execute is not defined',
-        },
-      };
+      throw new Error('versionToolAdapter.execute is not defined');
     }
 
     const runtimeContext = new RuntimeContext();
+
+    const requestContext = getRequestContext();
+    if (requestContext?.userId) {
+      runtimeContext.set(USER_ID, requestContext.userId);
+    }
 
     const versionResult = await versionToolAdapter.execute({
       context: {

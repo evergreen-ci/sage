@@ -1,7 +1,9 @@
 import { createWorkflow, createStep } from '@mastra/core';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
+import { USER_ID } from '../agents/constants';
 import { taskTestsToolAdapter } from '../tools/workflowAdapters';
+import { getRequestContext } from '../utils/requestContext';
 
 const workflowInputSchema = z.object({
   taskId: z.string(),
@@ -29,13 +31,14 @@ const getTaskTestsStep = createStep({
   }),
   execute: async ({ inputData }) => {
     if (!taskTestsToolAdapter.execute) {
-      return {
-        data: {
-          error: 'taskTestsToolAdapter.execute is not defined',
-        },
-      };
+      throw new Error('taskTestsToolAdapter.execute is not defined');
     }
     const runtimeContext = new RuntimeContext();
+
+    const requestContext = getRequestContext();
+    if (requestContext?.userId) {
+      runtimeContext.set(USER_ID, requestContext.userId);
+    }
 
     const result = await taskTestsToolAdapter.execute({
       context: {
@@ -64,14 +67,10 @@ const formatTaskTestsStep = createStep({
     const { data } = inputData;
 
     if (data?.error) {
-      return {
-        taskTests: null,
-        error: data.error,
-      };
+      throw new Error(data.error);
     }
     return {
       taskTests: data,
-      error: undefined,
     };
   },
 });

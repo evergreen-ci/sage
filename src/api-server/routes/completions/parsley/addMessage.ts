@@ -1,15 +1,18 @@
 import { LanguageModelV2Usage } from '@ai-sdk/provider';
+import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
-import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
+import { PARSLEY_AGENT_NAME, USER_ID } from 'mastra/agents/constants';
 import { LogTypes } from 'types/parsley';
 import { logger } from 'utils/logger';
+import { runWithRequestContext } from '../../../../mastra/utils/requestContext';
+import { getUserIdFromRequest } from '../../../middlewares/authentication';
 import { logMetadataSchema } from './validators';
 
 const addMessageInputSchema = z.object({
   message: z.string().min(1),
-  logMetadata: logMetadataSchema,
+  logMetadata: logMetadataSchema.optional(),
 });
 
 const addMessageParamsSchema = z.object({
@@ -42,7 +45,28 @@ const addMessageRoute = async (
     res.status(400).json({ message: 'Invalid request params' });
     return;
   }
+
   const { conversationId: conversationIdParam } = paramsData;
+
+  const runtimeContext = new RuntimeContext();
+
+  const authenticatedUserId = getUserIdFromRequest(req);
+
+  if (!authenticatedUserId) {
+    logger.error('No authentication provided', {
+      requestId: req.requestId,
+      conversationId: conversationIdParam,
+    });
+    res.status(401).json({ message: 'Authentication required' });
+    return;
+  }
+
+  runtimeContext.set(USER_ID, authenticatedUserId);
+
+  logger.debug('User context set for request', {
+    userId: authenticatedUserId,
+    requestId: req.requestId,
+  });
 
   const { data: messageData, success: messageSuccess } =
     addMessageInputSchema.safeParse(req.body);
@@ -91,20 +115,24 @@ const addMessageRoute = async (
     } else {
       const { logMetadata } = messageData;
       const metadata: Record<string, string | number> = {
-        task_id: logMetadata.task_id,
-        execution: logMetadata.execution,
-        log_type: logMetadata.log_type,
+        userId: authenticatedUserId,
       };
 
-      switch (logMetadata.log_type) {
-        case LogTypes.EVERGREEN_TEST_LOGS:
-          metadata.test_id = logMetadata.test_id;
-          break;
-        case LogTypes.EVERGREEN_TASK_LOGS:
-          metadata.origin = logMetadata.origin;
-          break;
-        default:
-          break;
+      if (logMetadata) {
+        metadata.task_id = logMetadata.task_id;
+        metadata.execution = logMetadata.execution;
+        metadata.log_type = logMetadata.log_type;
+
+        switch (logMetadata.log_type) {
+          case LogTypes.EVERGREEN_TEST_LOGS:
+            metadata.test_id = logMetadata.test_id;
+            break;
+          case LogTypes.EVERGREEN_TASK_LOGS:
+            metadata.origin = logMetadata.origin;
+            break;
+          default:
+            break;
+        }
       }
 
       const newThread = await memory?.createThread({
@@ -130,9 +158,14 @@ const addMessageRoute = async (
         ? memoryOptions.thread
         : memoryOptions.thread.id;
 
-    const result = await agent.generate(messageData.message, {
-      memory: memoryOptions,
-    });
+    const result = await runWithRequestContext(
+      { userId: authenticatedUserId, requestId: req.requestId },
+      async () =>
+        await agent.generate(messageData.message, {
+          memory: memoryOptions,
+          runtimeContext,
+        })
+    );
 
     res.json({
       message: result.text,

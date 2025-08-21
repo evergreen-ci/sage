@@ -1,11 +1,14 @@
 import { createWorkflow, createStep } from '@mastra/core';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
+import { USER_ID } from '../agents/constants';
 import { taskToolAdapter } from '../tools/workflowAdapters';
+import { getRequestContext } from '../utils/requestContext';
 
 const workflowInputSchema = z.object({
   taskId: z.string(),
   execution: z.number().optional(),
+  userId: z.string().optional(),
 });
 
 const workflowOutputSchema = z.object({
@@ -19,19 +22,22 @@ const getTaskStep = createStep({
   inputSchema: z.object({
     taskId: z.string(),
     execution: z.number().optional(),
+    userId: z.string().optional(),
   }),
   outputSchema: z.object({
     data: z.any(),
   }),
   execute: async ({ inputData }) => {
     if (!taskToolAdapter.execute) {
-      return {
-        data: {
-          error: 'taskToolAdapter.execute is not defined',
-        },
-      };
+      throw new Error('taskToolAdapter.execute is not defined');
     }
     const runtimeContext = new RuntimeContext();
+
+    const requestContext = getRequestContext();
+    const userId = inputData.userId || requestContext?.userId;
+    if (userId) {
+      runtimeContext.set(USER_ID, userId);
+    }
 
     const result = await taskToolAdapter.execute({
       context: {
@@ -58,14 +64,10 @@ const formatTaskStep = createStep({
     const { data } = inputData;
 
     if (data?.error) {
-      return {
-        task: null,
-        error: data.error,
-      };
+      throw new Error(data.error);
     }
     return {
       task: data,
-      error: undefined,
     };
   },
 });

@@ -1,7 +1,9 @@
 import { createWorkflow, createStep } from '@mastra/core';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
+import { USER_ID } from '../agents/constants';
 import { taskFilesToolAdapter } from '../tools/workflowAdapters';
+import { getRequestContext } from '../utils/requestContext';
 
 const workflowInputSchema = z.object({
   taskId: z.string(),
@@ -25,13 +27,14 @@ const getTaskFilesStep = createStep({
   }),
   execute: async ({ inputData }) => {
     if (!taskFilesToolAdapter.execute) {
-      return {
-        data: {
-          error: 'taskFilesToolAdapter.execute is not defined',
-        },
-      };
+      throw new Error('taskFilesToolAdapter.execute is not defined');
     }
     const runtimeContext = new RuntimeContext();
+
+    const requestContext = getRequestContext();
+    if (requestContext?.userId) {
+      runtimeContext.set(USER_ID, requestContext.userId);
+    }
 
     const result = await taskFilesToolAdapter.execute({
       context: {
@@ -58,14 +61,10 @@ const formatTaskFilesStep = createStep({
     const { data } = inputData;
 
     if (data?.error) {
-      return {
-        taskFiles: null,
-        error: data.error,
-      };
+      throw new Error(data.error);
     }
     return {
       taskFiles: data,
-      error: undefined,
     };
   },
 });
