@@ -274,7 +274,6 @@ Source report:
 
 const finalizeStep = createStep({
   id: "finalize",
-  description: "Normalize and format final report as markdown",
   description: "Generate final markdown report and executive summary",
   inputSchema: LoopStateSchema,
   outputSchema: z.object({
