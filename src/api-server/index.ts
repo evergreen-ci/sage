@@ -1,3 +1,4 @@
+import cors from 'cors';
 import express, { Application } from 'express';
 import expressListEndpoints from 'express-list-endpoints';
 import { config } from 'config';
@@ -36,6 +37,7 @@ class SageServer {
     // Basic Express middleware
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(cors());
   }
 
   private setupRoutes() {

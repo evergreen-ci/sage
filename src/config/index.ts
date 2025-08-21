@@ -1,6 +1,12 @@
 import dotenvFlow from 'dotenv-flow';
+import path from 'path';
 
+const cwd = process.cwd();
+const isMastraOutput =
+  path.basename(cwd) === 'output' &&
+  path.basename(path.dirname(cwd)) === '.mastra';
 dotenvFlow.config({
+  path: isMastraOutput ? path.resolve(cwd, '..', '..') : cwd,
   node_env: process.env.DEPLOYMENT_ENV || 'local',
 });
 
@@ -91,7 +97,7 @@ export const config: Config = {
         ? 'sage-test'
         : getEnvVar('DB_NAME', 'sage'),
   },
-  deploymentEnv: getEnvVar('DEPLOYMENT_ENV', 'staging'),
+  deploymentEnv: getEnvVar('DEPLOYMENT_ENV', 'local'),
   logging: {
     logLevel: getEnvVar('LOG_LEVEL', 'info'),
     logToFile: getEnvVar('LOG_TO_FILE', 'true') === 'true',
