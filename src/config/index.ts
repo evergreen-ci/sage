@@ -1,6 +1,15 @@
 import dotenvFlow from 'dotenv-flow';
+import path from 'path';
+
+// Determine the project root based on whether we're running from .mastra/output or not
+const currentDir = process.cwd();
+const isMastraOutput = currentDir.includes('.mastra/output');
+const projectRoot = isMastraOutput 
+  ? path.resolve(currentDir, '..', '..') 
+  : currentDir;
 
 dotenvFlow.config({
+  path: projectRoot,
   node_env: process.env.DEPLOYMENT_ENV || 'local',
 });
 
