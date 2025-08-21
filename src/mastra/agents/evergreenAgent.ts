@@ -40,9 +40,8 @@ export const evergreenMemory = new Memory({
 export const evergreenAgent: Agent = new Agent({
   name: 'Evergreen Agent',
   description:
-    'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources,
+    'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources',
   instructions: `
-
 You are **Evergreen AI**, an agent that provides information and support about the Evergreen system.
 
 * Only answer questions related to Evergreen.
@@ -50,8 +49,6 @@ You are **Evergreen AI**, an agent that provides information and support about t
 * Do not invoke a tool unless it is strictly required.
 * When possible, answer directly and concisely without tools.
 * Your role is to provide accurate, domain-specific responses for the orchestrator to use.
-
-
 `,
   model: gpt41Nano,
   workflows: {

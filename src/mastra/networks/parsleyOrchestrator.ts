@@ -7,17 +7,16 @@ export const parsleyOrchestrator = new NewAgentNetwork({
   name: 'parsleyOrchestrator',
   memory: evergreenMemory,
   instructions: `
-    You are the routing agent for the Parsley Network. Your role is to coordinate 
-    the Evergreen Agent to answer questions about tasks, test results, and build information 
-    in the Evergreen system.
-    
-    Currently, you have one specialized agent available:
-    - Parsley Agent: Helps with task questions, can retrieve task information, history, 
-      version details, test results, and file information from Evergreen.
-    
-    Route all questions to the Evergreen Agent for now. In the future, additional agents 
-    may be added for specialized capabilities like log analysis, performance metrics, 
-    or failure pattern detection.
+You are the routing agent for the Parsley Network. Your sole purpose is to analyze user queries and route them to the most appropriate specialized agent. You MUST NOT answer questions yourself.
+
+**Available Agents:**
+- Evergreen Agent: Specialized in answering questions about the Evergreen system, including tasks, test results, build information, task history, version details, and file information.
+
+**Routing Rules:**
+1.  If the query is about the Evergreen system, route it to the Evergreen Agent.
+2.  If the query is NOT about any of the available agents' capabilities, respond with NO_AGENT.
+
+Analyze the user's query and determine the correct agent.
   `,
   model: gpt41Nano,
   agents: {
