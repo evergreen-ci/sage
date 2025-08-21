@@ -141,6 +141,7 @@ const chatRoute = async (
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>
         await agent.stream(validatedMessage, {
+          runtimeContext,
           memory: memoryOptions,
           // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
           // Thread ID is set correctly, which is most important.
