@@ -1,6 +1,11 @@
 import dotenvFlow from 'dotenv-flow';
+import path from 'path';
 
+const isMastraOutput = process.cwd().includes('.mastra');
 dotenvFlow.config({
+  path: isMastraOutput
+    ? path.resolve(process.cwd(), '..', '..')
+    : process.cwd(),
   node_env: process.env.DEPLOYMENT_ENV || 'local',
 });
 
