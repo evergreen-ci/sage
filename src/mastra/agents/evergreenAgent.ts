@@ -11,7 +11,6 @@ import {
 } from '../workflows';
 
 const evergreenAgentMemory = new Memory({
-  storage: memoryStore,
   options: {
     workingMemory: {
       // TODO: Memory is scoped to the thread, so we will only recall from the current chat window.
