@@ -87,7 +87,7 @@ export const config: Config = {
         ? 'sage-test'
         : getEnvVar('DB_NAME', 'sage'),
   },
-  deploymentEnv: getEnvVar('DEPLOYMENT_ENV', 'staging'),
+  deploymentEnv: getEnvVar('DEPLOYMENT_ENV', 'local'),
   logging: {
     logLevel: getEnvVar('LOG_LEVEL', 'info'),
     logToFile: getEnvVar('LOG_TO_FILE', 'true') === 'true',

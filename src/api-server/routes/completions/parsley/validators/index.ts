@@ -32,3 +32,10 @@ export const logMetadataSchema = z.discriminatedUnion('log_type', [
   evergreenTaskLogsSchema,
   evergreenTestLogsSchema,
 ]);
+
+// Full validation of parts is handled by ai-sdk's validateUIMessage
+export const uiMessageSchema = z.object({
+  id: z.string(),
+  role: z.enum(['user', 'assistant', 'system']),
+  parts: z.array(z.any()),
+});
