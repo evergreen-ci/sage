@@ -47,8 +47,6 @@ class SageServer {
   }
 
   private setupRoutes() {
-    // Enable CORS pre-flight requests for Kanopy headers
-    this.app.options('*', cors(corsOptions));
     this.app.get('/', rootRoute);
     this.app.get('/health', healthRoute);
     this.app.use('/completions', completionsRoute);
