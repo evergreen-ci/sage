@@ -1,11 +1,11 @@
-import { AgentNetwork } from '@mastra/core/network';
 import { NewAgentNetwork } from '@mastra/core/network/vNext';
-import { evergreenAgent } from '../agents/evergreenAgent';
+import {evergreenAgent, evergreenMemory} from '../agents/evergreenAgent';
 import { gpt41Nano } from '../models/openAI/gpt41';
 
 export const sageOrchestrator = new NewAgentNetwork({
   id: 'sageOrchestrator',
   name: 'sageOrchestrator',
+  memory: evergreenMemory,
   instructions: `
     You are the routing agent for the Parsley Network. Your role is to coordinate 
     the Evergreen Agent to answer questions about tasks, test results, and build information 

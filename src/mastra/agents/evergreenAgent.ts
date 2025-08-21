@@ -10,7 +10,7 @@ import {
   versionWorkflow,
 } from '../workflows';
 
-const evergreenMemory = new Memory({
+export const evergreenMemory = new Memory({
   storage: memoryStore,
   options: {
     workingMemory: {

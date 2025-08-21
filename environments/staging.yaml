@@ -36,6 +36,7 @@ env:
   DEPLOYMENT_ENV: staging
   DB_NAME: sage
   OTEL_EXPORTER_OTLP_ENDPOINT: https://api.braintrust.dev/otel
+  LOG_LEVEL: debug
 
 
 envSecrets:
