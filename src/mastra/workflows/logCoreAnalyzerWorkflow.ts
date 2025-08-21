@@ -170,7 +170,12 @@ const refineStep = createStep({
 
     // TODO: make sure summary size stays manageable
     if (!chunk) {
-      throw new Error("No more chunks to process");
+      return {
+        idx: idx + 1,
+        chunks,
+        summary: existingSummary,
+        contextHint,
+      };
     }
 
     logger.debug("Refine step for chunk #:", { current: idx+1, total: chunks.length });
