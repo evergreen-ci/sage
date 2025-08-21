@@ -33,6 +33,7 @@ env:
   EVERGREEN_GRAPHQL_ENDPOINT: https://evergreen.mongodb.com/mcp/graphql/query
   PORT: 8080
   OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
+  HONEYCOMB_TEAM: sage
   DEPLOYMENT_ENV: staging
   DB_NAME: sage
   OTEL_EXPORTER_OTLP_ENDPOINT: https://api.braintrust.dev/otel
@@ -45,6 +46,7 @@ envSecrets:
   MONGODB_URI: parsley-ai-secrets
   OTEL_EXPORTER_OTLP_HEADERS: parsley-ai-secrets
   BRAINTRUST_API_KEY: parsley-ai-secrets
+  HONEYCOMB_API_KEY: parsley-ai-secrets
 
 serviceAccount:
   enabled: true
