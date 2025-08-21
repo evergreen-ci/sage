@@ -37,10 +37,7 @@ class SageServer {
     // Basic Express middleware
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-
-    if (config.nodeEnv === 'development') {
-      this.app.use(cors());
-    }
+    this.app.use(cors());
   }
 
   private setupRoutes() {
