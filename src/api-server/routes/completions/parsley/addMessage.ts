@@ -1,15 +1,20 @@
-import { validateUIMessages } from 'ai';
+import { LanguageModelV2Usage } from '@ai-sdk/provider';
+import { AgentMemoryOption } from '@mastra/core/agent';
+import { RuntimeContext } from '@mastra/core/runtime-context';
+import { UIMessage, validateUIMessages } from 'ai';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
-import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
+import { PARSLEY_AGENT_NAME, USER_ID } from 'mastra/agents/constants';
 import { LogTypes } from 'types/parsley';
 import { logger } from 'utils/logger';
+import { runWithRequestContext } from '../../../../mastra/utils/requestContext';
+import { getUserIdFromRequest } from '../../../middlewares/authentication';
 import { uiMessageSchema, logMetadataSchema } from './validators';
 
 const addMessageInputSchema = z.object({
   id: z.string(),
-  logMetadata: logMetadataSchema,
+  logMetadata: logMetadataSchema.optional(),
   // UIMessage arrays and strings are both valid inputs to agent.stream, so accept either.
   message: z.union([z.string(), uiMessageSchema]),
 });
@@ -38,6 +43,25 @@ const addMessageRoute = async (
     return;
   }
 
+  const runtimeContext = new RuntimeContext();
+
+  const authenticatedUserId = getUserIdFromRequest(req);
+
+  if (!authenticatedUserId) {
+    logger.error('No authentication provided', {
+      requestId: req.requestId,
+    });
+    res.status(401).json({ message: 'Authentication required' });
+    return;
+  }
+
+  runtimeContext.set(USER_ID, authenticatedUserId);
+
+  logger.debug('User context set for request', {
+    userId: authenticatedUserId,
+    requestId: req.requestId,
+  });
+
   const { data: messageData, success: messageSuccess } =
     addMessageInputSchema.safeParse(req.body);
   if (!messageSuccess) {
@@ -51,7 +75,7 @@ const addMessageRoute = async (
 
   const conversationId = messageData.id;
 
-  let validatedMessage;
+  let validatedMessage: string | UIMessage[];
   try {
     if (typeof messageData.message === 'string') {
       validatedMessage = messageData.message;
@@ -72,7 +96,7 @@ const addMessageRoute = async (
   try {
     const agent = mastra.getAgent(PARSLEY_AGENT_NAME);
     const memory = await agent.getMemory();
-    let memoryOptions;
+    let memoryOptions: AgentMemoryOption;
 
     // Populate session ID if provided
     const thread = await memory?.getThreadById({ threadId: conversationId });
@@ -91,20 +115,24 @@ const addMessageRoute = async (
     } else {
       const { logMetadata } = messageData;
       const metadata: Record<string, string | number> = {
-        task_id: logMetadata.task_id,
-        execution: logMetadata.execution,
-        log_type: logMetadata.log_type,
+        userId: authenticatedUserId,
       };
 
-      switch (logMetadata.log_type) {
-        case LogTypes.EVERGREEN_TEST_LOGS:
-          metadata.test_id = logMetadata.test_id;
-          break;
-        case LogTypes.EVERGREEN_TASK_LOGS:
-          metadata.origin = logMetadata.origin;
-          break;
-        default:
-          break;
+      if (logMetadata) {
+        metadata.task_id = logMetadata.task_id;
+        metadata.execution = logMetadata.execution;
+        metadata.log_type = logMetadata.log_type;
+
+        switch (logMetadata.log_type) {
+          case LogTypes.EVERGREEN_TEST_LOGS:
+            metadata.test_id = logMetadata.test_id;
+            break;
+          case LogTypes.EVERGREEN_TASK_LOGS:
+            metadata.origin = logMetadata.origin;
+            break;
+          default:
+            break;
+        }
       }
 
       const newThread = await memory?.createThread({
@@ -126,11 +154,16 @@ const addMessageRoute = async (
       };
     }
 
-    const stream = await agent.stream(validatedMessage, {
-      memory: memoryOptions,
-      // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
-      // https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence#setting-up-server-side-id-generation
-    });
+    const stream = await runWithRequestContext(
+      { userId: authenticatedUserId, requestId: req.requestId },
+      async () =>
+        await agent.stream(validatedMessage, {
+          memory: memoryOptions,
+          // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
+          // Thread ID is set correctly, which is most important.
+          // https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence#setting-up-server-side-id-generation
+        })
+    );
 
     stream.pipeUIMessageStreamToResponse(res);
   } catch (error) {

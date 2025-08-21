@@ -4,6 +4,7 @@ import z from 'zod';
 import { mastra } from 'mastra';
 import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
 import { logger } from 'utils/logger';
+import { getUserIdFromRequest } from '../../../middlewares/authentication';
 
 const getMessagesParamsSchema = z.object({
   conversationId: z.string().min(1),
@@ -36,7 +37,25 @@ const getMessagesRoute = async (
     res.status(400).json({ message: 'Invalid request params' });
     return;
   }
+
   const { conversationId } = paramsData;
+
+  const authenticatedUserId = getUserIdFromRequest(req);
+
+  if (!authenticatedUserId) {
+    logger.error('No authentication provided', {
+      requestId: req.requestId,
+      conversationId,
+    });
+    res.status(401).json({ message: 'Authentication required' });
+    return;
+  }
+
+  logger.debug('Get messages authentication', {
+    requestId: req.requestId,
+    conversationId,
+    userId: authenticatedUserId,
+  });
 
   try {
     const agent = mastra.getAgent(PARSLEY_AGENT_NAME);
@@ -55,6 +74,28 @@ const getMessagesRoute = async (
         conversationId,
       });
       res.status(404).json({ message: 'Conversation not found' });
+      return;
+    }
+
+    if (thread.metadata) {
+      const threadOwner = thread.metadata.userId as string | undefined;
+
+      if (threadOwner && threadOwner !== authenticatedUserId) {
+        logger.error('Unauthorized access attempt', {
+          requestId: req.requestId,
+          conversationId,
+          authenticatedUserId,
+          threadOwner,
+        });
+        res.status(403).json({ message: 'Access denied to this conversation' });
+        return;
+      }
+    } else {
+      logger.error('Thread has no metadata, denying access', {
+        requestId: req.requestId,
+        conversationId,
+      });
+      res.status(403).json({ message: 'Access denied to this conversation' });
       return;
     }
 

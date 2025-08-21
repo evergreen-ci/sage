@@ -103,7 +103,6 @@ export const slowRequestMiddleware =
   };
 
 /**
- * Get logger instance with request context
  * @param req - Express request object
  * @returns Logger instance with request context
  */
