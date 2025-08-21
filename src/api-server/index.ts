@@ -17,6 +17,7 @@ const corsOptions = {
   credentials: true,
   methods: 'POST,GET,OPTIONS,PATCH,PUT',
   origin: true,
+  preflightContinue: true,
 };
 
 /**
