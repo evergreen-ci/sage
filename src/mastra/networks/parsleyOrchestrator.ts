@@ -1,11 +1,34 @@
 import { NewAgentNetwork } from '@mastra/core/network/vNext';
-import {evergreenAgent, evergreenMemory} from '../agents/evergreenAgent';
+import { Memory } from '@mastra/memory';
+import { evergreenAgent } from '../agents/evergreenAgent';
 import { gpt41Nano } from '../models/openAI/gpt41';
+import { memoryStore } from '../utils/memory';
+
+const orchestratorMemory = new Memory({
+  storage: memoryStore,
+  options: {
+    workingMemory: {
+      scope: 'thread',
+      enabled: true,
+      template: `# Routing Context
+
+## Current Session
+- Thread ID:
+- Session Start Time:
+- Total Queries Processed:
+
+## Routing History
+- Last Routed Agent:
+- Recent Routing Decisions:
+`,
+    },
+  },
+});
 
 export const parsleyOrchestrator = new NewAgentNetwork({
   id: 'parsleyOrchestrator',
   name: 'parsleyOrchestrator',
-  memory: evergreenMemory,
+  memory: orchestratorMemory,
   instructions: `
 You are the routing agent for the Parsley Network. Your sole purpose is to analyze user queries and route them to the most appropriate specialized agent. You MUST NOT answer questions yourself.
 

@@ -10,29 +10,33 @@ import {
   versionWorkflow,
 } from '../workflows';
 
-export const evergreenMemory = new Memory({
+const evergreenAgentMemory = new Memory({
   storage: memoryStore,
   options: {
     workingMemory: {
       // TODO: Memory is scoped to the thread, so we will only recall from the current chat window.
       scope: 'thread',
       enabled: true,
-      // Define the template for the working memory
-      // The working memory is like a notepad that the agent can use to remember information
-      template: `
-      # Task Information
-      - Task ID: {{taskId}}
-      - Execution: {{execution}}
-      - Task Name: {{displayName}}
-      - Task Status: {{displayStatus}}
-      - Version: {{version}}
-      - Build Variant: {{buildVariant}}
-      - Patch Number: {{patchNumber}}
-      - Details: {{details}}
+      template: `# Evergreen Task Context
 
-      # Other interesting information
-      - {{otherInformation}}
-      `,
+## Current Task
+- Task ID:
+- Task Name:
+- Execution ID:
+- Status:
+- Build Variant:
+- Version:
+- Patch Number:
+- Details:
+
+## Task Details
+- Test Results:
+- Related Files:
+
+## Analysis Notes
+- Key Findings:
+- Potential Issues:
+`,
     },
   },
 });
@@ -51,6 +55,7 @@ You are **Evergreen AI**, an agent that provides information and support about t
 * Your role is to provide accurate, domain-specific responses for the orchestrator to use.
 `,
   model: gpt41Nano,
+  memory: evergreenAgentMemory,
   workflows: {
     taskWorkflow,
     historyWorkflow,
