@@ -1,10 +1,11 @@
-import { Router } from 'express';
-import addMessageRoute from './addMessage';
+import express from 'express';
+import chatRoute from './chat';
 import getMessagesRoute from './getMessages';
 
 const parsleyOrchestratorRouter = Router();
 
-parsleyOrchestratorRouter.post('/:conversationId/messages', addMessageRoute);
+// Route to initiate a chat stream
+parsleyOrchestratorRouter.post('/chat', chatRoute);
 parsleyOrchestratorRouter.get('/:conversationId/messages', getMessagesRoute);
 
 export default parsleyOrchestratorRouter;
