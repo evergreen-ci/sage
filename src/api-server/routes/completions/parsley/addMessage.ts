@@ -146,7 +146,7 @@ const addMessageRoute = async (
       }
 
       const newThread = await memory?.createThread({
-        resourceId: 'parsley_network_completions',
+        resourceId: 'parsley_completions',
         metadata,
       });
       if (!newThread) {
@@ -183,7 +183,7 @@ const addMessageRoute = async (
       conversationId: conversationId,
     });
   } catch (error) {
-    logger.error('Error in add message route for network', {
+    logger.error('Error in add message route', {
       error,
       requestId: req.requestId,
     });

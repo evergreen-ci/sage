@@ -22,7 +22,7 @@ const getMessagesRoute = async (
   req: Request,
   res: Response<GetMessagesOutput | ErrorResponse>
 ) => {
-  logger.info('Get messages request received for network', {
+  logger.info('Get messages request received', {
     requestId: req.requestId,
     body: req.body,
   });
@@ -128,7 +128,7 @@ const getMessagesRoute = async (
     });
     res.status(200).json({ messages: messages.messages });
   } catch (error) {
-    logger.error('Error in get messages route for network', {
+    logger.error('Error in get messages route', {
       error,
       requestId: req.requestId,
     });
