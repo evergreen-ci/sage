@@ -46,7 +46,6 @@ export const evergreenAgent: Agent = new Agent({
    You do not need to use a tool to answer a question. Only use a tool if you are sure that you need to.
 `,
   model: gpt41Nano,
-  memory: evergreenMemory,
   workflows: {
     taskWorkflow,
     historyWorkflow,
