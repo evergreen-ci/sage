@@ -40,7 +40,7 @@ export const evergreenMemory = new Memory({
 export const evergreenAgent: Agent = new Agent({
   name: 'Evergreen Agent',
   description:
-    'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources when embedded in the parsley log viewer',
+    'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources,
   instructions: `
    You are Evergreen ai, a helpful assistant that can help with tasks and questions about Evergreen resources. You should only use the tools and workflows provided to you.
    You do not need to use a tool to answer a question. Only use a tool if you are sure that you need to.
