@@ -53,8 +53,8 @@ const countTokens = (s: string) => encode(s).length;
 
 // Chunking configuration for GPT-4.1 nano (Assume max 128k context, but may be 1M)
 // TODO: hyperparameters below, need to find a right balance. Currently just for quick prototyping
-const CHUNK_SIZE = 9000;  // Optimal size for GPT-4 models
-const OVERLAP_TOKENS = 300;  // Overlap to maintain context between chunks
+const CHUNK_SIZE = 20_000;  // Optimal size for GPT-4 models
+const OVERLAP_TOKENS = 800;  // Overlap to maintain context between chunks
 const GPT_DEFAULT_TOKENIZER = "o200k_base"; // Tokenizer for GPT-4 TODO: auto selection based on model
 
 const chunkStep = createStep({
@@ -95,19 +95,24 @@ const LoopStateOutputSchema = z.object({
 
 // Define the log analyzer agent for chunked processing
 // Ultimately, the first call should be 4.1, and all other iterations should use nano
-const logAnalyzerAgent = new Agent({
-  name: "log-analyzer-agent",
-  description: "Analyzes and summarizes technical text chunks (logs, code, configs, telemetry, build output)",
-  instructions: `You are a senior engineer compressing *technical* text (logs, code, configs, telemetry, build output).
+// Initial analyzer - smarter model for understanding structure and context
+const initialAnalyzerAgent = new Agent({
+  name: "initial-analyzer-agent",
+  description: "Performs initial analysis of technical documents to understand structure and key patterns",
+  instructions: `You are a senior engineer performing initial analysis of technical text (logs, code, configs, telemetry, build output).
 You always respond as compact JSON matching the provided schema.
-- Preserve facts, identifiers, timestamps, error codes, and concrete evidence.
-- Collapse repeated patterns; merge equivalent lines; prefer timelines for events.
-- If a new chunk adds nothing material, set "updated": false.`,
+Focus on:
+- Understanding the overall structure and format of the content
+- Identifying key patterns, sections, and data types
+- Establishing context and technical domain
+- Preserving critical facts, identifiers, timestamps, error codes
+- Creating a strong foundation summary for further refinement`,
   model: gpt41,
 });
 
 const USER_INITIAL_PROMPT = (chunk: string, hint?: string) =>
-  `Summarize this first chunk into a concise technical brief.
+  `Analyze this first chunk to understand the document structure and create an initial technical summary.
+Identify the type of content (logs, code, config, telemetry, etc.) and key patterns.
 ${hint ? `Context hint:\n${hint}\n` : ""}
 
 Chunk:
@@ -128,7 +133,7 @@ const initialStep = createStep({
     logger.debug("Chunk length", { length: first.length });
     logger.debug("Calling LLM for initial summary");
     
-    const result = await logAnalyzerAgent.generate(
+    const result = await initialAnalyzerAgent.generate(
         USER_INITIAL_PROMPT(first, contextHint), 
         {
             experimental_output: LoopStateOutputSchema
@@ -140,8 +145,20 @@ const initialStep = createStep({
   }
 });
 
-// Step 3: Recursive iterative refinement
-// TODO cheaper agent (model) for the loop
+// Step 3: Recursive iterative refinement (using cheaper model)
+
+// Refinement agent - cheaper model for iterative updates
+const refinementAgent = new Agent({
+  name: "refinement-agent",
+  description: "Iteratively refines and updates technical summaries with new chunks",
+  instructions: `You are a technical analyst updating existing summaries with new information.
+You always respond as compact JSON matching the provided schema.
+- Merge new facts into the existing summary efficiently
+- Collapse repeated patterns; prefer timelines for events
+- If a new chunk adds nothing material, set "updated": false
+- Keep the summary concise while preserving all important details`,
+  model: gpt41Nano,
+});
 
 const USER_REFINE = (existing: string, chunk: string, hint?: string) =>
   `Refine the existing summary with ONLY *material* additions or corrections from the new chunk.
@@ -179,7 +196,7 @@ const refineStep = createStep({
     }
 
     logger.debug("Refine step for chunk #:", { current: idx+1, total: chunks.length });
-    const result = await logAnalyzerAgent.generate(
+    const result = await refinementAgent.generate(
         USER_REFINE(existingSummary, chunk, contextHint), 
         {
             experimental_output: LoopStateOutputSchema // TODO: define error handling strategy when schema validation fails
