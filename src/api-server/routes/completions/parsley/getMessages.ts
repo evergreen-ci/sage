@@ -1,4 +1,5 @@
 import { CoreMessage } from '@mastra/core';
+import { RuntimeContext } from '@mastra/core/dist/runtime-context';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
@@ -40,6 +41,8 @@ const getMessagesRoute = async (
 
   const { conversationId } = paramsData;
 
+  const runtimeContext = new RuntimeContext();
+
   const authenticatedUserId = getUserIdFromRequest(req);
 
   if (!authenticatedUserId) {
@@ -58,7 +61,7 @@ const getMessagesRoute = async (
   });
 
   try {
-    const network = mastra.getNetwork(ORCHESTRATOR_NAME);
+    const network = mastra.vnext_getNetwork(ORCHESTRATOR_NAME);
     if (!network) {
       logger.error('Network not found', {
         requestId: req.requestId,
@@ -67,23 +70,7 @@ const getMessagesRoute = async (
       res.status(500).json({ message: 'Network not found' });
       return;
     }
-    const agents = network.getAgents();
-    if (!Array.isArray(agents) || agents.length === 0) {
-      logger.error('No agents found in network', {
-        requestId: req.requestId,
-      });
-      res.status(500).json({ message: 'No agents found in network' });
-      return;
-    }
-    const routingAgent = agents[0];
-    if (!routingAgent) {
-      logger.error('Invalid network agents', {
-        requestId: req.requestId,
-      });
-      res.status(500).json({ message: 'Routing agent not found' });
-      return;
-    }
-    const memory = await routingAgent.getMemory();
+    const memory = await network.getMemory({ runtimeContext });
     if (!memory) {
       logger.error('Memory not found', {
         requestId: req.requestId,
