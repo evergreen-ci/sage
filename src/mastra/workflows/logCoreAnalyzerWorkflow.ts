@@ -3,7 +3,7 @@ import { z } from "zod";
 import { MDocument } from "@mastra/rag";
 import { Agent } from "@mastra/core/agent";
 import { encode } from "gpt-tokenizer";
-import { gpt41 } from '../models/openAI/gpt41';
+import { gpt41, gpt41Nano } from '../models/openAI/gpt41';
 import fs from "node:fs/promises";
 import path from "node:path";
 import { WinstonMastraLogger } from "../../utils/logger/winstonMastraLogger";
@@ -206,27 +206,23 @@ const refineStep = createStep({
 
 const ResultSchema = z.object({
   markdown: z.string(),
+  summary: z.string(),
   filePath: z.string().optional(),
 });
 
 const MAX_FINAL_SUMMARY_TOKENS = 2048;
 
-// Define the report formatter agent for final markdown output
-// Could probably be a simple LLM call and not an agent
+// Define the report formatter agent for final output
 const reportFormatterAgent = new Agent({
   name: "report-formatter-agent",
-  description: "Formats technical summaries into clean markdown reports",
-  instructions: `You are a senior engineer creating clean, well-formatted technical reports.
-You respond ONLY with properly formatted Markdown text - no JSON wrapper, no additional fields.
-- Use proper Markdown headers (#, ##, ###)
-- Use **bold** for emphasis and \`code\` for technical terms
-- Create tables with | pipes | where appropriate
-- Use bullet points and numbered lists effectively
-- Keep the report concise but comprehensive`,
+  description: "Formats technical summaries into various output formats",
+  instructions: `You are a senior engineer creating technical reports and summaries.
+You respond ONLY with the requested format - no JSON wrapper, no additional fields.
+Focus on clarity, precision, and appropriate formatting for the requested output type.`,
   model: gpt41,
 });
 
-const USER_FINALIZE_PROMPT = (summary: string) =>
+const USER_MARKDOWN_PROMPT = (summary: string) =>
   `Rewrite the accumulated summary into a clean technical report formatted as Markdown.
 
 Use the following structure with proper Markdown headers:
@@ -263,23 +259,48 @@ Keep it <= ${MAX_FINAL_SUMMARY_TOKENS} tokens; compress without losing facts.
 Source material:
 """${summary}"""`;
 
+const USER_EXECUTIVE_SUMMARY_PROMPT = (markdown: string) =>
+  `Create a concise executive summary (3-4 lines maximum) from this technical report.
+
+Focus on:
+- What happened (the main issue/situation)
+- Key impacts and metrics
+- Critical actions needed
+
+Write in plain text, no markdown formatting. Be direct and factual.
+
+Source report:
+"""${markdown}"""`;
+
 const finalizeStep = createStep({
   id: "finalize",
   description: "Normalize and format final report as markdown",
+  description: "Generate final markdown report and executive summary",
   inputSchema: LoopStateSchema,
   outputSchema: z.object({
     markdown: z.string(),
+    summary: z.string(),
   }),
   execute: async ({ inputData }) => {
     const { summary } = inputData;
     logger.debug("Generating final markdown report", { summary: summary.slice(0, 100) });
-    const finalRes = await reportFormatterAgent.generate(
-      USER_FINALIZE_PROMPT(summary),
+    
+    // Generate markdown report
+    const markdownRes = await reportFormatterAgent.generate(
+      USER_MARKDOWN_PROMPT(summary),
     );
-    logger.debug("Final markdown report generated", { length: finalRes.text.length });
+    logger.debug("Final markdown report generated", { length: markdownRes.text.length });
+    
+    // Generate executive summary from the markdown report
+    logger.debug("Generating executive summary");
+    const execSummaryRes = await reportFormatterAgent.generate(
+      USER_EXECUTIVE_SUMMARY_PROMPT(markdownRes.text),
+    );
+    logger.debug("Executive summary generated", { length: execSummaryRes.text.length });
     
     return {
-      markdown: finalRes.text,
+      markdown: markdownRes.text,
+      summary: execSummaryRes.text,
     };
   }
 });
@@ -290,10 +311,11 @@ const presentationStep = createStep({
   description: "Save markdown report to disk with timestamp",
   inputSchema: z.object({
     markdown: z.string(),
+    summary: z.string(),
   }),
   outputSchema: ResultSchema,
   execute: async ({ inputData }) => {
-    const { markdown } = inputData;
+    const { markdown, summary } = inputData;
     
     // Create reports directory if it doesn't exist
     const reportsDir = path.join(process.cwd(), 'reports');
@@ -314,6 +336,7 @@ const presentationStep = createStep({
     
     return {
       markdown,
+      summary,
       filePath,
     };
   }

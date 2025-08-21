@@ -32,6 +32,11 @@ async function runTest(filePath: string, quiet: boolean = false) {
     const successResult = result.status === "success" ? result.result : null;
     console.log(`Report saved to: ${successResult ? successResult.filePath : "N/A"}`);
     
+    // Show executive summary if available
+    if (successResult?.summary) {
+      console.log(`\n📋 Executive Summary:\n${successResult.summary}\n`);
+    }
+    
     // Analyze workflow steps
     if (result.steps) {
       analyzeAndPrint(result.steps);
