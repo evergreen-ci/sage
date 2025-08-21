@@ -83,7 +83,7 @@ const addMessageRoute = async (
   let conversationId =
     conversationIdParam === 'null' ? null : conversationIdParam;
   try {
-    const network = mastra.getNetwork(ORCHESTRATOR_NAME);
+    const network = mastra.vnext_getNetwork(ORCHESTRATOR_NAME);
     if (!network) {
       logger.error('Network not found', {
         requestId: req.requestId,
@@ -92,23 +92,7 @@ const addMessageRoute = async (
       res.status(500).json({ message: 'Network not found' });
       return;
     }
-    const agents = network.getAgents();
-    if (!Array.isArray(agents) || agents.length === 0) {
-      logger.error('No agents found in network', {
-        requestId: req.requestId,
-      });
-      res.status(500).json({ message: 'No agents found in network' });
-      return;
-    }
-    const routingAgent = agents[0];
-    if (!routingAgent) {
-      logger.error('Invalid network agents', {
-        requestId: req.requestId,
-      });
-      res.status(500).json({ message: 'Routing agent not found' });
-      return;
-    }
-    const memory = await routingAgent.getMemory();
+    const memory = await network.getMemory({ runtimeContext });
     let memoryOptions;
 
     // If the conversationId is not null, we use the existing thread
@@ -188,20 +172,15 @@ const addMessageRoute = async (
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>
         await network.generate(messageData.message, {
-          memory: memoryOptions,
           runtimeContext,
         })
     );
 
-    const agentInteractionSummary = network.getAgentInteractionSummary();
-
     res.json({
-      message: result.text,
+      message: result.result,
       requestId: req.requestId,
       timestamp: new Date().toISOString(),
-      completionUsage: result.usage,
       conversationId: conversationId,
-      ...(agentInteractionSummary && { agentInteractionSummary }),
     });
   } catch (error) {
     logger.error('Error in add message route for network', {

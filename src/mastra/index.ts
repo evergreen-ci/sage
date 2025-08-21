@@ -19,7 +19,7 @@ export const mastra: Mastra = new Mastra({
     taskFilesWorkflow,
   },
   agents: { evergreenAgent },
-  networks: { sageOrchestrator },
+  vnext_networks: { sageOrchestrator },
   logger: new WinstonMastraLogger({
     name: 'Mastra',
     level: 'info',
