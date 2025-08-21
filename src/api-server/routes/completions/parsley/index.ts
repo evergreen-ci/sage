@@ -2,7 +2,7 @@ import express from 'express';
 import chatRoute from './chat';
 import getMessagesRoute from './getMessages';
 
-const parsleyOrchestratorRouter = Router();
+const parsleyOrchestratorRouter = express.Router();
 
 // Route to initiate a chat stream
 parsleyOrchestratorRouter.post('/chat', chatRoute);

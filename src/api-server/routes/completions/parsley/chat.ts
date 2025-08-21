@@ -19,19 +19,6 @@ const addMessageInputSchema = z.object({
   message: z.union([z.string(), uiMessageSchema]),
 });
 
-const addMessageParamsSchema = z.object({
-  conversationId: z.string().min(1),
-});
-
-type AddMessageOutput = {
-  message: string;
-  requestId: string;
-  timestamp: string;
-  completionUsage: LanguageModelV2Usage;
-  conversationId: string;
-  agentInteractionSummary?: string;
-};
-
 type ErrorResponse = {
   message: string;
 };
@@ -159,22 +146,28 @@ const chatRoute = async (
       };
     }
 
+    const routingAgent = await network.getRoutingAgent({ runtimeContext });
+    if (!routingAgent) {
+      logger.error('Routing agent not found', {
+        requestId: req.requestId,
+        networkName: ORCHESTRATOR_NAME,
+      });
+      res.status(500).json({ message: 'Routing agent not found' });
+      return;
+    }
+
     const stream = await runWithRequestContext(
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>
-        await network.generate(messageData.message, {
+        await routingAgent.stream(validatedMessage, {
           runtimeContext,
-          threadId: memoryOptions.thread.id,
-          resourceId: memoryOptions.resource,
+          memory: memoryOptions,
+          // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
+          // Thread ID is set correctly, which is most important.
+          // https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence#setting-up-server-side-id-generation
         })
     );
-
-    res.json({
-      message: result.result,
-      requestId: req.requestId,
-      timestamp: new Date().toISOString(),
-      conversationId: conversationId,
-    });
+    stream.pipeUIMessageStreamToResponse(res);
   } catch (error) {
     logger.error('Error in add message route', {
       error,
