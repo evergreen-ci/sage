@@ -204,7 +204,7 @@ const refineStep = createStep({
     );
 
     const updated = result.object?.updated ?? false;
-    var newSummary = existingSummary;
+    let newSummary = existingSummary;
     if (updated) {
       newSummary = result.object?.summary ?? existingSummary; // TODO: error if no new summary
     }
