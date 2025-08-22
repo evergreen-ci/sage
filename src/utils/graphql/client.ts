@@ -24,7 +24,7 @@ interface ExecuteQueryOptions {
   operationName?: string;
   headers?: Record<string, string>;
   userID: string;
-  signal: AbortSignal | null;
+  signal?: AbortSignal | null;
   timeoutMs?: number;
 }
 
