@@ -2,13 +2,13 @@ import { Agent } from '@mastra/core/agent';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
 import { encode } from 'gpt-tokenizer';
+import fetch, { Headers } from 'node-fetch';
 import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
+import { config } from '../../config';
 import { WinstonMastraLogger } from '../../utils/logger/winstonMastraLogger';
 import { gpt41, gpt41Nano } from '../models/openAI/gpt41';
-import { config } from '../../config';
-import fetch, { Headers } from 'node-fetch';
 
 // Initialize logger for this workflow
 const logger = new WinstonMastraLogger({
@@ -45,7 +45,7 @@ const readStep = createStep({
   }),
   execute: async ({ inputData }) => {
     const { contextHint, path: p, text, url } = inputData;
-    
+
     let raw = text ?? '';
     if (p) {
       const buf = await fs.readFile(path.resolve(p));
@@ -59,17 +59,21 @@ const readStep = createStep({
         headers.append('Api-User', config.evergreen.apiUser);
         headers.append('Api-Key', config.evergreen.apiKey);
       } else {
-        logger.warn('Evergreen API credentials are not set in config; making unauthenticated request');
+        logger.warn(
+          'Evergreen API credentials are not set in config; making unauthenticated request'
+        );
       }
-      
-      logger.debug('Fetching URL with authentication', { 
+
+      logger.debug('Fetching URL with authentication', {
         url,
-        hasAuth: !!(config.evergreen.apiUser && config.evergreen.apiKey) 
+        hasAuth: !!(config.evergreen.apiUser && config.evergreen.apiKey),
       });
-      
+
       const response = await fetch(url, { headers });
       if (!response.ok) {
-        throw new Error(`Failed to fetch URL: ${url} (${response.status} ${response.statusText})`);
+        throw new Error(
+          `Failed to fetch URL: ${url} (${response.status} ${response.statusText})`
+        );
       }
       raw = await response.text();
     }
@@ -545,7 +549,7 @@ const decideAndRunStep = createStep({
 export const logCoreAnalyzer = createWorkflow({
   id: 'log-core-analyzer',
   description:
-    'Hierarchical refine summarization for arbitrary technical text files',
+    'Analyze, iteratively summarize, and produce a complete report of technical files of arbitrary types and structures. Take as input either an URL, a file path, or the file as plain text.',
   inputSchema: WorkflowInputSchema,
   outputSchema: ResultSchema,
 })
