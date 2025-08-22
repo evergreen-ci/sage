@@ -40,6 +40,7 @@ vi.mock('../../../utils/logger', () => ({
 describe('createGraphQLTool', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockExecuteQuery.mockReset();
   });
 
   it('executes query successfully with userID', async () => {
@@ -68,9 +69,7 @@ describe('createGraphQLTool', () => {
     );
   });
 
-  it('logs a warning when userID is missing', async () => {
-    mockExecuteQuery.mockResolvedValueOnce({ data: 'mockData' });
-
+  it('throws error when userID is missing', async () => {
     const tool = createGraphQLTool({
       id: 'get-task',
       description: 'Get task by ID',
@@ -79,23 +78,19 @@ describe('createGraphQLTool', () => {
       client: mockClient as any,
     });
 
-    await tool.execute?.({
-      context,
-      runtimeContext: makeRuntimeContext(undefined),
-    });
-
-    expect(logger.warn).toHaveBeenCalledWith(
-      'User ID not available in RuntimeContext provided to GraphQL tool',
-      expect.objectContaining({ id: 'get-task' })
-    );
+    await expect(
+      tool.execute?.({
+        context,
+        runtimeContext: makeRuntimeContext(undefined),
+      })
+    ).rejects.toThrow('User ID not available in RuntimeContext unable to execute query');
   });
 
-  it('returns structured error on GraphQLClientError', async () => {
-    const graphQLError = new GraphQLClientError(
-      'GraphQL error',
-      [{ message: 'bad' }],
-      400
-    );
+  it('throws GraphQLClientError on GraphQL errors', async () => {
+    const graphQLError = new GraphQLClientError('GraphQL error', {
+      statusCode: 400,
+      errors: [{ message: 'bad' }],
+    });
 
     mockExecuteQuery.mockRejectedValueOnce(graphQLError);
 
@@ -107,16 +102,12 @@ describe('createGraphQLTool', () => {
       client: mockClient as any,
     });
 
-    const result = await tool.execute?.({
-      context,
-      runtimeContext: makeRuntimeContext('user-456'),
-    });
-
-    expect(result).toEqual({
-      error: 'GraphQL error',
-      graphqlErrors: [{ message: 'bad' }],
-      statusCode: 400,
-    });
+    await expect(
+      tool.execute?.({
+        context,
+        runtimeContext: makeRuntimeContext('user-456'),
+      })
+    ).rejects.toThrow(GraphQLClientError);
 
     expect(logger.error).toHaveBeenCalledWith(
       'GraphQLClientError during tool execution',
@@ -129,8 +120,9 @@ describe('createGraphQLTool', () => {
     );
   });
 
-  it('returns fallback error on unknown exception', async () => {
-    mockExecuteQuery.mockRejectedValueOnce(new Error('Oops'));
+  it('throws error on unknown exception', async () => {
+    const unknownError = new Error('Oops');
+    mockExecuteQuery.mockRejectedValueOnce(unknownError);
 
     const tool = createGraphQLTool({
       id: 'get-task',
@@ -140,12 +132,12 @@ describe('createGraphQLTool', () => {
       client: mockClient as any,
     });
 
-    const result = await tool.execute?.({
-      context,
-      runtimeContext: makeRuntimeContext('user-789'),
-    });
-
-    expect(result).toEqual({ error: 'Oops' });
+    await expect(
+      tool.execute?.({
+        context,
+        runtimeContext: makeRuntimeContext('user-789'),
+      })
+    ).rejects.toThrow('Oops');
 
     expect(logger.error).toHaveBeenCalledWith(
       'Unexpected error during GraphQL tool execution',
