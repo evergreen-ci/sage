@@ -140,7 +140,7 @@ const chatRoute = async (
     const stream = await runWithRequestContext(
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>
-        await agent.stream(validatedMessage, {
+        await agent.streamVNext(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
           // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
@@ -149,7 +149,31 @@ const chatRoute = async (
         })
     );
 
-    stream.pipeDataStreamToResponse(res);
+    const response = stream.aisdk.v5.toUIMessageStreamResponse();
+    
+    // Set headers from the Response object
+    response.headers.forEach((value, key) => {
+      res.setHeader(key, value);
+    });
+    
+    // Pipe the body stream to the Express response
+    if (response.body) {
+      const reader = response.body.getReader();
+      const processStream = async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            res.write(value);
+          }
+          res.end();
+        } catch (err) {
+          logger.error('Error piping stream', { error: err });
+          res.end();
+        }
+      };
+      processStream();
+    }
   } catch (error) {
     logger.error('Error in add message route', {
       error,
