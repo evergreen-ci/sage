@@ -103,7 +103,7 @@ export class GraphQLClient {
         method: 'POST',
         headers,
         body: JSON.stringify(body),
-        signal: signal ?? null,
+        signal,
       });
 
       const contentType = res.headers.get('content-type') ?? '';
