@@ -1,15 +1,12 @@
 import dotenvFlow from 'dotenv-flow';
 import path from 'path';
 
-// Determine the project root based on whether we're running from .mastra/output or not
-const currentDir = process.cwd();
-const isMastraOutput = currentDir.includes('.mastra/output');
-const projectRoot = isMastraOutput 
-  ? path.resolve(currentDir, '..', '..') 
-  : currentDir;
-
+const cwd = process.cwd();
+const isMastraOutput =
+  path.basename(cwd) === 'output' &&
+  path.basename(path.dirname(cwd)) === '.mastra';
 dotenvFlow.config({
-  path: projectRoot,
+  path: isMastraOutput ? path.resolve(cwd, '..', '..') : cwd,
   node_env: process.env.DEPLOYMENT_ENV || 'local',
 });
 
@@ -42,6 +39,10 @@ export interface Config {
     userIDHeader: string;
   };
   otelCollectorURL: string;
+  honeycomb: {
+    team: string;
+    apiKey: string;
+  };
   braintrust: {
     apiKey: string;
     parent: string;
@@ -96,7 +97,7 @@ export const config: Config = {
         ? 'sage-test'
         : getEnvVar('DB_NAME', 'sage'),
   },
-  deploymentEnv: getEnvVar('DEPLOYMENT_ENV', 'staging'),
+  deploymentEnv: getEnvVar('DEPLOYMENT_ENV', 'local'),
   logging: {
     logLevel: getEnvVar('LOG_LEVEL', 'info'),
     logToFile: getEnvVar('LOG_TO_FILE', 'true') === 'true',
@@ -121,6 +122,10 @@ export const config: Config = {
     'OTEL_COLLECTOR_URL',
     'http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces'
   ),
+  honeycomb: {
+    team: getEnvVar('HONEYCOMB_TEAM', ''),
+    apiKey: getEnvVar('HONEYCOMB_API_KEY', ''),
+  },
   braintrust: {
     apiKey: getEnvVar('BRAINTRUST_API_KEY', ''),
     parent: getEnvVar('BRAINTRUST_PARENT', 'project_name:dev-prod-team'),

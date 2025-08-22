@@ -1,5 +1,6 @@
-import { LanguageModelV2Usage } from '@ai-sdk/provider';
+import { AgentMemoryOption } from '@mastra/core/agent';
 import { RuntimeContext } from '@mastra/core/runtime-context';
+import { UIMessage, validateUIMessages } from 'ai';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
@@ -8,46 +9,23 @@ import { LogTypes } from 'types/parsley';
 import { logger } from 'utils/logger';
 import { runWithRequestContext } from '../../../../mastra/utils/requestContext';
 import { getUserIdFromRequest } from '../../../middlewares/authentication';
-import { logMetadataSchema } from './validators';
+import { uiMessageSchema, logMetadataSchema } from './validators';
 
 const addMessageInputSchema = z.object({
-  message: z.string().min(1),
+  id: z.string(),
   logMetadata: logMetadataSchema.optional(),
+  // UIMessage arrays and strings are both valid inputs to agent.stream, so accept either.
+  message: z.union([z.string(), uiMessageSchema]),
 });
-
-const addMessageParamsSchema = z.object({
-  conversationId: z.string().min(1),
-});
-
-type AddMessageOutput = {
-  message: string;
-  requestId: string;
-  timestamp: string;
-  completionUsage: LanguageModelV2Usage;
-  conversationId: string;
-};
 
 type ErrorResponse = {
   message: string;
 };
 
-const addMessageRoute = async (
+const chatRoute = async (
   req: Request,
-  res: Response<AddMessageOutput | ErrorResponse>
+  res: Response<ReadableStream | ErrorResponse>
 ) => {
-  const { data: paramsData, success: paramsSuccess } =
-    addMessageParamsSchema.safeParse(req.params);
-  if (!paramsSuccess) {
-    logger.error('Invalid request params', {
-      requestId: req.requestId,
-      params: req.params,
-    });
-    res.status(400).json({ message: 'Invalid request params' });
-    return;
-  }
-
-  const { conversationId: conversationIdParam } = paramsData;
-
   const runtimeContext = new RuntimeContext();
 
   const authenticatedUserId = getUserIdFromRequest(req);
@@ -55,7 +33,6 @@ const addMessageRoute = async (
   if (!authenticatedUserId) {
     logger.error('No authentication provided', {
       requestId: req.requestId,
-      conversationId: conversationIdParam,
     });
     res.status(401).json({ message: 'Authentication required' });
     return;
@@ -78,40 +55,46 @@ const addMessageRoute = async (
     res.status(400).json({ message: 'Invalid request body' });
     return;
   }
-  let conversationId =
-    conversationIdParam === 'null' ? null : conversationIdParam;
+
+  const conversationId = messageData.id;
+
+  let validatedMessage: string | UIMessage[];
+  try {
+    if (typeof messageData.message === 'string') {
+      validatedMessage = messageData.message;
+    } else {
+      validatedMessage = await validateUIMessages({
+        messages: [messageData.message],
+      });
+    }
+  } catch (error) {
+    logger.error('Invalid UIMessage request params', {
+      requestId: req.requestId,
+      params: req.params,
+    });
+    res.status(400).json({ message: 'Invalid UIMessage request params' });
+    return;
+  }
+
   try {
     const agent = mastra.getAgent(PARSLEY_AGENT_NAME);
     const memory = await agent.getMemory();
-    let memoryOptions;
+    let memoryOptions: AgentMemoryOption;
 
-    // If the conversationId is not null, we use the existing thread
-    // If the conversationId is null, we create a new thread
-    if (conversationId) {
-      // Populate session ID if provided
-      const thread = await memory?.getThreadById({ threadId: conversationId });
-      if (thread) {
-        logger.debug('Found existing thread', {
-          requestId: req.requestId,
-          threadId: thread.id,
-          resourceId: thread.resourceId,
-        });
-        memoryOptions = {
-          thread: {
-            id: thread.id,
-          },
-          resource: thread.resourceId,
-        };
-      } else {
-        logger.error('Conversation not found', {
-          requestId: req.requestId,
-          conversationId: conversationId,
-        });
-        res.status(404).json({
-          message: 'Conversation not found',
-        });
-        return;
-      }
+    // Populate session ID if provided
+    const thread = await memory?.getThreadById({ threadId: conversationId });
+    if (thread) {
+      logger.debug('Found existing thread', {
+        requestId: req.requestId,
+        threadId: thread.id,
+        resourceId: thread.resourceId,
+      });
+      memoryOptions = {
+        thread: {
+          id: thread.id,
+        },
+        resource: thread.resourceId,
+      };
     } else {
       const { logMetadata } = messageData;
       const metadata: Record<string, string | number> = {
@@ -136,8 +119,9 @@ const addMessageRoute = async (
       }
 
       const newThread = await memory?.createThread({
-        resourceId: 'parsley_completions',
         metadata,
+        resourceId: 'parsley_completions',
+        threadId: conversationId,
       });
       if (!newThread) {
         res.status(500).json({
@@ -153,27 +137,19 @@ const addMessageRoute = async (
       };
     }
 
-    conversationId =
-      typeof memoryOptions.thread === 'string'
-        ? memoryOptions.thread
-        : memoryOptions.thread.id;
-
-    const result = await runWithRequestContext(
+    const stream = await runWithRequestContext(
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>
-        await agent.generate(messageData.message, {
-          memory: memoryOptions,
+        await agent.stream(validatedMessage, {
           runtimeContext,
+          memory: memoryOptions,
+          // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
+          // Thread ID is set correctly, which is most important.
+          // https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence#setting-up-server-side-id-generation
         })
     );
 
-    res.json({
-      message: result.text,
-      requestId: req.requestId,
-      timestamp: new Date().toISOString(),
-      completionUsage: result.usage,
-      conversationId: conversationId,
-    });
+    stream.pipeUIMessageStreamToResponse(res);
   } catch (error) {
     logger.error('Error in add message route', {
       error,
@@ -185,4 +161,4 @@ const addMessageRoute = async (
   }
 };
 
-export default addMessageRoute;
+export default chatRoute;
