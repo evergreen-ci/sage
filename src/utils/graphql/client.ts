@@ -173,7 +173,6 @@ export class GraphQLClient {
         throw new GraphQLClientError('Request was aborted', { cause: err });
       }
       const msg = err instanceof Error ? err.message : String(err);
-      console.log('Network or parsing error', err, this.endpoint, headers);
       throw new GraphQLClientError(`Network or parsing error: ${msg}`, {
         cause: err,
       });
