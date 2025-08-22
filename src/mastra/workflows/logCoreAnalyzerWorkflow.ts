@@ -554,8 +554,9 @@ const decideAndRunStep = createStep({
 
 export const logCoreAnalyzerWorkflow = createWorkflow({
   id: 'log-core-analyzer',
+  // In the description, tell the agent to use the "url" parameter, but any of them work.
   description:
-    'Analyze, iteratively summarize, and produce a complete report of technical files of arbitrary types and structures. Take as input either an URL, a file path, or the file as plain text.',
+    'Analyze, iteratively summarize, and produce a complete report of technical files of arbitrary types and structures. Pass the full URL of the file in the `url:` parameter.',
   inputSchema: WorkflowInputSchema,
   outputSchema: ResultSchema,
 })
