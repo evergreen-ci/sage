@@ -79,11 +79,7 @@ export const createGraphQLTool = <
             graphqlErrors: error.errors,
           });
 
-          return {
-            error: error.message,
-            graphqlErrors: error.errors,
-            statusCode: error.statusCode,
-          };
+          throw error;
         }
 
         logger.error(
@@ -91,9 +87,7 @@ export const createGraphQLTool = <
           baseError
         );
 
-        return {
-          error: baseError.error,
-        };
+        throw error;
       }
     },
   }) as ToolAction<TSchema, typeof outputSchema, TExecutionContext>;
