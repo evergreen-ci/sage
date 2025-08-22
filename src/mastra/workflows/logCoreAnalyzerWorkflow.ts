@@ -157,7 +157,7 @@ const initialStep = createStep({
     const result = await initialAnalyzerAgent.generateVNext(
       [{ role: 'user', content: USER_INITIAL_PROMPT(first, contextHint) }],
       {
-        output: LoopStateOutputSchema,
+        structuredOutput: { schema: LoopStateOutputSchema, model: gpt41 },
       }
     );
 
@@ -231,7 +231,7 @@ const refineStep = createStep({
         },
       ],
       {
-        output: LoopStateOutputSchema, // TODO: define error handling strategy when schema validation fails
+        structuredOutput: { schema: LoopStateOutputSchema, model: gpt41Nano }, // TODO: define error handling strategy when schema validation fails
       }
     );
 
@@ -377,9 +377,7 @@ const singlePassStep = createStep({
     // Use structured output to get both markdown and summary
     const result = await reportFormatterAgent.generateVNext(
       [{ role: 'user', content: SINGLE_PASS_PROMPT(text, contextHint) }],
-      {
-        output: ReportsSchema,
-      }
+      { structuredOutput: { schema: ReportsSchema, model: gpt41 } }
     );
 
     logger.debug('Single-pass analysis complete', {
@@ -485,8 +483,7 @@ const presentationStep = createStep({
 
 const iterativeRefinementWorkflow = createWorkflow({
   id: 'iterative-refinement',
-  description:
-    `Perform a 3 step iterative refinement process: initial and final analysis with an expensive model, 
+  description: `Perform a 3 step iterative refinement process: initial and final analysis with an expensive model, 
     and a lightweight refinement loop going through the whole document`,
   inputSchema: ChunkedSchema,
   outputSchema: ReportsSchema,
@@ -502,14 +499,14 @@ const iterativeRefinementWorkflow = createWorkflow({
   .commit();
 
 // This was initially a `.branch()` workflow step, but it involved too much complexity like unwrapping types correctly,
-// or wrapping iterativeRefinementWorkflow into a step. This option is much simpler.
+// or wrapping iterativeRefinementWorkflow into its own step. This option is much simpler.
 const decideAndRunStep = createStep({
   id: 'decide-and-run',
   description: 'Choose single-pass vs iterative workflow and run it',
   inputSchema: ChunkedSchema,
   outputSchema: ReportsSchema,
   execute: async params => {
-    const { chunks, contextHint } = params.inputData;
+    const { chunks } = params.inputData;
     if (chunks.length === 1) {
       // run the single-pass step directly
       return singlePassStep.execute(params);
