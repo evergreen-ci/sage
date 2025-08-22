@@ -224,7 +224,12 @@ const refineStep = createStep({
       total: chunks.length,
     });
     const result = await refinementAgent.generateVNext(
-      [{ role: 'user', content: USER_REFINE(existingSummary, chunk, contextHint) }],
+      [
+        {
+          role: 'user',
+          content: USER_REFINE(existingSummary, chunk, contextHint),
+        },
+      ],
       {
         output: LoopStateOutputSchema, // TODO: define error handling strategy when schema validation fails
       }
@@ -401,18 +406,21 @@ const finalizeStep = createStep({
     });
 
     // Generate markdown report
-    const markdownRes = await reportFormatterAgent.generateVNext(
-      [{ role: 'user', content: USER_MARKDOWN_PROMPT(summary) }]
-    );
+    const markdownRes = await reportFormatterAgent.generateVNext([
+      { role: 'user', content: USER_MARKDOWN_PROMPT(summary) },
+    ]);
     logger.debug('Final markdown report generated', {
       length: markdownRes.text.length,
     });
 
     // Generate executive summary from the markdown report
     logger.debug('Generating executive summary');
-    const execSummaryRes = await reportFormatterAgent.generateVNext(
-      [{ role: 'user', content: USER_EXECUTIVE_SUMMARY_PROMPT(markdownRes.text) }]
-    );
+    const execSummaryRes = await reportFormatterAgent.generateVNext([
+      {
+        role: 'user',
+        content: USER_EXECUTIVE_SUMMARY_PROMPT(markdownRes.text),
+      },
+    ]);
     logger.debug('Executive summary generated', {
       length: execSummaryRes.text.length,
     });
@@ -498,7 +506,7 @@ const iterativeRefinementBranchStep = createStep({
   description: 'Delegate to iterative-refinement workflow',
   inputSchema: ChunkedSchema,
   outputSchema: FinalizeSchema,
-  execute: async (params) => {
+  execute: async params => {
     const result = await iterativeRefinementWorkflow.execute(params);
     return result;
   },
@@ -518,7 +526,7 @@ const extractBranchOutputStep = createStep({
   execute: async ({ inputData }) => {
     const a = inputData['single-pass-analysis'];
     const b = inputData['iterative-refinement-branch'];
-    const chosen = (a?.markdown || a?.summary) ? a : b;
+    const chosen = a?.markdown || a?.summary ? a : b;
     return {
       markdown: chosen?.markdown ?? '',
       summary: chosen?.summary ?? '',
@@ -538,11 +546,11 @@ export const logCoreAnalyzer = createWorkflow({
   .branch([
     [
       async params => params.inputData.chunks.length === 1,
-      singlePassStep,  // Use the step directly instead of wrapping it
+      singlePassStep, // Use the step directly instead of wrapping it
     ],
     [
       async params => params.inputData.chunks.length > 1,
-      iterativeRefinementBranchStep,  // Keep the wrapper for the complex workflow
+      iterativeRefinementBranchStep, // Keep the wrapper for the complex workflow
     ],
   ])
   .then(extractBranchOutputStep)
