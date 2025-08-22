@@ -60,18 +60,6 @@ export const taskFilesToolAdapter = createToolAdapter(getTaskFilesTool, {
     'Adapter tool for getting Evergreen task files information to use in workflows',
 });
 
-export const taskTestsToolAdapter = createToolAdapter(getTaskTestsTool, {
-  id: 'taskTestsToolAdapter',
-  description:
-    'Adapter tool for getting Evergreen task tests information to use in workflows',
-});
-
-export const taskToolAdapter = createToolAdapter(getTaskTool, {
-  id: 'taskToolAdapter',
-  description:
-    'Adapter tool for getting Evergreen task information to use in workflows',
-});
-
 export const versionToolAdapter = createToolAdapter(getVersionTool, {
   id: 'versionToolAdapter',
   description:
