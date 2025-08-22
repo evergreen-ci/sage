@@ -96,17 +96,19 @@ const LoopStateOutputSchema = z.object({
 // Define the log analyzer agent for chunked processing
 // Ultimately, the first call should be 4.1, and all other iterations should use nano
 // Initial analyzer - smarter model for understanding structure and context
-const initialAnalyzerAgent = new Agent({
-  name: "initial-analyzer-agent",
-  description: "Performs initial analysis of technical documents to understand structure and key patterns",
-  instructions: `You are a senior engineer performing initial analysis of technical text (logs, code, configs, telemetry, build output).
+const INITIAL_ANALYZER_INSTRUCTIONS = `You are a senior engineer performing initial analysis of technical text (logs, code, configs, telemetry, build output).
 You always respond as compact JSON matching the provided schema.
 Focus on:
 - Understanding the overall structure and format of the content
 - Identifying key patterns, sections, and data types
 - Establishing context and technical domain
 - Preserving critical facts, identifiers, timestamps, error codes
-- Creating a strong foundation summary for further refinement`,
+- Creating a strong foundation summary for further refinement`;
+
+const initialAnalyzerAgent = new Agent({
+  name: "initial-analyzer-agent",
+  description: "Performs initial analysis of technical documents to understand structure and key patterns",
+  instructions: INITIAL_ANALYZER_INSTRUCTIONS,
   model: gpt41,
 });
 
@@ -148,15 +150,17 @@ const initialStep = createStep({
 // Step 3: Recursive iterative refinement (using cheaper model)
 
 // Refinement agent - cheaper model for iterative updates
-const refinementAgent = new Agent({
-  name: "refinement-agent",
-  description: "Iteratively refines and updates technical summaries with new chunks",
-  instructions: `You are a technical analyst updating existing summaries with new information.
+const REFINEMENT_AGENT_INSTRUCTIONS = `You are a technical analyst updating existing summaries with new information.
 You always respond as compact JSON matching the provided schema.
 - Merge new facts into the existing summary efficiently
 - Collapse repeated patterns; prefer timelines for events
 - If a new chunk adds nothing material, set "updated": false
-- Keep the summary concise while preserving all important details`,
+- Keep the summary concise while preserving all important details`;
+
+const refinementAgent = new Agent({
+  name: "refinement-agent",
+  description: "Iteratively refines and updates technical summaries with new chunks",
+  instructions: REFINEMENT_AGENT_INSTRUCTIONS,
   model: gpt41Nano,
 });
 
@@ -221,6 +225,11 @@ const refineStep = createStep({
 
 // Step 4: Final report
 
+const FinalizeSchema = z.object({
+  markdown: z.string(),
+  summary: z.string(),
+})
+
 const ResultSchema = z.object({
   markdown: z.string(),
   summary: z.string(),
@@ -229,20 +238,14 @@ const ResultSchema = z.object({
 
 const MAX_FINAL_SUMMARY_TOKENS = 2048;
 
-// Define the report formatter agent for final output
-const reportFormatterAgent = new Agent({
-  name: "report-formatter-agent",
-  description: "Formats technical summaries into various output formats",
-  instructions: `You are a senior engineer creating technical reports and summaries.
-You respond ONLY with the requested format - no JSON wrapper, no additional fields.
-Focus on clarity, precision, and appropriate formatting for the requested output type.`,
-  model: gpt41,
-});
+// Common executive summary requirements
+const EXECUTIVE_SUMMARY_REQUIREMENTS = `- 3-4 lines maximum
+- Focus on: what happened, key impacts/metrics, critical actions needed
+- Plain text only, no markdown formatting
+- Be direct and factual`;
 
-const USER_MARKDOWN_PROMPT = (summary: string) =>
-  `Rewrite the accumulated summary into a clean technical report formatted as Markdown.
-
-Use the following structure with proper Markdown headers:
+// Common markdown report formatting instructions
+const MARKDOWN_REPORT_FORMAT = `Use the following structure with proper Markdown headers:
 # Technical Analysis Report
 
 ## Overview
@@ -271,32 +274,102 @@ Use the following structure with proper Markdown headers:
 - [ ] Action item 2
 
 Format with proper Markdown: use **bold** for emphasis, \`code\` for technical terms, proper headers (#, ##, ###), tables where appropriate.
-Keep it <= ${MAX_FINAL_SUMMARY_TOKENS} tokens; compress without losing facts.
+Keep it <= ${MAX_FINAL_SUMMARY_TOKENS} tokens; compress without losing facts.`;
+
+// Define the report formatter agent for final output
+const REPORT_FORMATTER_INSTRUCTIONS = `You are a senior engineer creating technical reports and summaries.
+You respond ONLY with the requested format - no JSON wrapper, no additional fields.
+Focus on clarity, precision, and appropriate formatting for the requested output type.`;
+
+const reportFormatterAgent = new Agent({
+  name: "report-formatter-agent",
+  description: "Formats technical summaries into various output formats",
+  instructions: REPORT_FORMATTER_INSTRUCTIONS,
+  model: gpt41,
+});
+
+const USER_MARKDOWN_PROMPT = (summary: string) =>
+  `Rewrite the accumulated summary into a clean technical report formatted as Markdown.
+
+${MARKDOWN_REPORT_FORMAT}
 
 Source material:
 """${summary}"""`;
 
 const USER_EXECUTIVE_SUMMARY_PROMPT = (markdown: string) =>
-  `Create a concise executive summary (3-4 lines maximum) from this technical report.
+  `Create a concise executive summary from this technical report.
 
-Focus on:
-- What happened (the main issue/situation)
-- Key impacts and metrics
-- Critical actions needed
-
-Write in plain text, no markdown formatting. Be direct and factual.
+Requirements:
+${EXECUTIVE_SUMMARY_REQUIREMENTS}
 
 Source report:
 """${markdown}"""`;
+
+// Single-pass step for files that fit in one chunk - generates both markdown and summary in one call
+const SINGLE_PASS_PROMPT = (text: string, contextHint?: string) =>
+  `Analyze this technical document and provide both a markdown report and executive summary.
+${contextHint ? `Context hint:\n${contextHint}\n` : ""}
+
+Document:
+"""${text}"""
+
+Return a JSON response with two fields:
+{
+  "markdown": "# Technical Analysis Report\n\n## Overview\n...[full markdown report]",
+  "summary": "3-4 line executive summary"
+}
+
+Requirements for the markdown report:
+${MARKDOWN_REPORT_FORMAT}
+
+Requirements for the executive summary:
+${EXECUTIVE_SUMMARY_REQUIREMENTS}`;
+
+const singlePassStep = createStep({
+  id: "single-pass-analysis",
+  description: "Direct analysis and report generation for single-chunk files",
+  inputSchema: ChunkedSchema,
+  outputSchema: FinalizeSchema,
+  execute: async ({ inputData }) => {
+    const { chunks, contextHint } = inputData;
+    
+    // Validate we have exactly one chunk
+    if (chunks.length !== 1) {
+      logger.warn("Single-pass step called with multiple chunks", { chunkCount: chunks.length });
+    }
+    
+    const text = chunks[0]?.text ?? "";
+    
+    logger.debug("Single-pass analysis starting", { 
+      textLength: text.length,
+      contextHint 
+    });
+    
+    // Use structured output to get both markdown and summary
+    const result = await reportFormatterAgent.generate(
+      SINGLE_PASS_PROMPT(text, contextHint),
+      {
+        experimental_output: FinalizeSchema
+      }
+    );
+
+    logger.debug("Single-pass analysis complete", { 
+      markdownLength: result.object?.markdown?.length ?? 0,
+      summaryLength: result.object?.summary?.length ?? 0
+    });
+
+    return {
+      markdown: result.object?.markdown || "",
+      summary: result.object?.summary || ""
+    };
+  }
+});
 
 const finalizeStep = createStep({
   id: "finalize",
   description: "Generate final markdown report and executive summary",
   inputSchema: LoopStateSchema,
-  outputSchema: z.object({
-    markdown: z.string(),
-    summary: z.string(),
-  }),
+  outputSchema: FinalizeSchema,
   execute: async ({ inputData }) => {
     const { summary } = inputData;
     logger.debug("Generating final markdown report", { summary: summary.slice(0, 100) });
@@ -325,13 +398,24 @@ const finalizeStep = createStep({
 const presentationStep = createStep({
   id: "save-report",
   description: "Save markdown report to disk with timestamp",
-  inputSchema: z.object({
-    markdown: z.string(),
-    summary: z.string(),
-  }),
+  inputSchema: FinalizeSchema,
   outputSchema: ResultSchema,
   execute: async ({ inputData }) => {
     const { markdown, summary } = inputData;
+    
+    // Validate inputs
+    if (!markdown) {
+      logger.error("No markdown content to save", { 
+        hasMarkdown: !!markdown, 
+        hasSummary: !!summary,
+        inputDataKeys: Object.keys(inputData)
+      });
+      return {
+        markdown: "",
+        summary: summary || "",
+        filePath: undefined,
+      };
+    }
     
     // Create reports directory if it doesn't exist
     const reportsDir = path.join(process.cwd(), 'reports');
@@ -352,11 +436,25 @@ const presentationStep = createStep({
     
     return {
       markdown,
-      summary,
+      summary: summary || "",
       filePath,
     };
   }
 });
+
+export const iterativeRefinement = createWorkflow({
+  id: "iterative-refinement",
+  description: "Hierarchical refine summarization for arbitrary technical text files",
+  inputSchema: ChunkedSchema,
+  outputSchema: FinalizeSchema,
+})
+  .then(initialStep)
+  .dowhile(refineStep, async (params) => {
+    // Access inputData from the full params object
+    return params.inputData.idx < params.inputData.chunks.length;
+  })
+  .then(finalizeStep)
+  .commit();
 
 export const logCoreAnalyzer = createWorkflow({
   id: "log-core-analyzer",
@@ -366,9 +464,36 @@ export const logCoreAnalyzer = createWorkflow({
 })
   .then(readStep)
   .then(chunkStep)
-  .then(initialStep)
-  // sequential refine until idx == chunks.length
-  .dowhile(refineStep, async ({ inputData }) => inputData.idx < inputData.chunks.length)
-  .then(finalizeStep)
+  .branch([
+    [async (params) => params.inputData.chunks.length === 1, singlePassStep],
+    [async (params) => params.inputData.chunks.length > 1, iterativeRefinement]
+  ])
+  .map(async (params) => {
+    // Flatten the branch output - it comes wrapped in step/workflow IDs
+    const singlePass = params.inputData['single-pass-analysis'];
+    const iterative = params.inputData['iterative-refinement'];
+    
+    const result = singlePass || iterative;
+    
+    if (!result) {
+      logger.error("No result from branch", { 
+        keys: Object.keys(params.inputData),
+        inputData: params.inputData 
+      });
+      return { markdown: "", summary: "" };
+    }
+    
+    logger.debug("Flattening branch output", {
+      hasSinglePass: !!singlePass,
+      hasIterative: !!iterative,
+      hasMarkdown: !!result.markdown,
+      hasSummary: !!result.summary
+    });
+    
+    return {
+      markdown: result.markdown || "",
+      summary: result.summary || ""
+    };
+  })
   .then(presentationStep)
   .commit();
