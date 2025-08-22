@@ -25,7 +25,8 @@
     "exactOptionalPropertyTypes": true,
     "types": ["vitest/globals"],
     "paths": {
-      "src/*": ["./src/*"]
+      "src/*": ["./src/*"],
+      "ai": ["./node_modules/ai"]
     }
   },
   "include": [

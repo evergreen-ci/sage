@@ -2,6 +2,7 @@ import { AgentMemoryOption } from '@mastra/core/agent';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { UIMessage, validateUIMessages } from 'ai';
 import { Request, Response } from 'express';
+import { Readable } from 'stream';
 import z from 'zod';
 import { mastra } from 'mastra';
 import { PARSLEY_AGENT_NAME, USER_ID } from 'mastra/agents/constants';
@@ -140,7 +141,7 @@ const chatRoute = async (
     const stream = await runWithRequestContext(
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>
-        await agent.stream(validatedMessage, {
+        await agent.streamVNext(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
           // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
@@ -149,7 +150,23 @@ const chatRoute = async (
         })
     );
 
-    stream.pipeUIMessageStreamToResponse(res);
+    // Use the built-in method to pipe the UI message stream to the response
+    const response = stream.aisdk.v5.toUIMessageStreamResponse();
+    
+    // Send the response - this handles headers and body streaming properly
+    Object.entries(response.headers).forEach(([key, value]) => {
+      res.setHeader(key, value);
+    });
+    
+    res.status(response.status || 200);
+    
+    // Pipe using Node.js streams properly
+    if (response.body) {
+      const nodeStream = Readable.fromWeb(response.body);
+      nodeStream.pipe(res);
+    } else {
+      res.end();
+    }
   } catch (error) {
     logger.error('Error in add message route', {
       error,

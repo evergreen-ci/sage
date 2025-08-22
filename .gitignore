@@ -93,6 +93,14 @@ build/
 
 # Node
 node_modules/
+.nvmrc
 
 # graphql/
 sdlschema
+
+# test data
+test_data/
+log_data/
+
+# local notes
+PLAN_*.md
