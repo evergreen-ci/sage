@@ -1,51 +1,63 @@
-import { createWorkflow, createStep } from "@mastra/core/workflows";
-import { z } from "zod";
-import { MDocument } from "@mastra/rag";
-import { Agent } from "@mastra/core/agent";
-import { encode } from "gpt-tokenizer";
+import { Agent } from '@mastra/core/agent';
+import { createWorkflow, createStep } from '@mastra/core/workflows';
+import { MDocument } from '@mastra/rag';
+import { encode } from 'gpt-tokenizer';
+import { z } from 'zod';
+import fs from 'fs/promises';
+import path from 'path';
+import { WinstonMastraLogger } from '../../utils/logger/winstonMastraLogger';
 import { gpt41, gpt41Nano } from '../models/openAI/gpt41';
-import fs from "fs/promises";
-import path from "path";
-import { WinstonMastraLogger } from "../../utils/logger/winstonMastraLogger";
 
 // Initialize logger for this workflow
 const logger = new WinstonMastraLogger({
-  name: "LogCoreAnalyzerWorkflow",
-  level: "debug"
+  name: 'LogCoreAnalyzerWorkflow',
+  level: 'debug',
 });
 
+// TODO:
+// - push to staging with drone
+// - postman to send chat request
+// - braintrust to check token usage
+// - support fetching from URLs, look at evergreenClient.ts for auth headers
+// - cap file limit for v0
+
+// TODO: follow up PR with tests
+
 // Input: path to the file or content as string, initial prompt (optional, can contain more information about the task, the goal...)
-// Output: summary/analysis, 
+// Output: summary/analysis,
 
 const WorkflowInputSchema = z.object({
   path: z.string().optional(),
   text: z.string().optional(),
-  contextHint: z.string().optional()
+  contextHint: z.string().optional(),
 });
 
 const readStep = createStep({
-  id: "read-input",
-  description: "Read file or accept provided text, normalize",
+  id: 'read-input',
+  description: 'Read file or accept provided text, normalize',
   inputSchema: WorkflowInputSchema,
-  outputSchema: z.object({ text: z.string(), contextHint: z.string().optional() }),
+  outputSchema: z.object({
+    text: z.string(),
+    contextHint: z.string().optional(),
+  }),
   execute: async ({ inputData }) => {
-    const { path: p, text, contextHint } = inputData;
-    let raw = text ?? "";
+    const { contextHint, path: p, text } = inputData;
+    let raw = text ?? '';
     if (p) {
       const buf = await fs.readFile(path.resolve(p));
-      raw = buf.toString("utf8");
+      raw = buf.toString('utf8');
     }
     // cheap normalization
-    raw = raw.replace(/\r\n/g, "\n").replace(/\n{4,}/g, "\n\n\n");
+    raw = raw.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');
     return { text: raw, contextHint };
-  }
+  },
 });
 
 // Step 1: Chunking
 
 const ChunkedSchema = z.object({
-  chunks: z.array(z.object({ text: z.string() })),   // from MDocument.chunk
-  contextHint: z.string().optional()
+  chunks: z.array(z.object({ text: z.string() })), // from MDocument.chunk
+  contextHint: z.string().optional(),
 });
 
 // Default to o200k_base tokenizer
@@ -53,28 +65,31 @@ const countTokens = (s: string) => encode(s).length;
 
 // Chunking configuration for GPT-4.1 nano (Assume max 128k context, but may be 1M)
 // TODO: hyperparameters below, need to find a right balance. Currently just for quick prototyping
-const CHUNK_SIZE = 20_000;  // Optimal size for GPT-4 models
-const OVERLAP_TOKENS = 800;  // Overlap to maintain context between chunks
-const GPT_DEFAULT_TOKENIZER = "o200k_base"; // Tokenizer for GPT-4 TODO: auto selection based on model
+const CHUNK_SIZE = 20_000; // Optimal size for GPT-4 models
+const OVERLAP_TOKENS = 800; // Overlap to maintain context between chunks
+const GPT_DEFAULT_TOKENIZER = 'o200k_base'; // Tokenizer for GPT-4 TODO: auto selection based on model
 
 const chunkStep = createStep({
-  id: "chunk",
-  description: "Token-aware chunking with overlap",
-  inputSchema: z.object({ text: z.string(), contextHint: z.string().optional() }),
+  id: 'chunk',
+  description: 'Token-aware chunking with overlap',
+  inputSchema: z.object({
+    text: z.string(),
+    contextHint: z.string().optional(),
+  }),
   outputSchema: ChunkedSchema,
   execute: async ({ inputData }) => {
-    const { text, contextHint } = inputData;
+    const { contextHint, text } = inputData;
 
     const doc = MDocument.fromText(text);
     const chunks = await doc.chunk({
-      strategy: "token",
+      strategy: 'token',
       encodingName: GPT_DEFAULT_TOKENIZER,
       maxSize: CHUNK_SIZE,
-      overlap: OVERLAP_TOKENS
+      overlap: OVERLAP_TOKENS,
     });
-    logger.debug("Chunking complete", { chunkCount: chunks.length });
+    logger.debug('Chunking complete', { chunkCount: chunks.length });
     return { chunks, contextHint };
-  }
+  },
 });
 
 // Step 2: First chunk analysis
@@ -84,14 +99,14 @@ const LoopStateSchema = z.object({
   idx: z.number(),
   chunks: z.array(z.object({ text: z.string() })),
   summary: z.string(),
-  contextHint: z.string().optional()
+  contextHint: z.string().optional(),
 });
 
 const LoopStateOutputSchema = z.object({
-        updated: z.boolean(),
-        summary: z.string(),
-        evidence: z.array(z.string()).optional()
-      })
+  updated: z.boolean(),
+  summary: z.string(),
+  evidence: z.array(z.string()).optional(),
+});
 
 // Define the log analyzer agent for chunked processing
 // Ultimately, the first call should be 4.1, and all other iterations should use nano
@@ -106,8 +121,9 @@ Focus on:
 - Creating a strong foundation summary for further refinement`;
 
 const initialAnalyzerAgent = new Agent({
-  name: "initial-analyzer-agent",
-  description: "Performs initial analysis of technical documents to understand structure and key patterns",
+  name: 'initial-analyzer-agent',
+  description:
+    'Performs initial analysis of technical documents to understand structure and key patterns',
   instructions: INITIAL_ANALYZER_INSTRUCTIONS,
   model: gpt41,
 });
@@ -115,7 +131,7 @@ const initialAnalyzerAgent = new Agent({
 const USER_INITIAL_PROMPT = (chunk: string, hint?: string) =>
   `Analyze this first chunk to understand the document structure and create an initial technical summary.
 Identify the type of content (logs, code, config, telemetry, etc.) and key patterns.
-${hint ? `Context hint:\n${hint}\n` : ""}
+${hint ? `Context hint:\n${hint}\n` : ''}
 
 Chunk:
 """${chunk}"""
@@ -124,27 +140,30 @@ Return JSON:
 { "updated": true, "summary": "<concise but comprehensive summary>", "evidence": ["<short quotes or line ranges>"] }`;
 
 const initialStep = createStep({
-  id: "initial-summary",
-  description: "Summarize first chunk using log analyzer agent",
+  id: 'initial-summary',
+  description: 'Summarize first chunk using log analyzer agent',
   inputSchema: ChunkedSchema,
   outputSchema: LoopStateSchema,
   execute: async ({ inputData }) => {
     const { chunks, contextHint } = inputData;
-    const first = chunks[0]?.text ?? "";
-    logger.debug("Initial chunk for analysis", { first: first.slice(0, 100), contextHint });
-    logger.debug("Chunk length", { length: first.length });
-    logger.debug("Calling LLM for initial summary");
-    
+    const first = chunks[0]?.text ?? '';
+    logger.debug('Initial chunk for analysis', {
+      first: first.slice(0, 100),
+      contextHint,
+    });
+    logger.debug('Chunk length', { length: first.length });
+    logger.debug('Calling LLM for initial summary');
+
     const result = await initialAnalyzerAgent.generate(
-        USER_INITIAL_PROMPT(first, contextHint), 
-        {
-            experimental_output: LoopStateOutputSchema
-        },
+      USER_INITIAL_PROMPT(first, contextHint),
+      {
+        experimental_output: LoopStateOutputSchema,
+      }
     );
 
-    const summary = result.object?.summary ?? "";
+    const summary = result.object?.summary ?? '';
     return { idx: 1, chunks, summary, contextHint };
-  }
+  },
 });
 
 // Step 3: Recursive iterative refinement (using cheaper model)
@@ -158,8 +177,9 @@ You always respond as compact JSON matching the provided schema.
 - Keep the summary concise while preserving all important details`;
 
 const refinementAgent = new Agent({
-  name: "refinement-agent",
-  description: "Iteratively refines and updates technical summaries with new chunks",
+  name: 'refinement-agent',
+  description:
+    'Iteratively refines and updates technical summaries with new chunks',
   instructions: REFINEMENT_AGENT_INSTRUCTIONS,
   model: gpt41Nano,
 });
@@ -168,7 +188,7 @@ const USER_REFINE = (existing: string, chunk: string, hint?: string) =>
   `Refine the existing summary with ONLY *material* additions or corrections from the new chunk.
 If the chunk adds nothing substantive, return {"updated": false, "summary": "<unchanged>", "evidence": []}.
 
-${hint ? `Context hint:\n${hint}\n` : ""}
+${hint ? `Context hint:\n${hint}\n` : ''}
 
 Existing summary:
 """${existing}"""
@@ -179,15 +199,15 @@ New chunk:
 Return JSON:
 { "updated": <bool>, "summary": "<updated or unchanged>", "evidence": ["<short quotes or line ranges>"] }`;
 
-
 const refineStep = createStep({
-  id: "refine-summary",
-  description: "Iteratively refine the summary with context from previous chunks",
+  id: 'refine-summary',
+  description:
+    'Iteratively refine the summary with context from previous chunks',
   inputSchema: LoopStateSchema,
   outputSchema: LoopStateSchema,
   execute: async ({ inputData }) => {
-    const { idx, chunks, summary: existingSummary, contextHint } = inputData;
-    const chunk = chunks[idx]?.text ?? "";
+    const { chunks, contextHint, idx, summary: existingSummary } = inputData;
+    const chunk = chunks[idx]?.text ?? '';
 
     // TODO: make sure summary size stays manageable
     if (!chunk) {
@@ -199,12 +219,15 @@ const refineStep = createStep({
       };
     }
 
-    logger.debug("Refine step for chunk #:", { current: idx+1, total: chunks.length });
+    logger.debug('Refine step for chunk #:', {
+      current: idx + 1,
+      total: chunks.length,
+    });
     const result = await refinementAgent.generate(
-        USER_REFINE(existingSummary, chunk, contextHint), 
-        {
-            experimental_output: LoopStateOutputSchema // TODO: define error handling strategy when schema validation fails
-        },
+      USER_REFINE(existingSummary, chunk, contextHint),
+      {
+        experimental_output: LoopStateOutputSchema, // TODO: define error handling strategy when schema validation fails
+      }
     );
 
     const updated = result.object?.updated ?? false;
@@ -219,8 +242,7 @@ const refineStep = createStep({
       summary: newSummary,
       contextHint,
     };
-
-  }
+  },
 });
 
 // Step 4: Final report
@@ -228,7 +250,7 @@ const refineStep = createStep({
 const FinalizeSchema = z.object({
   markdown: z.string(),
   summary: z.string(),
-})
+});
 
 const ResultSchema = z.object({
   markdown: z.string(),
@@ -282,8 +304,8 @@ You respond ONLY with the requested format - no JSON wrapper, no additional fiel
 Focus on clarity, precision, and appropriate formatting for the requested output type.`;
 
 const reportFormatterAgent = new Agent({
-  name: "report-formatter-agent",
-  description: "Formats technical summaries into various output formats",
+  name: 'report-formatter-agent',
+  description: 'Formats technical summaries into various output formats',
   instructions: REPORT_FORMATTER_INSTRUCTIONS,
   model: gpt41,
 });
@@ -308,7 +330,7 @@ Source report:
 // Single-pass step for files that fit in one chunk - generates both markdown and summary in one call
 const SINGLE_PASS_PROMPT = (text: string, contextHint?: string) =>
   `Analyze this technical document and provide both a markdown report and executive summary.
-${contextHint ? `Context hint:\n${contextHint}\n` : ""}
+${contextHint ? `Context hint:\n${contextHint}\n` : ''}
 
 Document:
 """${text}"""
@@ -326,189 +348,209 @@ Requirements for the executive summary:
 ${EXECUTIVE_SUMMARY_REQUIREMENTS}`;
 
 const singlePassStep = createStep({
-  id: "single-pass-analysis",
-  description: "Direct analysis and report generation for single-chunk files",
+  id: 'single-pass-analysis',
+  description: 'Direct analysis and report generation for single-chunk files',
   inputSchema: ChunkedSchema,
   outputSchema: FinalizeSchema,
   execute: async ({ inputData }) => {
     const { chunks, contextHint } = inputData;
-    
+
     // Validate we have exactly one chunk
     if (chunks.length !== 1) {
-      logger.warn("Single-pass step called with multiple chunks", { chunkCount: chunks.length });
+      logger.warn('Single-pass step called with multiple chunks', {
+        chunkCount: chunks.length,
+      });
     }
-    
-    const text = chunks[0]?.text ?? "";
-    
-    logger.debug("Single-pass analysis starting", { 
+
+    const text = chunks[0]?.text ?? '';
+
+    logger.debug('Single-pass analysis starting', {
       textLength: text.length,
-      contextHint 
+      contextHint,
     });
-    
+
     // Use structured output to get both markdown and summary
     const result = await reportFormatterAgent.generate(
       SINGLE_PASS_PROMPT(text, contextHint),
       {
-        experimental_output: FinalizeSchema
+        experimental_output: FinalizeSchema,
       }
     );
 
-    logger.debug("Single-pass analysis complete", { 
+    logger.debug('Single-pass analysis complete', {
       markdownLength: result.object?.markdown?.length ?? 0,
-      summaryLength: result.object?.summary?.length ?? 0
+      summaryLength: result.object?.summary?.length ?? 0,
     });
 
     return {
-      markdown: result.object?.markdown || "",
-      summary: result.object?.summary || ""
+      markdown: result.object?.markdown || '',
+      summary: result.object?.summary || '',
     };
-  }
+  },
 });
 
 const finalizeStep = createStep({
-  id: "finalize",
-  description: "Generate final markdown report and executive summary",
+  id: 'finalize',
+  description: 'Generate final markdown report and executive summary',
   inputSchema: LoopStateSchema,
   outputSchema: FinalizeSchema,
   execute: async ({ inputData }) => {
     const { summary } = inputData;
-    logger.debug("Generating final markdown report", { summary: summary.slice(0, 100) });
-    
+    logger.debug('Generating final markdown report', {
+      summary: summary.slice(0, 100),
+    });
+
     // Generate markdown report
     const markdownRes = await reportFormatterAgent.generate(
-      USER_MARKDOWN_PROMPT(summary),
+      USER_MARKDOWN_PROMPT(summary)
     );
-    logger.debug("Final markdown report generated", { length: markdownRes.text.length });
-    
+    logger.debug('Final markdown report generated', {
+      length: markdownRes.text.length,
+    });
+
     // Generate executive summary from the markdown report
-    logger.debug("Generating executive summary");
+    logger.debug('Generating executive summary');
     const execSummaryRes = await reportFormatterAgent.generate(
-      USER_EXECUTIVE_SUMMARY_PROMPT(markdownRes.text),
+      USER_EXECUTIVE_SUMMARY_PROMPT(markdownRes.text)
     );
-    logger.debug("Executive summary generated", { length: execSummaryRes.text.length });
-    
+    logger.debug('Executive summary generated', {
+      length: execSummaryRes.text.length,
+    });
+
     return {
       markdown: markdownRes.text,
       summary: execSummaryRes.text,
     };
-  }
+  },
 });
 
 // Step 5: Save markdown report to disk
 const presentationStep = createStep({
-  id: "save-report",
-  description: "Save markdown report to disk with timestamp",
+  id: 'save-report',
+  description: 'Save markdown report to disk with timestamp',
   inputSchema: FinalizeSchema,
   outputSchema: ResultSchema,
   execute: async ({ inputData }) => {
     const { markdown, summary } = inputData;
-    
+
     // Validate inputs
     if (!markdown) {
-      logger.error("No markdown content to save", { 
-        hasMarkdown: !!markdown, 
+      logger.error('No markdown content to save', {
+        hasMarkdown: !!markdown,
         hasSummary: !!summary,
-        inputDataKeys: Object.keys(inputData)
+        inputDataKeys: Object.keys(inputData),
       });
       return {
-        markdown: "",
-        summary: summary || "",
+        markdown: '',
+        summary: summary || '',
         filePath: undefined,
       };
     }
-    
+
     // Create reports directory if it doesn't exist
     const reportsDir = path.join(process.cwd(), 'reports');
     try {
       await fs.mkdir(reportsDir, { recursive: true });
     } catch (err) {
-      logger.debug("Reports directory creation", { error: err });
+      logger.debug('Reports directory creation', { error: err });
     }
-    
+
     // Generate timestamp for filename
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, '-')
+      .slice(0, -5);
     const filename = `report-${timestamp}.md`;
     const filePath = path.join(reportsDir, filename);
-    
+
     // Save markdown file
     await fs.writeFile(filePath, markdown, 'utf8');
-    logger.info("Report saved", { filePath });
-    
+    logger.info('Report saved', { filePath });
+
     return {
       markdown,
-      summary: summary || "",
+      summary: summary || '',
       filePath,
     };
-  }
+  },
 });
 
-
 const iterativeRefinementWorkflow = createWorkflow({
-  id: "iterative-refinement",
-  description: "Hierarchical refine summarization for arbitrary technical text files",
+  id: 'iterative-refinement',
+  description:
+    'Hierarchical refine summarization for arbitrary technical text files',
   inputSchema: ChunkedSchema,
   outputSchema: FinalizeSchema,
 })
   .then(initialStep)
-  .dowhile(refineStep, async (params) => {
-    // Access inputData from the full params object
-    return params.inputData.idx < params.inputData.chunks.length;
-  })
+  .dowhile(
+    refineStep,
+    async params =>
+      // Access inputData from the full params object
+      params.inputData.idx < params.inputData.chunks.length
+  )
   .then(finalizeStep)
   .commit();
 
-  const singlePassWorkflow = createWorkflow({
-    id: "single-pass",
-    description: "Single-pass analysis for a single chunk of text",
-    inputSchema: ChunkedSchema,
-    outputSchema: FinalizeSchema,
-  })
-    .then(singlePassStep)
-    .commit();
-
+const singlePassWorkflow = createWorkflow({
+  id: 'single-pass',
+  description: 'Single-pass analysis for a single chunk of text',
+  inputSchema: ChunkedSchema,
+  outputSchema: FinalizeSchema,
+})
+  .then(singlePassStep)
+  .commit();
 
 // When we use a branch, the output is wrapped in an object with the key being the name of the workflow
 const extractBranchOutputStep = createStep({
-  id: "extract-branch-output",
-  description: "Extract markdown and summary from branch workflow output",
+  id: 'extract-branch-output',
+  description: 'Extract markdown and summary from branch workflow output',
   inputSchema: z.object({
-    "single-pass": FinalizeSchema.optional(),
-    "iterative-refinement": FinalizeSchema.optional()
+    'single-pass': FinalizeSchema.optional(),
+    'iterative-refinement': FinalizeSchema.optional(),
   }),
   outputSchema: FinalizeSchema,
   execute: async ({ inputData }) => {
     // Get the result from whichever workflow ran
-    const result = inputData["single-pass"] || inputData["iterative-refinement"];
-    
+    const result =
+      inputData['single-pass'] || inputData['iterative-refinement'];
+
     if (!result) {
-      logger.error("No output from branch workflows", { inputData });
-      return { markdown: "", summary: "" };
+      logger.error('No output from branch workflows', { inputData });
+      return { markdown: '', summary: '' };
     }
-    
-    logger.debug("Extracted branch output", { 
+
+    logger.debug('Extracted branch output', {
       hasMarkdown: !!result.markdown,
       hasSummary: !!result.summary,
-      markdownLength: result.markdown?.length || 0
+      markdownLength: result.markdown?.length || 0,
     });
-    
+
     return {
-      markdown: result.markdown || "",
-      summary: result.summary || ""
+      markdown: result.markdown || '',
+      summary: result.summary || '',
     };
-  }
+  },
 });
 
 export const logCoreAnalyzer = createWorkflow({
-  id: "log-core-analyzer",
-  description: "Hierarchical refine summarization for arbitrary technical text files",
+  id: 'log-core-analyzer',
+  description:
+    'Hierarchical refine summarization for arbitrary technical text files',
   inputSchema: WorkflowInputSchema,
-  outputSchema: ResultSchema
+  outputSchema: ResultSchema,
 })
   .then(readStep)
   .then(chunkStep)
   .branch([
-    [async (params) => params.inputData.chunks.length === 1, singlePassWorkflow as any],
-    [async (params) => params.inputData.chunks.length > 1, iterativeRefinementWorkflow as any]
+    [
+      async params => params.inputData.chunks.length === 1,
+      singlePassWorkflow,
+    ],
+    [
+      async params => params.inputData.chunks.length > 1,
+      iterativeRefinementWorkflow,
+    ],
   ])
   .then(extractBranchOutputStep)
   .then(presentationStep)
