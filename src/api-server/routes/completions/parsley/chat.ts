@@ -4,9 +4,10 @@ import { UIMessage, validateUIMessages } from 'ai';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
-import { PARSLEY_AGENT_NAME, USER_ID } from 'mastra/agents/constants';
+import { ORCHESTRATOR_NAME } from 'mastra/networks/constants';
 import { LogTypes } from 'types/parsley';
 import { logger } from 'utils/logger';
+import { USER_ID } from '../../../../mastra/agents/constants';
 import { runWithRequestContext } from '../../../../mastra/utils/requestContext';
 import { getUserIdFromRequest } from '../../../middlewares/authentication';
 import { uiMessageSchema, logMetadataSchema } from './validators';
@@ -77,8 +78,16 @@ const chatRoute = async (
   }
 
   try {
-    const agent = mastra.getAgent(PARSLEY_AGENT_NAME);
-    const memory = await agent.getMemory();
+    const network = mastra.vnext_getNetwork(ORCHESTRATOR_NAME);
+    if (!network) {
+      logger.error('Network not found', {
+        requestId: req.requestId,
+        networkName: ORCHESTRATOR_NAME,
+      });
+      res.status(500).json({ message: 'Network not found' });
+      return;
+    }
+    const memory = await network.getMemory({ runtimeContext });
     let memoryOptions: AgentMemoryOption;
 
     // Populate session ID if provided
@@ -137,10 +146,20 @@ const chatRoute = async (
       };
     }
 
+    const routingAgent = await network.getRoutingAgent({ runtimeContext });
+    if (!routingAgent) {
+      logger.error('Routing agent not found', {
+        requestId: req.requestId,
+        networkName: ORCHESTRATOR_NAME,
+      });
+      res.status(500).json({ message: 'Routing agent not found' });
+      return;
+    }
+
     const stream = await runWithRequestContext(
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>
-        await agent.stream(validatedMessage, {
+        await routingAgent.stream(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
           // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
@@ -148,7 +167,6 @@ const chatRoute = async (
           // https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence#setting-up-server-side-id-generation
         })
     );
-
     stream.pipeUIMessageStreamToResponse(res);
   } catch (error) {
     logger.error('Error in add message route', {

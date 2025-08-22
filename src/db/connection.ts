@@ -30,7 +30,7 @@ class Database {
     try {
       logger.info('Connecting to MongoDB...');
       await this.client.connect();
-      // Perform a ping to verify the connection
+      // Perform a ping to verify the connection.
       await this.client.db('admin').command({ ping: 1 });
       this.isConnected = true;
       logger.info('Connected to MongoDB');

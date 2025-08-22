@@ -10,6 +10,6 @@ describe('Health check', () => {
   });
   it('should return a list of agents', async () => {
     const response = await request(app).get('/health');
-    expect(response.body.agents.names).toEqual(['parsleyAgent']);
+    expect(response.body.agents.names).toEqual(['evergreenAgent']);
   });
 });
