@@ -4,8 +4,8 @@ import { MDocument } from "@mastra/rag";
 import { Agent } from "@mastra/core/agent";
 import { encode } from "gpt-tokenizer";
 import { gpt41, gpt41Nano } from '../models/openAI/gpt41';
-import fs from "node:fs/promises";
-import path from "node:path";
+import fs from "fs/promises";
+import path from "path";
 import { WinstonMastraLogger } from "../../utils/logger/winstonMastraLogger";
 
 // Initialize logger for this workflow
@@ -442,7 +442,8 @@ const presentationStep = createStep({
   }
 });
 
-export const iterativeRefinement = createWorkflow({
+
+const iterativeRefinementWorkflow = createWorkflow({
   id: "iterative-refinement",
   description: "Hierarchical refine summarization for arbitrary technical text files",
   inputSchema: ChunkedSchema,
@@ -456,6 +457,47 @@ export const iterativeRefinement = createWorkflow({
   .then(finalizeStep)
   .commit();
 
+  const singlePassWorkflow = createWorkflow({
+    id: "single-pass",
+    description: "Single-pass analysis for a single chunk of text",
+    inputSchema: ChunkedSchema,
+    outputSchema: FinalizeSchema,
+  })
+    .then(singlePassStep)
+    .commit();
+
+
+// When we use a branch, the output is wrapped in an object with the key being the name of the workflow
+const extractBranchOutputStep = createStep({
+  id: "extract-branch-output",
+  description: "Extract markdown and summary from branch workflow output",
+  inputSchema: z.object({
+    "single-pass": FinalizeSchema.optional(),
+    "iterative-refinement": FinalizeSchema.optional()
+  }),
+  outputSchema: FinalizeSchema,
+  execute: async ({ inputData }) => {
+    // Get the result from whichever workflow ran
+    const result = inputData["single-pass"] || inputData["iterative-refinement"];
+    
+    if (!result) {
+      logger.error("No output from branch workflows", { inputData });
+      return { markdown: "", summary: "" };
+    }
+    
+    logger.debug("Extracted branch output", { 
+      hasMarkdown: !!result.markdown,
+      hasSummary: !!result.summary,
+      markdownLength: result.markdown?.length || 0
+    });
+    
+    return {
+      markdown: result.markdown || "",
+      summary: result.summary || ""
+    };
+  }
+});
+
 export const logCoreAnalyzer = createWorkflow({
   id: "log-core-analyzer",
   description: "Hierarchical refine summarization for arbitrary technical text files",
@@ -465,35 +507,9 @@ export const logCoreAnalyzer = createWorkflow({
   .then(readStep)
   .then(chunkStep)
   .branch([
-    [async (params) => params.inputData.chunks.length === 1, singlePassStep],
-    [async (params) => params.inputData.chunks.length > 1, iterativeRefinement]
+    [async (params) => params.inputData.chunks.length === 1, singlePassWorkflow as any],
+    [async (params) => params.inputData.chunks.length > 1, iterativeRefinementWorkflow as any]
   ])
-  .map(async (params) => {
-    // Flatten the branch output - it comes wrapped in step/workflow IDs
-    const singlePass = params.inputData['single-pass-analysis'];
-    const iterative = params.inputData['iterative-refinement'];
-    
-    const result = singlePass || iterative;
-    
-    if (!result) {
-      logger.error("No result from branch", { 
-        keys: Object.keys(params.inputData),
-        inputData: params.inputData 
-      });
-      return { markdown: "", summary: "" };
-    }
-    
-    logger.debug("Flattening branch output", {
-      hasSinglePass: !!singlePass,
-      hasIterative: !!iterative,
-      hasMarkdown: !!result.markdown,
-      hasSummary: !!result.summary
-    });
-    
-    return {
-      markdown: result.markdown || "",
-      summary: result.summary || ""
-    };
-  })
+  .then(extractBranchOutputStep)
   .then(presentationStep)
   .commit();
