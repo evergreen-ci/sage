@@ -78,7 +78,9 @@ const readStep = createStep({
         raw = await response.text();
       } catch (error) {
         logger.error('Failed to fetch URL', { url, error });
-        throw new Error(`Failed to fetch URL ${url}: ${error instanceof Error ? error.message : String(error)}`);
+        throw new Error(
+          `Failed to fetch URL ${url}: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     }
     // cheap normalization
