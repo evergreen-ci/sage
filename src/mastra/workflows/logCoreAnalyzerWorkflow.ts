@@ -252,7 +252,7 @@ const refineStep = createStep({
 
 // Step 4: Final report
 
-const FinalizeSchema = z.object({
+const ReportsSchema = z.object({
   markdown: z.string(),
   summary: z.string(),
 });
@@ -356,7 +356,7 @@ const singlePassStep = createStep({
   id: 'single-pass-analysis',
   description: 'Direct analysis and report generation for single-chunk files',
   inputSchema: ChunkedSchema,
-  outputSchema: FinalizeSchema,
+  outputSchema: ReportsSchema,
   execute: async ({ inputData }) => {
     const { chunks, contextHint } = inputData;
 
@@ -378,7 +378,7 @@ const singlePassStep = createStep({
     const result = await reportFormatterAgent.generateVNext(
       [{ role: 'user', content: SINGLE_PASS_PROMPT(text, contextHint) }],
       {
-        output: FinalizeSchema,
+        output: ReportsSchema,
       }
     );
 
@@ -398,7 +398,7 @@ const finalizeStep = createStep({
   id: 'finalize',
   description: 'Generate final markdown report and executive summary',
   inputSchema: LoopStateSchema,
-  outputSchema: FinalizeSchema,
+  outputSchema: ReportsSchema,
   execute: async ({ inputData }) => {
     const { summary } = inputData;
     logger.debug('Generating final markdown report', {
@@ -436,7 +436,7 @@ const finalizeStep = createStep({
 const presentationStep = createStep({
   id: 'save-report',
   description: 'Save markdown report to disk with timestamp',
-  inputSchema: FinalizeSchema,
+  inputSchema: ReportsSchema,
   outputSchema: ResultSchema,
   execute: async ({ inputData }) => {
     const { markdown, summary } = inputData;
@@ -486,9 +486,10 @@ const presentationStep = createStep({
 const iterativeRefinementWorkflow = createWorkflow({
   id: 'iterative-refinement',
   description:
-    'Hierarchical refine summarization for arbitrary technical text files',
+    `Perform a 3 step iterative refinement process: initial and final analysis with an expensive model, 
+    and a lightweight refinement loop going through the whole document`,
   inputSchema: ChunkedSchema,
-  outputSchema: FinalizeSchema,
+  outputSchema: ReportsSchema,
 })
   .then(initialStep)
   .dowhile(
@@ -500,37 +501,21 @@ const iterativeRefinementWorkflow = createWorkflow({
   .then(finalizeStep)
   .commit();
 
-// Wrap refinement workflow into a step, for branching (needed because it has a dowhile loop)
-const iterativeRefinementBranchStep = createStep({
-  id: 'iterative-refinement-branch',
-  description: 'Delegate to iterative-refinement workflow',
+// This was initially a `.branch()` workflow step, but it involved too much complexity like unwrapping types correctly,
+// or wrapping iterativeRefinementWorkflow into a step. This option is much simpler.
+const decideAndRunStep = createStep({
+  id: 'decide-and-run',
+  description: 'Choose single-pass vs iterative workflow and run it',
   inputSchema: ChunkedSchema,
-  outputSchema: FinalizeSchema,
+  outputSchema: ReportsSchema,
   execute: async params => {
-    const result = await iterativeRefinementWorkflow.execute(params);
-    return result;
-  },
-});
-
-// Keyed schema needed because branch condition return it like this
-const BranchOutputSchema = z.object({
-  'single-pass-analysis': FinalizeSchema,
-  'iterative-refinement-branch': FinalizeSchema,
-});
-
-const extractBranchOutputStep = createStep({
-  id: 'extract-branch-output',
-  description: 'Select the branch output (single-pass or iterative)',
-  inputSchema: BranchOutputSchema,
-  outputSchema: FinalizeSchema,
-  execute: async ({ inputData }) => {
-    const a = inputData['single-pass-analysis'];
-    const b = inputData['iterative-refinement-branch'];
-    const chosen = a?.markdown || a?.summary ? a : b;
-    return {
-      markdown: chosen?.markdown ?? '',
-      summary: chosen?.summary ?? '',
-    };
+    const { chunks, contextHint } = params.inputData;
+    if (chunks.length === 1) {
+      // run the single-pass step directly
+      return singlePassStep.execute(params);
+    }
+    // run the iterative workflow
+    return iterativeRefinementWorkflow.execute(params);
   },
 });
 
@@ -543,16 +528,6 @@ export const logCoreAnalyzer = createWorkflow({
 })
   .then(readStep)
   .then(chunkStep)
-  .branch([
-    [
-      async params => params.inputData.chunks.length === 1,
-      singlePassStep, // Use the step directly instead of wrapping it
-    ],
-    [
-      async params => params.inputData.chunks.length > 1,
-      iterativeRefinementBranchStep, // Keep the wrapper for the complex workflow
-    ],
-  ])
-  .then(extractBranchOutputStep)
+  .then(decideAndRunStep)
   .then(presentationStep)
   .commit();
