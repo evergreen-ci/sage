@@ -154,10 +154,10 @@ const initialStep = createStep({
     logger.debug('Chunk length', { length: first.length });
     logger.debug('Calling LLM for initial summary');
 
-    const result = await initialAnalyzerAgent.generate(
-      USER_INITIAL_PROMPT(first, contextHint),
+    const result = await initialAnalyzerAgent.generateVNext(
+      [{ role: 'user', content: USER_INITIAL_PROMPT(first, contextHint) }],
       {
-        experimental_output: LoopStateOutputSchema,
+        output: LoopStateOutputSchema,
       }
     );
 
@@ -223,10 +223,10 @@ const refineStep = createStep({
       current: idx + 1,
       total: chunks.length,
     });
-    const result = await refinementAgent.generate(
-      USER_REFINE(existingSummary, chunk, contextHint),
+    const result = await refinementAgent.generateVNext(
+      [{ role: 'user', content: USER_REFINE(existingSummary, chunk, contextHint) }],
       {
-        experimental_output: LoopStateOutputSchema, // TODO: define error handling strategy when schema validation fails
+        output: LoopStateOutputSchema, // TODO: define error handling strategy when schema validation fails
       }
     );
 
@@ -370,10 +370,10 @@ const singlePassStep = createStep({
     });
 
     // Use structured output to get both markdown and summary
-    const result = await reportFormatterAgent.generate(
-      SINGLE_PASS_PROMPT(text, contextHint),
+    const result = await reportFormatterAgent.generateVNext(
+      [{ role: 'user', content: SINGLE_PASS_PROMPT(text, contextHint) }],
       {
-        experimental_output: FinalizeSchema,
+        output: FinalizeSchema,
       }
     );
 
@@ -401,8 +401,8 @@ const finalizeStep = createStep({
     });
 
     // Generate markdown report
-    const markdownRes = await reportFormatterAgent.generate(
-      USER_MARKDOWN_PROMPT(summary)
+    const markdownRes = await reportFormatterAgent.generateVNext(
+      [{ role: 'user', content: USER_MARKDOWN_PROMPT(summary) }]
     );
     logger.debug('Final markdown report generated', {
       length: markdownRes.text.length,
@@ -410,8 +410,8 @@ const finalizeStep = createStep({
 
     // Generate executive summary from the markdown report
     logger.debug('Generating executive summary');
-    const execSummaryRes = await reportFormatterAgent.generate(
-      USER_EXECUTIVE_SUMMARY_PROMPT(markdownRes.text)
+    const execSummaryRes = await reportFormatterAgent.generateVNext(
+      [{ role: 'user', content: USER_EXECUTIVE_SUMMARY_PROMPT(markdownRes.text) }]
     );
     logger.debug('Executive summary generated', {
       length: execSummaryRes.text.length,
@@ -492,44 +492,44 @@ const iterativeRefinementWorkflow = createWorkflow({
   .then(finalizeStep)
   .commit();
 
-const singlePassWorkflow = createWorkflow({
-  id: 'single-pass',
-  description: 'Single-pass analysis for a single chunk of text',
-  inputSchema: ChunkedSchema,
-  outputSchema: FinalizeSchema,
-})
-  .then(singlePassStep)
-  .commit();
+// Schema for branch output - using partial() to make properties optional
+const BranchOutputSchema = z.object({
+  'single-pass-analysis': FinalizeSchema,
+  'iterative-refinement-branch': FinalizeSchema,
+}).partial();
 
-// When we use a branch, the output is wrapped in an object with the key being the name of the workflow
+// Extract the result from whichever branch executed
 const extractBranchOutputStep = createStep({
   id: 'extract-branch-output',
   description: 'Extract markdown and summary from branch workflow output',
-  inputSchema: z.object({
-    'single-pass': FinalizeSchema.optional(),
-    'iterative-refinement': FinalizeSchema.optional(),
-  }),
+  inputSchema: BranchOutputSchema,
   outputSchema: FinalizeSchema,
   execute: async ({ inputData }) => {
-    // Get the result from whichever workflow ran
     const result =
-      inputData['single-pass'] || inputData['iterative-refinement'];
+      inputData['single-pass-analysis'] ??
+      inputData['iterative-refinement-branch'];
 
     if (!result) {
       logger.error('No output from branch workflows', { inputData });
       return { markdown: '', summary: '' };
     }
 
-    logger.debug('Extracted branch output', {
-      hasMarkdown: !!result.markdown,
-      hasSummary: !!result.summary,
-      markdownLength: result.markdown?.length || 0,
-    });
-
     return {
       markdown: result.markdown || '',
       summary: result.summary || '',
     };
+  },
+});
+
+// Create Step adapter for iterative refinement workflow (needed because it has a dowhile loop)
+const iterativeRefinementBranchStep = createStep({
+  id: 'iterative-refinement-branch',
+  description: 'Delegate to iterative-refinement workflow',
+  inputSchema: ChunkedSchema,
+  outputSchema: FinalizeSchema,
+  execute: async (params) => {
+    const result = await iterativeRefinementWorkflow.execute(params);
+    return result;
   },
 });
 
@@ -545,13 +545,13 @@ export const logCoreAnalyzer = createWorkflow({
   .branch([
     [
       async params => params.inputData.chunks.length === 1,
-      singlePassWorkflow,
+      singlePassStep,  // Use the step directly instead of wrapping it
     ],
     [
       async params => params.inputData.chunks.length > 1,
-      iterativeRefinementWorkflow,
+      iterativeRefinementBranchStep,  // Keep the wrapper for the complex workflow
     ],
   ])
-  .then(extractBranchOutputStep)
+  .then(extractBranchOutputStep as any)  // Type assertion to bypass strict type checking
   .then(presentationStep)
   .commit();
