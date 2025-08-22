@@ -7,6 +7,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import { WinstonMastraLogger } from '../../utils/logger/winstonMastraLogger';
 import { gpt41, gpt41Nano } from '../models/openAI/gpt41';
+import { config } from '../../config';
+import fetch, { Headers } from 'node-fetch';
 
 // Initialize logger for this workflow
 const logger = new WinstonMastraLogger({
@@ -29,6 +31,7 @@ const logger = new WinstonMastraLogger({
 const WorkflowInputSchema = z.object({
   path: z.string().optional(),
   text: z.string().optional(),
+  url: z.string().optional(),
   contextHint: z.string().optional(),
 });
 
@@ -41,11 +44,34 @@ const readStep = createStep({
     contextHint: z.string().optional(),
   }),
   execute: async ({ inputData }) => {
-    const { contextHint, path: p, text } = inputData;
+    const { contextHint, path: p, text, url } = inputData;
+    
     let raw = text ?? '';
     if (p) {
       const buf = await fs.readFile(path.resolve(p));
       raw = buf.toString('utf8');
+    } else if (url) {
+      // Build authentication headers for Evergreen API
+      const headers: Headers = new Headers();
+
+      // Add Evergreen API authentication if credentials are configured
+      if (config.evergreen.apiUser && config.evergreen.apiKey) {
+        headers.append('Api-User', config.evergreen.apiUser);
+        headers.append('Api-Key', config.evergreen.apiKey);
+      } else {
+        logger.warn('Evergreen API credentials are not set in config; making unauthenticated request');
+      }
+      
+      logger.debug('Fetching URL with authentication', { 
+        url,
+        hasAuth: !!(config.evergreen.apiUser && config.evergreen.apiKey) 
+      });
+      
+      const response = await fetch(url, { headers });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch URL: ${url} (${response.status} ${response.statusText})`);
+      }
+      raw = await response.text();
     }
     // cheap normalization
     raw = raw.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');
