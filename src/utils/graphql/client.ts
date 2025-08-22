@@ -24,7 +24,7 @@ interface ExecuteQueryOptions {
   operationName?: string;
   headers?: Record<string, string>;
   userID: string;
-  signal?: AbortSignal;
+  signal: AbortSignal | null;
   timeoutMs?: number;
 }
 
@@ -103,7 +103,7 @@ export class GraphQLClient {
         method: 'POST',
         headers,
         body: JSON.stringify(body),
-        signal,
+        signal: signal ?? null,
       });
 
       const contentType = res.headers.get('content-type') ?? '';
@@ -231,7 +231,6 @@ const safeReadBody = async (
 
 /**
  * Forces parsing of a Response body as JSON, throwing if parsing fails.
- * @typeParam T - Expected GraphQL data type.
  * @param res - The fetch Response object.
  * @throws GraphQLClientError if the body cannot be parsed as JSON.
  * @returns The parsed GraphQLResponse.
