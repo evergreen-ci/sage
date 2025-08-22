@@ -8,7 +8,6 @@ platform:
 trigger:
   branch:
     - main
-    - jben/chunk-summarize-agent
 
 steps:
   - name: publish
