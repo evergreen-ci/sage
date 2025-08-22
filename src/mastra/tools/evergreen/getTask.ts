@@ -3,7 +3,34 @@ import { z } from 'zod';
 import { GetTaskQuery } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
 import evergreenClient from './graphql/evergreenClient';
-import GET_TASK from './graphql/get-task';
+
+const GET_TASK = `query GetTask($taskId: String!, $execution: Int) {
+  task(taskId: $taskId, execution: $execution) {
+    id
+    displayName
+    displayStatus
+    execution
+    patchNumber
+    buildVariant
+    projectIdentifier
+    versionMetadata {
+      id
+      isPatch
+      message
+      projectIdentifier
+      projectMetadata {
+        id
+      }
+      revision
+    }
+    details {
+      description
+      failingCommand
+      status
+    }
+  }
+}
+`;
 
 const getTaskInputSchema = z.object({
   taskId: z.string(),
