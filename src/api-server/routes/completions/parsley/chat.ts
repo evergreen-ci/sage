@@ -149,7 +149,7 @@ const chatRoute = async (
         })
     );
 
-    stream.pipeUIMessageStreamToResponse(res);
+    stream.pipeDataStreamToResponse(res);
   } catch (error) {
     logger.error('Error in add message route', {
       error,
