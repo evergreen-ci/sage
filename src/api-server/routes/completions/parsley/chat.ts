@@ -2,6 +2,7 @@ import { AgentMemoryOption } from '@mastra/core/agent';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { UIMessage, validateUIMessages } from 'ai';
 import { Request, Response } from 'express';
+import { Readable } from 'stream';
 import z from 'zod';
 import { mastra } from 'mastra';
 import { PARSLEY_AGENT_NAME, USER_ID } from 'mastra/agents/constants';
@@ -149,30 +150,22 @@ const chatRoute = async (
         })
     );
 
+    // Use the built-in method to pipe the UI message stream to the response
     const response = stream.aisdk.v5.toUIMessageStreamResponse();
     
-    // Set headers from the Response object
-    response.headers.forEach((value, key) => {
+    // Send the response - this handles headers and body streaming properly
+    Object.entries(response.headers).forEach(([key, value]) => {
       res.setHeader(key, value);
     });
     
-    // Pipe the body stream to the Express response
+    res.status(response.status || 200);
+    
+    // Pipe using Node.js streams properly
     if (response.body) {
-      const reader = response.body.getReader();
-      const processStream = async () => {
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            res.write(value);
-          }
-          res.end();
-        } catch (err) {
-          logger.error('Error piping stream', { error: err });
-          res.end();
-        }
-      };
-      processStream();
+      const nodeStream = Readable.fromWeb(response.body);
+      nodeStream.pipe(res);
+    } else {
+      res.end();
     }
   } catch (error) {
     logger.error('Error in add message route', {
