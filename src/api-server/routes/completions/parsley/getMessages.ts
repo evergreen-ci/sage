@@ -1,8 +1,9 @@
 import { CoreMessage } from '@mastra/core';
+import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
-import { PARSLEY_AGENT_NAME } from 'mastra/agents/constants';
+import { ORCHESTRATOR_NAME } from 'mastra/networks/constants';
 import { logger } from 'utils/logger';
 import { getUserIdFromRequest } from '../../../middlewares/authentication';
 
@@ -40,6 +41,8 @@ const getMessagesRoute = async (
 
   const { conversationId } = paramsData;
 
+  const runtimeContext = new RuntimeContext();
+
   const authenticatedUserId = getUserIdFromRequest(req);
 
   if (!authenticatedUserId) {
@@ -58,8 +61,16 @@ const getMessagesRoute = async (
   });
 
   try {
-    const agent = mastra.getAgent(PARSLEY_AGENT_NAME);
-    const memory = await agent.getMemory();
+    const network = mastra.vnext_getNetwork(ORCHESTRATOR_NAME);
+    if (!network) {
+      logger.error('Network not found', {
+        requestId: req.requestId,
+        networkName: ORCHESTRATOR_NAME,
+      });
+      res.status(500).json({ message: 'Network not found' });
+      return;
+    }
+    const memory = await network.getMemory({ runtimeContext });
     if (!memory) {
       logger.error('Memory not found', {
         requestId: req.requestId,

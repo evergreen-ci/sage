@@ -2,13 +2,10 @@ import express from 'express';
 import chatRoute from './chat';
 import getMessagesRoute from './getMessages';
 
-// export express router
-const router = express.Router();
+const parsleyOrchestratorRouter = express.Router();
 
 // Route to initiate a chat stream
-router.post('/chat', chatRoute);
+parsleyOrchestratorRouter.post('/chat', chatRoute);
+parsleyOrchestratorRouter.get('/:conversationId/messages', getMessagesRoute);
 
-// Route to get messages for a conversation
-router.get('/:conversationId/messages', getMessagesRoute);
-
-export default router;
+export default parsleyOrchestratorRouter;
