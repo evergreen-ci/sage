@@ -492,36 +492,7 @@ const iterativeRefinementWorkflow = createWorkflow({
   .then(finalizeStep)
   .commit();
 
-// Schema for branch output - using partial() to make properties optional
-const BranchOutputSchema = z.object({
-  'single-pass-analysis': FinalizeSchema,
-  'iterative-refinement-branch': FinalizeSchema,
-}).partial();
-
-// Extract the result from whichever branch executed
-const extractBranchOutputStep = createStep({
-  id: 'extract-branch-output',
-  description: 'Extract markdown and summary from branch workflow output',
-  inputSchema: BranchOutputSchema,
-  outputSchema: FinalizeSchema,
-  execute: async ({ inputData }) => {
-    const result =
-      inputData['single-pass-analysis'] ??
-      inputData['iterative-refinement-branch'];
-
-    if (!result) {
-      logger.error('No output from branch workflows', { inputData });
-      return { markdown: '', summary: '' };
-    }
-
-    return {
-      markdown: result.markdown || '',
-      summary: result.summary || '',
-    };
-  },
-});
-
-// Create Step adapter for iterative refinement workflow (needed because it has a dowhile loop)
+// Wrap refinement workflow into a step, for branching (needed because it has a dowhile loop)
 const iterativeRefinementBranchStep = createStep({
   id: 'iterative-refinement-branch',
   description: 'Delegate to iterative-refinement workflow',
@@ -530,6 +501,28 @@ const iterativeRefinementBranchStep = createStep({
   execute: async (params) => {
     const result = await iterativeRefinementWorkflow.execute(params);
     return result;
+  },
+});
+
+// Keyed schema needed because branch condition return it like this
+const BranchOutputSchema = z.object({
+  'single-pass-analysis': FinalizeSchema,
+  'iterative-refinement-branch': FinalizeSchema,
+});
+
+const extractBranchOutputStep = createStep({
+  id: 'extract-branch-output',
+  description: 'Select the branch output (single-pass or iterative)',
+  inputSchema: BranchOutputSchema,
+  outputSchema: FinalizeSchema,
+  execute: async ({ inputData }) => {
+    const a = inputData['single-pass-analysis'];
+    const b = inputData['iterative-refinement-branch'];
+    const chosen = (a?.markdown || a?.summary) ? a : b;
+    return {
+      markdown: chosen?.markdown ?? '',
+      summary: chosen?.summary ?? '',
+    };
   },
 });
 
@@ -552,6 +545,6 @@ export const logCoreAnalyzer = createWorkflow({
       iterativeRefinementBranchStep,  // Keep the wrapper for the complex workflow
     ],
   ])
-  .then(extractBranchOutputStep as any)  // Type assertion to bypass strict type checking
+  .then(extractBranchOutputStep)
   .then(presentationStep)
   .commit();
