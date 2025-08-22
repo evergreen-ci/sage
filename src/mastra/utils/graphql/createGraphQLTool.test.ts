@@ -83,7 +83,9 @@ describe('createGraphQLTool', () => {
         context,
         runtimeContext: makeRuntimeContext(undefined),
       })
-    ).rejects.toThrow('User ID not available in RuntimeContext unable to execute query');
+    ).rejects.toThrow(
+      'User ID not available in RuntimeContext unable to execute query'
+    );
   });
 
   it('throws GraphQLClientError on GraphQL errors', async () => {
