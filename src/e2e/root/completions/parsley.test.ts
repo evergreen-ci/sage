@@ -119,47 +119,37 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
   });
 });
 
-describe('completions/parsley/conversations/:conversationId/messages with taskWorkflow', () => {
-  const taskId =
-    'evg_lint_generate_lint_ecbbf17f49224235d43416ea55566f3b1894bbf7_25_03_21_21_09_20';
-  it('should use taskWorkflow to fetch task details from evergreenClient and return information to the user', async () => {
-    const { GraphQLClient } = await import('../../../utils/graphql/client');
-    const executeQuerySpy = vi.spyOn(GraphQLClient.prototype, 'executeQuery');
-    executeQuerySpy.mockResolvedValue({
-      task: {
-        id: taskId,
-        status: 'failed',
-        displayName: 'Test Task',
-        details: {
-          status: 'failed',
-          type: 'test',
-        },
-      },
+describe('completions/parsley/conversations/chat', () => {
+  describe('toolCalls', () => {
+    const taskId =
+      'evg_lint_generate_lint_ecbbf17f49224235d43416ea55566f3b1894bbf7_25_03_21_21_09_20';
+    it('should use the getTaskTool to fetch task details from evergreen and return information to the user', async () => {
+      const { GraphQLClient } = await import('../../../utils/graphql/client');
+      const executeQuerySpy = vi.spyOn(GraphQLClient.prototype, 'executeQuery');
+
+      const id = '456';
+
+      try {
+        const response = await request(app)
+          .post(chatEndpoint)
+          .send({
+            id,
+            message: `Get task ${taskId} and tell me its status`,
+            logMetadata: {
+              task_id: taskId,
+              execution: 0,
+              log_type: LogTypes.EVERGREEN_TASK_LOGS,
+              origin: TaskLogOrigin.Task,
+            },
+          });
+
+        expect(response.status).toBe(200);
+        expect(response.text).toBeTruthy();
+        const responseMessage = response.text.toLowerCase();
+        expect(responseMessage.length).toBeGreaterThan(0);
+      } finally {
+        executeQuerySpy.mockRestore();
+      }
     });
-
-    const id = '456';
-
-    try {
-      const response = await request(app)
-        .post(chatEndpoint)
-        .send({
-          id,
-          message: `Get task ${taskId} and tell me its status`,
-          logMetadata: {
-            task_id: taskId,
-            execution: 0,
-            log_type: LogTypes.EVERGREEN_TASK_LOGS,
-            origin: TaskLogOrigin.Task,
-          },
-        })
-        .timeout(30000);
-
-      expect(response.status).toBe(200);
-      expect(response.text).toBeTruthy();
-      const responseMessage = response.text.toLowerCase();
-      expect(responseMessage.length).toBeGreaterThan(0);
-    } finally {
-      executeQuerySpy.mockRestore();
-    }
-  }, 30000);
+  });
 });
