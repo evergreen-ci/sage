@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { KANOPY_AUTH_HEADER } from '../../mastra/agents/constants';
+import { KANOPY_AUTH_HEADER } from '../../constants/headers';
 import { logger } from '../../utils/logger';
 
 interface KanopyJWTClaims {
