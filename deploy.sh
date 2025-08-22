@@ -23,7 +23,7 @@ if [ -z "$ECR_ACCESS_KEY" ] || [ -z "$ECR_SECRET_KEY" ]; then
     exit 1
 fi
 
-AWS_ACCESS_KEY_ID="$(helm ksec get ecr ecr_access_key)" AWS_SECRET_ACCESS_KEY="$(helm ksec get ecr ecr_secret_key)" \
+AWS_ACCESS_KEY_ID=$ECR_ACCESS_KEY AWS_SECRET_ACCESS_KEY=$ECR_SECRET_KEY \
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${REGISTRY}
 
 echo "Building Docker image..."
@@ -54,7 +54,7 @@ helm upgrade --install ${RELEASE_NAME} ${HELM_CHART} \
     --set image.repository=${FULL_IMAGE} \
     --set ingress.enabled=true \
     --set "ingress.hosts[0]=${STAGING_HOST}" \
-    --values environments/staging.yaml \
+    --values environments/staging.yaml
 
 echo "Deployment complete!"
 echo "To check deployment status:"
