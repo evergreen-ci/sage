@@ -1,8 +1,6 @@
 import { Agent } from '@mastra/core/agent';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
-import { encode } from 'gpt-tokenizer';
-import fetch, { Headers } from 'node-fetch';
 import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
@@ -52,12 +50,13 @@ const readStep = createStep({
       raw = buf.toString('utf8');
     } else if (url) {
       // Build authentication headers for Evergreen API
-      const headers: Headers = new Headers();
+      const headers = new Headers();
+      headers.set('Accept', 'text/plain,application/json');
 
       // Add Evergreen API authentication if credentials are configured
       if (config.evergreen.apiUser && config.evergreen.apiKey) {
-        headers.append('Api-User', config.evergreen.apiUser);
-        headers.append('Api-Key', config.evergreen.apiKey);
+        headers.set('Api-User', config.evergreen.apiUser);
+        headers.set('Api-Key', config.evergreen.apiKey);
       } else {
         logger.warn(
           'Evergreen API credentials are not set in config; making unauthenticated request'
@@ -69,13 +68,18 @@ const readStep = createStep({
         hasAuth: !!(config.evergreen.apiUser && config.evergreen.apiKey),
       });
 
-      const response = await fetch(url, { headers });
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch URL: ${url} (${response.status} ${response.statusText})`
-        );
+      try {
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch URL: ${url} (${response.status} ${response.statusText})`
+          );
+        }
+        raw = await response.text();
+      } catch (error) {
+        logger.error('Failed to fetch URL', { url, error });
+        throw new Error(`Failed to fetch URL ${url}: ${error instanceof Error ? error.message : String(error)}`);
       }
-      raw = await response.text();
     }
     // cheap normalization
     raw = raw.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');
@@ -91,7 +95,7 @@ const ChunkedSchema = z.object({
 });
 
 // Default to o200k_base tokenizer
-const countTokens = (s: string) => encode(s).length;
+// const countTokens = (s: string) => encode(s).length;
 
 // Chunking configuration for GPT-4.1 nano (Assume max 128k context, but may be 1M)
 // TODO: hyperparameters below, need to find a right balance. Currently just for quick prototyping
@@ -546,7 +550,7 @@ const decideAndRunStep = createStep({
   },
 });
 
-export const logCoreAnalyzer = createWorkflow({
+export const logCoreAnalyzerWorkflow = createWorkflow({
   id: 'log-core-analyzer',
   description:
     'Analyze, iteratively summarize, and produce a complete report of technical files of arbitrary types and structures. Take as input either an URL, a file path, or the file as plain text.',

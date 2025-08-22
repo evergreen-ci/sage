@@ -8,6 +8,7 @@ import {
   taskTestWorkflow,
   taskWorkflow,
   versionWorkflow,
+  logCoreAnalyzerWorkflow
 } from '../workflows';
 
 const parsleyMemory = new Memory({
@@ -53,5 +54,6 @@ export const parsleyAgent: Agent = new Agent({
     versionWorkflow,
     taskTestWorkflow,
     taskFilesWorkflow,
+    logCoreAnalyzerWorkflow
   },
 });
