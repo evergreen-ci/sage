@@ -1,16 +1,22 @@
 #!/usr/bin/env ts-node
 
-import { mastra } from "../../mastra";
-import path from "node:path";
-import { analyzeWorkflowSteps } from "./analyze-workflow-steps";
-import fs from "node:fs";
+import fs from 'node:fs';
+import path from 'node:path';
+import { mastra } from '../../mastra';
+import { analyzeWorkflowSteps } from './analyze-workflow-steps';
 
+/**
+ *
+ * @param filePath
+ * @param index
+ * @param total
+ */
 async function runTest(filePath: string, index: number, total: number) {
   const absolutePath = path.resolve(filePath);
   const stats = fs.statSync(absolutePath);
   const fileSize = stats.size;
   const fileName = path.basename(absolutePath);
-  
+
   // Show file info at start
   console.log(`\n[${index}/${total}] Processing: ${fileName}`);
   console.log(`      Path: ${absolutePath}`);
@@ -19,26 +25,30 @@ async function runTest(filePath: string, index: number, total: number) {
 
   const startTime = Date.now();
 
-  const run = await mastra.getWorkflow("logCoreAnalyzer").createRunAsync();
-  
+  const run = await mastra.getWorkflow('logCoreAnalyzer').createRunAsync();
+
   const result = await run.start({
     inputData: {
-      path: absolutePath
-    }
+      path: absolutePath,
+    },
   });
 
   const duration = Date.now() - startTime;
-  const successResult = result.status === "success" ? result.result : null;
-  
+  const successResult = result.status === 'success' ? result.result : null;
+
   // Analyze workflow steps (for JSON output only)
   const stepAnalysis = result.steps ? analyzeWorkflowSteps(result.steps) : null;
-  
+
   // Update status line with result
-  process.stdout.write(`\r      Status: ${result.status === 'success' ? '✅ Complete' : '❌ Failed'} (${(duration/1000).toFixed(1)}s)\n`);
-  
+  process.stdout.write(
+    `\r      Status: ${result.status === 'success' ? '✅ Complete' : '❌ Failed'} (${(duration / 1000).toFixed(1)}s)\n`
+  );
+
   // Show executive summary
   if (successResult?.summary) {
-    console.log(`      Summary: ${successResult.summary.replace(/\n/g, ' ').slice(0, 200)}`);
+    console.log(
+      `      Summary: ${successResult.summary.replace(/\n/g, ' ').slice(0, 200)}`
+    );
   }
 
   return {
@@ -50,23 +60,31 @@ async function runTest(filePath: string, index: number, total: number) {
     summary: successResult?.summary,
     reportPath: successResult?.filePath,
     steps: result.steps,
-    stepAnalysis
+    stepAnalysis,
   };
 }
 
+/**
+ *
+ * @param bytes
+ */
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1024 * 1024) return `${(bytes/1024).toFixed(1)}KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes/(1024*1024)).toFixed(1)}MB`;
-  return `${(bytes/(1024*1024*1024)).toFixed(2)}GB`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+  if (bytes < 1024 * 1024 * 1024)
+    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)}GB`;
 }
 
+/**
+ *
+ */
 async function main() {
   const args = process.argv.slice(2);
-  
+
   if (args.length === 0) {
-    console.error("Usage: yarn run-analyzer <file-path> [file-path2...]");
-    console.error("   or: yarn run-analyzer --batch <directory>");
+    console.error('Usage: yarn run-analyzer <file-path> [file-path2...]');
+    console.error('   or: yarn run-analyzer --batch <directory>');
     process.exit(1);
   }
 
@@ -75,26 +93,29 @@ async function main() {
 
   try {
     let filesToProcess: string[] = [];
-    
+
     // Batch mode: test all files in a directory
     if (args[0] === '--batch' && args[1]) {
       const dir = path.resolve(args[1]);
-      const files = fs.readdirSync(dir)
+      const files = fs
+        .readdirSync(dir)
         .filter(f => {
           const fullPath = path.join(dir, f);
           return fs.statSync(fullPath).isFile(); // Accept all files, not just specific extensions
         })
         .map(f => path.join(dir, f));
       filesToProcess = files;
-    } 
+    }
     // Single or multiple file mode
     else {
       filesToProcess = args;
     }
-    
-    console.log(`\n🔬 Analyzing ${filesToProcess.length} file${filesToProcess.length > 1 ? 's' : ''}\n`);
+
+    console.log(
+      `\n🔬 Analyzing ${filesToProcess.length} file${filesToProcess.length > 1 ? 's' : ''}\n`
+    );
     console.log('─'.repeat(80));
-    
+
     let i = 0;
     for (const filePath of filesToProcess) {
       i++;
@@ -104,38 +125,55 @@ async function main() {
 
     // Print summary
     const totalDuration = Date.now() - startTime;
-    console.log('\n' + '═'.repeat(80));
+    console.log(`\n${'═'.repeat(80)}`);
     console.log('📊 ANALYSIS SUMMARY');
     console.log('─'.repeat(80));
-    
+
     const passed = results.filter(r => r.status === 'success').length;
     const failed = results.filter(r => r.status !== 'success').length;
     const totalSize = results.reduce((sum, r) => sum + r.fileSize, 0);
-    
+
     console.log(`\n📈 Overall Statistics:`);
     console.log(`   • Files processed: ${results.length}`);
     console.log(`   • Total size: ${formatFileSize(totalSize)}`);
-    console.log(`   • Success rate: ${passed}/${results.length} (${(passed/results.length*100).toFixed(1)}%)`);
+    console.log(
+      `   • Success rate: ${passed}/${results.length} (${((passed / results.length) * 100).toFixed(1)}%)`
+    );
     if (failed > 0) {
       console.log(`   • Failed: ${failed} files`);
     }
-    console.log(`   • Total time: ${(totalDuration/1000).toFixed(1)}s`);
-    console.log(`   • Processing speed: ${formatFileSize(totalSize / (totalDuration/1000))}/s`);
-    
+    console.log(`   • Total time: ${(totalDuration / 1000).toFixed(1)}s`);
+    console.log(
+      `   • Processing speed: ${formatFileSize(totalSize / (totalDuration / 1000))}/s`
+    );
+
     if (results.length > 1) {
-      const avgTime = results.reduce((sum, r) => sum + r.duration, 0) / results.length;
+      const avgTime =
+        results.reduce((sum, r) => sum + r.duration, 0) / results.length;
       const avgSize = totalSize / results.length;
-      const slowest = results.reduce((max, r) => r.duration > max.duration ? r : max);
-      const fastest = results.reduce((min, r) => r.duration < min.duration ? r : min);
-      const largest = results.reduce((max, r) => r.fileSize > max.fileSize ? r : max);
-      
+      const slowest = results.reduce((max, r) =>
+        r.duration > max.duration ? r : max
+      );
+      const fastest = results.reduce((min, r) =>
+        r.duration < min.duration ? r : min
+      );
+      const largest = results.reduce((max, r) =>
+        r.fileSize > max.fileSize ? r : max
+      );
+
       console.log(`\n⏱️  Performance Metrics:`);
-      console.log(`   • Average time: ${(avgTime/1000).toFixed(1)}s`);
+      console.log(`   • Average time: ${(avgTime / 1000).toFixed(1)}s`);
       console.log(`   • Average size: ${formatFileSize(avgSize)}`);
-      console.log(`   • Slowest: ${slowest.file} (${(slowest.duration/1000).toFixed(1)}s, ${formatFileSize(slowest.fileSize)})`);
-      console.log(`   • Fastest: ${fastest.file} (${(fastest.duration/1000).toFixed(1)}s, ${formatFileSize(fastest.fileSize)})`);
-      console.log(`   • Largest: ${largest.file} (${formatFileSize(largest.fileSize)})`);
-      
+      console.log(
+        `   • Slowest: ${slowest.file} (${(slowest.duration / 1000).toFixed(1)}s, ${formatFileSize(slowest.fileSize)})`
+      );
+      console.log(
+        `   • Fastest: ${fastest.file} (${(fastest.duration / 1000).toFixed(1)}s, ${formatFileSize(fastest.fileSize)})`
+      );
+      console.log(
+        `   • Largest: ${largest.file} (${formatFileSize(largest.fileSize)})`
+      );
+
       // Show any failed files
       const failedFiles = results.filter(r => r.status !== 'success');
       if (failedFiles.length > 0) {
@@ -144,12 +182,19 @@ async function main() {
           console.log(`   • ${f.file}`);
         });
       }
-      
+
       // Performance bottlenecks across all runs
       const allBottlenecks = results
-        .filter(r => r.stepAnalysis?.performanceBottlenecks && r.stepAnalysis.performanceBottlenecks.length > 0)
-        .map(r => ({ file: r.file, bottlenecks: r.stepAnalysis!.performanceBottlenecks }));
-      
+        .filter(
+          r =>
+            r.stepAnalysis?.performanceBottlenecks &&
+            r.stepAnalysis.performanceBottlenecks.length > 0
+        )
+        .map(r => ({
+          file: r.file,
+          bottlenecks: r.stepAnalysis!.performanceBottlenecks,
+        }));
+
       if (allBottlenecks.length > 0) {
         console.log(`\n⚠️  Common Bottlenecks:`);
         const bottleneckCounts = new Map<string, number>();
@@ -157,7 +202,10 @@ async function main() {
           bottlenecks.forEach((b: string) => {
             const stepName = b.split(':')[0];
             if (stepName) {
-              bottleneckCounts.set(stepName, (bottleneckCounts.get(stepName) || 0) + 1);
+              bottleneckCounts.set(
+                stepName,
+                (bottleneckCounts.get(stepName) || 0) + 1
+              );
             }
           });
         });
@@ -172,9 +220,12 @@ async function main() {
 
     // Save detailed results to JSON
     if (results.length > 0) {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, '-')
+        .slice(0, -5);
       const outputFile = `test-results-${timestamp}.json`;
-      
+
       const detailedResults = {
         metadata: {
           timestamp: new Date().toISOString(),
@@ -183,41 +234,49 @@ async function main() {
           totalDuration,
           successRate: passed / results.length,
         },
-        results
+        results,
       };
-      
+
       fs.writeFileSync(outputFile, JSON.stringify(detailedResults, null, 2));
       console.log(`\n💾 Detailed results saved to: ${outputFile}`);
     }
-    
+
     // Display results table
     console.log('\n📋 Results Table:');
     console.log('─'.repeat(80));
-    console.log(`${'File'.padEnd(65)} ${'Size'.padEnd(10)} ${'Time'.padEnd(8)} Summary`);
+    console.log(
+      `${'File'.padEnd(65)} ${'Size'.padEnd(10)} ${'Time'.padEnd(8)} Summary`
+    );
     console.log('─'.repeat(80));
-    
+
     results.forEach(r => {
-      const fileName = r.file.length > 60 ? r.file.slice(0, 60) + '...' : r.file;
+      const fileName =
+        r.file.length > 60 ? `${r.file.slice(0, 60)}...` : r.file;
       const statusIcon = r.status === 'success' ? '✅' : '❌';
-      const summary = r.status === 'success' && r.summary 
-      ? r.summary.replace(/\n/g, ' ').slice(0, 400) + (r.summary.length > 400 ? '...' : '')
-      : r.status === 'success' ? 'No summary available' : 'Failed';
-      
+      const summary =
+        r.status === 'success' && r.summary
+          ? r.summary.replace(/\n/g, ' ').slice(0, 400) +
+            (r.summary.length > 400 ? '...' : '')
+          : r.status === 'success'
+            ? 'No summary available'
+            : 'Failed';
+
       console.log(
-        `${statusIcon} ${fileName.padEnd(28)} ${formatFileSize(r.fileSize).padEnd(10)} ${(r.duration/1000).toFixed(1)}s`.padEnd(50)
+        `${statusIcon} ${fileName.padEnd(28)} ${formatFileSize(r.fileSize).padEnd(10)} ${(r.duration / 1000).toFixed(1)}s`.padEnd(
+          50
+        )
       );
       if (r.status === 'success' && r.summary) {
         console.log(`   ${summary}`);
       }
     });
-    
+
     console.log('═'.repeat(80));
 
     // Exit with proper code
     process.exit(passed === results.length ? 0 : 1);
-
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
     process.exit(1);
   }
 }
