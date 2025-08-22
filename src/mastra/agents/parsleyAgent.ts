@@ -1,12 +1,11 @@
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { gpt41Nano } from '../models/openAI/gpt41';
+import { getTaskHistoryTool, getTaskTool } from '../tools/evergreen';
 import { memoryStore } from '../utils/memory';
 import {
   historyWorkflow,
-  taskFilesWorkflow,
   taskTestWorkflow,
-  taskWorkflow,
   versionWorkflow,
 } from '../workflows';
 
@@ -47,11 +46,13 @@ export const parsleyAgent: Agent = new Agent({
 `,
   model: gpt41Nano,
   memory: parsleyMemory,
+  tools: {
+    getTaskTool,
+    getTaskHistoryTool,
+  },
   workflows: {
-    taskWorkflow,
     historyWorkflow,
     versionWorkflow,
     taskTestWorkflow,
-    taskFilesWorkflow,
   },
 });
