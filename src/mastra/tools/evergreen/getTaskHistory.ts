@@ -3,7 +3,43 @@ import { z } from 'zod';
 import { TaskHistoryQuery } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
 import evergreenClient from './graphql/evergreenClient';
-import GET_TASK_HISTORY from './graphql/get-task-history';
+
+const GET_TASK_HISTORY = `query TaskHistory($options: TaskHistoryOpts!) {
+  taskHistory(options: $options) {
+    pagination {
+      mostRecentTaskOrder
+      oldestTaskOrder
+    }
+    tasks {
+      id
+      activated
+      canRestart
+      canSchedule
+      createTime
+      displayStatus
+      execution
+      latestExecution
+      order
+      revision
+      tests(opts: { statuses: ["fail", "silentfail"] }) {
+        testResults {
+          id
+          logs {
+            urlParsley
+          }
+          status
+          testFile
+        }
+      }
+      versionMetadata {
+        id
+        author
+        message
+      }
+    }
+  }
+}
+`;
 
 const TaskHistoryOptsSchema = z.object({
   options: z.object({

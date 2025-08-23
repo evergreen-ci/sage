@@ -1,14 +1,13 @@
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { gpt41Nano } from '../models/openAI/gpt41';
-import { memoryStore } from '../utils/memory';
 import {
-  historyWorkflow,
-  taskFilesWorkflow,
-  taskTestWorkflow,
-  taskWorkflow,
-  versionWorkflow,
-} from '../workflows';
+  getTaskTool,
+  getTaskFilesTool,
+  getTaskTestsTool,
+} from '../tools/evergreen';
+import { memoryStore } from '../utils/memory';
+import { historyWorkflow, versionWorkflow } from '../workflows';
 
 const evergreenAgentMemory = new Memory({
   storage: memoryStore,
@@ -57,10 +56,12 @@ You are **Evergreen AI**, an agent that provides information and support about t
   model: gpt41Nano,
   memory: evergreenAgentMemory,
   workflows: {
-    taskWorkflow,
     historyWorkflow,
     versionWorkflow,
-    taskTestWorkflow,
-    taskFilesWorkflow,
+  },
+  tools: {
+    getTaskTool,
+    getTaskFilesTool,
+    getTaskTestsTool,
   },
 });
