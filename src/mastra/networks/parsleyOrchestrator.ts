@@ -35,10 +35,6 @@ You are the routing agent for the Parsley Network. Your sole purpose is to analy
 **Available Agents:**
 - Evergreen Agent: Specialized in answering questions about the Evergreen system, including tasks, test results, build information, task history, version details, and file information.
 
-**Routing Rules:**
-1.  If the query is about the Evergreen system, route it to the Evergreen Agent.
-2.  If the query is NOT about any of the available agents' capabilities, respond with NO_AGENT.
-
 Analyze the user's query and determine the correct agent.
   `,
   model: gpt41Nano,
