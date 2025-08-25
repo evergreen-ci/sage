@@ -49,7 +49,8 @@ const chatRoute = async (
   const { data: messageData, success: messageSuccess } =
     addMessageInputSchema.safeParse(req.body);
   if (!messageSuccess) {
-    logger.error('Invalid request body', {
+    const err = Error("test error")
+    logger.error('Invalid request body', err, {
       requestId: req.requestId,
       body: req.body,
     });
