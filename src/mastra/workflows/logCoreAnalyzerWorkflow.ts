@@ -193,8 +193,7 @@ const initialStep = createStep({
 
 const RefinementAgentOutputSchema = z.object({
   updated: z.boolean(),
-  summary: z.string(),
-  evidence: z.array(z.string()).optional(),
+  summary: z.string(),-
 });
 
 const refinementAgent = new Agent({

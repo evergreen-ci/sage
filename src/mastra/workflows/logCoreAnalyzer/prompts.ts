@@ -72,11 +72,11 @@ Chunk:
 """${chunk}"""
 
 Return JSON:
-{ "updated": true, "summary": "<concise but comprehensive summary>", "evidence": ["<short quotes or line ranges>"] }`;
+{ "updated": true, "summary": "<concise but comprehensive summary>" }`;
 
 export const USER_REFINE = (existing: string, chunk: string, analysisContext?: string) =>
   `Refine the existing summary with ONLY *material* additions or corrections from the new chunk.
-If the chunk adds nothing substantive, return {"updated": false, "summary": "<unchanged>", "evidence": []}.
+If the chunk adds nothing substantive, return {"updated": false, "summary": "<unchanged>"}.
 ${analysisContext ? `\nAnalysis Context:\n${analysisContext}\nKeep this context in mind while refining the summary.\n` : ''}
 
 Existing summary:
@@ -86,7 +86,7 @@ New chunk:
 """${chunk}"""
 
 Return JSON:
-{ "updated": <bool>, "summary": "<updated or unchanged>", "evidence": ["<short quotes or line ranges>"] }`;
+{ "updated": <bool>, "summary": "<updated or unchanged>" }`;
 
 export const USER_MARKDOWN_PROMPT = (summary: string, analysisContext?: string) =>
   `Rewrite the accumulated summary into a clean technical report formatted as Markdown.
