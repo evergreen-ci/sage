@@ -167,7 +167,7 @@ const chatRoute = async (
           // https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence#setting-up-server-side-id-generation
         })
     );
-    stream.pipeUIMessageStreamToResponse(res);
+    stream.pipeDataStreamToResponse(res);
   } catch (error) {
     logger.error('Error in add message route', {
       error,
