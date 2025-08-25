@@ -14,7 +14,7 @@ import {
   USER_INITIAL_PROMPT,
   USER_REFINE,
   USER_MARKDOWN_PROMPT,
-  USER_EXECUTIVE_SUMMARY_PROMPT,
+  USER_CONCISE_SUMMARY_PROMPT,
   SINGLE_PASS_PROMPT,
 } from './logCoreAnalyzer/prompts';
 
@@ -326,7 +326,7 @@ const singlePassStep = createStep({
 
 const finalizeStep = createStep({
   id: 'finalize',
-  description: 'Generate final markdown report and executive summary',
+  description: 'Generate final markdown report and concise summary',
   inputSchema: LoopStateSchema,
   outputSchema: ReportsSchema,
   execute: async ({ inputData }) => {
@@ -343,21 +343,21 @@ const finalizeStep = createStep({
       length: markdownRes.text.length,
     });
 
-    // Generate executive summary from the markdown report
-    logger.debug('Generating executive summary');
-    const execSummaryRes = await reportFormatterAgent.generateVNext([
+    // Generate concise summary from the markdown report
+    logger.debug('Generating concise summary');
+    const conciseSummaryRes = await reportFormatterAgent.generateVNext([
       {
         role: 'user',
-        content: USER_EXECUTIVE_SUMMARY_PROMPT(markdownRes.text),
+        content: USER_CONCISE_SUMMARY_PROMPT(markdownRes.text),
       },
     ]);
-    logger.debug('Executive summary generated', {
-      length: execSummaryRes.text.length,
+    logger.debug('Concise summary generated', {
+      length: conciseSummaryRes.text.length,
     });
 
     return {
       markdown: markdownRes.text,
-      summary: execSummaryRes.text,
+      summary: conciseSummaryRes.text,
     };
   },
 });

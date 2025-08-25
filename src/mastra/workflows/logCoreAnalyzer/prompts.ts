@@ -1,3 +1,6 @@
+// Prompts for log files analysis
+// TODO: decouple prompts from output schemas, once we confirm that structured_output passes the expected schema to the agent automatically.
+
 // Constants
 export const MAX_FINAL_SUMMARY_TOKENS = 2048;
 
@@ -23,7 +26,7 @@ You respond ONLY with the requested format - no JSON wrapper, no additional fiel
 Focus on clarity, precision, and appropriate formatting for the requested output type.`;
 
 // Formatting Requirements
-export const EXECUTIVE_SUMMARY_REQUIREMENTS = `- 3-4 lines maximum
+export const CONCISE_SUMMARY_REQUIREMENTS = `- 3-4 lines maximum
 - Focus on: what happened, key impacts/metrics, critical actions needed
 - Plain text only, no markdown formatting
 - Be direct and factual`;
@@ -94,11 +97,11 @@ ${MARKDOWN_REPORT_FORMAT}
 Source material:
 """${summary}"""`;
 
-export const USER_EXECUTIVE_SUMMARY_PROMPT = (markdown: string) =>
+export const USER_CONCISE_SUMMARY_PROMPT = (markdown: string) =>
   `Create a concise executive summary from this technical report.
 
 Requirements:
-${EXECUTIVE_SUMMARY_REQUIREMENTS}
+${CONCISE_SUMMARY_REQUIREMENTS}
 
 Source report:
 """${markdown}"""`;
@@ -120,4 +123,4 @@ Requirements for the markdown report:
 ${MARKDOWN_REPORT_FORMAT}
 
 Requirements for the executive summary:
-${EXECUTIVE_SUMMARY_REQUIREMENTS}`;
+${CONCISE_SUMMARY_REQUIREMENTS}`;
