@@ -10,7 +10,6 @@ trigger:
     - main
     - DEVPROD-19198
 
-
 steps:
   - name: publish
     image: plugins/kaniko-ecr
