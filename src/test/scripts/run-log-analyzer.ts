@@ -3,7 +3,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { mastra } from '../../mastra';
-import { logAnalyzerConfig } from '../../mastra/workflows/logCoreAnalyzer/config';
 import { analyzeWorkflowSteps } from './analyze-workflow-steps';
 
 // Helper script for local development, run log analyzer workflow on one or more log files. Display benchmark data
@@ -11,6 +10,10 @@ import { analyzeWorkflowSteps } from './analyze-workflow-steps';
 // Usage:
 // yarn run-analyzer <file-path> [file-path2...]
 // or: yarn run-analyzer --batch <directory>
+
+// Configuration for report output
+const REPORTS_DIR = 'tmp/reports';
+const REPORT_PREFIX = 'report';
 
 /**
  *
@@ -52,10 +55,7 @@ async function runTest(filePath: string, index: number, total: number) {
   let reportPath: string | undefined;
   if (successResult?.markdown) {
     // Create reports directory if it doesn't exist
-    const reportsDir = path.join(
-      process.cwd(),
-      logAnalyzerConfig.output.reportsDir
-    );
+    const reportsDir = path.join(process.cwd(), REPORTS_DIR);
     try {
       fs.mkdirSync(reportsDir, { recursive: true });
     } catch (err) {
@@ -67,7 +67,7 @@ async function runTest(filePath: string, index: number, total: number) {
       .toISOString()
       .replace(/[:.]/g, '-')
       .slice(0, -5);
-    const filename = `${logAnalyzerConfig.output.filePrefix}-${timestamp}.md`;
+    const filename = `${REPORT_PREFIX}-${timestamp}.md`;
     reportPath = path.join(reportsDir, filename);
 
     // Save markdown file
@@ -260,11 +260,19 @@ async function main() {
 
     // Save detailed results to JSON
     if (results.length > 0) {
+      // Create tmp directory if it doesn't exist
+      const tmpDir = path.join(process.cwd(), 'tmp');
+      try {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      } catch (err) {
+        // Directory might already exist, that's okay
+      }
+
       const timestamp = new Date()
         .toISOString()
         .replace(/[:.]/g, '-')
         .slice(0, -5);
-      const outputFile = `test-results-${timestamp}.json`;
+      const outputFile = path.join(tmpDir, `test-results-${timestamp}.json`);
 
       const detailedResults = {
         metadata: {
@@ -278,7 +286,7 @@ async function main() {
       };
 
       fs.writeFileSync(outputFile, JSON.stringify(detailedResults, null, 2));
-      console.log(`\n💾 Detailed results saved to: ${outputFile}`);
+      console.log(`\n💾 Detailed results saved to: ${path.relative(process.cwd(), outputFile)}`);
     }
 
     // Display results table

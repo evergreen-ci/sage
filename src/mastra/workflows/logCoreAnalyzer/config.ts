@@ -24,14 +24,6 @@ export const logAnalyzerConfig = {
   },
 
   /**
-   * Output configuration
-   */
-  output: {
-    reportsDir: 'reports', // Directory where reports are saved
-    filePrefix: 'report', // Prefix for report filenames
-  },
-
-  /**
    * Logging configuration
    */
   logging: {
