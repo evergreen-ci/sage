@@ -7,6 +7,16 @@ import path from 'path';
 import { config } from '../../config';
 import { WinstonMastraLogger } from '../../utils/logger/winstonMastraLogger';
 import { gpt41, gpt41Nano } from '../models/openAI/gpt41';
+import {
+  INITIAL_ANALYZER_INSTRUCTIONS,
+  REFINEMENT_AGENT_INSTRUCTIONS,
+  REPORT_FORMATTER_INSTRUCTIONS,
+  USER_INITIAL_PROMPT,
+  USER_REFINE,
+  USER_MARKDOWN_PROMPT,
+  USER_EXECUTIVE_SUMMARY_PROMPT,
+  SINGLE_PASS_PROMPT,
+} from './logCoreAnalyzer/prompts';
 
 // Initialize logger for this workflow
 const logger = new WinstonMastraLogger({
@@ -147,14 +157,6 @@ const LoopStateOutputSchema = z.object({
 // Define the log analyzer agent for chunked processing
 // Ultimately, the first call should be 4.1, and all other iterations should use nano
 // Initial analyzer - smarter model for understanding structure and context
-const INITIAL_ANALYZER_INSTRUCTIONS = `You are a senior engineer performing initial analysis of technical text (logs, code, configs, telemetry, build output).
-You always respond as compact JSON matching the provided schema.
-Focus on:
-- Understanding the overall structure and format of the content
-- Identifying key patterns, sections, and data types
-- Establishing context and technical domain
-- Preserving critical facts, identifiers, timestamps, error codes
-- Creating a strong foundation summary for further refinement`;
 
 const initialAnalyzerAgent = new Agent({
   name: 'initial-analyzer-agent',
@@ -164,16 +166,6 @@ const initialAnalyzerAgent = new Agent({
   model: gpt41,
 });
 
-const USER_INITIAL_PROMPT = (chunk: string, hint?: string) =>
-  `Analyze this first chunk to understand the document structure and create an initial technical summary.
-Identify the type of content (logs, code, config, telemetry, etc.) and key patterns.
-${hint ? `Context hint:\n${hint}\n` : ''}
-
-Chunk:
-"""${chunk}"""
-
-Return JSON:
-{ "updated": true, "summary": "<concise but comprehensive summary>", "evidence": ["<short quotes or line ranges>"] }`;
 
 const initialStep = createStep({
   id: 'initial-summary',
@@ -205,12 +197,6 @@ const initialStep = createStep({
 // Step 3: Recursive iterative refinement (using cheaper model)
 
 // Refinement agent - cheaper model for iterative updates
-const REFINEMENT_AGENT_INSTRUCTIONS = `You are a technical analyst updating existing summaries with new information.
-You always respond as compact JSON matching the provided schema.
-- Merge new facts into the existing summary efficiently
-- Collapse repeated patterns; prefer timelines for events
-- If a new chunk adds nothing material, set "updated": false
-- Keep the summary concise while preserving all important details`;
 
 const refinementAgent = new Agent({
   name: 'refinement-agent',
@@ -220,20 +206,6 @@ const refinementAgent = new Agent({
   model: gpt41Nano,
 });
 
-const USER_REFINE = (existing: string, chunk: string, hint?: string) =>
-  `Refine the existing summary with ONLY *material* additions or corrections from the new chunk.
-If the chunk adds nothing substantive, return {"updated": false, "summary": "<unchanged>", "evidence": []}.
-
-${hint ? `Context hint:\n${hint}\n` : ''}
-
-Existing summary:
-"""${existing}"""
-
-New chunk:
-"""${chunk}"""
-
-Return JSON:
-{ "updated": <bool>, "summary": "<updated or unchanged>", "evidence": ["<short quotes or line ranges>"] }`;
 
 const refineStep = createStep({
   id: 'refine-summary',
@@ -299,50 +271,7 @@ const ResultSchema = z.object({
   filePath: z.string().optional(),
 });
 
-const MAX_FINAL_SUMMARY_TOKENS = 2048;
-
-// Common executive summary requirements
-const EXECUTIVE_SUMMARY_REQUIREMENTS = `- 3-4 lines maximum
-- Focus on: what happened, key impacts/metrics, critical actions needed
-- Plain text only, no markdown formatting
-- Be direct and factual`;
-
-// Common markdown report formatting instructions
-const MARKDOWN_REPORT_FORMAT = `Use the following structure with proper Markdown headers:
-# Technical Analysis Report
-
-## Overview
-(Concise summary of the situation)
-
-## Key Entities/Modules
-- Use bullet points
-- Include identifiers and technical names
-
-## Timeline / Key Events
-(Chronological list with clear sequence)
-
-## Anomalies / Errors
-### Error 1 Title
-- **Description:** ...
-- **Evidence:** ...
-- **Likely Cause:** ...
-
-## Metrics / Counts
-| Metric | Value |
-|--------|-------|
-| ... | ... |
-
-## Open Questions / Next Actions
-- [ ] Action item 1
-- [ ] Action item 2
-
-Format with proper Markdown: use **bold** for emphasis, \`code\` for technical terms, proper headers (#, ##, ###), tables where appropriate.
-Keep it <= ${MAX_FINAL_SUMMARY_TOKENS} tokens; compress without losing facts.`;
-
 // Define the report formatter agent for final output
-const REPORT_FORMATTER_INSTRUCTIONS = `You are a senior engineer creating technical reports and summaries.
-You respond ONLY with the requested format - no JSON wrapper, no additional fields.
-Focus on clarity, precision, and appropriate formatting for the requested output type.`;
 
 const reportFormatterAgent = new Agent({
   name: 'report-formatter-agent',
@@ -351,42 +280,9 @@ const reportFormatterAgent = new Agent({
   model: gpt41,
 });
 
-const USER_MARKDOWN_PROMPT = (summary: string) =>
-  `Rewrite the accumulated summary into a clean technical report formatted as Markdown.
 
-${MARKDOWN_REPORT_FORMAT}
-
-Source material:
-"""${summary}"""`;
-
-const USER_EXECUTIVE_SUMMARY_PROMPT = (markdown: string) =>
-  `Create a concise executive summary from this technical report.
-
-Requirements:
-${EXECUTIVE_SUMMARY_REQUIREMENTS}
-
-Source report:
-"""${markdown}"""`;
 
 // Single-pass step for files that fit in one chunk - generates both markdown and summary in one call
-const SINGLE_PASS_PROMPT = (text: string, contextHint?: string) =>
-  `Analyze this technical document and provide both a markdown report and executive summary.
-${contextHint ? `Context hint:\n${contextHint}\n` : ''}
-
-Document:
-"""${text}"""
-
-Return a JSON response with two fields:
-{
-  "markdown": "# Technical Analysis Report\n\n## Overview\n...[full markdown report]",
-  "summary": "3-4 line executive summary"
-}
-
-Requirements for the markdown report:
-${MARKDOWN_REPORT_FORMAT}
-
-Requirements for the executive summary:
-${EXECUTIVE_SUMMARY_REQUIREMENTS}`;
 
 const singlePassStep = createStep({
   id: 'single-pass-analysis',
