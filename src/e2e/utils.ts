@@ -1,5 +1,4 @@
 import { CoreMessage } from '@mastra/core';
-import { AssistantContent, FilePart, TextPart, ToolCallPart } from 'ai';
 
 export const getMessageContent = (message: CoreMessage) => {
   switch (message.role) {
@@ -18,7 +17,7 @@ export const getMessageContent = (message: CoreMessage) => {
   }
 };
 
-const decodeAssistantContent = (part: AssistantContent | undefined): string => {
+const decodeAssistantContent = (part: any): string => {
   if (!part) {
     return '';
   }
@@ -31,9 +30,7 @@ const decodeAssistantContent = (part: AssistantContent | undefined): string => {
   return '';
 };
 
-const decodeAssistantContentPart = (
-  part: TextPart | FilePart | ToolCallPart | any
-) => {
+const decodeAssistantContentPart = (part: any) => {
   if (!part) {
     return '';
   }
