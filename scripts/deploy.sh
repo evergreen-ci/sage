@@ -40,8 +40,6 @@ fi
 
 helm repo add mongodb https://10gen.github.io/helm-charts
 helm repo update
-kubectl config set-cluster staging --server=${K8S_API_SERVER}
-kubectl config set-credentials staging --token=${STAGING_KUBERNETES_TOKEN}
 kubectl config set-context staging --cluster=staging --user=staging
 kubectl config use-context staging
 echo "Deploying Helm chart..."
@@ -53,8 +51,9 @@ helm upgrade --install ${RELEASE_NAME} ${HELM_CHART} \
     --set image.repository=${FULL_IMAGE} \
     --set ingress.enabled=true \
     --set "ingress.hosts[0]=${STAGING_HOST}" \
-    --values environments/staging.yaml
-
+    --values environments/staging.yaml \
+    --kube-apiserver ${K8S_API_SERVER} \
+    --kube-token ${STAGING_KUBERNETES_TOKEN}
 echo "Deployment complete!"
 echo "To check deployment status:"
 echo "kubectl get pods -n ${NAMESPACE} -l app=${RELEASE_NAME}"
