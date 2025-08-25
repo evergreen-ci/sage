@@ -9,7 +9,9 @@ import { analyzeWorkflowSteps } from './analyze-workflow-steps';
 // such as file size, processing time, and success/failure status. Saves test data and reports to the file system.
 // Usage:
 // yarn run-analyzer <file-path> [file-path2...]
-// or: yarn run-analyzer --batch <directory>
+// yarn run-analyzer --batch <directory>
+// yarn run-analyzer --context "specific analysis instructions" <file-path>
+// yarn run-analyzer --batch <directory> --context "what to look for"
 
 // Configuration for report output
 const REPORTS_DIR = 'tmp/reports';
@@ -20,8 +22,14 @@ const REPORT_PREFIX = 'report';
  * @param filePath
  * @param index
  * @param total
+ * @param analysisContext
  */
-async function runTest(filePath: string, index: number, total: number) {
+async function runTest(
+  filePath: string,
+  index: number,
+  total: number,
+  analysisContext?: string
+) {
   const absolutePath = path.resolve(filePath);
   const stats = fs.statSync(absolutePath);
   const fileSize = stats.size;
@@ -42,6 +50,7 @@ async function runTest(filePath: string, index: number, total: number) {
   const result = await run.start({
     inputData: {
       path: absolutePath,
+      ...(analysisContext && { analysisContext }),
     },
   });
 
@@ -101,6 +110,7 @@ async function runTest(filePath: string, index: number, total: number) {
     reportPath,
     steps: result.steps,
     stepAnalysis,
+    analysisContext,
   };
 }
 
@@ -125,18 +135,32 @@ async function main() {
   if (args.length === 0) {
     console.error('Usage: yarn run-analyzer <file-path> [file-path2...]');
     console.error('   or: yarn run-analyzer --batch <directory>');
+    console.error('   or: yarn run-analyzer --context "analysis instructions" <file-path>');
+    console.error('   or: yarn run-analyzer --batch <directory> --context "what to look for"');
     process.exit(1);
   }
 
   const results = [];
   const startTime = Date.now();
 
+  // Parse arguments for context flag
+  let analysisContext: string | undefined;
+  let filteredArgs = [...args];
+  
+  const contextIndex = filteredArgs.indexOf('--context');
+  if (contextIndex !== -1 && contextIndex < filteredArgs.length - 1) {
+    analysisContext = filteredArgs[contextIndex + 1];
+    // Remove --context and its value from args
+    filteredArgs.splice(contextIndex, 2);
+    console.log(`📝 Using analysis context: "${analysisContext}"\n`);
+  }
+
   try {
     let filesToProcess: string[] = [];
 
     // Batch mode: test all files in a directory
-    if (args[0] === '--batch' && args[1]) {
-      const dir = path.resolve(args[1]);
+    if (filteredArgs[0] === '--batch' && filteredArgs[1]) {
+      const dir = path.resolve(filteredArgs[1]);
       const files = fs
         .readdirSync(dir)
         .filter(f => {
@@ -148,7 +172,7 @@ async function main() {
     }
     // Single or multiple file mode
     else {
-      filesToProcess = args;
+      filesToProcess = filteredArgs;
     }
 
     console.log(
@@ -159,7 +183,12 @@ async function main() {
     let i = 0;
     for (const filePath of filesToProcess) {
       i++;
-      const result = await runTest(filePath, i, filesToProcess.length);
+      const result = await runTest(
+        filePath,
+        i,
+        filesToProcess.length,
+        analysisContext
+      );
       results.push(result);
     }
 
@@ -281,6 +310,7 @@ async function main() {
           totalSize,
           totalDuration,
           successRate: passed / results.length,
+          ...(analysisContext && { analysisContext }),
         },
         results,
       };
