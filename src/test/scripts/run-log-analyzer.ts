@@ -3,7 +3,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { mastra } from '../../mastra';
+import { logAnalyzerConfig } from '../../mastra/workflows/logCoreAnalyzer/config';
 import { analyzeWorkflowSteps } from './analyze-workflow-steps';
+
+// Helper script for local development, run log analyzer workflow on one or more log files. Display benchmark data
+// such as file size, processing time, and success/failure status. Saves test data and reports to the file system.
+// Usage:
+// yarn run-analyzer <file-path> [file-path2...]
+// or: yarn run-analyzer --batch <directory>
 
 /**
  *
@@ -25,7 +32,9 @@ async function runTest(filePath: string, index: number, total: number) {
 
   const startTime = Date.now();
 
-  const run = await mastra.getWorkflow('logCoreAnalyzer').createRunAsync();
+  const run = await mastra
+    .getWorkflow('logCoreAnalyzerWorkflow')
+    .createRunAsync();
 
   const result = await run.start({
     inputData: {
@@ -39,6 +48,32 @@ async function runTest(filePath: string, index: number, total: number) {
   // Analyze workflow steps (for JSON output only)
   const stepAnalysis = result.steps ? analyzeWorkflowSteps(result.steps) : null;
 
+  // Save markdown report if successful
+  let reportPath: string | undefined;
+  if (successResult?.markdown) {
+    // Create reports directory if it doesn't exist
+    const reportsDir = path.join(
+      process.cwd(),
+      logAnalyzerConfig.output.reportsDir
+    );
+    try {
+      fs.mkdirSync(reportsDir, { recursive: true });
+    } catch (err) {
+      // Directory might already exist, that's okay
+    }
+
+    // Generate timestamp for filename
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, '-')
+      .slice(0, -5);
+    const filename = `${logAnalyzerConfig.output.filePrefix}-${timestamp}.md`;
+    reportPath = path.join(reportsDir, filename);
+
+    // Save markdown file
+    fs.writeFileSync(reportPath, successResult.markdown, 'utf8');
+  }
+
   // Update status line with result
   process.stdout.write(
     `\r      Status: ${result.status === 'success' ? '✅ Complete' : '❌ Failed'} (${(duration / 1000).toFixed(1)}s)\n`
@@ -51,6 +86,11 @@ async function runTest(filePath: string, index: number, total: number) {
     );
   }
 
+  // Show report path if saved
+  if (reportPath) {
+    console.log(`      Report: ${reportPath}`);
+  }
+
   return {
     file: fileName,
     path: absolutePath,
@@ -58,7 +98,7 @@ async function runTest(filePath: string, index: number, total: number) {
     status: result.status,
     duration,
     summary: successResult?.summary,
-    reportPath: successResult?.filePath,
+    reportPath,
     steps: result.steps,
     stepAnalysis,
   };

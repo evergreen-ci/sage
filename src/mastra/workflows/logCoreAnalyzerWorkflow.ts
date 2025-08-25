@@ -31,11 +31,18 @@ const logger = new WinstonMastraLogger({
 // - cap file limit for v0
 // - follow up PR with tests
 
+// This workflow takes either a file path, raw text, or an URL as input, and optional additional instructions
+// and returns a structured analysis report, as well as a concise summary.
 const WorkflowInputSchema = z.object({
   path: z.string().optional(),
   text: z.string().optional(),
   url: z.string().optional(),
   contextHint: z.string().optional(),
+});
+
+const WorkflowOutputSchema = z.object({
+  markdown: z.string(),
+  summary: z.string(),
 });
 
 const readStep = createStep({
@@ -247,19 +254,7 @@ const refineStep = createStep({
   },
 });
 
-const ReportsSchema = z.object({
-  markdown: z.string(),
-  summary: z.string(),
-});
-
-const ResultSchema = z.object({
-  markdown: z.string(),
-  summary: z.string(),
-  filePath: z.string().optional(),
-});
-
 // Define the report formatter agent for final output
-
 const reportFormatterAgent = new Agent({
   name: 'report-formatter-agent',
   description: 'Formats technical summaries into various output formats',
@@ -268,12 +263,11 @@ const reportFormatterAgent = new Agent({
 });
 
 // Single-pass step for files that fit in one chunk - generates both markdown and summary in one call
-
 const singlePassStep = createStep({
   id: 'single-pass-analysis',
   description: 'Direct analysis and report generation for single-chunk files',
   inputSchema: ChunkedSchema,
-  outputSchema: ReportsSchema,
+  outputSchema: WorkflowOutputSchema,
   execute: async ({ inputData }) => {
     const { chunks, contextHint } = inputData;
 
@@ -296,7 +290,7 @@ const singlePassStep = createStep({
       [{ role: 'user', content: SINGLE_PASS_PROMPT(text, contextHint) }],
       {
         structuredOutput: {
-          schema: ReportsSchema,
+          schema: WorkflowOutputSchema,
           model: logAnalyzerConfig.models.formatter,
         },
       }
@@ -318,7 +312,7 @@ const finalizeStep = createStep({
   id: 'finalize',
   description: 'Generate final markdown report and concise summary',
   inputSchema: LoopStateSchema,
-  outputSchema: ReportsSchema,
+  outputSchema: WorkflowOutputSchema,
   execute: async ({ inputData }) => {
     const { summary } = inputData;
     logger.debug('Generating final markdown report', {
@@ -352,65 +346,12 @@ const finalizeStep = createStep({
   },
 });
 
-const presentationStep = createStep({
-  id: 'save-report',
-  description: 'Save markdown report to disk with timestamp',
-  inputSchema: ReportsSchema,
-  outputSchema: ResultSchema,
-  execute: async ({ inputData }) => {
-    const { markdown, summary } = inputData;
-
-    // Validate inputs
-    if (!markdown) {
-      logger.error('No markdown content to save', {
-        hasMarkdown: !!markdown,
-        hasSummary: !!summary,
-        inputDataKeys: Object.keys(inputData),
-      });
-      return {
-        markdown: '',
-        summary: summary || '',
-        filePath: undefined,
-      };
-    }
-
-    // Create reports directory if it doesn't exist
-    const reportsDir = path.join(
-      process.cwd(),
-      logAnalyzerConfig.output.reportsDir
-    );
-    try {
-      await fs.mkdir(reportsDir, { recursive: true });
-    } catch (err) {
-      logger.debug('Reports directory creation', { error: err });
-    }
-
-    // Generate timestamp for filename
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/[:.]/g, '-')
-      .slice(0, -5);
-    const filename = `${logAnalyzerConfig.output.filePrefix}-${timestamp}.md`;
-    const filePath = path.join(reportsDir, filename);
-
-    // Save markdown file
-    await fs.writeFile(filePath, markdown, 'utf8');
-    logger.info('Report saved', { filePath });
-
-    return {
-      markdown,
-      summary: summary || '',
-      filePath,
-    };
-  },
-});
-
 const iterativeRefinementWorkflow = createWorkflow({
   id: 'iterative-refinement',
   description: `Perform a 3 step iterative refinement process: initial and final analysis with an expensive model, 
     and a lightweight refinement loop going through the whole document`,
   inputSchema: ChunkedSchema,
-  outputSchema: ReportsSchema,
+  outputSchema: WorkflowOutputSchema,
 })
   .then(initialStep)
   .dowhile(
@@ -428,7 +369,7 @@ const decideAndRunStep = createStep({
   id: 'decide-and-run',
   description: 'Choose single-pass vs iterative workflow and run it',
   inputSchema: ChunkedSchema,
-  outputSchema: ReportsSchema,
+  outputSchema: WorkflowOutputSchema,
   execute: async params => {
     const { chunks } = params.inputData;
     if (chunks.length === 1) {
@@ -446,10 +387,9 @@ export const logCoreAnalyzerWorkflow = createWorkflow({
   description:
     'Analyze, iteratively summarize, and produce a complete report of technical files of arbitrary types and structures. Pass the full URL of the file in the `url:` parameter.',
   inputSchema: WorkflowInputSchema,
-  outputSchema: ResultSchema,
+  outputSchema: WorkflowOutputSchema,
 })
   .then(readStep)
   .then(chunkStep)
   .then(decideAndRunStep)
-  .then(presentationStep)
   .commit();
