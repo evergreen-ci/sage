@@ -37,7 +37,12 @@ const WorkflowInputSchema = z.object({
   path: z.string().optional(),
   text: z.string().optional(),
   url: z.string().optional(),
-  contextHint: z.string().optional(),
+  analysisContext: z
+    .string()
+    .optional()
+    .describe(
+      'Additional context or specific analysis instructions. Can include file origin, what to focus on, or specific questions to answer during analysis.'
+    ),
 });
 
 const WorkflowOutputSchema = z.object({
@@ -51,10 +56,10 @@ const readStep = createStep({
   inputSchema: WorkflowInputSchema,
   outputSchema: z.object({
     text: z.string(),
-    contextHint: z.string().optional(),
+    analysisContext: z.string().optional(),
   }),
   execute: async ({ inputData }) => {
-    const { contextHint, path: p, text, url } = inputData;
+    const { analysisContext, path: p, text, url } = inputData;
 
     let raw = text ?? '';
     if (p) {
@@ -97,13 +102,13 @@ const readStep = createStep({
     }
     // cheap normalization
     raw = raw.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');
-    return { text: raw, contextHint };
+    return { text: raw, analysisContext };
   },
 });
 
 const ChunkedSchema = z.object({
   chunks: z.array(z.object({ text: z.string() })), // from MDocument.chunk
-  contextHint: z.string().optional(),
+  analysisContext: z.string().optional(),
 });
 
 // Default to o200k_base tokenizer (GPT-4)
@@ -117,11 +122,11 @@ const chunkStep = createStep({
   description: 'Token-aware chunking with overlap',
   inputSchema: z.object({
     text: z.string(),
-    contextHint: z.string().optional(),
+    analysisContext: z.string().optional(),
   }),
   outputSchema: ChunkedSchema,
   execute: async ({ inputData }) => {
-    const { contextHint, text } = inputData;
+    const { analysisContext, text } = inputData;
 
     const doc = MDocument.fromText(text);
     const chunks = await doc.chunk({
@@ -131,7 +136,7 @@ const chunkStep = createStep({
       overlap: logAnalyzerConfig.chunking.overlapTokens,
     });
     logger.debug('Chunking complete', { chunkCount: chunks.length });
-    return { chunks, contextHint };
+    return { chunks, analysisContext };
   },
 });
 
@@ -140,7 +145,7 @@ const LoopStateSchema = z.object({
   idx: z.number(),
   chunks: z.array(z.object({ text: z.string() })),
   summary: z.string(),
-  contextHint: z.string().optional(),
+  analysisContext: z.string().optional(),
 });
 
 // Define the log analyzer agent for chunked processing
@@ -160,17 +165,17 @@ const initialStep = createStep({
   inputSchema: ChunkedSchema,
   outputSchema: LoopStateSchema,
   execute: async ({ inputData }) => {
-    const { chunks, contextHint } = inputData;
+    const { chunks, analysisContext } = inputData;
     const first = chunks[0]?.text ?? '';
     logger.debug('Initial chunk for analysis', {
       first: first.slice(0, 100),
-      contextHint,
+      analysisContext,
     });
     logger.debug('Chunk length', { length: first.length });
     logger.debug('Calling LLM for initial summary');
 
     const result = await initialAnalyzerAgent.generateVNext(
-      [{ role: 'user', content: USER_INITIAL_PROMPT(first, contextHint) }],
+      [{ role: 'user', content: USER_INITIAL_PROMPT(first, analysisContext) }],
       {
         structuredOutput: {
           schema: RefinementAgentOutputSchema,
@@ -180,7 +185,7 @@ const initialStep = createStep({
     );
 
     const summary = result.object?.summary ?? '';
-    return { idx: 1, chunks, summary, contextHint };
+    return { idx: 1, chunks, summary, analysisContext };
   },
 });
 
@@ -207,7 +212,7 @@ const refineStep = createStep({
   inputSchema: LoopStateSchema,
   outputSchema: LoopStateSchema,
   execute: async ({ inputData }) => {
-    const { chunks, contextHint, idx, summary: existingSummary } = inputData;
+    const { chunks, analysisContext, idx, summary: existingSummary } = inputData;
     const chunk = chunks[idx]?.text ?? '';
 
     // TODO: make sure summary size stays manageable
@@ -216,7 +221,7 @@ const refineStep = createStep({
         idx: idx + 1,
         chunks,
         summary: existingSummary,
-        contextHint,
+        analysisContext,
       };
     }
 
@@ -228,7 +233,7 @@ const refineStep = createStep({
       [
         {
           role: 'user',
-          content: USER_REFINE(existingSummary, chunk, contextHint),
+          content: USER_REFINE(existingSummary, chunk, analysisContext),
         },
       ],
       {
@@ -249,7 +254,7 @@ const refineStep = createStep({
       idx: idx + 1,
       chunks,
       summary: newSummary,
-      contextHint,
+      analysisContext,
     };
   },
 });
@@ -269,7 +274,7 @@ const singlePassStep = createStep({
   inputSchema: ChunkedSchema,
   outputSchema: WorkflowOutputSchema,
   execute: async ({ inputData }) => {
-    const { chunks, contextHint } = inputData;
+    const { chunks, analysisContext } = inputData;
 
     // Validate we have exactly one chunk
     if (chunks.length !== 1) {
@@ -282,12 +287,12 @@ const singlePassStep = createStep({
 
     logger.debug('Single-pass analysis starting', {
       textLength: text.length,
-      contextHint,
+      analysisContext,
     });
 
     // Use structured output to get both markdown and summary
     const result = await reportFormatterAgent.generateVNext(
-      [{ role: 'user', content: SINGLE_PASS_PROMPT(text, contextHint) }],
+      [{ role: 'user', content: SINGLE_PASS_PROMPT(text, analysisContext) }],
       {
         structuredOutput: {
           schema: WorkflowOutputSchema,
@@ -314,14 +319,15 @@ const finalizeStep = createStep({
   inputSchema: LoopStateSchema,
   outputSchema: WorkflowOutputSchema,
   execute: async ({ inputData }) => {
-    const { summary } = inputData;
+    const { summary, analysisContext } = inputData;
     logger.debug('Generating final markdown report', {
       summary: summary.slice(0, 100),
+      analysisContext,
     });
 
     // Generate markdown report
     const markdownRes = await reportFormatterAgent.generateVNext([
-      { role: 'user', content: USER_MARKDOWN_PROMPT(summary) },
+      { role: 'user', content: USER_MARKDOWN_PROMPT(summary, analysisContext) },
     ]);
     logger.debug('Final markdown report generated', {
       length: markdownRes.text.length,
@@ -332,7 +338,7 @@ const finalizeStep = createStep({
     const conciseSummaryRes = await reportFormatterAgent.generateVNext([
       {
         role: 'user',
-        content: USER_CONCISE_SUMMARY_PROMPT(markdownRes.text),
+        content: USER_CONCISE_SUMMARY_PROMPT(markdownRes.text, analysisContext),
       },
     ]);
     logger.debug('Concise summary generated', {
