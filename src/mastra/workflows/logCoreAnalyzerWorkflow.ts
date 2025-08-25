@@ -6,6 +6,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { config } from '../../config';
 import { WinstonMastraLogger } from '../../utils/logger/winstonMastraLogger';
+import { logAnalyzerConfig } from './logCoreAnalyzer/config';
 import {
   INITIAL_ANALYZER_INSTRUCTIONS,
   REFINEMENT_AGENT_INSTRUCTIONS,
@@ -16,7 +17,6 @@ import {
   USER_CONCISE_SUMMARY_PROMPT,
   SINGLE_PASS_PROMPT,
 } from './logCoreAnalyzer/prompts';
-import { logAnalyzerConfig } from './logCoreAnalyzer/config';
 
 // This file defines the core workflow for log file analysis. It gives the Parsley Agent the capability to read and understand text files, of any kind and format.
 // Depending on the file size, we either return a summary in a single LLM call, or perform a more complex iterative refinement, combining the usage of cheap and more expensive models.
@@ -147,7 +147,6 @@ const initialAnalyzerAgent = new Agent({
   model: logAnalyzerConfig.models.initial,
 });
 
-
 const initialStep = createStep({
   id: 'initial-summary',
   description: 'Summarize first chunk using log analyzer agent',
@@ -166,7 +165,10 @@ const initialStep = createStep({
     const result = await initialAnalyzerAgent.generateVNext(
       [{ role: 'user', content: USER_INITIAL_PROMPT(first, contextHint) }],
       {
-        structuredOutput: { schema: RefinementAgentOutputSchema, model: logAnalyzerConfig.models.initial },
+        structuredOutput: {
+          schema: RefinementAgentOutputSchema,
+          model: logAnalyzerConfig.models.initial,
+        },
       }
     );
 
@@ -190,7 +192,6 @@ const refinementAgent = new Agent({
   instructions: REFINEMENT_AGENT_INSTRUCTIONS,
   model: logAnalyzerConfig.models.refinement,
 });
-
 
 const refineStep = createStep({
   id: 'refine-summary',
@@ -224,7 +225,10 @@ const refineStep = createStep({
         },
       ],
       {
-        structuredOutput: { schema: RefinementAgentOutputSchema, model: logAnalyzerConfig.models.refinement }, // TODO: define error handling strategy when schema validation fails
+        structuredOutput: {
+          schema: RefinementAgentOutputSchema,
+          model: logAnalyzerConfig.models.refinement,
+        }, // TODO: define error handling strategy when schema validation fails
       }
     );
 
@@ -263,7 +267,6 @@ const reportFormatterAgent = new Agent({
   model: logAnalyzerConfig.models.formatter,
 });
 
-
 // Single-pass step for files that fit in one chunk - generates both markdown and summary in one call
 
 const singlePassStep = createStep({
@@ -291,7 +294,12 @@ const singlePassStep = createStep({
     // Use structured output to get both markdown and summary
     const result = await reportFormatterAgent.generateVNext(
       [{ role: 'user', content: SINGLE_PASS_PROMPT(text, contextHint) }],
-      { structuredOutput: { schema: ReportsSchema, model: logAnalyzerConfig.models.formatter } }
+      {
+        structuredOutput: {
+          schema: ReportsSchema,
+          model: logAnalyzerConfig.models.formatter,
+        },
+      }
     );
 
     logger.debug('Single-pass analysis complete', {
@@ -367,7 +375,10 @@ const presentationStep = createStep({
     }
 
     // Create reports directory if it doesn't exist
-    const reportsDir = path.join(process.cwd(), logAnalyzerConfig.output.reportsDir);
+    const reportsDir = path.join(
+      process.cwd(),
+      logAnalyzerConfig.output.reportsDir
+    );
     try {
       await fs.mkdir(reportsDir, { recursive: true });
     } catch (err) {
