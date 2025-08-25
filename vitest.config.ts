@@ -21,6 +21,13 @@ export default defineConfig({
           include: ['src/**/*.test.ts', '!src/e2e/**/*.test.ts'],
         },
       },
+      {
+        extends: true,
+        test: {
+          name: { label: 'agents', color: 'yellow' },
+          include: ['src/mastra/**/*.agent.test.ts'],
+        },
+      },
     ],
     exclude: [],
     outputFile: {

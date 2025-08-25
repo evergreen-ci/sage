@@ -13,6 +13,7 @@
     "codegen": "graphql-codegen-esm --config graphql.config.ts",
     "e2e": "vitest --project e2e",
     "test": "vitest --project unit",
+    "test:agents": "vitest --project agents",
     "test:ui": "yarn test --ui",
     "test:run": "yarn test run",
     "test:coverage": "yarn test --coverage",
