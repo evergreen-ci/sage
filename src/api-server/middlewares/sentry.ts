@@ -10,9 +10,10 @@ export interface RequestWithContext {
 
 /**
  * Middleware to enrich Sentry scope with request context
- * @param req
- * @param res
- * @param next
+ * @param req - Express request object with context
+ * @param res - Express response object
+ * @param next - Express next function
+ * @returns void
  */
 export const sentryContextMiddleware = (
   req: Request & RequestWithContext,

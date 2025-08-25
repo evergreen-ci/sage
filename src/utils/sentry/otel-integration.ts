@@ -12,8 +12,8 @@ export class SentrySpanProcessor implements SpanProcessor {
 
   /**
    * Called when a span is started
-   * @param span
-   * @param parentContext
+   * @param span - The span that is starting
+   * @param parentContext - The parent context
    */
   onStart(span: Span, parentContext: Context): void {
     if (!this.enabled) return;
