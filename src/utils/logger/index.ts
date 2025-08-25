@@ -1,3 +1,4 @@
+import { sentryService } from '../sentry';
 import loggerInstance from './setup';
 /**
  * Logs an error message at the error level, with optional error and metadata.
@@ -18,6 +19,19 @@ const logError = (
     });
   } else {
     loggerInstance.error(message, { error, ...meta });
+  }
+
+  if (sentryService.isInitialized() && error instanceof Error) {
+    sentryService.captureException(error, {
+      level: 'error',
+      extra: {
+        message,
+        ...meta,
+      },
+      tags: {
+        source: 'logger',
+      },
+    });
   }
 };
 

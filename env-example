@@ -25,3 +25,6 @@ EVERGREEN_API_KEY=mysecret
 # MongoDB Configuration
 MONGODB_URI=mongodb://localhost:27017
 DB_NAME=sage
+
+# Sentry Configuration
+SENTRY_DSN=

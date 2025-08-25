@@ -37,6 +37,7 @@ env:
   DEPLOYMENT_ENV: staging
   DB_NAME: sage
   OTEL_EXPORTER_OTLP_ENDPOINT: https://api.braintrust.dev/otel
+  SENTRY_DSN: https://3db76f0989faad4c102a8708fba9446f@o4504991346720768.ingest.us.sentry.io/4509905876942849
 
 
 envSecrets:
