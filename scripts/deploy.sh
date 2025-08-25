@@ -19,7 +19,6 @@ echo "Building and pushing Docker image..."
 
 if [ -z "$ECR_ACCESS_KEY" ] || [ -z "$ECR_SECRET_KEY" ]; then
     echo "Error: ECR_ACCESS_KEY and ECR_SECRET_KEY must be set"
-    echo "You can export them or use AWS CLI configuration"
     exit 1
 fi
 
