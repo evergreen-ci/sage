@@ -1,6 +1,6 @@
 import { createWorkflow, createStep } from '@mastra/core';
 import { z } from 'zod';
-import { taskToolAdapter, versionToolAdapter } from '../tools/workflowAdapters';
+import { taskToolAdapter, versionToolAdapter } from '../../tools/workflowAdapters';
 
 const workflowInputSchema = z.object({
   taskId: z.string(),
