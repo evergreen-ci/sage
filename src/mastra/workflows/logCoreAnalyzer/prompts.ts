@@ -1,5 +1,5 @@
 // Prompts for log files analysis
-// TODO: decouple prompts from output schemas, once we confirm that structured_output passes the expected schema to the agent automatically.
+// TODO: decouple prompts from output schemas, if we can confirm that structured_output passes the expected schema to the agent automatically.
 
 // Constants
 export const MAX_FINAL_SUMMARY_TOKENS = 2048;

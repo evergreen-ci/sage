@@ -6,7 +6,6 @@ import fs from 'fs/promises';
 import path from 'path';
 import { config } from '../../config';
 import { WinstonMastraLogger } from '../../utils/logger/winstonMastraLogger';
-import { gpt41, gpt41Nano } from '../models/openAI/gpt41';
 import {
   INITIAL_ANALYZER_INSTRUCTIONS,
   REFINEMENT_AGENT_INSTRUCTIONS,
@@ -17,24 +16,20 @@ import {
   USER_CONCISE_SUMMARY_PROMPT,
   SINGLE_PASS_PROMPT,
 } from './logCoreAnalyzer/prompts';
+import { logAnalyzerConfig } from './logCoreAnalyzer/config';
+
+// This file defines the core workflow for log file analysis. It gives the Parsley Agent the capability to read and understand text files, of any kind and format.
+// Depending on the file size, we either return a summary in a single LLM call, or perform a more complex iterative refinement, combining the usage of cheap and more expensive models.
 
 // Initialize logger for this workflow
 const logger = new WinstonMastraLogger({
-  name: 'LogCoreAnalyzerWorkflow',
-  level: 'debug',
+  name: logAnalyzerConfig.logging.name,
+  level: logAnalyzerConfig.logging.level,
 });
 
 // TODO:
-// - push to staging with drone
-// - postman to send chat request
-// - braintrust to check token usage
-// - support fetching from URLs, look at evergreenClient.ts for auth headers
 // - cap file limit for v0
-
-// TODO: follow up PR with tests
-
-// Input: path to the file or content as string, initial prompt (optional, can contain more information about the task, the goal...)
-// Output: summary/analysis,
+// - follow up PR with tests
 
 const WorkflowInputSchema = z.object({
   path: z.string().optional(),
@@ -99,21 +94,16 @@ const readStep = createStep({
   },
 });
 
-// Step 1: Chunking
-
 const ChunkedSchema = z.object({
   chunks: z.array(z.object({ text: z.string() })), // from MDocument.chunk
   contextHint: z.string().optional(),
 });
 
-// Default to o200k_base tokenizer
+// Default to o200k_base tokenizer (GPT-4)
 // const countTokens = (s: string) => encode(s).length;
 
-// Chunking configuration for GPT-4.1 nano (Assume max 128k context, but may be 1M)
-// TODO: hyperparameters below, need to find a right balance. Currently just for quick prototyping
-const CHUNK_SIZE = 20_000; // Optimal size for GPT-4 models
-const OVERLAP_TOKENS = 800; // Overlap to maintain context between chunks
-const GPT_DEFAULT_TOKENIZER = 'o200k_base'; // Tokenizer for GPT-4 TODO: auto selection based on model
+// Chunking configuration from config
+// TODO: hyperparameters below, we need to find a right balance with benchmarking.
 
 const chunkStep = createStep({
   id: 'chunk',
@@ -129,18 +119,16 @@ const chunkStep = createStep({
     const doc = MDocument.fromText(text);
     const chunks = await doc.chunk({
       strategy: 'token',
-      encodingName: GPT_DEFAULT_TOKENIZER,
-      maxSize: CHUNK_SIZE,
-      overlap: OVERLAP_TOKENS,
+      encodingName: logAnalyzerConfig.chunking.tokenizer,
+      maxSize: logAnalyzerConfig.chunking.maxSize,
+      overlap: logAnalyzerConfig.chunking.overlapTokens,
     });
     logger.debug('Chunking complete', { chunkCount: chunks.length });
     return { chunks, contextHint };
   },
 });
 
-// Step 2: First chunk analysis
-
-// This schema will be passed in the whole summarization loop
+// This schema passed accross steps during the refinement loop, keeps track of the current chunk index and summary
 const LoopStateSchema = z.object({
   idx: z.number(),
   chunks: z.array(z.object({ text: z.string() })),
@@ -148,22 +136,15 @@ const LoopStateSchema = z.object({
   contextHint: z.string().optional(),
 });
 
-const LoopStateOutputSchema = z.object({
-  updated: z.boolean(),
-  summary: z.string(),
-  evidence: z.array(z.string()).optional(),
-});
-
 // Define the log analyzer agent for chunked processing
-// Ultimately, the first call should be 4.1, and all other iterations should use nano
-// Initial analyzer - smarter model for understanding structure and context
+// Initial analyzer - We use a bigger model for the first chunk, for better understanding of the structure and context
 
 const initialAnalyzerAgent = new Agent({
   name: 'initial-analyzer-agent',
   description:
     'Performs initial analysis of technical documents to understand structure and key patterns',
   instructions: INITIAL_ANALYZER_INSTRUCTIONS,
-  model: gpt41,
+  model: logAnalyzerConfig.models.initial,
 });
 
 
@@ -185,7 +166,7 @@ const initialStep = createStep({
     const result = await initialAnalyzerAgent.generateVNext(
       [{ role: 'user', content: USER_INITIAL_PROMPT(first, contextHint) }],
       {
-        structuredOutput: { schema: LoopStateOutputSchema, model: gpt41 },
+        structuredOutput: { schema: RefinementAgentOutputSchema, model: logAnalyzerConfig.models.initial },
       }
     );
 
@@ -194,16 +175,20 @@ const initialStep = createStep({
   },
 });
 
-// Step 3: Recursive iterative refinement (using cheaper model)
+// Refinement agent - cheaper model for iterative processing
 
-// Refinement agent - cheaper model for iterative updates
+const RefinementAgentOutputSchema = z.object({
+  updated: z.boolean(),
+  summary: z.string(),
+  evidence: z.array(z.string()).optional(),
+});
 
 const refinementAgent = new Agent({
   name: 'refinement-agent',
   description:
     'Iteratively refines and updates technical summaries with new chunks',
   instructions: REFINEMENT_AGENT_INSTRUCTIONS,
-  model: gpt41Nano,
+  model: logAnalyzerConfig.models.refinement,
 });
 
 
@@ -239,14 +224,14 @@ const refineStep = createStep({
         },
       ],
       {
-        structuredOutput: { schema: LoopStateOutputSchema, model: gpt41Nano }, // TODO: define error handling strategy when schema validation fails
+        structuredOutput: { schema: RefinementAgentOutputSchema, model: logAnalyzerConfig.models.refinement }, // TODO: define error handling strategy when schema validation fails
       }
     );
 
     const updated = result.object?.updated ?? false;
     let newSummary = existingSummary;
     if (updated) {
-      newSummary = result.object?.summary ?? existingSummary; // TODO: error if no new summary
+      newSummary = result.object?.summary ?? existingSummary;
     }
 
     return {
@@ -257,8 +242,6 @@ const refineStep = createStep({
     };
   },
 });
-
-// Step 4: Final report
 
 const ReportsSchema = z.object({
   markdown: z.string(),
@@ -277,9 +260,8 @@ const reportFormatterAgent = new Agent({
   name: 'report-formatter-agent',
   description: 'Formats technical summaries into various output formats',
   instructions: REPORT_FORMATTER_INSTRUCTIONS,
-  model: gpt41,
+  model: logAnalyzerConfig.models.formatter,
 });
-
 
 
 // Single-pass step for files that fit in one chunk - generates both markdown and summary in one call
@@ -309,7 +291,7 @@ const singlePassStep = createStep({
     // Use structured output to get both markdown and summary
     const result = await reportFormatterAgent.generateVNext(
       [{ role: 'user', content: SINGLE_PASS_PROMPT(text, contextHint) }],
-      { structuredOutput: { schema: ReportsSchema, model: gpt41 } }
+      { structuredOutput: { schema: ReportsSchema, model: logAnalyzerConfig.models.formatter } }
     );
 
     logger.debug('Single-pass analysis complete', {
@@ -362,7 +344,6 @@ const finalizeStep = createStep({
   },
 });
 
-// Step 5: Save markdown report to disk
 const presentationStep = createStep({
   id: 'save-report',
   description: 'Save markdown report to disk with timestamp',
@@ -386,7 +367,7 @@ const presentationStep = createStep({
     }
 
     // Create reports directory if it doesn't exist
-    const reportsDir = path.join(process.cwd(), 'reports');
+    const reportsDir = path.join(process.cwd(), logAnalyzerConfig.output.reportsDir);
     try {
       await fs.mkdir(reportsDir, { recursive: true });
     } catch (err) {
@@ -398,7 +379,7 @@ const presentationStep = createStep({
       .toISOString()
       .replace(/[:.]/g, '-')
       .slice(0, -5);
-    const filename = `report-${timestamp}.md`;
+    const filename = `${logAnalyzerConfig.output.filePrefix}-${timestamp}.md`;
     const filePath = path.join(reportsDir, filename);
 
     // Save markdown file
