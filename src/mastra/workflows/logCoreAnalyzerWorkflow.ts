@@ -18,7 +18,7 @@ import {
   SINGLE_PASS_PROMPT,
 } from './logCoreAnalyzer/prompts';
 
-// This file defines the core workflow for log file analysis. It gives the Parsley Agent the capability to read and understand text files, of any kind and format.
+// We define here the core workflow for log file analysis. It gives the Parsley Agent the capability to read and understand text files, of any kind and format.
 // Depending on the file size, we either return a summary in a single LLM call, or perform a more complex iterative refinement, combining the usage of cheap and more expensive models.
 
 // Initialize logger for this workflow
@@ -383,7 +383,7 @@ const decideAndRunStep = createStep({
 
 export const logCoreAnalyzerWorkflow = createWorkflow({
   id: 'log-core-analyzer',
-  // In the description, tell the agent to use the "url" parameter, but any of them work.
+  // In the description, we tell the agent to use the "url" parameter, but any of them work.
   description:
     'Analyze, iteratively summarize, and produce a complete report of technical files of arbitrary types and structures. Pass the full URL of the file in the `url:` parameter.',
   inputSchema: WorkflowInputSchema,

@@ -9,7 +9,7 @@ export const logAnalyzerConfig = {
    * Chunking configuration
    */
   chunking: {
-    maxSize: 20_000, // Optimal size for GPT-4 models
+    maxSize: 20_000, // Maximum chunk size in tokens
     overlapTokens: 800, // Overlap to maintain context between chunks
     tokenizer: 'o200k_base' as const, // Tokenizer for GPT-4
   },
