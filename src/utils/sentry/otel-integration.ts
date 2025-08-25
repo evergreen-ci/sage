@@ -10,7 +10,7 @@ export class SentrySpanProcessor implements SpanProcessor {
     this.enabled = config.sentry.enabled && !!config.sentry.dsn;
   }
 
-  onStart(span: Span, parentContext: Context): void {
+  onStart(span: Span, _parentContext: Context): void {
     if (!this.enabled) return;
 
     const spanContext = span.spanContext();

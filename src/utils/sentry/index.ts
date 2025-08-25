@@ -58,7 +58,7 @@ class SentryService {
             ? [Sentry.consoleIntegration()]
             : []),
         ],
-        beforeSend: (event, hint) => {
+        beforeSend: event => {
           if (config.nodeEnv === 'development') {
             logger.debug('Sentry event:', event as any);
           }
