@@ -30,7 +30,6 @@
     "@ai-sdk/azure": "^2.0.10",
     "@ai-sdk/openai": "^2.0.10",
     "@ai-sdk/provider": "^2.0.0",
-    "@mastra/core": "^0.0.0-ai-v5-20250813235735",
     "@mastra/core": "^0.14.1",
     "@mastra/libsql": "^0.13.4",
     "@mastra/loggers": "^0.10.7",
