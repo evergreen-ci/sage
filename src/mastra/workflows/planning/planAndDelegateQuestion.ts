@@ -5,12 +5,6 @@ import {
   outputSchema as questionClassifierOutputSchema,
 } from '../../agents/classifiers/questionClassifierAgent';
 import { evergreenAgent } from '../../agents/evergreenAgent';
-import { gpt41 } from '../../models/openAI/gpt41';
-import listAgentsAndTools from '../../tools/planning/listAgentsAndTools';
-
-const workflowInputSchema = z.object({
-  prompt: z.string(),
-});
 
 const workflowOutputSchema = z.object({
   output: z.string(),
@@ -36,11 +30,10 @@ const classifyQuestionStep1 = createStep({
 const askEvergreenAgentStep = createStep({
   id: 'ask-evergreen-agent-step',
   description: 'Ask the evergreen agent to answer the question',
-  inputSchema: questionClassifierOutputSchema,
+  inputSchema: z.string(),
   outputSchema: z.string(),
   execute: async ({ inputData, workflowId }) => {
-    const { originalQuestion } = inputData;
-    const result = await evergreenAgent.generate(originalQuestion);
+    const result = await evergreenAgent.generate(inputData);
     if (result.object === undefined) {
       throw new Error('Could not get an answer from the evergreen agent');
     }
@@ -79,6 +72,31 @@ const doNotAnswerStep = createStep({
   execute: async ({ inputData }) => 'I cannot answer that question!',
 });
 
+const refineQuestionStep = createStep({
+  id: 'refine-question-step',
+  description: 'Refine the question',
+  inputSchema: questionClassifierOutputSchema,
+  outputSchema: z.string(),
+  execute: async ({ inputData, runtimeContext }) => {
+    const { originalQuestion } = inputData;
+    const logMetadata = runtimeContext.get('logMetadata');
+    const logMetadataString = JSON.stringify(logMetadata, null, 2);
+    return `User Question: 
+        ${originalQuestion}
+        Additional context: ${logMetadataString}`;
+  },
+});
+
+const refineAndAnswerEvergreenWorkflow = createWorkflow({
+  id: 'refine-and-delegate-question-workflow',
+  description: 'Workflow to refine and delegate a question',
+  inputSchema: questionClassifierOutputSchema,
+  outputSchema: z.string(),
+})
+  .then(refineQuestionStep)
+  .then(askEvergreenAgentStep)
+  .commit();
+
 export const planAndDelegateQuestionWorkflow = createWorkflow({
   id: 'plan-and-delegate-question-workflow',
   description:
@@ -92,7 +110,7 @@ export const planAndDelegateQuestionWorkflow = createWorkflow({
   .branch([
     [
       async ({ inputData }) => inputData.nextAction === 'USE_EVERGREEN_AGENT',
-      askEvergreenAgentStep,
+      refineAndAnswerEvergreenWorkflow,
     ],
     [
       async ({ inputData }) =>

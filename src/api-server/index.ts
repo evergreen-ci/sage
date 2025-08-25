@@ -37,7 +37,14 @@ class SageServer {
     // Basic Express middleware
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-    this.app.use(cors());
+    this.app.use(
+      cors({
+        origin: 'https://parsley-local.corp.mongodb.com:8444',
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true,
+      })
+    );
   }
 
   private setupRoutes() {

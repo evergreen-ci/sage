@@ -57,6 +57,7 @@ const chatRoute = async (
     return;
   }
 
+  runtimeContext.set('logMetadata', messageData.logMetadata);
   const conversationId = messageData.id;
 
   let validatedMessage: string | UIMessage[];
@@ -156,10 +157,25 @@ const chatRoute = async (
       return;
     }
 
+    const chainOfThoughtParsleyAgent = mastra.getAgent(
+      'chainOfThoughtParsleyAgent'
+    );
+
+    if (!chainOfThoughtParsleyAgent) {
+      logger.error('Chain of thought parsley agent not found', {
+        requestId: req.requestId,
+        agentName: 'chainOfThoughtParsleyAgent',
+      });
+      res
+        .status(500)
+        .json({ message: 'Chain of thought parsley agent not found' });
+      return;
+    }
+
     const stream = await runWithRequestContext(
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>
-        await routingAgent.stream(validatedMessage, {
+        await chainOfThoughtParsleyAgent.stream(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
           // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
