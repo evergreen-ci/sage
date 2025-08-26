@@ -179,7 +179,7 @@ const chatRoute = async (
     const stream = await runWithRequestContext(
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>
-        await routingAgent.streamVNext(validatedMessage, {
+        await chainOfThoughtParsleyAgent.streamVNext(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
           format: 'aisdk',

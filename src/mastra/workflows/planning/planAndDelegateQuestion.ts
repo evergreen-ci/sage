@@ -32,10 +32,10 @@ const askEvergreenAgentStep = createStep({
   description: 'Ask the evergreen agent to answer the question',
   inputSchema: z.string(),
   outputSchema: z.string(),
-  execute: async ({ inputData, workflowId }) => {
+  execute: async ({ inputData }) => {
     const result = await evergreenAgent.generate(inputData);
     if (result.object === undefined) {
-      throw new Error('Could not get an answer from the evergreen agent');
+      return 'Could not get an answer from the evergreen agent';
     }
     return result.text;
   },
@@ -108,10 +108,10 @@ export const planAndDelegateQuestionWorkflow = createWorkflow({
 })
   .then(classifyQuestionStep1)
   .branch([
-    [
-      async ({ inputData }) => inputData.nextAction === 'USE_EVERGREEN_AGENT',
-      refineAndAnswerEvergreenWorkflow,
-    ],
+    // [
+    //   async ({ inputData }) => inputData.nextAction === 'USE_EVERGREEN_AGENT',
+    //   refineAndAnswerEvergreenWorkflow,
+    // ],
     [
       async ({ inputData }) =>
         inputData.nextAction === 'USE_LOG_ANALYSIS_AGENT',
