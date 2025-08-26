@@ -108,7 +108,7 @@ export const USER_CONCISE_SUMMARY_PROMPT = (
   markdown: string,
   analysisContext?: string
 ) =>
-  `Create a concise executive summary from this technical report.
+  `Create a concise summary from this technical report.
 ${analysisContext ? `\nAnalysis Context:\n${analysisContext}\nHighlight findings relevant to this context in the summary.\n` : ''}
 
 Requirements:
@@ -118,7 +118,7 @@ Source report:
 """${markdown}"""`;
 
 export const SINGLE_PASS_PROMPT = (text: string, analysisContext?: string) =>
-  `Analyze this technical document and provide both a markdown report and executive summary.
+  `Analyze this technical document and provide both a markdown report and concise summary.
 ${analysisContext ? `\nAnalysis Context:\n${analysisContext}\nUse this context to guide your analysis, focusing on relevant aspects and answering any specific questions.\n` : ''}
 
 Document:
@@ -127,11 +127,11 @@ Document:
 Return a JSON response with two fields:
 {
   "markdown": "# Technical Analysis Report\n\n## Overview\n...[full markdown report]",
-  "summary": "3-4 line executive summary"
+  "summary": "3-4 line concise summary"
 }
 
 Requirements for the markdown report:
 ${MARKDOWN_REPORT_FORMAT}
 
-Requirements for the executive summary:
+Requirements for the concise summary:
 ${CONCISE_SUMMARY_REQUIREMENTS}`;

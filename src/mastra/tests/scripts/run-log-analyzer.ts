@@ -88,7 +88,7 @@ async function runTest(
     `\r      Status: ${result.status === 'success' ? '✅ Complete' : '❌ Failed'} (${(duration / 1000).toFixed(1)}s)\n`
   );
 
-  // Show executive summary
+  // Show concise summary
   if (successResult?.summary) {
     console.log(
       `      Summary: ${successResult.summary.replace(/\n/g, ' ').slice(0, 200)}`
