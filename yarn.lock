@@ -106,7 +106,17 @@
   dependencies:
     json-schema "^0.4.0"
 
-"@ai-sdk/ui-utils@^1.2.11":
+"@ai-sdk/react@1.2.12":
+  version "1.2.12"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/react/-/react-1.2.12.tgz#f4250b6df566b170af98a71d5708b52108dd0ce1"
+  integrity sha512-jK1IZZ22evPZoQW3vlkZ7wvjYGYF+tRBKXtrcolduIkQ/m/sOAVcVeVDUDvh1T91xCnWCdUGCPZg2avZ90mv3g==
+  dependencies:
+    "@ai-sdk/provider-utils" "2.2.8"
+    "@ai-sdk/ui-utils" "1.2.11"
+    swr "^2.2.5"
+    throttleit "2.1.0"
+
+"@ai-sdk/ui-utils@1.2.11", "@ai-sdk/ui-utils@^1.2.11":
   version "1.2.11"
   resolved "https://registry.yarnpkg.com/@ai-sdk/ui-utils/-/ui-utils-1.2.11.tgz#4f815589d08d8fef7292ade54ee5db5d09652603"
   integrity sha512-3zcwCc8ezzFlwp3ZD15wAPjf2Au4s3vAbKsXQVyhxODHcmu0iyPO2Eua6D/vicq/AUm/BAo60r97O6HU+EI0+w==
@@ -2966,6 +2976,11 @@
   resolved "https://registry.yarnpkg.com/@types/deep-eql/-/deep-eql-4.0.2.tgz#334311971d3a07121e7eb91b684a605e7eea9cbd"
   integrity sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==
 
+"@types/diff-match-patch@^1.0.36":
+  version "1.0.36"
+  resolved "https://registry.yarnpkg.com/@types/diff-match-patch/-/diff-match-patch-1.0.36.tgz#dcef10a69d357fe9d43ac4ff2eca6b85dbf466af"
+  integrity sha512-xFdR6tkm0MWvBfO8xXCSsinYxHcqkQUlcHeSpMC2ukzOb6lwQAfDmW+Qt0AvlGd8HpsS28qKsB+oPeJn9I39jg==
+
 "@types/estree@*", "@types/estree@1.0.8", "@types/estree@^1.0.0", "@types/estree@^1.0.6", "@types/estree@^1.0.8":
   version "1.0.8"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-1.0.8.tgz#958b91c991b1867ced318bedea0e215ee050726e"
@@ -3650,7 +3665,19 @@ aggregate-error@^3.0.0:
     "@ai-sdk/provider-utils" "3.0.3"
     "@opentelemetry/api" "1.9.0"
 
-ai@^4.3.19, ai@^5.0.10, ai@^5.0.15:
+ai@^4.3.19:
+  version "4.3.19"
+  resolved "https://registry.yarnpkg.com/ai/-/ai-4.3.19.tgz#e94f5b37f3885bc9c9637f892e13bddd0a1857e5"
+  integrity sha512-dIE2bfNpqHN3r6IINp9znguYdhIOheKW2LDigAMrgt/upT3B8eBGPSCblENvaZGoq+hxaN9fSMzjWpbqloP+7Q==
+  dependencies:
+    "@ai-sdk/provider" "1.1.3"
+    "@ai-sdk/provider-utils" "2.2.8"
+    "@ai-sdk/react" "1.2.12"
+    "@ai-sdk/ui-utils" "1.2.11"
+    "@opentelemetry/api" "1.9.0"
+    jsondiffpatch "0.6.0"
+
+ai@^5.0.15:
   version "5.0.24"
   resolved "https://registry.yarnpkg.com/ai/-/ai-5.0.24.tgz#c6e741ea17cfe13a955607dff58c244ae01239e9"
   integrity sha512-C7wGp5U3UkqR/ott5uoRZamlaks8ur3PgDE/VtdIDnbEXkwGrYlahDjeWwVf6XLT+DxDLPnkFo1HjgEOdhhBfw==
@@ -4153,6 +4180,11 @@ chalk@^4.0.0, chalk@^4.1.0, chalk@^4.1.1, chalk@^4.1.2:
   dependencies:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
+
+chalk@^5.3.0:
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/chalk/-/chalk-5.6.0.tgz#a1a8d294ea3526dbb77660f12649a08490e33ab8"
+  integrity sha512-46QrSQFyVSEyYAgQ22hQ+zDa60YHA4fBstHmtSApj1Y5vKtG27fWowW03jCk5KcbXEWPZUIR894aARCA/G1kfQ==
 
 change-case-all@1.0.15:
   version "1.0.15"
@@ -4725,6 +4757,11 @@ dezalgo@^1.0.4:
   dependencies:
     asap "^2.0.0"
     wrappy "1"
+
+diff-match-patch@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/diff-match-patch/-/diff-match-patch-1.0.5.tgz#abb584d5f10cd1196dfc55aa03701592ae3f7b37"
+  integrity sha512-IayShXAgj/QMXgB0IWmKx+rOPuGMhqm5w6jvFxmVenXKIzRqTAAsbBPT3kWQeGANj3jGgvcvv4yK6SxqYmikgw==
 
 diff@^4.0.1:
   version "4.0.2"
@@ -6730,6 +6767,15 @@ json5@^2.2.2, json5@^2.2.3:
   version "2.2.3"
   resolved "https://registry.yarnpkg.com/json5/-/json5-2.2.3.tgz#78cd6f1a19bdc12b73db5ad0c61efd66c1e29283"
   integrity sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==
+
+jsondiffpatch@0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/jsondiffpatch/-/jsondiffpatch-0.6.0.tgz#daa6a25bedf0830974c81545568d5f671c82551f"
+  integrity sha512-3QItJOXp2AP1uv7waBkao5nCvhEv+QmJAd38Ybq7wNI74Q+BBmnLn4EDKz6yI9xGAIQoUF87qHt+kc1IVxB4zQ==
+  dependencies:
+    "@types/diff-match-patch" "^1.0.36"
+    chalk "^5.3.0"
+    diff-match-patch "^1.0.5"
 
 jsonfile@^6.0.1:
   version "6.2.0"
@@ -8958,7 +9004,7 @@ swap-case@^2.0.2:
   dependencies:
     tslib "^2.0.3"
 
-swr@^2.3.4:
+swr@^2.2.5, swr@^2.3.4:
   version "2.3.6"
   resolved "https://registry.yarnpkg.com/swr/-/swr-2.3.6.tgz#5fee0ee8a0762a16871ee371075cb09422b64f50"
   integrity sha512-wfHRmHWk/isGNMwlLGlZX5Gzz/uTgo0o2IRuTMcf4CPuPFJZlq0rDaKUx+ozB5nBOReNV1kiOyzMfj+MBMikLw==
@@ -9010,6 +9056,11 @@ thread-stream@^3.0.0:
   integrity sha512-OqyPZ9u96VohAyMfJykzmivOrY2wfMSf3C5TtFJVgN+Hm6aj+voFhlK+kZEIv2FBh1X6Xp3DlnCOfEQ3B2J86A==
   dependencies:
     real-require "^0.2.0"
+
+throttleit@2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/throttleit/-/throttleit-2.1.0.tgz#a7e4aa0bf4845a5bd10daa39ea0c783f631a07b4"
+  integrity sha512-nt6AMGKW1p/70DF/hGBdJB57B8Tspmbp5gfJ8ilhLnt7kkr2ye7hzD6NVG8GGErk2HWF34igrL2CXmNIkzKqKw==
 
 through@^2.3.6, through@^2.3.8:
   version "2.3.8"
