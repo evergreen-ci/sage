@@ -114,9 +114,7 @@ const ChunkedSchema = z.object({
 // Default to o200k_base tokenizer (GPT-4)
 // const countTokens = (s: string) => encode(s).length;
 
-// Chunking configuration from config
-// TODO: hyperparameters below, we need to find a right balance with benchmarking.
-
+// Divide the text into chunks
 const chunkStep = createStep({
   id: 'chunk',
   description: 'Token-aware chunking with overlap',
