@@ -10,10 +10,9 @@ build/
 *.tsbuildinfo
 
 # Environment variables
+# .env is not used and replaced by non-secret .env.defaults, but keep this line since people may have .env files with secrets on their machines and we don't want to accidentally expose them to git.
 .env
-.env.staging.local
-.env.test.local
-.env.production.local
+.env*.local
 
 # Logs
 logs/
@@ -52,11 +51,6 @@ jspm_packages/
 
 # Yarn Integrity file
 .yarn-integrity
-
-# dotenv environment variables file
-.env
-.env.test
-
 
 # Temporary folders
 tmp/

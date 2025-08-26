@@ -16,7 +16,6 @@ pre:
   - func: get-project
   - func: setup-node
   - func: yarn-install
-  - func: setup-env
 post:
   - func: assume-ec2-role
   - func: attach-mongod-logs
@@ -116,16 +115,6 @@ functions:
       env:
         SETTINGS_OVERRIDE: file
         GOROOT: ${goroot}
-
-  setup-env:
-    - command: shell.exec
-      type: setup
-      params:
-        working_dir: sage
-        shell: bash
-        script: |
-          ${PREPARE_SHELL}
-          mv env-example .env
 
   setup-mongodb:
     - command: subprocess.exec

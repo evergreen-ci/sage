@@ -37,7 +37,6 @@ export const createMockLogger = () => {
  */
 export const createMockConfig = (options = {}) => ({
   config: {
-    port: 3000,
     nodeEnv: 'test',
     ...options,
   },
