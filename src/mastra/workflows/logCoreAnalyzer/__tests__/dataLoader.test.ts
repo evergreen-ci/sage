@@ -59,7 +59,7 @@ describe('dataLoader', () => {
       const fs = (await import('fs/promises')).default;
 
       // Mock a file that's under size limit but over token limit
-      const hugeText = 'x'.repeat(1_000_000); // ~250k tokens
+      const hugeText = 'x'.repeat(10_000_000); // ~2.5M tokens
 
       vi.mocked(fs.stat).mockResolvedValue({
         size: hugeText.length,
@@ -139,7 +139,7 @@ describe('dataLoader', () => {
 
     it('should reject text over token limit', async () => {
       // Text that's under character limit but over token limit
-      const text = 'x'.repeat(1_000_000); // ~250k tokens
+      const text = 'x'.repeat(10_000_000); // ~2.5M tokens
 
       await expect(loadFromText(text)).rejects.toThrow('tokens, exceeds limit');
     });
