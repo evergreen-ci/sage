@@ -1,4 +1,5 @@
 import { CoreMessage } from '@mastra/core';
+import { AssistantContent, FilePart, TextPart, ToolCallPart } from 'ai';
 
 export const getMessageContent = (message: CoreMessage) => {
   switch (message.role) {
@@ -8,8 +9,7 @@ export const getMessageContent = (message: CoreMessage) => {
       if (typeof message.content === 'string') {
         return message.content;
       }
-      // Custom implementation for AssistantContent decoding
-      return decodeAssistantContentCustom(message.content);
+      return decodeAssistantContent(message.content);
 
     case 'system':
       return message.content;
@@ -18,35 +18,34 @@ export const getMessageContent = (message: CoreMessage) => {
   }
 };
 
-const decodeAssistantContentCustom = (content: any): string => {
-  if (!content) {
+const decodeAssistantContent = (part: AssistantContent | undefined): string => {
+  if (!part) {
     return '';
   }
-  if (typeof content === 'string') {
-    return content;
+  if (typeof part === 'string') {
+    return part;
   }
-  if (Array.isArray(content)) {
-    return content.map(decodeAssistantContentPart).join('');
+  if (Array.isArray(part)) {
+    return part.map(decodeAssistantContentPart).join('');
   }
   return '';
 };
 
-const decodeAssistantContentPart = (part: any) => {
+const decodeAssistantContentPart = (
+  part: TextPart | FilePart | ToolCallPart | any
+) => {
   if (!part) {
     return '';
   }
   switch (part.type) {
     case 'text':
-      return part.text || '';
+      return part.text;
     case 'file':
-      // Handle file parts with data
-      return part.data ? part.data.toString() : '';
+      return part.data.toString();
     case 'tool-call':
-      return part.toolName || '';
-    case 'tool-result':
-      return part.result || '';
+      return part.toolName;
     case 'reasoning':
-      return part.reasoning || '';
+      return part.reasoning;
     case 'redacted-reasoning':
       return '[reasoning redacted]';
     default:
