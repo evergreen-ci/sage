@@ -1,24 +1,22 @@
-import { CoreMessage } from '@mastra/core';
-import { AssistantContent, FilePart, TextPart, ToolCallPart } from 'ai';
+import { UIMessage, UIMessagePart } from 'ai';
 
-export const getMessageContent = (message: CoreMessage) => {
+export const getMessageContent = (message: UIMessage) => {
   switch (message.role) {
     case 'user':
-      return message.content.toString();
+      return decodeAIV5Content(message.parts);
     case 'assistant':
-      if (typeof message.content === 'string') {
-        return message.content;
-      }
-      return decodeAssistantContent(message.content);
+      return decodeAIV5Content(message.parts);
 
     case 'system':
-      return message.content;
+      return message.parts.toString();
     default:
       throw new Error(`Unknown message role: ${message.role}`);
   }
 };
 
-const decodeAssistantContent = (part: AssistantContent | undefined): string => {
+const decodeAIV5Content = (
+  part: UIMessagePart<any, any>[] | undefined
+): string => {
   if (!part) {
     return '';
   }
@@ -26,14 +24,12 @@ const decodeAssistantContent = (part: AssistantContent | undefined): string => {
     return part;
   }
   if (Array.isArray(part)) {
-    return part.map(decodeAssistantContentPart).join('');
+    return part.map(decodeAIV5ContentPart).join('');
   }
   return '';
 };
 
-const decodeAssistantContentPart = (
-  part: TextPart | FilePart | ToolCallPart | any
-) => {
+const decodeAIV5ContentPart = (part: UIMessagePart<any, any> | undefined) => {
   if (!part) {
     return '';
   }
@@ -41,14 +37,14 @@ const decodeAssistantContentPart = (
     case 'text':
       return part.text;
     case 'file':
-      return part.data.toString();
-    case 'tool-call':
+      return part.filename;
+    case 'dynamic-tool':
       return part.toolName;
     case 'reasoning':
-      return part.reasoning;
-    case 'redacted-reasoning':
-      return '[reasoning redacted]';
+      return part.text;
+    case 'source-url':
+      return part.url;
     default:
-      return '';
+      return part.type;
   }
 };
