@@ -3,7 +3,7 @@ import { z } from 'zod';
 import {
   taskHistoryToolAdapter,
   taskToolAdapter,
-} from '../tools/workflowAdapters';
+} from '../../tools/workflowAdapters';
 
 const workflowInputSchema = z.object({
   taskId: z.string(),
