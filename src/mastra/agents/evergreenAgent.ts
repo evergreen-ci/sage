@@ -7,7 +7,7 @@ import {
   getTaskTestsTool,
 } from '../tools/evergreen';
 import { memoryStore } from '../utils/memory';
-import { historyWorkflow, versionWorkflow } from '../workflows';
+import { historyWorkflow, logCoreAnalyzerWorkflow, versionWorkflow } from '../workflows';
 
 const evergreenAgentMemory = new Memory({
   storage: memoryStore,
@@ -57,6 +57,7 @@ You are **Evergreen AI**, an agent that provides information and support about t
   memory: evergreenAgentMemory,
   workflows: {
     historyWorkflow,
+    logCoreAnalyzerWorkflow,
     versionWorkflow,
   },
   tools: {
