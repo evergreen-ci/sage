@@ -39,7 +39,7 @@ export const logAnalyzerConfig = {
       process.env.LOG_ANALYZER_MAX_URL_SIZE_MB || '10',
       10
     ), // Max size for URL fetches in MB
-    maxTokens: parseInt(process.env.LOG_ANALYZER_MAX_TOKENS || '200000', 10), // Max estimated tokens to process
+    maxTokens: parseInt(process.env.LOG_ANALYZER_MAX_TOKENS || '2000000', 10), // Max estimated tokens to process
     urlTimeoutMs: parseInt(
       process.env.LOG_ANALYZER_URL_TIMEOUT_MS || '30000',
       10

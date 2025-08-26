@@ -89,11 +89,10 @@ async function runTest(
     `\r      Status: ${result.status === 'success' ? '✅ Complete' : '❌ Failed'} (${(duration / 1000).toFixed(1)}s)\n`
   );
 
-  // Show concise summary
+  // Show concise summary (first line only)
   if (successResult?.summary) {
-    console.log(
-      `      Summary: ${successResult.summary.replace(/\n/g, ' ').slice(0, 200)}`
-    );
+    const firstLine = successResult.summary.split('\n')[0].trim();
+    console.log(`      Summary: ${firstLine}`);
   }
 
   // Show report path if saved
@@ -184,7 +183,7 @@ async function main() {
     console.log(
       `\n🔬 Analyzing ${filesToProcess.length} file${filesToProcess.length > 1 ? 's' : ''}\n`
     );
-    console.log('─'.repeat(80));
+    console.log('─'.repeat(60));
 
     let i = 0;
     for (const filePath of filesToProcess) {
@@ -203,9 +202,9 @@ async function main() {
 
     // Print summary
     const totalDuration = Date.now() - startTime;
-    console.log(`\n${'═'.repeat(80)}`);
+    console.log(`\n${'═'.repeat(60)}`);
     console.log('📊 ANALYSIS SUMMARY');
-    console.log('─'.repeat(80));
+    console.log('─'.repeat(60));
 
     const passed = results.filter(r => r.status === 'success').length;
     const failed = results.filter(r => r.status !== 'success').length;
@@ -330,42 +329,31 @@ async function main() {
       );
     }
 
-    // Display results table
-    console.log('\n📋 Results Table:');
-    console.log('─'.repeat(80));
-    console.log(
-      `${'File'.padEnd(65)} ${'Size'.padEnd(10)} ${'Time'.padEnd(8)} Summary`
-    );
-    console.log('─'.repeat(80));
+    // Display results in a simple, readable format
+    console.log('\n📋 Results:');
+    console.log('─'.repeat(60));
 
-    results.forEach(r => {
-      const fileName =
-        r.file.length > 60 ? `${r.file.slice(0, 60)}...` : r.file;
+    for (const r of results) {
       const statusIcon = r.status === 'success' ? '✅' : '❌';
-      let summary: string;
-      if (r.status === 'success') {
-        if (r.summary) {
-          summary =
-            r.summary.replace(/\n/g, ' ').slice(0, 400) +
-            (r.summary.length > 400 ? '...' : '');
-        } else {
-          summary = 'No summary available';
-        }
-      } else {
-        summary = 'Failed';
-      }
+      const statusText = r.status === 'success' ? 'Success' : 'Failed';
 
+      console.log(`\n  ${statusIcon} ${r.file}`);
+      console.log(`     Status: ${statusText}`);
       console.log(
-        `${statusIcon} ${fileName.padEnd(28)} ${formatFileSize(r.fileSize).padEnd(10)} ${(r.duration / 1000).toFixed(1)}s`.padEnd(
-          50
-        )
+        `     Size: ${formatFileSize(r.fileSize)} | Time: ${(r.duration / 1000).toFixed(1)}s`
       );
-      if (r.status === 'success' && r.summary) {
-        console.log(`   ${summary}`);
-      }
-    });
 
-    console.log('═'.repeat(80));
+      if (r.summary) {
+        const firstLine = r.summary.split('\n')[0].trim();
+        console.log(`     Summary: ${firstLine}`);
+      }
+
+      if (r.reportPath) {
+        console.log(`     Report: ${r.reportPath}`);
+      }
+    }
+
+    console.log(`\n${'═'.repeat(60)}`);
 
     // Exit with proper code
     process.exit(passed === results.length ? 0 : 1);
