@@ -52,11 +52,6 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
-.env
-.env.test
-
-
 # Temporary folders
 tmp/
 temp/
