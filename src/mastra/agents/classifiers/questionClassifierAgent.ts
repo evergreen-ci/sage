@@ -26,9 +26,6 @@ export const outputSchema = z.object({
   originalQuestion: z.string().min(1),
 });
 
-const inputSchema = z.object({
-  question: z.string().min(1),
-});
 export const questionClassifierAgent = new Agent({
   id: 'question-classifier-agent',
   name: 'Question Classifier Agent',
@@ -107,7 +104,6 @@ A:
 {"confidence":0.89,"questionClass":"COMBINATION","nextAction":"USE_COMBINATION_ANALYSIS","originalQuestion":"Did this flake start yesterday? Compare to last passing and show failing tests."}
   `,
   defaultGenerateOptions: {
-    input: inputSchema,
     output: outputSchema,
     temperature: 0,
   },

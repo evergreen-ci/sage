@@ -1,4 +1,3 @@
-import { ToolExecutionContext } from '@mastra/core';
 import { z } from 'zod';
 import { TaskFilesQuery } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
@@ -30,8 +29,7 @@ const getTaskInputSchema = z.object({
 
 const getTaskFilesTool = createGraphQLTool<
   typeof getTaskInputSchema,
-  TaskFilesQuery,
-  ToolExecutionContext<typeof getTaskInputSchema>
+  TaskFilesQuery
 >({
   id: 'getTaskFiles',
   description:

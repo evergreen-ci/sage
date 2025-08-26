@@ -1,4 +1,3 @@
-import { ToolExecutionContext } from '@mastra/core';
 import { z } from 'zod';
 import { TaskHistoryQuery } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
@@ -53,8 +52,7 @@ const TaskHistoryOptsSchema = z.object({
 
 const getTaskHistoryTool = createGraphQLTool<
   typeof TaskHistoryOptsSchema,
-  TaskHistoryQuery,
-  ToolExecutionContext<typeof TaskHistoryOptsSchema>
+  TaskHistoryQuery
 >({
   id: 'getTaskHistory',
   description:
