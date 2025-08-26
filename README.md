@@ -13,16 +13,9 @@ A TypeScript-based Express.js server powering the Evergreen AI Service.
 
 ### Environment Variables
 
-Copy the `env-example` file to `.env` and update the values to match your environment.
+Non-secret variables are tracked in `.env.defaults`, with environment-specific variables in `.env.<NODE_ENV>` files.
 
-```bash
-cp env-example .env
-```
-
-Copy the `env.example.local` file to `.env.<deployment-environment>.local` and update the values to match your environment. You should do this for all remote environments you plan to run against.
-```bash
-cp .env.example.local .env.<deployment-environment>.local
-```
+Update `.env.local` or `.env.<NODE_ENV>.local` files with secrets for external services. These files are ignored by git. Refer to the team password manager or ask a teammate for credentials.
 
 ### Installation
 
@@ -32,13 +25,6 @@ cp .env.example.local .env.<deployment-environment>.local
    ```bash
    yarn install
    ```
-3. Set up environment variables:
-
-   ```bash
-   cp env-example .env
-   ```
-
-   Update the `.env` file with the necessary values. Refer to the team password manager or ask a teammate for credentials.
 
 ---
 
@@ -93,7 +79,8 @@ sage/
 ├── scripts/                          # Project automation scripts
 ├── .drone.yml                        # Drone CI pipeline
 ├── .evergreen.yml                    # Evergreen configuration
-├── env-example                       # Environment variable template
+├── .env.defaults                     # Shared environment variables
+├── .env.<NODE_ENV>                   # Non-secret environment variables
 └── README.md
 ```
 
@@ -107,7 +94,7 @@ sage/
 yarn dev
 ```
 
-Starts the server using `ts-node-dev`, with hot-reloading and TypeScript support. Default port: `3000` (or set via the `PORT` environment variable).
+Starts the server using `ts-node-dev`, with hot-reloading and TypeScript support. Default port: `8080` (or set via the `PORT` environment variable).
 
 ### Production
 
