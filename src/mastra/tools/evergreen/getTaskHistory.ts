@@ -53,8 +53,7 @@ const TaskHistoryOptsSchema = z.object({
 
 const getTaskHistoryTool = createGraphQLTool<
   typeof TaskHistoryOptsSchema,
-  TaskHistoryQuery,
-  ToolExecutionContext<typeof TaskHistoryOptsSchema>
+  TaskHistoryQuery
 >({
   id: 'getTaskHistory',
   description:

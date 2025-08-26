@@ -103,8 +103,7 @@ const getVersionInputSchema = z.object({
 
 const getVersionTool = createGraphQLTool<
   typeof getVersionInputSchema,
-  VersionQuery,
-  ToolExecutionContext<typeof getVersionInputSchema>
+  VersionQuery
 >({
   id: 'getVersion',
   description:

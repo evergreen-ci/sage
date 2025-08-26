@@ -1,4 +1,4 @@
-import { createTool, ToolAction, ToolExecutionContext } from '@mastra/core';
+import { createTool } from '@mastra/core';
 import { z } from 'zod';
 import {
   GraphQLClient,
@@ -27,11 +27,7 @@ interface GraphQLToolInputParams<TSchema extends z.ZodObject<any>> {
  * @param param0.outputSchema - Optional output schema for workflow compatibility
  * @returns A typed Mastra tool that can be used in both agents and workflows
  */
-export const createGraphQLTool = <
-  TSchema extends z.ZodObject<any>,
-  TResult,
-  TExecutionContext extends ToolExecutionContext<TSchema>,
->({
+export const createGraphQLTool = <TSchema extends z.ZodObject<any>, TResult>({
   client,
   description,
   id,
@@ -83,4 +79,4 @@ export const createGraphQLTool = <
         throw error;
       }
     },
-  }) as ToolAction<TSchema, typeof outputSchema, TExecutionContext>;
+  });

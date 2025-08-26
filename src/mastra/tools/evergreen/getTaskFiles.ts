@@ -30,8 +30,7 @@ const getTaskInputSchema = z.object({
 
 const getTaskFilesTool = createGraphQLTool<
   typeof getTaskInputSchema,
-  TaskFilesQuery,
-  ToolExecutionContext<typeof getTaskInputSchema>
+  TaskFilesQuery
 >({
   id: 'getTaskFiles',
   description:

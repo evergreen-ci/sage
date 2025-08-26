@@ -71,8 +71,7 @@ const getTaskTestsInputSchema = z.object({
 
 const getTaskTestsTool = createGraphQLTool<
   typeof getTaskTestsInputSchema,
-  TaskTestsQuery,
-  ToolExecutionContext<typeof getTaskTestsInputSchema>
+  TaskTestsQuery
 >({
   id: 'getTaskTests',
   description:
