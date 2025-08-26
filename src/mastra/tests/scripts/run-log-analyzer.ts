@@ -2,7 +2,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { mastra } from '../../mastra';
+import { mastra } from 'mastra';
 import { analyzeWorkflowSteps } from './analyze-workflow-steps';
 
 // Helper script for local development, run log analyzer workflow on one or more log files. Display benchmark data
