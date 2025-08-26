@@ -18,11 +18,12 @@ const REPORTS_DIR = 'tmp/reports';
 const REPORT_PREFIX = 'report';
 
 /**
- *
- * @param filePath
- * @param index
- * @param total
- * @param analysisContext
+ * Runs the log analyzer workflow on a single file
+ * @param filePath - Path to the file to analyze
+ * @param index - Current file index (for progress display)
+ * @param total - Total number of files being processed
+ * @param analysisContext - Optional context for analysis
+ * @returns Test result object with analysis details
  */
 async function runTest(
   filePath: string,
@@ -115,8 +116,9 @@ async function runTest(
 }
 
 /**
- *
- * @param bytes
+ * Formats file size in bytes to a human-readable string
+ * @param bytes - File size in bytes
+ * @returns Formatted file size string
  */
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes}B`;
@@ -186,7 +188,10 @@ async function main() {
 
     let i = 0;
     for (const filePath of filesToProcess) {
-      i++;
+      i += 1;
+      // Sequential processing is intentional to avoid overwhelming the system
+      // and to display accurate progress information
+      // eslint-disable-next-line no-await-in-loop
       const result = await runTest(
         filePath,
         i,
@@ -337,13 +342,18 @@ async function main() {
       const fileName =
         r.file.length > 60 ? `${r.file.slice(0, 60)}...` : r.file;
       const statusIcon = r.status === 'success' ? '✅' : '❌';
-      const summary =
-        r.status === 'success' && r.summary
-          ? r.summary.replace(/\n/g, ' ').slice(0, 400) +
-            (r.summary.length > 400 ? '...' : '')
-          : r.status === 'success'
-            ? 'No summary available'
-            : 'Failed';
+      let summary: string;
+      if (r.status === 'success') {
+        if (r.summary) {
+          summary =
+            r.summary.replace(/\n/g, ' ').slice(0, 400) +
+            (r.summary.length > 400 ? '...' : '');
+        } else {
+          summary = 'No summary available';
+        }
+      } else {
+        summary = 'Failed';
+      }
 
       console.log(
         `${statusIcon} ${fileName.padEnd(28)} ${formatFileSize(r.fileSize).padEnd(10)} ${(r.duration / 1000).toFixed(1)}s`.padEnd(

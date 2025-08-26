@@ -17,8 +17,8 @@ export interface LoadResult {
 
 /**
  * Simple validation to check size limits
- * @param size
- * @param source
+ * @param size - Size in bytes or characters to validate
+ * @param source - Source type (file, url, or text)
  */
 function validateSize(size: number, source: SourceType): void {
   const { limits } = logAnalyzerConfig;
@@ -38,6 +38,8 @@ function validateSize(size: number, source: SourceType): void {
       maxSize = limits.maxTextLength;
       label = `${limits.maxTextLength} characters`;
       break;
+    default:
+      throw new Error(`Unknown source type: ${source}`);
   }
 
   if (size > maxSize) {
@@ -54,7 +56,8 @@ function validateSize(size: number, source: SourceType): void {
 /**
  * Quick token estimation without full tokenization
  * Tokenization can be expensive, so we use a simple heuristic here.
- * @param text
+ * @param text - Text to estimate tokens for
+ * @returns Estimated number of tokens
  */
 function estimateTokens(text: string): number {
   // Sample first 100k characters for accurate estimation
@@ -73,7 +76,8 @@ function estimateTokens(text: string): number {
 
 /**
  * Validate token count against configured limits
- * @param text
+ * @param text - Text to validate token count for
+ * @returns Estimated number of tokens
  * @throws Error if token count exceeds limit
  */
 function validateTokenLimit(text: string): number {
@@ -90,7 +94,8 @@ function validateTokenLimit(text: string): number {
 
 /**
  * Load from file with size validation
- * @param filePath
+ * @param filePath - Path to the file to load
+ * @returns Loaded text and metadata
  */
 export async function loadFromFile(filePath: string): Promise<LoadResult> {
   const resolvedPath = path.resolve(filePath);
@@ -124,7 +129,8 @@ export async function loadFromFile(filePath: string): Promise<LoadResult> {
 
 /**
  * Load from URL with size validation
- * @param url
+ * @param url - URL to load content from
+ * @returns Loaded text and metadata
  */
 export async function loadFromUrl(url: string): Promise<LoadResult> {
   // Build headers
@@ -162,7 +168,7 @@ export async function loadFromUrl(url: string): Promise<LoadResult> {
     // Check content length if available
     const contentLength = response.headers.get('content-length');
     if (contentLength) {
-      const size = parseInt(contentLength);
+      const size = parseInt(contentLength, 10);
       validateSize(size, SOURCE_TYPE.URL);
     }
 
@@ -203,7 +209,8 @@ export async function loadFromUrl(url: string): Promise<LoadResult> {
 
 /**
  * Validate raw text input
- * @param text
+ * @param text - Raw text to validate and load
+ * @returns Loaded text and metadata
  */
 export async function loadFromText(text: string): Promise<LoadResult> {
   const size = text.length;
@@ -228,8 +235,9 @@ export async function loadFromText(text: string): Promise<LoadResult> {
 }
 
 /**
- *
- * @param text
+ * Normalize text by standardizing line endings
+ * @param text - Text to normalize
+ * @returns Normalized text
  */
 export function normalizeText(text: string): string {
   return text.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');

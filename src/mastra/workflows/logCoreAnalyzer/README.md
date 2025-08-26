@@ -12,14 +12,14 @@ This workflow takes log files or technical documents (via file path, URL, or raw
 
 ### Input Processing
 - **Data Loading** (`dataLoader.ts`): Handles file/URL/text input with size and token validation
-- **Configurable Limits** (`config.ts`): Max file size (10MB), max tokens (200k), configurable via env vars
+- **Configurable Limits** (`config.ts`): Max file size, max tokens, configurable via env vars
 
 ### Processing Strategy
 
 The workflow automatically chooses between two approaches based on file size:
 
 #### Single-Pass (small files)
-Files that fit in one chunk (≤4096 tokens) are processed in a single LLM call for efficiency.
+Files that fit in one chunk are processed in a single LLM call for efficiency.
 
 #### Iterative Refinement (large files)
 Larger files are processed through:
@@ -54,11 +54,7 @@ const result = await logCoreAnalyzerWorkflow.execute({
 
 ## Configuration
 
-Environment variables:
-- `LOG_ANALYZER_MAX_FILE_SIZE_MB` (default: 10)
-- `LOG_ANALYZER_MAX_TEXT_LENGTH` (default: 10000000)
-- `LOG_ANALYZER_MAX_TOKENS` (default: 200000)
-- `LOG_ANALYZER_URL_TIMEOUT_MS` (default: 30000)
+Various parameters can be adjusted in `config.ts` such as token/size limits, models used etc... 
 
 ## Key Features
 

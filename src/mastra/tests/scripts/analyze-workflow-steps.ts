@@ -39,8 +39,9 @@ interface WorkflowAnalysis {
 }
 
 /**
- *
- * @param steps
+ * Analyzes workflow steps and generates performance metrics
+ * @param steps - The workflow steps object to analyze
+ * @returns Detailed analysis of workflow execution
  */
 export function analyzeWorkflowSteps(steps: WorkflowSteps): WorkflowAnalysis {
   const stepNames = Object.keys(steps);
@@ -83,7 +84,7 @@ export function analyzeWorkflowSteps(steps: WorkflowSteps): WorkflowAnalysis {
     stepArray.forEach((step, index) => {
       if (!step) return;
 
-      totalExecutions++;
+      totalExecutions += 1;
 
       // Calculate duration
       const duration =
@@ -102,9 +103,9 @@ export function analyzeWorkflowSteps(steps: WorkflowSteps): WorkflowAnalysis {
       if (index === stepArray.length - 1) {
         lastStatus = step.status || 'unknown';
         if (step.status === 'success') {
-          successfulSteps++;
+          successfulSteps += 1;
         } else if (step.status === 'failed' || step.status === 'error') {
-          failedSteps++;
+          failedSteps += 1;
         }
       }
 
@@ -204,8 +205,9 @@ export function analyzeWorkflowSteps(steps: WorkflowSteps): WorkflowAnalysis {
 }
 
 /**
- *
- * @param ms
+ * Formats a duration in milliseconds to a human-readable string
+ * @param ms - Duration in milliseconds
+ * @returns Formatted duration string
  */
 function formatDuration(ms: number): string {
   if (ms < 1000) {
@@ -219,8 +221,8 @@ function formatDuration(ms: number): string {
 }
 
 /**
- *
- * @param analysis
+ * Prints a formatted workflow analysis to the console
+ * @param analysis - The workflow analysis to print
  */
 export function printWorkflowAnalysis(analysis: WorkflowAnalysis): void {
   console.log('\n=== Workflow Analysis ===\n');
@@ -293,8 +295,9 @@ export function printWorkflowAnalysis(analysis: WorkflowAnalysis): void {
 
 // Example usage function
 /**
- *
- * @param steps
+ * Analyzes workflow steps and prints the results
+ * @param steps - The workflow steps object to analyze
+ * @returns The workflow analysis
  */
 export function analyzeAndPrint(steps: WorkflowSteps): WorkflowAnalysis {
   const analysis = analyzeWorkflowSteps(steps);
