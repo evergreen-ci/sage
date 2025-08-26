@@ -44,7 +44,6 @@ envSecrets:
   AZURE_OPENAI_ENDPOINT: parsley-ai-secrets
   EVERGREEN_API_KEY: parsley-ai-secrets
   MONGODB_URI: parsley-ai-secrets
-  OTEL_EXPORTER_OTLP_HEADERS: parsley-ai-secrets
   BRAINTRUST_API_KEY: parsley-ai-secrets
   HONEYCOMB_API_KEY: parsley-ai-secrets
 
