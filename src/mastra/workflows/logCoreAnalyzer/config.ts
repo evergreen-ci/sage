@@ -24,6 +24,19 @@ export const logAnalyzerConfig = {
   },
 
   /**
+   * Input limits
+   */
+  limits: {
+    maxFileSizeMB: parseInt(process.env.LOG_ANALYZER_MAX_FILE_SIZE_MB || '10'), // Max file size in MB
+    maxTextLength: parseInt(
+      process.env.LOG_ANALYZER_MAX_TEXT_LENGTH || '10000000'
+    ), // Max text length in characters (10M default)
+    maxUrlSizeMB: parseInt(process.env.LOG_ANALYZER_MAX_URL_SIZE_MB || '10'), // Max size for URL fetches in MB
+    maxTokens: parseInt(process.env.LOG_ANALYZER_MAX_TOKENS || '200000'), // Max estimated tokens to process
+    urlTimeoutMs: parseInt(process.env.LOG_ANALYZER_URL_TIMEOUT_MS || '30000'), // URL fetch timeout (30s default)
+  },
+
+  /**
    * Logging configuration
    */
   logging: {

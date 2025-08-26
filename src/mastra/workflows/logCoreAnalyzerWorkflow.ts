@@ -2,11 +2,15 @@ import { Agent } from '@mastra/core/agent';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
 import { z } from 'zod';
-import fs from 'fs/promises';
-import path from 'path';
-import { config } from '../../config';
 import { WinstonMastraLogger } from '../../utils/logger/winstonMastraLogger';
 import { logAnalyzerConfig } from './logCoreAnalyzer/config';
+import {
+  loadFromFile,
+  loadFromUrl,
+  loadFromText,
+  normalizeText,
+  type LoadResult,
+} from './logCoreAnalyzer/dataLoader';
 import {
   INITIAL_ANALYZER_INSTRUCTIONS,
   REFINEMENT_AGENT_INSTRUCTIONS,
@@ -27,10 +31,6 @@ const logger = new WinstonMastraLogger({
   level: logAnalyzerConfig.logging.level,
 });
 
-// TODO:
-// - cap file limit for v0
-// - follow up PR with tests
-
 // This workflow takes either a file path, raw text, or an URL as input, and optional additional instructions
 // and returns a structured analysis report, as well as a concise summary.
 const WorkflowInputSchema = z.object({
@@ -50,59 +50,50 @@ const WorkflowOutputSchema = z.object({
   summary: z.string(),
 });
 
-const readStep = createStep({
-  id: 'read-input',
-  description: 'Read file or accept provided text, normalize',
+// Unified load step that handles all I/O with validation
+const loadDataStep = createStep({
+  id: 'load-data',
+  description: 'Load and validate data from any source',
   inputSchema: WorkflowInputSchema,
   outputSchema: z.object({
     text: z.string(),
     analysisContext: z.string().optional(),
   }),
   execute: async ({ inputData }) => {
-    const { analysisContext, path: p, text, url } = inputData;
+    const { analysisContext, path: filePath, text, url } = inputData;
 
-    let raw = text ?? '';
-    if (p) {
-      const buf = await fs.readFile(path.resolve(p));
-      raw = buf.toString('utf8');
-    } else if (url) {
-      // Build authentication headers for Evergreen API
-      const headers = new Headers();
-      headers.set('Accept', 'text/plain,application/json');
+    let result: LoadResult;
 
-      // Add Evergreen API authentication if credentials are configured
-      if (config.evergreen.apiUser && config.evergreen.apiKey) {
-        headers.set('Api-User', config.evergreen.apiUser);
-        headers.set('Api-Key', config.evergreen.apiKey);
+    try {
+      if (filePath) {
+        result = await loadFromFile(filePath);
+      } else if (url) {
+        result = await loadFromUrl(url);
+      } else if (text) {
+        result = await loadFromText(text);
       } else {
-        logger.warn(
-          'Evergreen API credentials are not set in config; making unauthenticated request'
-        );
-      }
-
-      logger.debug('Fetching URL with authentication', {
-        url,
-        hasAuth: !!(config.evergreen.apiUser && config.evergreen.apiKey),
-      });
-
-      try {
-        const response = await fetch(url, { headers });
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch URL: ${url} (${response.status} ${response.statusText})`
-          );
-        }
-        raw = await response.text();
-      } catch (error) {
-        logger.error('Failed to fetch URL', { url, error });
         throw new Error(
-          `Failed to fetch URL ${url}: ${error instanceof Error ? error.message : String(error)}`
+          'No input source provided (path, url, or text required)'
         );
       }
+    } catch (error) {
+      logger.error('Failed to load data', error);
+      throw error;
     }
-    // cheap normalization
-    raw = raw.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');
-    return { text: raw, analysisContext };
+
+    // Normalize the text
+    const normalizedText = normalizeText(result.text);
+
+    logger.info('Data loaded successfully', {
+      source: result.metadata.source,
+      sizeMB: (result.metadata.originalSize / 1024 / 1024).toFixed(2),
+      estimatedTokens: result.metadata.estimatedTokens,
+    });
+
+    return {
+      text: normalizedText,
+      analysisContext,
+    };
   },
 });
 
@@ -111,10 +102,7 @@ const ChunkedSchema = z.object({
   analysisContext: z.string().optional(),
 });
 
-// Default to o200k_base tokenizer (GPT-4)
-// const countTokens = (s: string) => encode(s).length;
-
-// Divide the text into chunks
+// Modified chunk step to use loaded data with metadata
 const chunkStep = createStep({
   id: 'chunk',
   description: 'Token-aware chunking with overlap',
@@ -133,7 +121,11 @@ const chunkStep = createStep({
       maxSize: logAnalyzerConfig.chunking.maxSize,
       overlap: logAnalyzerConfig.chunking.overlapTokens,
     });
-    logger.debug('Chunking complete', { chunkCount: chunks.length });
+
+    logger.debug('Chunking complete', {
+      chunkCount: chunks.length,
+    });
+
     return { chunks, analysisContext };
   },
 });
@@ -391,13 +383,14 @@ const decideAndRunStep = createStep({
 
 export const logCoreAnalyzerWorkflow = createWorkflow({
   id: 'log-core-analyzer',
-  // In the description, we tell the agent to use the "url" parameter, but any of them work.
+  // In the description, we tell the agent to use the "url" parameter, because that's the preferred way
+  // for the orchestrator to use this workflow, but all of them work.
   description:
     'Analyze, iteratively summarize, and produce a complete report of technical files of arbitrary types and structures. Pass the full URL of the file in the `url:` parameter.',
   inputSchema: WorkflowInputSchema,
   outputSchema: WorkflowOutputSchema,
 })
-  .then(readStep)
+  .then(loadDataStep) // Use the new unified load step with validation
   .then(chunkStep)
   .then(decideAndRunStep)
   .commit();
