@@ -163,7 +163,7 @@ const initialStep = createStep({
   inputSchema: ChunkedSchema,
   outputSchema: LoopStateSchema,
   execute: async ({ inputData }) => {
-    const { chunks, analysisContext } = inputData;
+    const { analysisContext, chunks } = inputData;
     const first = chunks[0]?.text ?? '';
     logger.debug('Initial chunk for analysis', {
       first: first.slice(0, 100),
@@ -209,7 +209,12 @@ const refineStep = createStep({
   inputSchema: LoopStateSchema,
   outputSchema: LoopStateSchema,
   execute: async ({ inputData }) => {
-    const { chunks, analysisContext, idx, summary: existingSummary } = inputData;
+    const {
+      analysisContext,
+      chunks,
+      idx,
+      summary: existingSummary,
+    } = inputData;
     const chunk = chunks[idx]?.text ?? '';
 
     // TODO: make sure summary size stays manageable
@@ -271,7 +276,7 @@ const singlePassStep = createStep({
   inputSchema: ChunkedSchema,
   outputSchema: WorkflowOutputSchema,
   execute: async ({ inputData }) => {
-    const { chunks, analysisContext } = inputData;
+    const { analysisContext, chunks } = inputData;
 
     // Validate we have exactly one chunk
     if (chunks.length !== 1) {
@@ -316,7 +321,7 @@ const finalizeStep = createStep({
   inputSchema: LoopStateSchema,
   outputSchema: WorkflowOutputSchema,
   execute: async ({ inputData }) => {
-    const { summary, analysisContext } = inputData;
+    const { analysisContext, summary } = inputData;
     logger.debug('Generating final markdown report', {
       summary: summary.slice(0, 100),
       analysisContext,

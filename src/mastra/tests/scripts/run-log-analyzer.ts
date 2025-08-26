@@ -135,8 +135,12 @@ async function main() {
   if (args.length === 0) {
     console.error('Usage: yarn run-analyzer <file-path> [file-path2...]');
     console.error('   or: yarn run-analyzer --batch <directory>');
-    console.error('   or: yarn run-analyzer --context "analysis instructions" <file-path>');
-    console.error('   or: yarn run-analyzer --batch <directory> --context "what to look for"');
+    console.error(
+      '   or: yarn run-analyzer --context "analysis instructions" <file-path>'
+    );
+    console.error(
+      '   or: yarn run-analyzer --batch <directory> --context "what to look for"'
+    );
     process.exit(1);
   }
 
@@ -145,8 +149,8 @@ async function main() {
 
   // Parse arguments for context flag
   let analysisContext: string | undefined;
-  let filteredArgs = [...args];
-  
+  const filteredArgs = [...args];
+
   const contextIndex = filteredArgs.indexOf('--context');
   if (contextIndex !== -1 && contextIndex < filteredArgs.length - 1) {
     analysisContext = filteredArgs[contextIndex + 1];
@@ -316,7 +320,9 @@ async function main() {
       };
 
       fs.writeFileSync(outputFile, JSON.stringify(detailedResults, null, 2));
-      console.log(`\n💾 Detailed results saved to: ${path.relative(process.cwd(), outputFile)}`);
+      console.log(
+        `\n💾 Detailed results saved to: ${path.relative(process.cwd(), outputFile)}`
+      );
     }
 
     // Display results table

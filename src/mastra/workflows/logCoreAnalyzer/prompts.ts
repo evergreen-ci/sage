@@ -74,7 +74,11 @@ Chunk:
 Return JSON:
 { "updated": true, "summary": "<concise but comprehensive summary>" }`;
 
-export const USER_REFINE = (existing: string, chunk: string, analysisContext?: string) =>
+export const USER_REFINE = (
+  existing: string,
+  chunk: string,
+  analysisContext?: string
+) =>
   `Refine the existing summary with ONLY *material* additions or corrections from the new chunk.
 If the chunk adds nothing substantive, return {"updated": false, "summary": "<unchanged>"}.
 ${analysisContext ? `\nAnalysis Context:\n${analysisContext}\nKeep this context in mind while refining the summary.\n` : ''}
@@ -88,7 +92,10 @@ New chunk:
 Return JSON:
 { "updated": <bool>, "summary": "<updated or unchanged>" }`;
 
-export const USER_MARKDOWN_PROMPT = (summary: string, analysisContext?: string) =>
+export const USER_MARKDOWN_PROMPT = (
+  summary: string,
+  analysisContext?: string
+) =>
   `Rewrite the accumulated summary into a clean technical report formatted as Markdown.
 ${analysisContext ? `\nAnalysis Context:\n${analysisContext}\nEnsure the report addresses any specific questions or focus areas mentioned in the context.\n` : ''}
 
@@ -97,7 +104,10 @@ ${MARKDOWN_REPORT_FORMAT}
 Source material:
 """${summary}"""`;
 
-export const USER_CONCISE_SUMMARY_PROMPT = (markdown: string, analysisContext?: string) =>
+export const USER_CONCISE_SUMMARY_PROMPT = (
+  markdown: string,
+  analysisContext?: string
+) =>
   `Create a concise executive summary from this technical report.
 ${analysisContext ? `\nAnalysis Context:\n${analysisContext}\nHighlight findings relevant to this context in the summary.\n` : ''}
 

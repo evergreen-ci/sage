@@ -7,7 +7,11 @@ import {
   getTaskTestsTool,
 } from '../tools/evergreen';
 import { memoryStore } from '../utils/memory';
-import { historyWorkflow, logCoreAnalyzerWorkflow, versionWorkflow } from '../workflows';
+import {
+  historyWorkflow,
+  logCoreAnalyzerWorkflow,
+  versionWorkflow,
+} from '../workflows';
 
 const evergreenAgentMemory = new Memory({
   storage: memoryStore,
