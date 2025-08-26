@@ -1,9 +1,6 @@
 import { createWorkflow, createStep } from '@mastra/core';
-import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
-import { USER_ID } from '../agents/constants';
 import { taskToolAdapter, versionToolAdapter } from '../tools/workflowAdapters';
-import { getRequestContext } from '../utils/requestContext';
 
 const workflowInputSchema = z.object({
   taskId: z.string(),
@@ -29,16 +26,9 @@ const getTaskStep = createStep({
     taskData: z.any(),
     includeNeverActivatedTasks: z.boolean().optional(),
   }),
-  execute: async ({ inputData }) => {
+  execute: async ({ inputData, runtimeContext }) => {
     if (!taskToolAdapter.execute) {
       throw new Error('taskToolAdapter.execute is not defined');
-    }
-
-    const runtimeContext = new RuntimeContext();
-
-    const requestContext = getRequestContext();
-    if (requestContext?.userId) {
-      runtimeContext.set(USER_ID, requestContext.userId);
     }
 
     const result = await taskToolAdapter.execute({
@@ -67,7 +57,7 @@ const getVersionStep = createStep({
     taskData: z.any(),
     versionData: z.any(),
   }),
-  execute: async ({ inputData }) => {
+  execute: async ({ inputData, runtimeContext }) => {
     const { includeNeverActivatedTasks, taskData } = inputData;
 
     if (taskData?.error) {
@@ -90,13 +80,6 @@ const getVersionStep = createStep({
 
     if (!versionToolAdapter.execute) {
       throw new Error('versionToolAdapter.execute is not defined');
-    }
-
-    const runtimeContext = new RuntimeContext();
-
-    const requestContext = getRequestContext();
-    if (requestContext?.userId) {
-      runtimeContext.set(USER_ID, requestContext.userId);
     }
 
     const versionResult = await versionToolAdapter.execute({

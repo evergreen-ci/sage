@@ -4,7 +4,6 @@ import { logger } from '../../../utils/logger';
 import getTaskTool from '../evergreen/getTask';
 import getTaskFilesTool from '../evergreen/getTaskFiles';
 import getTaskHistoryTool from '../evergreen/getTaskHistory';
-import getTaskTestsTool from '../evergreen/getTaskTests';
 import getVersionTool from '../evergreen/getVersion';
 
 /**
@@ -54,22 +53,16 @@ function createToolAdapter<TSchema extends z.ZodObject<any>>(
   }) as ToolAction<TSchema, undefined, any>;
 }
 
-export const taskFilesToolAdapter = createToolAdapter(getTaskFilesTool, {
-  id: 'taskFilesToolAdapter',
-  description:
-    'Adapter tool for getting Evergreen task files information to use in workflows',
-});
-
-export const taskTestsToolAdapter = createToolAdapter(getTaskTestsTool, {
-  id: 'taskTestsToolAdapter',
-  description:
-    'Adapter tool for getting Evergreen task tests information to use in workflows',
-});
-
 export const taskToolAdapter = createToolAdapter(getTaskTool, {
   id: 'taskToolAdapter',
   description:
     'Adapter tool for getting Evergreen task information to use in workflows',
+});
+
+export const taskFilesToolAdapter = createToolAdapter(getTaskFilesTool, {
+  id: 'taskFilesToolAdapter',
+  description:
+    'Adapter tool for getting Evergreen task files information to use in workflows',
 });
 
 export const versionToolAdapter = createToolAdapter(getVersionTool, {

@@ -3,7 +3,25 @@ import { z } from 'zod';
 import { TaskFilesQuery } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
 import evergreenClient from './graphql/evergreenClient';
-import GET_TASK_FILES from './graphql/get-task-files';
+
+const GET_TASK_FILES = `query TaskFiles($taskId: String!, $execution: Int) {
+  task(taskId: $taskId, execution: $execution) {
+    id
+    execution
+    files {
+      fileCount
+      groupedFiles {
+        files {
+          link
+          name
+          urlParsley
+        }
+        taskName
+      }
+    }
+  }
+}
+`;
 
 const getTaskInputSchema = z.object({
   taskId: z.string(),
