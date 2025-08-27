@@ -5,10 +5,12 @@ import { questionClassifierAgent } from './agents/planning/questionClassifierAge
 import { sageThinkingAgent } from './agents/planning/sageThinkingAgent';
 import { parsleyOrchestrator } from './networks';
 import { historyWorkflow, versionWorkflow } from './workflows/evergreen';
+import { logCoreAnalyzerWorkflow } from './workflows/logCoreAnalyzerWorkflow';
 
 export const mastra: Mastra = new Mastra({
   workflows: {
     historyWorkflow,
+    logCoreAnalyzerWorkflow,
     versionWorkflow,
   },
   agents: { sageThinkingAgent, evergreenAgent, questionClassifierAgent },
