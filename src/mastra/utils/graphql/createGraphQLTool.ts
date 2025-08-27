@@ -1,4 +1,5 @@
-import { createTool, ToolAction, ToolExecutionContext } from '@mastra/core';
+import { createTool } from '@mastra/core';
+import { DocumentNode } from 'graphql';
 import { z } from 'zod';
 import {
   GraphQLClient,
@@ -7,13 +8,16 @@ import {
 import logger from '../../../utils/logger';
 import { USER_ID } from '../../agents/constants';
 
-interface GraphQLToolInputParams<TSchema extends z.ZodObject<any>> {
+interface GraphQLToolInputParams<
+  GraphQLQuery extends object,
+  GraphQLQueryVariables extends object,
+> {
   id: string;
   description: string;
-  query: string;
-  inputSchema: TSchema;
+  query: string | DocumentNode;
+  inputSchema: z.ZodType<GraphQLQueryVariables>;
+  outputSchema: z.ZodType<GraphQLQuery>;
   client: GraphQLClient;
-  outputSchema?: z.ZodType<any>;
 }
 
 /**
@@ -28,17 +32,16 @@ interface GraphQLToolInputParams<TSchema extends z.ZodObject<any>> {
  * @returns A typed Mastra tool that can be used in both agents and workflows
  */
 export const createGraphQLTool = <
-  TSchema extends z.ZodObject<any>,
-  TResult,
-  TExecutionContext extends ToolExecutionContext<TSchema>,
+  GraphQLQuery extends object,
+  GraphQLQueryVariables extends object,
 >({
   client,
   description,
   id,
   inputSchema,
-  outputSchema = z.any(),
+  outputSchema,
   query,
-}: GraphQLToolInputParams<TSchema>) =>
+}: GraphQLToolInputParams<GraphQLQuery, GraphQLQueryVariables>) =>
   createTool({
     id,
     inputSchema,
@@ -53,9 +56,13 @@ export const createGraphQLTool = <
       }
 
       try {
-        const result = await client.executeQuery<TResult>(query, context, {
-          userID: userId,
-        });
+        const result = await client.executeQuery<GraphQLQueryOutput>(
+          query,
+          context,
+          {
+            userID: userId,
+          }
+        );
         return result;
       } catch (error) {
         const baseError = {
@@ -83,4 +90,4 @@ export const createGraphQLTool = <
         throw error;
       }
     },
-  }) as ToolAction<TSchema, typeof outputSchema, TExecutionContext>;
+  });
