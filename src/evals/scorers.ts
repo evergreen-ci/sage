@@ -1,4 +1,4 @@
-import { TestResult } from './types';
+import { TestInput, TestResult } from './types';
 
 // https://www.braintrust.dev/docs/guides/experiments/write#define-your-own-scorers
 
@@ -11,7 +11,7 @@ import { TestResult } from './types';
  * @returns score (1 being correct, 0 being incorrect) along with metadata
  */
 export const toolUsage = (args: {
-  input: string;
+  input: TestInput;
   output: TestResult;
   expected: TestResult;
 }) => {

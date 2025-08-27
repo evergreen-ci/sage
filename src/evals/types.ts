@@ -7,8 +7,12 @@ export enum TestUser {
   Admin = 'admin',
 }
 
-export type TestMetadata = {
+export type TestInput = {
+  content: string;
   user: TestUser;
+};
+
+export type TestMetadata = {
   description: string;
   testName: string;
 };
@@ -19,13 +23,13 @@ export type TestResult = {
 };
 
 export type TestCase = {
-  input: string;
+  input: TestInput;
   expected: TestResult;
   metadata: TestMetadata;
 };
 
 export interface CustomEvalResult {
-  input: string;
+  input: TestInput;
   output: TestResult & { duration: number };
   metadata: TestMetadata;
   scores: Record<string, number>;
