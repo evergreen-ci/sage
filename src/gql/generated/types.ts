@@ -5056,7 +5056,6 @@ export type TaskTestsQuery = {
 
 export type VersionQueryVariables = Exact<{
   id: Scalars['String']['input'];
-  includeNeverActivatedTasks?: InputMaybe<Scalars['Boolean']['input']>;
 }>;
 
 export type VersionQuery = {
@@ -5073,7 +5072,6 @@ export type VersionQuery = {
     order: number;
     project: string;
     projectIdentifier: string;
-    repo: string;
     requester: string;
     revision: string;
     startTime?: Date | null;
@@ -5085,41 +5083,11 @@ export type VersionQuery = {
       id: string;
       alias?: string | null;
       patchNumber: number;
-      childPatches?: Array<{
-        __typename?: 'Patch';
-        id: string;
-        githash: string;
-        projectIdentifier: string;
-        status: string;
-        parameters: Array<{
-          __typename?: 'Parameter';
-          key: string;
-          value: string;
-        }>;
-        versionFull?: {
-          __typename?: 'Version';
-          id: string;
-          status: string;
-          baseVersion?: { __typename?: 'Version'; id: string } | null;
-        } | null;
-      }> | null;
-      githubPatchData?: {
-        __typename?: 'GithubPatch';
-        headHash?: string | null;
-        prNumber?: number | null;
-      } | null;
     } | null;
     previousVersion?: {
       __typename?: 'Version';
       id: string;
       revision: string;
-    } | null;
-    projectMetadata?: {
-      __typename?: 'Project';
-      id: string;
-      branch: string;
-      owner: string;
-      repo: string;
     } | null;
   };
 };

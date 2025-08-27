@@ -1,5 +1,5 @@
-import { historyWorkflow } from './historyWorkflow';
+import { historyWorkflow } from './evergreen/historyWorkflow';
+import { versionWorkflow } from './evergreen/versionWorkflow';
 import { logCoreAnalyzerWorkflow } from './logCoreAnalyzerWorkflow';
-import { versionWorkflow } from './versionWorkflow';
 
 export { historyWorkflow, logCoreAnalyzerWorkflow, versionWorkflow };

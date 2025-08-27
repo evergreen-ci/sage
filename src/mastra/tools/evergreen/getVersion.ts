@@ -8,7 +8,7 @@ import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
 import evergreenClient from './graphql/evergreenClient';
 
 const GET_VERSION = gql`
-  query Version($id: String!, $includeNeverActivatedTasks: Boolean) {
+  query Version($id: String!) {
     version(versionId: $id) {
       id
       activated
@@ -36,16 +36,13 @@ const GET_VERSION = gql`
       revision
       startTime
       status
-      taskCount(
-        options: { includeNeverActivatedTasks: $includeNeverActivatedTasks }
-      )
+      taskCount(options: { includeNeverActivatedTasks: false })
     }
   }
 `;
 
 const getVersionInputSchema = z.object({
   id: z.string(),
-  includeNeverActivatedTasks: z.boolean().optional(),
 });
 
 const getVersionOutputSchema = z.object({
