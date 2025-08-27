@@ -1,5 +1,4 @@
 import { createTool } from '@mastra/core';
-import { Agent } from '@mastra/core/agent';
 import { z } from 'zod';
 
 const inputSchema = z.object({

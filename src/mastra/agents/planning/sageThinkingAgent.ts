@@ -2,6 +2,7 @@ import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { memoryStore } from '../../utils/memory';
+import { USER_ID } from '../constants';
 import { askEvergreenAgentTool } from '../evergreenAgent';
 import { askQuestionClassifierAgentTool } from './questionClassifierAgent';
 
@@ -20,7 +21,12 @@ export const sageThinkingAgent: Agent = new Agent({
   description:
     'A agent that thinks about the user question and decides the next action.',
   memory: sageThinkingAgentMemory,
-  instructions: `
+  instructions: ({ runtimeContext }) => {
+    const userID = runtimeContext.get(USER_ID);
+    const logMetadata = runtimeContext.get('logMetadata');
+    console.log('userID', userID);
+    console.log('logMetadata', logMetadata);
+    return `
   You are Parsley AI. A senior software engineer that can think about a users questions and decide on a course of action. To answer the question. 
   You have a deep understanding of the evergreen platform and have access to a series of tools that can help you answer any question.
 
@@ -30,8 +36,16 @@ export const sageThinkingAgent: Agent = new Agent({
   - combinationAnalysisAgent: A agent that can analyze logs and answer questions about the logs.
 
   You have access to the following tools:
-  - questionClassifierAgent: A agent that can classify the user question and help youdecide the next action.
-  `,
+  - questionClassifierAgent: A agent that can classify the user question and help you decide the next action.
+
+
+  <ADDITIONAL_CONTEXT>
+  User ID: ${userID}
+  Log Metadata: ${JSON.stringify(logMetadata)}
+  </ADDITIONAL_CONTEXT>
+
+  `;
+  },
   model: gpt41,
   tools: {
     askQuestionClassifierAgentTool,
