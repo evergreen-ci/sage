@@ -74,8 +74,10 @@ export class GraphQLClient {
     variables: any | undefined,
     options: ExecuteQueryOptions
   ): Promise<T> {
+    const graphqlQueryBody =
+      typeof query === 'string' ? query : query.loc?.source.body || '';
     const body: GraphQLRequestOptions<any> = {
-      query: query.toString(),
+      query: graphqlQueryBody,
       ...(variables && Object.keys(variables).length ? { variables } : {}),
       ...(options.operationName
         ? { operationName: options.operationName }
@@ -97,6 +99,7 @@ export class GraphQLClient {
     const signal = options.signal ?? ac?.signal;
 
     try {
+      console.log('GQL REQUEST', JSON.stringify(body));
       const res = await fetch(this.endpoint, {
         method: 'POST',
         headers,
