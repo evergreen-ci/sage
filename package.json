@@ -22,6 +22,7 @@
     "eslint:strict": "STRICT=1 eslint .",
     "format": "prettier --write src/**/*.ts",
     "format:check": "prettier --check src/**/*.ts",
+    "run-analyzer": "ts-node -r tsconfig-paths/register src/mastra/tests/scripts/run-log-analyzer.ts",
     "mastra:dev": "mastra dev -p 4111",
     "mastra:build": "mastra build",
     "mastra:start": "node --import=./.mastra/output/instrumentation.mjs .mastra/output/index.mjs",
