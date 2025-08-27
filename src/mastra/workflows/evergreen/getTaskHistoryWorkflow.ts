@@ -1,6 +1,6 @@
 import { createWorkflow, createStep } from '@mastra/core';
 import { z } from 'zod';
-import { TaskHistoryDirection } from 'gql/generated/types';
+import { TaskHistoryDirection } from '../../../gql/generated/types';
 import { getTaskTool, getTaskHistoryTool } from '../../tools/evergreen';
 
 const getTaskStep = createStep(getTaskTool);
