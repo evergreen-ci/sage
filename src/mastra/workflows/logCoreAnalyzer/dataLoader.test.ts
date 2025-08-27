@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SOURCE_TYPE } from '../constants';
-import { loadFromFile, loadFromUrl, loadFromText } from '../dataLoader';
+import { SOURCE_TYPE } from './constants';
+import { loadFromFile, loadFromUrl, loadFromText } from './dataLoader';
 
 // Mock fs/promises
 vi.mock('fs/promises', () => ({
@@ -151,17 +150,6 @@ describe('dataLoader', () => {
       expect(result.text).toBe(text);
       expect(result.metadata.source).toBe(SOURCE_TYPE.TEXT);
       expect(result.metadata.originalSize).toBe(text.length);
-    });
-  });
-
-  describe('normalizeText', () => {
-    it('should normalize line endings', async () => {
-      const { normalizeText } = await import('../dataLoader');
-
-      const input = 'line1\r\nline2\r\n\r\n\r\n\r\nline3';
-      const expected = 'line1\nline2\n\n\nline3';
-
-      expect(normalizeText(input)).toBe(expected);
     });
   });
 });

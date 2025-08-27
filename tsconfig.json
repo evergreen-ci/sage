@@ -26,7 +26,6 @@
     "types": ["vitest/globals"],
     "paths": {
       "src/*": ["./src/*"],
-      "ai": ["./node_modules/ai"]
     }
   },
   "include": [

@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node
 
-import fs from 'node:fs';
-import path from 'node:path';
+import fs from 'fs';
+import path from 'path';
 import { mastra } from 'mastra';
 import { analyzeWorkflowSteps } from './analyze-workflow-steps';
 

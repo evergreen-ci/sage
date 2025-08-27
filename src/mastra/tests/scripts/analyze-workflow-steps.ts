@@ -43,7 +43,9 @@ interface WorkflowAnalysis {
  * @param steps - The workflow steps object to analyze
  * @returns Detailed analysis of workflow execution
  */
-export function analyzeWorkflowSteps(steps: WorkflowSteps): WorkflowAnalysis {
+export const analyzeWorkflowSteps = (
+  steps: WorkflowSteps
+): WorkflowAnalysis => {
   const stepNames = Object.keys(steps);
   const stepDetails: StepAnalysis[] = [];
   const timeline: string[] = [];
@@ -202,7 +204,7 @@ export function analyzeWorkflowSteps(steps: WorkflowSteps): WorkflowAnalysis {
     keyOutputs,
     repeatedSteps,
   };
-}
+};
 
 /**
  * Formats a duration in milliseconds to a human-readable string
