@@ -8,7 +8,7 @@ export const getConfig = ({
   generatedFileName: string;
 } & Pick<CodegenConfig, "silent">): CodegenConfig => ({
   documents: [
-    "./src/**/!(*.test).ts",
+    "./src/**/*.ts",
     "./src/**/*.graphql",
     "./src/**/*.gql",
   ].map((d) => resolve(process.cwd(), d)),
