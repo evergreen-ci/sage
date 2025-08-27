@@ -1,9 +1,6 @@
 import { createWorkflow, createStep } from '@mastra/core';
 import { z } from 'zod';
-import {
-  taskHistoryToolAdapter,
-  taskToolAdapter,
-} from '../../tools/workflowAdapters';
+import { getTaskTool, getTaskHistoryTool } from '../../tools/evergreen';
 
 const workflowInputSchema = z.object({
   taskId: z.string(),
@@ -16,71 +13,31 @@ const workflowOutputSchema = z.object({
   error: z.string().optional(),
 });
 
-const getTaskStep = createStep({
-  id: 'get-task-for-history',
-  description: 'Get task information from Evergreen',
-  inputSchema: z.object({
-    taskId: z.string(),
-    execution: z.number().optional(),
-  }),
-  outputSchema: z.object({
-    taskData: z.any(),
-  }),
-  execute: async ({ inputData, runtimeContext }) => {
-    if (!taskToolAdapter.execute) {
-      throw new Error('taskToolAdapter.execute is not defined');
-    }
-
-    const result = await taskToolAdapter.execute({
-      context: {
-        taskId: inputData.taskId,
-        execution: inputData.execution,
-      },
-      runtimeContext,
-    });
-
-    return {
-      taskData: result,
-    };
-  },
-});
+const getTaskStep = createStep(getTaskTool);
 
 const getTaskHistoryStep = createStep({
   id: 'get-task-history',
   description: 'Get task history from Evergreen using task data',
   inputSchema: z.object({
-    taskData: z.any(),
+    task: z.any(),
   }),
   outputSchema: z.object({
     taskData: z.any(),
     historyData: z.any(),
   }),
   execute: async ({ inputData, runtimeContext }) => {
-    const { taskData } = inputData;
-
-    if (taskData?.error) {
-      throw new Error('Cannot fetch history: task data has error');
-    }
-
-    const task = taskData?.task;
+    const { task } = inputData;
 
     if (!task) {
       throw new Error('Cannot fetch history: task data is missing');
     }
 
-    const taskId = task.id;
-    const { displayName } = task;
-    const { buildVariant } = task;
-    const { projectIdentifier } = task;
+    const { buildVariant, displayName, id: taskId, projectIdentifier } = task;
 
     if (!taskId || !displayName || !buildVariant || !projectIdentifier) {
       throw new Error(
         `Cannot fetch history: missing required fields (id: ${taskId}, displayName: ${displayName}, buildVariant: ${buildVariant}, projectIdentifier: ${projectIdentifier})`
       );
-    }
-
-    if (!taskHistoryToolAdapter.execute) {
-      throw new Error('taskHistoryToolAdapter.execute is not defined');
     }
 
     const cursorParams = {
@@ -89,7 +46,7 @@ const getTaskHistoryStep = createStep({
       includeCursor: true,
     };
 
-    const historyResult = await taskHistoryToolAdapter.execute({
+    const historyResult = await getTaskHistoryTool.execute({
       context: {
         options: {
           taskName: displayName,
@@ -103,7 +60,7 @@ const getTaskHistoryStep = createStep({
     });
 
     return {
-      taskData,
+      task,
       historyData: historyResult,
     };
   },

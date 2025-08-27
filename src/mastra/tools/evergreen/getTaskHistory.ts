@@ -1,4 +1,3 @@
-import { ToolExecutionContext } from '@mastra/core';
 import { z } from 'zod';
 import { TaskHistoryQuery } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
@@ -48,6 +47,11 @@ const TaskHistoryOptsSchema = z.object({
     limit: z.number().optional(),
     projectIdentifier: z.string(),
     taskName: z.string(),
+    cursorParams: z.object({
+      cursorId: z.string(),
+      direction: z.enum(['BEFORE', 'AFTER']),
+      includeCursor: z.boolean(),
+    }),
   }),
 });
 
