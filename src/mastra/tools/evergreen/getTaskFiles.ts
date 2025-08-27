@@ -1,4 +1,3 @@
-import { ToolExecutionContext } from '@mastra/core';
 import { z } from 'zod';
 import { TaskFilesQuery } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
