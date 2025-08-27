@@ -1,6 +1,10 @@
 import { AgentMemoryOption } from '@mastra/core/agent';
 import { RuntimeContext } from '@mastra/core/runtime-context';
-import { UIMessage, validateUIMessages } from 'ai';
+import {
+  pipeUIMessageStreamToResponse,
+  UIMessage,
+  validateUIMessages,
+} from 'ai';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
@@ -159,15 +163,21 @@ const chatRoute = async (
     const stream = await runWithRequestContext(
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>
-        await routingAgent.stream(validatedMessage, {
+        await routingAgent.streamVNext(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
+          format: 'aisdk',
           // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
           // Thread ID is set correctly, which is most important.
           // https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence#setting-up-server-side-id-generation
         })
     );
-    stream.pipeUIMessageStreamToResponse(res);
+
+    // Get the UIMessage stream and pipe it to Express with correct headers & backpressure.
+    pipeUIMessageStreamToResponse({
+      response: res,
+      stream: stream.toUIMessageStream(),
+    });
   } catch (error) {
     logger.error('Error in add message route', {
       error,
