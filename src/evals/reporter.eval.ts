@@ -32,17 +32,21 @@ Reporter('Evergreen CI reporter', {
       const failedToolUsage = toolUsageScore < toolUsagePassCutoff;
 
       if (r.error || failedFactuality || failedToolUsage) {
-        let message = '';
+        const messages: string[] = [];
         if (r.error) {
-          message += r.error?.toString();
+          messages.push(r.error?.toString());
         }
         if (failedFactuality) {
-          message += `Factuality score ${factualityScore} is below threshold ${factualityPassCutoff}`;
+          messages.push(
+            `Factuality score ${factualityScore} is below threshold ${factualityPassCutoff}`
+          );
         }
         if (failedToolUsage) {
-          message += `Tool Usage score ${toolUsageScore} is below threshold ${toolUsagePassCutoff}`;
+          messages.push(
+            `Tool Usage score ${toolUsageScore} is below threshold ${toolUsagePassCutoff}`
+          );
         }
-        testCase.failure(message);
+        testCase.failure(messages.join('\n'));
       }
 
       printResultsTable({
