@@ -5,7 +5,7 @@ import {
   GraphQLClientError,
 } from '../../../utils/graphql/client';
 import logger from '../../../utils/logger';
-import { EVERGREEN_USER_HEADER, USER_ID } from '../../agents/constants';
+import { USER_ID } from '../../agents/constants';
 
 interface GraphQLToolInputParams<TSchema extends z.ZodObject<any>> {
   id: string;
@@ -47,21 +47,14 @@ export const createGraphQLTool = <
     execute: async ({ context, runtimeContext }) => {
       const userId = runtimeContext.get(USER_ID) as string | undefined;
       if (!userId) {
-        logger.warn(
-          'User ID not available in RuntimeContext provided to GraphQL tool',
-          { id }
+        throw new Error(
+          'User ID not available in RuntimeContext unable to execute query'
         );
-      }
-
-      const headers: Record<string, string> = {};
-      if (userId) {
-        headers[EVERGREEN_USER_HEADER] = userId;
       }
 
       try {
         const result = await client.executeQuery<TResult>(query, context, {
-          userID: userId ?? '',
-          headers,
+          userID: userId,
         });
         return result;
       } catch (error) {
@@ -79,11 +72,7 @@ export const createGraphQLTool = <
             graphqlErrors: error.errors,
           });
 
-          return {
-            error: error.message,
-            graphqlErrors: error.errors,
-            statusCode: error.statusCode,
-          };
+          throw error;
         }
 
         logger.error(
@@ -91,9 +80,7 @@ export const createGraphQLTool = <
           baseError
         );
 
-        return {
-          error: baseError.error,
-        };
+        throw error;
       }
     },
   }) as ToolAction<TSchema, typeof outputSchema, TExecutionContext>;

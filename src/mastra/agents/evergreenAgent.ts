@@ -1,12 +1,15 @@
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { gpt41Nano } from '../models/openAI/gpt41';
+import {
+  getTaskTool,
+  getTaskFilesTool,
+  getTaskTestsTool,
+} from '../tools/evergreen';
 import { memoryStore } from '../utils/memory';
 import {
   historyWorkflow,
-  taskFilesWorkflow,
-  taskTestWorkflow,
-  taskWorkflow,
+  logCoreAnalyzerWorkflow,
   versionWorkflow,
 } from '../workflows';
 
@@ -57,10 +60,13 @@ You are **Evergreen AI**, an agent that provides information and support about t
   model: gpt41Nano,
   memory: evergreenAgentMemory,
   workflows: {
-    taskWorkflow,
     historyWorkflow,
+    logCoreAnalyzerWorkflow,
     versionWorkflow,
-    taskTestWorkflow,
-    taskFilesWorkflow,
+  },
+  tools: {
+    getTaskTool,
+    getTaskFilesTool,
+    getTaskTestsTool,
   },
 });

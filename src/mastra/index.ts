@@ -4,19 +4,15 @@ import { evergreenAgent } from './agents/evergreenAgent';
 import { parsleyOrchestrator } from './networks';
 import {
   historyWorkflow,
-  taskWorkflow,
+  logCoreAnalyzerWorkflow,
   versionWorkflow,
-  taskFilesWorkflow,
-  taskTestWorkflow,
 } from './workflows';
 
 export const mastra: Mastra = new Mastra({
   workflows: {
-    taskWorkflow,
     historyWorkflow,
+    logCoreAnalyzerWorkflow,
     versionWorkflow,
-    taskTestWorkflow,
-    taskFilesWorkflow,
   },
   agents: { evergreenAgent },
   vnext_networks: { parsleyOrchestrator },

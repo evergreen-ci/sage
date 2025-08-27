@@ -3,7 +3,46 @@ import { z } from 'zod';
 import { TaskTestsQuery } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
 import evergreenClient from './graphql/evergreenClient';
-import GET_TASK_TESTS from './graphql/get-task-tests';
+
+const GET_TASK_TESTS = `query TaskTests(
+  $id: String!
+  $execution: Int
+  $pageNum: Int
+  $limitNum: Int
+  $statusList: [String!]!
+  $sort: [TestSortOptions!]
+  $testName: String!
+) {
+  task(taskId: $id, execution: $execution) {
+    id
+    execution
+    tests(
+      opts: {
+        sort: $sort
+        page: $pageNum
+        limit: $limitNum
+        statuses: $statusList
+        testName: $testName
+      }
+    ) {
+      filteredTestCount
+      testResults {
+        id
+        baseStatus
+        duration
+        logs {
+          url
+          urlParsley
+          urlRaw
+        }
+        status
+        testFile
+      }
+      totalTestCount
+    }
+  }
+}
+`;
 
 const TestSortCategoryEnum = z.enum([
   'BASE_STATUS',
