@@ -30,8 +30,7 @@ export const sageThinkingAgent: Agent = new Agent({
 
   You have access to the following tools:
   - evergreenAgent: A agent that can answer questions about the evergreen platform.
-  - logAnalysisAgent: A agent that can analyze logs and answer questions about the logs.
-  - combinationAnalysisAgent: A agent that can analyze logs and answer questions about the logs.
+  - logCoreAnalyzerWorkflow: A agent that can analyze logs and answer questions about the logs.
 
   You have access to the following tools:
   - questionClassifierAgent: A agent that can classify the user question and help you decide the next action.
@@ -48,5 +47,8 @@ export const sageThinkingAgent: Agent = new Agent({
   tools: {
     askQuestionClassifierAgentTool,
     askEvergreenAgentTool,
+  },
+  workflows: {
+    logCoreAnalyzerWorkflow,
   },
 });
