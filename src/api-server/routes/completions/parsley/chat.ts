@@ -1,5 +1,4 @@
 import { AgentMemoryOption } from '@mastra/core/agent';
-import { RuntimeContext } from '@mastra/core/runtime-context';
 import {
   pipeUIMessageStreamToResponse,
   UIMessage,
@@ -8,8 +7,7 @@ import {
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
-import { ORCHESTRATOR_NAME } from 'mastra/networks/constants';
-import { LogTypes } from 'types/parsley';
+import { createParsleyRuntimeContext } from 'mastra/memory/parsley/runtimeContext';
 import { logger } from 'utils/logger';
 import { USER_ID } from '../../../../mastra/agents/constants';
 import { runWithRequestContext } from '../../../../mastra/utils/requestContext';
@@ -31,10 +29,8 @@ const chatRoute = async (
   req: Request,
   res: Response<ReadableStream | ErrorResponse>
 ) => {
-  const runtimeContext = new RuntimeContext();
-
+  const runtimeContext = createParsleyRuntimeContext();
   const authenticatedUserId = getUserIdFromRequest(req);
-
   if (!authenticatedUserId) {
     logger.error('No authentication provided', {
       requestId: req.requestId,
@@ -44,7 +40,6 @@ const chatRoute = async (
   }
 
   runtimeContext.set(USER_ID, authenticatedUserId);
-
   logger.debug('User context set for request', {
     userId: authenticatedUserId,
     requestId: req.requestId,
@@ -60,6 +55,7 @@ const chatRoute = async (
     res.status(400).json({ message: 'Invalid request body' });
     return;
   }
+  runtimeContext.set('logMetadata', messageData.logMetadata);
 
   const conversationId = messageData.id;
 
@@ -82,18 +78,18 @@ const chatRoute = async (
   }
 
   try {
-    const network = mastra.vnext_getNetwork(ORCHESTRATOR_NAME);
-    if (!network) {
-      logger.error('Network not found', {
-        requestId: req.requestId,
-        networkName: ORCHESTRATOR_NAME,
-      });
-      res.status(500).json({ message: 'Network not found' });
-      return;
-    }
-    const memory = await network.getMemory({ runtimeContext });
-    let memoryOptions: AgentMemoryOption;
+    const agent = mastra.getAgent('sageThinkingAgent');
 
+    const memory = await agent.getMemory({
+      runtimeContext,
+    });
+
+    let memoryOptions: AgentMemoryOption = {
+      thread: {
+        id: 'undefined',
+      },
+      resource: 'undefined',
+    };
     // Populate session ID if provided
     const thread = await memory?.getThreadById({ threadId: conversationId });
     if (thread) {
@@ -109,30 +105,8 @@ const chatRoute = async (
         resource: thread.resourceId,
       };
     } else {
-      const { logMetadata } = messageData;
-      const metadata: Record<string, string | number> = {
-        userId: authenticatedUserId,
-      };
-
-      if (logMetadata) {
-        metadata.task_id = logMetadata.task_id;
-        metadata.execution = logMetadata.execution;
-        metadata.log_type = logMetadata.log_type;
-
-        switch (logMetadata.log_type) {
-          case LogTypes.EVERGREEN_TEST_LOGS:
-            metadata.test_id = logMetadata.test_id;
-            break;
-          case LogTypes.EVERGREEN_TASK_LOGS:
-            metadata.origin = logMetadata.origin;
-            break;
-          default:
-            break;
-        }
-      }
-
       const newThread = await memory?.createThread({
-        metadata,
+        metadata: runtimeContext.toJSON(),
         resourceId: 'parsley_completions',
         threadId: conversationId,
       });
@@ -150,20 +124,10 @@ const chatRoute = async (
       };
     }
 
-    const routingAgent = await network.getRoutingAgent({ runtimeContext });
-    if (!routingAgent) {
-      logger.error('Routing agent not found', {
-        requestId: req.requestId,
-        networkName: ORCHESTRATOR_NAME,
-      });
-      res.status(500).json({ message: 'Routing agent not found' });
-      return;
-    }
-
     const stream = await runWithRequestContext(
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>
-        await routingAgent.streamVNext(validatedMessage, {
+        await agent.streamVNext(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
           format: 'aisdk',
