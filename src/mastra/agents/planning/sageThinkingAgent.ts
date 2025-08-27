@@ -14,6 +14,7 @@ const sageThinkingAgentMemory = new Memory({
     },
   },
 });
+// @ts-expect-error - Agent is not typed correctly
 export const sageThinkingAgent: Agent = new Agent({
   name: 'Sage Thinking Agent',
   description:
