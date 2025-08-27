@@ -74,17 +74,17 @@ const callModel = async (input: TestInput) =>
     runtimeContext.set(USER_ID, input.user);
 
     const agent = mastra.getAgent(AGENT_NAME);
-    const response = await agent.generate(input.content, { runtimeContext });
+    const response = await agent.generateVNext(input.content, {
+      runtimeContext,
+    });
     const end = Date.now();
 
-    const toolCalls = response.steps.flatMap(step => step.toolCalls);
-    const toolResults = response.steps.flatMap(step => step.toolResults);
-    const toolNames = toolCalls.map(t => t.toolName);
     const duration = end - start;
+    const toolsUsed = response.toolCalls.map(t => t.payload.toolName);
 
     const result = {
       text: response.text,
-      toolsUsed: toolNames,
+      toolsUsed,
     };
 
     span.log({
@@ -98,7 +98,7 @@ const callModel = async (input: TestInput) =>
         duration,
       },
       metadata: {
-        tool_results: toolResults,
+        tool_results: response.toolResults,
       },
     });
 
