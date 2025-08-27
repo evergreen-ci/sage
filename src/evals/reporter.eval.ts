@@ -30,18 +30,22 @@ Reporter('Evergreen CI reporter', {
       const levenshteinScore = r.scores.Levenshtein ?? 0;
       const toolUsageScore = r.scores?.['Tool Usage'] ?? 0;
 
-      if (r.error || factualityScore < FACTUALITY_PASS_CUTOFF) {
+      const failedFactuality = factualityScore < FACTUALITY_PASS_CUTOFF;
+      const failedLevenshtein = levenshteinScore < LEVENSHTEIN_PASS_CUTOFF;
+      const failedToolUsage = toolUsageScore < TOOL_USAGE_PASS_CUTOFF;
+
+      if (r.error || failedFactuality || failedLevenshtein || failedToolUsage) {
         let message = '';
         if (r.error) {
           message += r.error?.toString();
         }
-        if (factualityScore < FACTUALITY_PASS_CUTOFF) {
+        if (failedFactuality) {
           message += `Factuality score ${factualityScore} is below threshold ${FACTUALITY_PASS_CUTOFF}`;
         }
-        if (levenshteinScore < LEVENSHTEIN_PASS_CUTOFF) {
+        if (failedLevenshtein) {
           message += `Levenshtein score ${levenshteinScore} is below threshold ${LEVENSHTEIN_PASS_CUTOFF}`;
         }
-        if (toolUsageScore < TOOL_USAGE_PASS_CUTOFF) {
+        if (failedToolUsage) {
           message += `Tool Usage score ${toolUsageScore} is below threshold ${TOOL_USAGE_PASS_CUTOFF}`;
         }
         testCase.failure(message);

@@ -4,7 +4,7 @@ import { Eval, traced } from 'braintrust';
 import { mastra } from 'mastra';
 import { USER_ID, AGENT_NAME } from 'mastra/agents/constants';
 import { toolUsage } from './scorers';
-import { TestMetadata, TestCase, TestUser } from './types';
+import { TestCase, TestUser } from './types';
 
 const testRegularUserCanGetTaskStatus = (): TestCase => {
   const taskId =
@@ -50,17 +50,17 @@ const testCases: TestCase[] = [
  * https://www.braintrust.dev/docs/guides/experiments/write#tracing
  * This is a wrapper function that adds tracing spans to the model call.
  * @param input - Input (originally given in test case)
- * @param metadata - Metadata (originally given in test case)
+ * @param user - User to run the test as (originally given in test case)
  * @returns Expected result from calling agent
  */
-const callModel = async (input: string, metadata: TestMetadata) =>
+const callModel = async (input: string, user: TestUser) =>
   traced(async span => {
     span.setAttributes({ name: 'call-model-span' });
     span.log({ input });
 
     const start = Date.now();
     const runtimeContext = new RuntimeContext();
-    runtimeContext.set(USER_ID, metadata.user);
+    runtimeContext.set(USER_ID, user);
 
     const agent = mastra.getAgent(AGENT_NAME);
     const response = await agent.generate(input, { runtimeContext });
@@ -97,7 +97,7 @@ const callModel = async (input: string, metadata: TestMetadata) =>
 Eval('dev-prod-team', {
   data: testCases,
   // @ts-expect-error: Throws an error but works
-  task: async (input, { metadata }) => await callModel(input, metadata),
+  task: async (input, { metadata }) => await callModel(input, metadata.user),
   // @ts-expect-error: Throws an error but works
   scores: [Factuality, Levenshtein, toolUsage], // https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts#L37
   experimentName: 'Evergreen Agent Eval',
