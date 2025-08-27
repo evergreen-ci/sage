@@ -1,4 +1,4 @@
-import taskHistoryWorkflow from './historyWorkflow';
-import versionWorkflow from './versionWorkflow';
+import getTaskHistoryWorkflow from './getTaskHistoryWorkflow';
+import getVersionWorkflow from './getVersionWorkflow';
 
-export { taskHistoryWorkflow, versionWorkflow };
+export { getTaskHistoryWorkflow, getVersionWorkflow };

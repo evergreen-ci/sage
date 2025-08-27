@@ -35,7 +35,7 @@ const getVersionStep = createStep({
   },
 });
 
-export const versionWorkflow = createWorkflow({
+const getVersionWorkflow = createWorkflow({
   id: 'version-workflow',
   description: 'Workflow to retrieve task version information from Evergreen',
   inputSchema: getTaskStep.inputSchema,
@@ -45,4 +45,4 @@ export const versionWorkflow = createWorkflow({
   .then(getVersionStep)
   .commit();
 
-export default versionWorkflow;
+export default getVersionWorkflow;

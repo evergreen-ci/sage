@@ -54,7 +54,7 @@ const getTaskHistoryStep = createStep({
   },
 });
 
-export const historyWorkflow = createWorkflow({
+export const getTaskHistoryWorkflow = createWorkflow({
   id: 'task-with-history-workflow',
   description: 'Workflow to retrieve task history information from Evergreen',
   inputSchema: getTaskStep.inputSchema,
@@ -64,4 +64,4 @@ export const historyWorkflow = createWorkflow({
   .then(getTaskHistoryStep)
   .commit();
 
-export default historyWorkflow;
+export default getTaskHistoryWorkflow;
