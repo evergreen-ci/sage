@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "evergreen-ai-service",
   "main": "dist/main.js",
+  "type": "module",
   "scripts": {
     "build": "tsc && tsc-alias",
     "start": "NODE_ENV=production node dist/main.js",
@@ -24,7 +25,9 @@
     "mastra:dev": "mastra dev -p 4111",
     "mastra:build": "mastra build",
     "mastra:start": "node --import=./.mastra/output/instrumentation.mjs .mastra/output/index.mjs",
-    "mastra:full": "yarn mastra:build && yarn mastra:start"
+    "mastra:full": "yarn mastra:build && yarn mastra:start",
+    "eval": "npx braintrust eval --no-send-logs src/evals/",
+    "eval:send_to_braintrust": "npx braintrust eval src/evals/"
   },
   "dependencies": {
     "@ai-sdk/azure": "^2.0.10",
@@ -41,7 +44,8 @@
     "@opentelemetry/sdk-node": "^0.203.0",
     "@opentelemetry/sdk-trace-base": "^2.0.1",
     "ai": "^5.0.15",
-    "braintrust": "^0.2.1",
+    "autoevals": "^0.0.131",
+    "braintrust": "^0.2.5",
     "cors": "^2.8.5",
     "dotenv-flow": "^4.1.0",
     "express": "^4.18.2",
@@ -76,6 +80,7 @@
     "eslint-plugin-prettier": "^5.5.1",
     "eslint-plugin-sort-destructure-keys": "^2.0.0",
     "globals": "^16.3.0",
+    "junit-report-builder": "^5.1.1",
     "nodemon": "^3.0.1",
     "prettier": "^3.6.2",
     "supertest": "^7.1.4",
