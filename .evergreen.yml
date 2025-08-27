@@ -113,6 +113,15 @@ functions:
       directory: sage
       shallow_clone: true
 
+  health-check:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        ./scripts/health-check.sh
+
   run-make-background:
     command: subprocess.exec
     params:
