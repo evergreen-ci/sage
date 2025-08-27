@@ -12,9 +12,15 @@ export type TestInput = {
   user: TestUser;
 };
 
+export type Thresholds = {
+  factuality: number;
+  toolUsage: number;
+};
+
 export type TestMetadata = {
   description: string;
   testName: string;
+  thresholds: Thresholds;
 };
 
 export type TestResult = {

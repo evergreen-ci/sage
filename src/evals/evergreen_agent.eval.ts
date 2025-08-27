@@ -1,5 +1,5 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
-import { Factuality, Levenshtein } from 'autoevals';
+import { Factuality } from 'autoevals';
 import { Eval, traced } from 'braintrust';
 import { mastra } from 'mastra';
 import { USER_ID, AGENT_NAME } from 'mastra/agents/constants';
@@ -22,6 +22,10 @@ const testRegularUserCanGetTaskStatus = (): TestCase => {
       testName: 'Regular User Can Access Unrestricted Task',
       description:
         'Tests that a user can successfully fetch a task from Evergreen.',
+      thresholds: {
+        factuality: 0.7,
+        toolUsage: 1.0,
+      },
     },
   };
 };
@@ -41,6 +45,10 @@ const testRegularUserCannotAccessRestrictedTask = (): TestCase => {
     metadata: {
       testName: 'Regular User Cannot Access Restricted Task',
       description: 'Tests that a regular user cannot access a restricted task.',
+      thresholds: {
+        factuality: 0.5,
+        toolUsage: 1.0,
+      },
     },
   };
 };
@@ -107,11 +115,6 @@ Eval('dev-prod-team', {
         expected: expected.text,
         output: output.text,
         input: input.content,
-      }),
-    ({ expected, output }) =>
-      Levenshtein.partial({})({
-        expected: expected.text,
-        output: output.text,
       }),
     toolUsage,
   ],

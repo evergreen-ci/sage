@@ -1,11 +1,7 @@
 import { Reporter, reportFailures } from 'braintrust';
 import junit from 'junit-report-builder';
 import path from 'path';
-import { CustomEvalResult } from './types';
-
-const FACTUALITY_PASS_CUTOFF = 0.4;
-const LEVENSHTEIN_PASS_CUTOFF = 0.7;
-const TOOL_USAGE_PASS_CUTOFF = 1.0;
+import { CustomEvalResult, Thresholds } from './types';
 
 const xmlBuilder = junit.newBuilder();
 const suite = xmlBuilder.testSuite().name('Braintrust Evals');
@@ -27,37 +23,34 @@ Reporter('Evergreen CI reporter', {
       testCase.time(r.output.duration / 1000);
 
       const factualityScore = r.scores.Factuality ?? 0;
-      const levenshteinScore = r.scores.Levenshtein ?? 0;
       const toolUsageScore = r.scores?.['Tool Usage'] ?? 0;
 
-      const failedFactuality = factualityScore < FACTUALITY_PASS_CUTOFF;
-      const failedLevenshtein = levenshteinScore < LEVENSHTEIN_PASS_CUTOFF;
-      const failedToolUsage = toolUsageScore < TOOL_USAGE_PASS_CUTOFF;
+      const factualityPassCutoff = r.metadata.thresholds.factuality;
+      const toolUsagePassCutoff = r.metadata.thresholds.toolUsage;
 
-      if (r.error || failedFactuality || failedLevenshtein || failedToolUsage) {
+      const failedFactuality = factualityScore < factualityPassCutoff;
+      const failedToolUsage = toolUsageScore < toolUsagePassCutoff;
+
+      if (r.error || failedFactuality || failedToolUsage) {
         let message = '';
         if (r.error) {
           message += r.error?.toString();
         }
         if (failedFactuality) {
-          message += `Factuality score ${factualityScore} is below threshold ${FACTUALITY_PASS_CUTOFF}`;
-        }
-        if (failedLevenshtein) {
-          message += `Levenshtein score ${levenshteinScore} is below threshold ${LEVENSHTEIN_PASS_CUTOFF}`;
+          message += `Factuality score ${factualityScore} is below threshold ${factualityPassCutoff}`;
         }
         if (failedToolUsage) {
-          message += `Tool Usage score ${toolUsageScore} is below threshold ${TOOL_USAGE_PASS_CUTOFF}`;
+          message += `Tool Usage score ${toolUsageScore} is below threshold ${toolUsagePassCutoff}`;
         }
         testCase.failure(message);
       }
 
-      const tableResults = buildResultsTable({
+      printResultsTable({
         factualityScore,
-        levenshteinScore,
         toolUsageScore,
+        thresholds: r.metadata.thresholds,
+        testName: r.metadata.testName,
       });
-      console.log(r.metadata.testName);
-      console.table(tableResults);
     });
 
     // Report any errors that occurred.
@@ -75,25 +68,27 @@ Reporter('Evergreen CI reporter', {
   },
 });
 
-const buildResultsTable = ({
+const printResultsTable = ({
   factualityScore,
-  levenshteinScore,
+  testName,
+  thresholds,
   toolUsageScore,
 }: {
   factualityScore: number;
-  levenshteinScore: number;
   toolUsageScore: number;
-}) => ({
-  Factuality: {
-    actual: factualityScore,
-    expected: `>= ${FACTUALITY_PASS_CUTOFF}`,
-  },
-  Levenshtein: {
-    actual: levenshteinScore,
-    expected: `>= ${LEVENSHTEIN_PASS_CUTOFF}`,
-  },
-  'Tool Usage': {
-    actual: toolUsageScore,
-    expected: `>= ${TOOL_USAGE_PASS_CUTOFF}`,
-  },
-});
+  thresholds: Thresholds;
+  testName: string;
+}) => {
+  const resultsTable = {
+    Factuality: {
+      actual: factualityScore,
+      expected: `>= ${thresholds.factuality}`,
+    },
+    'Tool Usage': {
+      actual: toolUsageScore,
+      expected: `>= ${thresholds.toolUsage}`,
+    },
+  };
+  console.log(testName);
+  console.table(resultsTable);
+};
