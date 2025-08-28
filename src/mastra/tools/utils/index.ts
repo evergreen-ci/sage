@@ -13,7 +13,6 @@ const constructAgentMessage = (input: z.infer<typeof inputSchema>) => `
 
 /**
  * Creates a tool from an agent.
- * @param agent - The agent to create a tool from.
  * @param agentId - The id of the agent to create a tool from.
  * @param description - The description of the tool.
  * @returns A tool that can be used to execute the agent.
