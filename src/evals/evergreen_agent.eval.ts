@@ -2,7 +2,7 @@ import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Factuality } from 'autoevals';
 import { Eval, traced } from 'braintrust';
 import { mastra } from 'mastra';
-import { USER_ID, AGENT_NAME } from 'mastra/agents/constants';
+import { USER_ID, EVERGREEN_AGENT_NAME } from 'mastra/agents/constants';
 import { toolUsage } from './scorers';
 import { TestCase, TestInput, TestUser } from './types';
 
@@ -73,7 +73,7 @@ const callModel = async (input: TestInput) =>
     const runtimeContext = new RuntimeContext();
     runtimeContext.set(USER_ID, input.user);
 
-    const agent = mastra.getAgent(AGENT_NAME);
+    const agent = mastra.getAgent(EVERGREEN_AGENT_NAME);
     const response = await agent.generateVNext(input.content, {
       runtimeContext,
     });
