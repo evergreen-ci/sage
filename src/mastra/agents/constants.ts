@@ -4,4 +4,6 @@
  */
 const USER_ID = 'userId';
 
-export { USER_ID };
+const EVERGREEN_AGENT_NAME = 'evergreenAgent';
+
+export { USER_ID, EVERGREEN_AGENT_NAME };
