@@ -21,7 +21,7 @@ post:
   - func: assume-ec2-role
   - func: attach-mongod-logs
   - func: attach-test-results
-  - func: attach-braintrust-logs
+  - func: attach-braintrust-results
 
 buildvariants:
   - name: ubuntu2204-small
@@ -81,7 +81,7 @@ functions:
       files:
         - "./sage/bin/test/*.xml"
 
-  attach-braintrust-logs:
+  attach-braintrust-results:
     command: attach.xunit_results
     params:
       files:
