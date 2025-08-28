@@ -34,15 +34,24 @@ const logger = new WinstonMastraLogger({
 // This workflow takes either a file path, raw text, or an URL as input, and optional additional instructions
 // and returns a structured analysis report, as well as a concise summary.
 const WorkflowInputSchema = z.object({
-  path: z.string().optional().describe(
-    'Absolute file path on the local filesystem (e.g., "/var/log/app.log", "/tmp/debug.txt"). The file must be accessible from the server.'
-  ),
-  text: z.string().optional().describe(
-    'Raw text content to analyze. Use this when you already have the log content in memory or received it from another tool.'
-  ),
-  url: z.string().optional().describe(
-    'HTTP/HTTPS URL to fetch and analyze content from. Must be a direct link to raw text/log content (e.g., "https://pastebin.com/raw/abc123").'
-  ),
+  path: z
+    .string()
+    .optional()
+    .describe(
+      'Absolute file path on the local filesystem (e.g., "/var/log/app.log", "/tmp/debug.txt"). The file must be accessible from the server.'
+    ),
+  text: z
+    .string()
+    .optional()
+    .describe(
+      'Raw text content to analyze. Use this when you already have the log content in memory or received it from another tool.'
+    ),
+  url: z
+    .string()
+    .optional()
+    .describe(
+      'HTTP/HTTPS URL to fetch and analyze content from. Must be a direct link to raw text/log content (e.g., "https://pastebin.com/raw/abc123").'
+    ),
   analysisContext: z
     .string()
     .optional()
