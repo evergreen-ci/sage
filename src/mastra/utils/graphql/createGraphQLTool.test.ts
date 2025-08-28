@@ -13,6 +13,11 @@ const mockClient = {
 const inputSchema = z.object({
   taskId: z.string(),
 });
+const outputSchema = z.object({
+  task: z.object({
+    id: z.string(),
+  }),
+});
 
 const query = `
   query GetTask($taskId: String!) {
@@ -51,6 +56,7 @@ describe('createGraphQLTool', () => {
       description: 'Get task by ID',
       query,
       inputSchema,
+      outputSchema,
       client: mockClient as any,
     });
 
@@ -75,6 +81,7 @@ describe('createGraphQLTool', () => {
       description: 'Get task by ID',
       query,
       inputSchema,
+      outputSchema,
       client: mockClient as any,
     });
 
@@ -101,6 +108,7 @@ describe('createGraphQLTool', () => {
       description: 'Get task by ID',
       query,
       inputSchema,
+      outputSchema,
       client: mockClient as any,
     });
 
@@ -131,6 +139,7 @@ describe('createGraphQLTool', () => {
       description: 'Get task by ID',
       query,
       inputSchema,
+      outputSchema,
       client: mockClient as any,
     });
 

@@ -8,7 +8,11 @@ import {
 } from '../tools/evergreen';
 import { createToolFromAgent } from '../tools/utils';
 import { memoryStore } from '../utils/memory';
-import { historyWorkflow, versionWorkflow } from '../workflows/evergreen';
+import {
+  getTaskHistoryWorkflow,
+  getVersionWorkflow,
+} from '../workflows/evergreen';
+import { logCoreAnalyzerWorkflow } from '../workflows/logCoreAnalyzerWorkflow';
 
 const evergreenAgentMemory = new Memory({
   storage: memoryStore,
@@ -57,8 +61,9 @@ You are **Evergreen AI**, an agent that provides information and support about t
   model: gpt41,
   memory: evergreenAgentMemory,
   workflows: {
-    historyWorkflow,
-    versionWorkflow,
+    getTaskHistoryWorkflow,
+    logCoreAnalyzerWorkflow,
+    getVersionWorkflow,
   },
   tools: {
     getTaskTool,

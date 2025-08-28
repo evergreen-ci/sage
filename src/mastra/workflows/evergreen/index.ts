@@ -1,5 +1,4 @@
-import { historyWorkflow } from './historyWorkflow';
-import { logCoreAnalyzerWorkflow } from '../logCoreAnalyzerWorkflow';
-import { versionWorkflow } from './versionWorkflow';
+import getTaskHistoryWorkflow from './getTaskHistoryWorkflow';
+import getVersionWorkflow from './getVersionWorkflow';
 
-export { historyWorkflow, logCoreAnalyzerWorkflow, versionWorkflow };
+export { getTaskHistoryWorkflow, getVersionWorkflow };
