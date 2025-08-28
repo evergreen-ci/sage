@@ -38,12 +38,12 @@ Reporter('Evergreen CI reporter', {
         }
         if (failedFactuality) {
           messages.push(
-            `Factuality score ${factualityScore} is below threshold ${factualityPassCutoff}`
+            `Factuality score ${factualityScore} is below threshold ${factualityPassCutoff}.`
           );
         }
         if (failedToolUsage) {
           messages.push(
-            `Tool Usage score ${toolUsageScore} is below threshold ${toolUsagePassCutoff}`
+            `Tool Usage score ${toolUsageScore} is below threshold ${toolUsagePassCutoff}.`
           );
         }
         testCase.failure(messages.join('\n'));
