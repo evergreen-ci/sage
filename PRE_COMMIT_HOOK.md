@@ -52,15 +52,30 @@ git commit --no-verify -m "Emergency commit message"
 
 ⚠️ **Warning**: Only use this in true emergencies. The pre-commit hook exists to maintain code quality.
 
+## Setup for new developers
+
+When a new developer clones the repository, the pre-commit hooks will be automatically installed when they run:
+
+```bash
+yarn install
+```
+
+This is because the `prepare` script in `package.json` runs `husky`, which sets up the Git hooks.
+
 ## Troubleshooting
 
 If the pre-commit hook is failing:
 
 1. Run `yarn tsc --noEmit` to check for TypeScript errors
 2. Run `yarn eslint:strict` to check for linting errors
-3. Fix any issues found
-4. Try committing again
+3. Run `yarn format:check` to check for formatting issues
+4. Fix any issues found
+5. Try committing again
 
 The hook will provide clear error messages indicating which check failed and what needs to be fixed.
 
-# Test comment
+## Configuration files
+
+- `.husky/pre-commit` - The pre-commit hook script
+- `.lintstagedrc.js` - lint-staged configuration for running checks on staged files
+- `package.json` - Contains the `prepare` script for Husky setup
