@@ -39,7 +39,7 @@ class StagingChatClient {
     return `randomID${Math.floor(Math.random() * 100000000)}`;
   }
 
-  parseStreamData(chunk) {
+  parseStreamData(chunk: string) {
     const lines = chunk.split('\n');
     const messages = [];
 
@@ -62,7 +62,7 @@ class StagingChatClient {
     return messages;
   }
 
-  async sendMessage(message) {
+  async sendMessage(message: string) {
     return new Promise((resolve, reject) => {
       const messageId = this.generateMessageId();
       const data = JSON.stringify({
