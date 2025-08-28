@@ -1,5 +1,5 @@
 import { LogTypes } from 'types/parsley';
-import { logMetadataSchema } from '.';
+import { logMetadataSchema } from './logMetadata';
 
 describe('logMetadataSchema (discriminated union)', () => {
   describe('EVERGREEN_TASK_FILE', () => {

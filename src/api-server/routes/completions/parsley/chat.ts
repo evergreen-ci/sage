@@ -6,13 +6,14 @@ import {
 } from 'ai';
 import { Request, Response } from 'express';
 import z from 'zod';
+import { logMetadataSchema } from 'constants/parsley/logMetadata';
 import { mastra } from 'mastra';
 import { createParsleyRuntimeContext } from 'mastra/memory/parsley/runtimeContext';
 import { logger } from 'utils/logger';
 import { USER_ID } from '../../../../mastra/agents/constants';
 import { runWithRequestContext } from '../../../../mastra/utils/requestContext';
 import { getUserIdFromRequest } from '../../../middlewares/authentication';
-import { uiMessageSchema, logMetadataSchema } from './validators';
+import { uiMessageSchema } from './validators';
 
 const addMessageInputSchema = z.object({
   id: z.string(),
