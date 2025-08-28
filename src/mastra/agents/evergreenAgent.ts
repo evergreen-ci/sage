@@ -12,7 +12,6 @@ import {
   getTaskHistoryWorkflow,
   getVersionWorkflow,
 } from '../workflows/evergreen';
-import { logCoreAnalyzerWorkflow } from '../workflows/logCoreAnalyzerWorkflow';
 
 const evergreenAgentMemory = new Memory({
   storage: memoryStore,
@@ -62,7 +61,6 @@ You are **Evergreen AI**, an agent that provides information and support about t
   memory: evergreenAgentMemory,
   workflows: {
     getTaskHistoryWorkflow,
-    logCoreAnalyzerWorkflow,
     getVersionWorkflow,
   },
   tools: {
