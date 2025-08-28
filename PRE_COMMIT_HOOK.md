@@ -62,3 +62,5 @@ If the pre-commit hook is failing:
 4. Try committing again
 
 The hook will provide clear error messages indicating which check failed and what needs to be fixed.
+
+# Test comment
