@@ -57,6 +57,7 @@
     "gpt-tokenizer": "^3.0.1",
     "gql": "^1.1.2",
     "graphql": "^16.11.0",
+    "graphql-tag": "^2.12.6",
     "mongodb": "^6.18.0",
     "uuid": "^11.1.0",
     "winston": "^3.17.0",
