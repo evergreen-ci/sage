@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "Running pre-commit checks..."
+
+# Run TypeScript compilation check on the entire project
+echo "Running TypeScript compilation check..."
+yarn tsc --noEmit
+if [ $? -ne 0 ]; then
+    echo "❌ TypeScript compilation failed. Please fix the errors before committing."
+    exit 1
+fi
+
+# Run lint-staged on staged files
+echo "Running lint-staged checks..."
+npx lint-staged
