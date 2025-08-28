@@ -1,14 +1,11 @@
-// import queryString from 'query-string';
+import queryString from 'query-string';
 import { z } from 'zod';
 import { Task as TaskType } from 'gql/generated/types';
 import { LogTypes } from 'types/parsley';
+import { stringifyQuery } from 'utils/query-string';
 import { config } from '../../config';
 import { logMetadataSchema } from './logMetadata';
 
-const queryString = {
-  stringifyUrl: (d: any) => '',
-};
-const stringifyQuery = (d: any) => '';
 const { evergreenURL } = config.evergreen;
 /**
  *
@@ -157,4 +154,5 @@ export {
   getEvergreenTaskFileURL,
   getEvergreenTaskLogURL,
   getEvergreenTestLogURL,
+  generateLogURL,
 };
