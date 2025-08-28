@@ -1,10 +1,11 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Factuality } from 'autoevals';
-import { Eval, traced } from 'braintrust';
+import { Eval } from 'braintrust';
 import { mastra } from 'mastra';
 import { USER_ID, EVERGREEN_AGENT_NAME } from 'mastra/agents/constants';
 import { toolUsage } from './scorers';
-import { TestCase, TestInput, TestUser } from './types';
+import { callModelWithTrace } from './tracer';
+import { ModelOutput, TestCase, TestInput, TestUser } from './types';
 
 const unrestrictedTaskId =
   'evergreen_ubuntu1604_test_service_patch_5e823e1f28baeaa22ae00823d83e03082cd148ab_5e4ff3abe3c3317e352062e4_20_02_21_15_13_48';
@@ -55,56 +56,29 @@ const testCases: TestCase[] = [
   testRegularUserCannotAccessRestrictedTask,
 ];
 
-/**
- * https://www.braintrust.dev/docs/guides/experiments/write#tracing
- * This is a wrapper function that adds tracing spans to the model call.
- * @param input - input (originally given in test case)
- * @returns Expected result from calling agent
- */
-const callModel = async (input: TestInput) =>
-  traced(async span => {
-    span.setAttributes({ name: 'call-model-span' });
-    span.log({ input });
-
-    const start = Date.now();
-    const runtimeContext = new RuntimeContext();
-    runtimeContext.set(USER_ID, input.user);
-
-    const agent = mastra.getAgent(EVERGREEN_AGENT_NAME);
-    const response = await agent.generateVNext(input.content, {
-      runtimeContext,
-    });
-    const end = Date.now();
-
-    const duration = end - start;
-    const toolsUsed = response.toolCalls.map(t => t.payload.toolName);
-
-    const result = {
-      text: response.text,
-      toolsUsed,
-    };
-
-    span.log({
-      output: result,
-      metrics: {
-        input_tokens: response.usage.inputTokens,
-        output_tokens: response.usage.outputTokens,
-        total_tokens: response.usage.totalTokens,
-        reasoning_tokens: response.usage.reasoningTokens,
-        cached_input_tokens: response.usage.cachedInputTokens,
-        duration,
-      },
-      metadata: {
-        tool_results: response.toolResults,
-      },
-    });
-
-    return { ...result, duration };
+const callEvergreenAgent = async (input: TestInput): ModelOutput => {
+  const runtimeContext = new RuntimeContext();
+  runtimeContext.set(USER_ID, input.user);
+  const agent = mastra.getAgent(EVERGREEN_AGENT_NAME);
+  const response = await agent.generateVNext(input.content, {
+    runtimeContext,
   });
+  const toolsUsed = response.toolCalls.map(t => t.payload.toolName);
+  const output = {
+    text: response.text,
+    toolsUsed,
+  };
+  return {
+    ...response,
+    input,
+    output,
+  };
+};
 
 Eval('dev-prod-team', {
   data: testCases,
-  task: async (input: TestInput) => await callModel(input),
+  task: async (input: TestInput) =>
+    await callModelWithTrace(() => callEvergreenAgent(input)),
   // Choose scorers from https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts
   scores: [
     ({ expected, input, output }) =>

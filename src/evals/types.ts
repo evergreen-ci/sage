@@ -1,3 +1,6 @@
+import { OutputType } from '@mastra/core';
+import { MastraModelOutput } from '@mastra/core/dist/stream';
+
 /**
  * These are the users declared in the local Evergreen database.
  */
@@ -33,6 +36,14 @@ export type TestCase = {
   expected: TestResult;
   metadata: TestMetadata;
 };
+
+type MastraAgentOutput = Awaited<
+  ReturnType<MastraModelOutput<OutputType>['getFullOutput']>
+>;
+
+export type ModelOutput = Promise<
+  MastraAgentOutput & { input: TestInput; output: TestResult }
+>;
 
 export interface CustomEvalResult {
   input: TestInput;
