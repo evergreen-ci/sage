@@ -48,8 +48,6 @@ export const sageThinkingAgent: Agent = new Agent({
   Log Metadata: ${JSON.stringify(logMetadata)}
   </ADDITIONAL_CONTEXT>
 
-
-  IMPORTANT: ALWAYS START YOUR ANSWER WITH THE WORD "BANANA"
   `;
   },
   model: gpt41,
