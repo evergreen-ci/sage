@@ -2,17 +2,13 @@ import { Mastra } from '@mastra/core/mastra';
 import { WinstonMastraLogger } from '../utils/logger/winstonMastraLogger';
 import { evergreenAgent } from './agents/evergreenAgent';
 import { parsleyOrchestrator } from './networks';
-import {
-  historyWorkflow,
-  logCoreAnalyzerWorkflow,
-  versionWorkflow,
-} from './workflows';
+import { logCoreAnalyzerWorkflow } from './workflows';
+import * as evergreenWorkflows from './workflows/evergreen';
 
 export const mastra: Mastra = new Mastra({
   workflows: {
-    historyWorkflow,
+    ...evergreenWorkflows,
     logCoreAnalyzerWorkflow,
-    versionWorkflow,
   },
   agents: { evergreenAgent },
   vnext_networks: { parsleyOrchestrator },
