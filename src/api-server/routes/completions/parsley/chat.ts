@@ -7,6 +7,7 @@ import {
 import { Request, Response } from 'express';
 import z from 'zod';
 import { logMetadataSchema } from 'constants/parsley/logMetadata';
+import { generateLogURL } from 'constants/parsley/logURLTemplates';
 import { mastra } from 'mastra';
 import { createParsleyRuntimeContext } from 'mastra/memory/parsley/runtimeContext';
 import { logger } from 'utils/logger';
@@ -56,8 +57,10 @@ const chatRoute = async (
     res.status(400).json({ message: 'Invalid request body' });
     return;
   }
-  runtimeContext.set('logMetadata', messageData.logMetadata);
-
+  if (messageData.logMetadata) {
+    runtimeContext.set('logMetadata', messageData.logMetadata);
+    runtimeContext.set('logURL', generateLogURL(messageData.logMetadata));
+  }
   const conversationId = messageData.id;
 
   let validatedMessage: string | UIMessage[];

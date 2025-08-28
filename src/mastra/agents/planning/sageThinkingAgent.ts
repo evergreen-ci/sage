@@ -25,6 +25,7 @@ export const sageThinkingAgent: Agent = new Agent({
   instructions: ({ runtimeContext }) => {
     const userID = runtimeContext.get(USER_ID);
     const logMetadata = runtimeContext.get('logMetadata');
+    const logURL = runtimeContext.get('logURL');
     return `
   You are Parsley AI. A senior software engineer that can think about a users questions and decide on a course of action to answer the question. 
   You have a deep understanding of the evergreen platform and have access to a series of tools that can help you answer any question.
@@ -46,6 +47,7 @@ export const sageThinkingAgent: Agent = new Agent({
   <ADDITIONAL_CONTEXT>
   User ID: ${userID}
   Log Metadata: ${JSON.stringify(logMetadata)}
+  The Raw log url for the log we are looking at is: ${logURL}
   </ADDITIONAL_CONTEXT>
 
   `;

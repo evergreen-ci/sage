@@ -9,8 +9,8 @@ type ParsleyRuntimeContext = {
     log_type?: string;
     origin?: string;
     test_id?: string;
-    logURL?: string;
   };
+  logURL?: string;
 };
 
 /**
