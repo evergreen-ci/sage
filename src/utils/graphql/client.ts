@@ -99,7 +99,6 @@ export class GraphQLClient {
     const signal = options.signal ?? ac?.signal;
 
     try {
-      console.log('GQL REQUEST', JSON.stringify(body));
       const res = await fetch(this.endpoint, {
         method: 'POST',
         headers,
