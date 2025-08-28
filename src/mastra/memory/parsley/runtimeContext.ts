@@ -9,14 +9,14 @@ type ParsleyRuntimeContext = {
     log_type?: string;
     origin?: string;
     test_id?: string;
+    logURL?: string;
   };
 };
 
 /**
- * Creates a runtime context for the Parsley network.
- * @param logMetadata - The log metadata to include in the runtime context.
- * @param context -
- * @returns A runtime context for the Parsley network.
+ * Creates a runtime context for the Parsley chat route.
+ * This is just a wrapper around RuntimeContext with some typing to assist in development.
+ * @returns A runtime context for the Parsley chat route.
  */
 export const createParsleyRuntimeContext = () =>
   new RuntimeContext<ParsleyRuntimeContext>();
