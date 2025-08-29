@@ -28,7 +28,9 @@
     "mastra:dev": "mastra dev -p 4111",
     "mastra:build": "mastra build",
     "mastra:start": "node --import=./.mastra/output/instrumentation.mjs .mastra/output/index.mjs",
-    "mastra:full": "yarn mastra:build && yarn mastra:start"
+    "mastra:full": "yarn mastra:build && yarn mastra:start",
+    "eval": "npx braintrust eval --no-send-logs src/evals/",
+    "eval:send_to_braintrust": "npx braintrust eval src/evals/"
   },
   "dependencies": {
     "@ai-sdk/azure": "^2.0.10",
@@ -47,7 +49,7 @@
     "@opentelemetry/sdk-node": "^0.203.0",
     "@opentelemetry/sdk-trace-base": "^2.0.1",
     "ai": "^5.0.15",
-    "braintrust": "^0.2.1",
+    "braintrust": "^0.2.5",
     "cors": "^2.8.5",
     "dotenv-cli": "^10.0.0",
     "dotenv-flow": "^4.1.0",
@@ -78,6 +80,7 @@
     "@types/winston": "^2.4.4",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
+    "autoevals": "^0.0.131",
     "eslint": "^9.30.1",
     "eslint-config-prettier": "^10.1.5",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -86,6 +89,7 @@
     "eslint-plugin-prettier": "^5.5.1",
     "eslint-plugin-sort-destructure-keys": "^2.0.0",
     "globals": "^16.3.0",
+    "junit-report-builder": "^5.1.1",
     "mastra": "^0.10.23",
     "nodemon": "^3.0.1",
     "prettier": "^3.6.2",
