@@ -34,9 +34,24 @@ const logger = new WinstonMastraLogger({
 // This workflow takes either a file path, raw text, or an URL as input, and optional additional instructions
 // and returns a structured analysis report, as well as a concise summary.
 const WorkflowInputSchema = z.object({
-  path: z.string().optional(),
-  text: z.string().optional(),
-  url: z.string().optional(),
+  path: z
+    .string()
+    .optional()
+    .describe(
+      'Absolute file path on the local filesystem (e.g., "/var/log/app.log", "/tmp/debug.txt"). The file must be accessible from the server.'
+    ),
+  text: z
+    .string()
+    .optional()
+    .describe(
+      'Raw text content to analyze. Use this when you already have the log content in memory or received it from another tool.'
+    ),
+  url: z
+    .string()
+    .optional()
+    .describe(
+      'HTTP/HTTPS URL to fetch and analyze content from. Must be a direct link to raw text/log content (e.g., "https://pastebin.com/raw/abc123").'
+    ),
   analysisContext: z
     .string()
     .optional()
@@ -383,10 +398,14 @@ const decideAndRunStep = createStep({
 
 export const logCoreAnalyzerWorkflow = createWorkflow({
   id: 'log-core-analyzer',
-  // In the description, we tell the agent to use the "url" parameter, because that's the preferred way
-  // for the orchestrator to use this workflow, but all of them work.
   description:
-    'Analyze, iteratively summarize, and produce a complete report of technical files of arbitrary types and structures. Pass the full URL of the file in the `url:` parameter.',
+    'Analyzes and summarizes log files, technical documents, or any text content. Produces a structured markdown report with key findings and a concise summary. ' +
+    'INPUTS (provide exactly ONE): ' +
+    '• path: Absolute file path on the local filesystem (e.g., "/var/log/app.log") ' +
+    '• url: HTTP/HTTPS URL to fetch content from (e.g., "https://example.com/logs.txt") ' +
+    '• text: Raw text content as a string (for content already in memory) ' +
+    'OPTIONAL: analysisContext - Additional instructions for what to focus on (e.g., "Look for timeout errors", "Focus on authentication issues") ' +
+    'NOTE: This tool analyzes raw file content. It does NOT fetch data from Evergreen or other APIs - provide the actual content or a direct URL/path to it.',
   inputSchema: WorkflowInputSchema,
   outputSchema: WorkflowOutputSchema,
 })
