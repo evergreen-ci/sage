@@ -27,7 +27,7 @@ steps:
       event:
         - push
 
-  - name: deploy-staging
+  - name: deploy-prod
     image: public.ecr.aws/kanopy/drone-helm:v3
     settings:
       chart: mongodb/web-app
@@ -35,11 +35,11 @@ steps:
       add_repos: [mongodb=https://10gen.github.io/helm-charts]
       namespace: devprod-evergreen
       release: sage
-      values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=sage.devprod-evergreen.staging.corp.mongodb.com
-      values_files: [ "environments/staging.yaml" ]
-      api_server: https://api.staging.corp.mongodb.com
+      values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=sage.devprod-evergreen.prod.corp.mongodb.com
+      values_files: [ "environments/prod.yaml" ]
+      api_server: https://api.prod.corp.mongodb.com
       kubernetes_token:
-        from_secret: staging_kubernetes_token
+        from_secret: prod_kubernetes_token
     when:
       event:
         - push
