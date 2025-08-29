@@ -10,6 +10,10 @@ describe('Health check', () => {
   });
   it('should return a list of agents', async () => {
     const response = await request(app).get('/health');
-    expect(response.body.agents.names).toEqual(['evergreenAgent']);
+    expect(response.body.agents.names).toEqual([
+      'sageThinkingAgent',
+      'evergreenAgent',
+      'questionClassifierAgent',
+    ]);
   });
 });
