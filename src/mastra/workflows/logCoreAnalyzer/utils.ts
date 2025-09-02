@@ -59,7 +59,7 @@ export const estimateTokens = (text: string): number => {
   // Sample first 100k characters for accurate estimation
   const sampleSize = Math.min(text.length, 100_000);
   const sample = text.slice(0, sampleSize);
-  const sampleTokens = encode(sample).length;
+  const sampleTokens = countTokens(sample);
 
   if (text.length <= sampleSize) {
     return sampleTokens;
@@ -69,6 +69,11 @@ export const estimateTokens = (text: string): number => {
   const tokensPerChar = sampleTokens / sample.length;
   return Math.ceil(text.length * tokensPerChar);
 };
+
+// Count tokens in text
+export function countTokens(text: string): number {
+  return encode(text).length;
+}
 
 /**
  * Validate token count against configured limits
@@ -86,4 +91,43 @@ export function validateTokenLimit(text: string): number {
   }
 
   return estimatedTokens;
+}
+
+/**
+ * Crop text to a maximum length, keeping portions from head and tail
+ * @param text - Text to crop
+ * @param maxLength - Maximum length in characters
+ * @param headRatio - Ratio of head to keep (0.0 to 1.0, default 0.5)
+ * @param separator - Separator to insert between head and tail (default '...\n[content truncated]\n...')
+ * @returns Cropped text with head and tail portions
+ */
+export function cropMiddle(
+  text: string,
+  maxLength: number,
+  headRatio: number = 0.5,
+  separator: string = '...\n[content truncated]\n...'
+): string {
+  // If text fits, return as-is
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  // Validate headRatio
+  if (headRatio < 0 || headRatio > 1) {
+    throw new Error('headRatio must be between 0 and 1');
+  }
+
+  // Reserve space for separator
+  const availableLength = maxLength - separator.length;
+  if (availableLength <= 0) {
+    throw new Error('maxLength too small to accommodate separator');
+  }
+
+  // Extract head and tail
+  const headLength = Math.floor(availableLength * headRatio);
+  const tailLength = availableLength - headLength;
+  const head = text.substring(0, headLength);
+  const tail = tailLength > 0 ? text.substring(text.length - tailLength) : '';
+
+  return head + separator + tail;
 }

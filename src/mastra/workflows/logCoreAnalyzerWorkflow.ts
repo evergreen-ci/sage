@@ -20,7 +20,7 @@ import {
   USER_CONCISE_SUMMARY_PROMPT,
   SINGLE_PASS_PROMPT,
 } from './logCoreAnalyzer/prompts';
-import { normalizeLineEndings } from './logCoreAnalyzer/utils';
+import { countTokens, normalizeLineEndings, cropMiddle } from './logCoreAnalyzer/utils';
 
 // We define here the core workflow for log file analysis. It gives the Parsley Agent the capability to read and understand text files, of any kind and format.
 // Depending on the file size, we either return a summary in a single LLM call, or perform a more complex iterative refinement, combining the usage of cheap and more expensive models.
@@ -97,7 +97,11 @@ const loadDataStep = createStep({
     }
 
     // Normalize the text
-    const normalizedText = normalizeLineEndings(result.text);
+    let normalizedText = normalizeLineEndings(result.text);
+
+    // Crop text to reasonable size, keeping 70% from head and 30% from tail
+    const maxCharacters = 50000; // Adjust as needed
+    normalizedText = cropMiddle(normalizedText, maxCharacters, 0.7);
 
     logger.info('Data loaded successfully', {
       source: result.metadata.source,
@@ -111,6 +115,7 @@ const loadDataStep = createStep({
     };
   },
 });
+
 
 const ChunkedSchema = z.object({
   chunks: z.array(z.object({ text: z.string() })), // from MDocument.chunk
