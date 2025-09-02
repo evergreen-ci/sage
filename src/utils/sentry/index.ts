@@ -5,7 +5,6 @@ import { logger } from '../logger';
 
 export interface SentryUser {
   id?: string;
-  username?: string;
   email?: string;
   ip_address?: string;
 }
