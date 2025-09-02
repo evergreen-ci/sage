@@ -53,9 +53,14 @@ const developmentFormat = winston.format.combine(
 );
 
 // Create console transport this will print to the console
+// Check NODE_ENV directly from environment at runtime, not from config
+// This ensures we get the correct format even when Mastra builds the code
+const isProduction =
+  process.env.NODE_ENV === 'production' ||
+  (process.env.NODE_ENV === undefined && config.nodeEnv === 'production');
+
 const consoleTransport = new winston.transports.Console({
-  format:
-    config.nodeEnv === 'production' ? productionFormat : developmentFormat,
+  format: isProduction ? productionFormat : developmentFormat,
 });
 
 // Create file transport for all logs

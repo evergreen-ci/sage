@@ -9,7 +9,7 @@ import {
   httpLoggingMiddleware,
   errorLoggingMiddleware,
 } from './middlewares/logging';
-import { completionsRoute } from './routes';
+import { completionsRoute, loginRoute } from './routes';
 import healthRoute from './routes/health';
 import rootRoute from './routes/root';
 
@@ -44,6 +44,7 @@ class SageServer {
     this.app.get('/', rootRoute);
     this.app.get('/health', healthRoute);
     this.app.use('/completions', completionsRoute);
+    this.app.use('/login', loginRoute);
   }
 
   private setupErrorHandling() {

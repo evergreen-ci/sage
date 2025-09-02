@@ -51,10 +51,13 @@ describe('POST /completions/parsley/conversations/chat', () => {
       threadId: id,
     });
     expect(thread).toBeTruthy();
-    expect(thread?.metadata?.log_type).toBe(logMetadata.log_type);
-    expect(thread?.metadata?.task_id).toBe(logMetadata.task_id);
-    expect(thread?.metadata?.execution).toBe(logMetadata.execution);
-    expect(thread?.metadata?.origin).toBe(logMetadata.origin);
+    const logMetadataObj = thread?.metadata?.logMetadata as
+      | typeof logMetadata
+      | undefined;
+    expect(logMetadataObj?.log_type).toBe(logMetadata.log_type);
+    expect(logMetadataObj?.task_id).toBe(logMetadata.task_id);
+    expect(logMetadataObj?.execution).toBe(logMetadata.execution);
+    expect(logMetadataObj?.origin).toBe(logMetadata.origin);
   });
 
   it('should return a 400 status code if the id is not provided', async () => {

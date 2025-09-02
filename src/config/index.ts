@@ -37,6 +37,7 @@ export interface Config {
     apiUser: string;
     apiKey: string;
     userIDHeader: string;
+    evergreenURL: string;
   };
   otelCollectorURL: string;
   honeycomb: {
@@ -113,6 +114,7 @@ export const config: Config = {
     apiUser: getEnvVar('EVERGREEN_API_USER', ''),
     apiKey: getEnvVar('EVERGREEN_API_KEY', ''),
     userIDHeader: getEnvVar('END_USER_HEADER_ID', 'end-user-header-id'),
+    evergreenURL: getEnvVar('EVERGREEN_URL', ''),
   },
   otelCollectorURL: getEnvVar(
     'OTEL_COLLECTOR_URL',

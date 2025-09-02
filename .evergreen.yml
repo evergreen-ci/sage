@@ -20,6 +20,7 @@ post:
   - func: assume-ec2-role
   - func: attach-mongod-logs
   - func: attach-test-results
+  - func: attach-braintrust-results
 
 buildvariants:
   - name: ubuntu2204-small
@@ -39,6 +40,7 @@ buildvariants:
       - name: lint
       - name: test
       - name: e2e
+      - name: eval
 
 tasks:
   - name: compile
@@ -60,6 +62,14 @@ tasks:
       - func: yarn-build
       - func: wait-for-evergreen
       - func: yarn-e2e
+  - name: eval
+    commands:
+      - func: setup-mongodb
+      - func: run-make-background
+        vars:
+          target: local-evergreen
+      - func: wait-for-evergreen
+      - func: yarn-eval
 
 
 
@@ -69,6 +79,12 @@ functions:
     params:
       files:
         - "./sage/bin/test/*.xml"
+
+  attach-braintrust-results:
+    command: attach.xunit_results
+    params:
+      files:
+        - "./sage/bin/braintrust_evals.xml"
 
   attach-mongod-logs:
     command: s3.put
@@ -270,4 +286,15 @@ functions:
         ${PREPARE_SHELL}
         yarn test
 
-      
+  yarn-eval:
+    command: shell.exec
+    params:
+      working_dir: sage
+      env:
+        AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
+        AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
+        BRAINTRUST_API_KEY: ${BRAINTRUST_API_KEY}
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        yarn eval:send_to_braintrust
