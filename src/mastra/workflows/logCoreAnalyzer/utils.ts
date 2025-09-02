@@ -71,6 +71,10 @@ export const estimateTokens = (text: string): number => {
 };
 
 // Count tokens in text
+/**
+ *
+ * @param text
+ */
 export function countTokens(text: string): number {
   return encode(text).length;
 }

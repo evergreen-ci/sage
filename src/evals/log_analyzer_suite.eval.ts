@@ -25,6 +25,10 @@ type TestMetadata = {
   taskName: string;
 };
 
+/**
+ *
+ * @param filePath
+ */
 function getFileSizeInMB(filePath: string): string {
   try {
     const stats = fs.statSync(filePath);
@@ -46,6 +50,9 @@ const evaluationResults: Array<{
 }> = [];
 
 // Custom test case loader
+/**
+ *
+ */
 function loadTestCases() {
   const csvPath = path.join(
     process.cwd(),
@@ -109,6 +116,10 @@ function loadTestCases() {
   return testCases;
 }
 
+/**
+ *
+ * @param input
+ */
 async function callLogAnalyzer(input: WorkflowInput): Promise<WorkflowOutput> {
   return traced(async span => {
     span.setAttributes({ name: 'log-analyzer-suite' });
@@ -169,6 +180,12 @@ const rootCauseScorer = (args: {
   };
 };
 
+/**
+ *
+ * @param output
+ * @param expected
+ * @param metadata
+ */
 async function logEvaluation(
   output: WorkflowOutput,
   expected: TestExpected,
@@ -209,6 +226,9 @@ async function logEvaluation(
 }
 
 // Export to JSON and Markdown report for easy manual assessment
+/**
+ *
+ */
 function exportResults() {
   if (evaluationResults.length === 0) {
     console.log('\nNo evaluation results to export');
@@ -217,7 +237,9 @@ function exportResults() {
 
   const totalTests = evaluationResults.length;
   const passedTests = evaluationResults.filter(r => r.rootCauseFound).length;
-  const avgFactuality = evaluationResults.reduce((sum, r) => sum + r.factualityScore, 0) / totalTests;
+  const avgFactuality =
+    evaluationResults.reduce((sum, r) => sum + r.factualityScore, 0) /
+    totalTests;
 
   const byDifficulty: Record<string, typeof evaluationResults> = {};
   evaluationResults.forEach(r => {
@@ -259,20 +281,29 @@ function exportResults() {
 - Avg Factuality Score: ${summary.metadata.avgFactualityScore}
 
 ## Results by Difficulty
-${summary.byDifficulty.map(d => `
+${summary.byDifficulty
+  .map(
+    d => `
 ### ${d.difficulty || 'Unknown'}
 - Tests: ${d.count}
 - Passed: ${d.passed}
 - Pass Rate: ${d.passRate}
 - Avg Factuality: ${d.avgFactuality}
-`).join('')}
+`
+  )
+  .join('')}
 
 ## Failed Tests
-${evaluationResults.filter(r => !r.rootCauseFound).map(r => `
+${evaluationResults
+  .filter(r => !r.rootCauseFound)
+  .map(
+    r => `
 - ${r.fileName} (${r.difficulty})
   - Expected: ${r.expectedRootCause}
   - Factuality: ${r.factualityScore.toFixed(1)}%
-`).join('')}
+`
+  )
+  .join('')}
 `;
 
   const mdPath = path.join(process.cwd(), 'eval_results_log_analyzer.md');
@@ -283,7 +314,9 @@ ${evaluationResults.filter(r => !r.rootCauseFound).map(r => `
   console.log('-'.repeat(80));
   console.log(`Total Tests: ${summary.metadata.totalTests}`);
   console.log(`Pass Rate: ${summary.metadata.passRate}`);
-  console.log(`Average Factuality Score: ${summary.metadata.avgFactualityScore}`);
+  console.log(
+    `Average Factuality Score: ${summary.metadata.avgFactualityScore}`
+  );
   console.log('-'.repeat(80));
 }
 

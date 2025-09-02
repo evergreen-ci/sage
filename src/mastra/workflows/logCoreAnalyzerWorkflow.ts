@@ -104,7 +104,11 @@ const loadDataStep = createStep({
     let normalizedText = normalizeLineEndings(result.text);
 
     // Crop text to reasonable size, keeping 20% from head and 80% from tail
-    normalizedText = cropMiddle(normalizedText, logAnalyzerConfig.limits.maxChars, 0.2);
+    normalizedText = cropMiddle(
+      normalizedText,
+      logAnalyzerConfig.limits.maxChars,
+      0.2
+    );
 
     logger.info('Data loaded successfully', {
       source: result.metadata.source,
