@@ -9,8 +9,8 @@ export const logAnalyzerConfig = {
    * Chunking configuration
    */
   chunking: {
-    maxSize: 20_000, // Maximum chunk size in tokens
-    overlapTokens: 800, // Overlap to maintain context between chunks
+    maxSize: 6000, // Maximum chunk size in tokens
+    overlapTokens: 600, // Overlap to maintain context between chunks (~10% of maxSize is a good rule of thumb)
     tokenizer: 'o200k_base' as const, // Tokenizer for GPT-4
   },
 
@@ -27,23 +27,13 @@ export const logAnalyzerConfig = {
    * Input limits
    */
   limits: {
-    maxFileSizeMB: parseInt(
-      process.env.LOG_ANALYZER_MAX_FILE_SIZE_MB || '10',
-      10
-    ), // Max file size in MB
-    maxTextLength: parseInt(
-      process.env.LOG_ANALYZER_MAX_TEXT_LENGTH || '10000000',
-      10
-    ), // Max text length in characters (10M default)
-    maxUrlSizeMB: parseInt(
-      process.env.LOG_ANALYZER_MAX_URL_SIZE_MB || '10',
-      10
-    ), // Max size for URL fetches in MB
-    maxTokens: parseInt(process.env.LOG_ANALYZER_MAX_TOKENS || '2000000', 10), // Max estimated tokens to process
-    urlTimeoutMs: parseInt(
-      process.env.LOG_ANALYZER_URL_TIMEOUT_MS || '30000',
-      10
-    ), // URL fetch timeout (30s default)
+    // Limits for loading
+    maxFileSizeMB: 500, // Max file size in MB
+    maxTextLength: 500_000_000, // Max text length in characters (500M)
+    maxUrlSizeMB: 500, // Max size for URL fetches in MB
+    urlTimeoutMs: 30000, // URL fetch timeout in milliseconds (30s)
+    // Limit for processing
+    maxChars: 10_000_000, // Max estimated characters to process (10M)
   },
 
   /**
