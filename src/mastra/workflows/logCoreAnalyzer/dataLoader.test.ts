@@ -1,5 +1,6 @@
 import { SOURCE_TYPE } from './constants';
 import { loadFromFile, loadFromUrl, loadFromText } from './dataLoader';
+import { logAnalyzerConfig } from './config';
 
 // Mock fs/promises
 vi.mock('fs/promises', () => ({
@@ -30,9 +31,10 @@ describe('dataLoader', () => {
     it('should reject files over size limit', async () => {
       const fs = (await import('fs/promises')).default;
 
-      // Mock a 100MB file (way over 10MB limit)
+      // Mock a file that's over the configured limit
+      const oversizeBytes = (logAnalyzerConfig.limits.maxFileSizeMB + 1) * 1024 * 1024;
       vi.mocked(fs.stat).mockResolvedValue({
-        size: 100 * 1024 * 1024,
+        size: oversizeBytes,
       } as any);
 
       await expect(loadFromFile('large.log')).rejects.toThrow('exceeds limit');
@@ -41,9 +43,10 @@ describe('dataLoader', () => {
     it('should load valid files', async () => {
       const fs = (await import('fs/promises')).default;
 
-      // Mock a 1MB file
+      // Mock a file that's within the configured limit
+      const validSizeBytes = Math.floor(logAnalyzerConfig.limits.maxFileSizeMB * 0.5 * 1024 * 1024);
       vi.mocked(fs.stat).mockResolvedValue({
-        size: 1024 * 1024,
+        size: validSizeBytes,
       } as any);
 
       vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('log content'));
@@ -51,17 +54,22 @@ describe('dataLoader', () => {
       const result = await loadFromFile('valid.log');
       expect(result.text).toBe('log content');
       expect(result.metadata.source).toBe(SOURCE_TYPE.FILE);
-      expect(result.metadata.originalSize).toBe(1024 * 1024);
+      expect(result.metadata.originalSize).toBe(validSizeBytes);
     });
 
     it('should reject files with too many tokens', async () => {
       const fs = (await import('fs/promises')).default;
 
       // Mock a file that's under size limit but over token limit
-      const hugeText = 'x'.repeat(10_000_000); // ~2.5M tokens
+      // Use just under the file size limit to ensure we hit token limit instead
+      const fileSizeBytes = Math.floor(logAnalyzerConfig.limits.maxFileSizeMB * 0.9 * 1024 * 1024);
+      // Create text that will exceed token limit (tokens are ~0.25 per char in our mock)
+      // We need > maxTokens, so text length should be > maxTokens * 4
+      const textLength = (logAnalyzerConfig.limits.maxTokens * 5);
+      const hugeText = 'x'.repeat(textLength);
 
       vi.mocked(fs.stat).mockResolvedValue({
-        size: hugeText.length,
+        size: fileSizeBytes,
       } as any);
 
       vi.mocked(fs.readFile).mockResolvedValue(Buffer.from(hugeText));
@@ -74,12 +82,13 @@ describe('dataLoader', () => {
 
   describe('loadFromUrl', () => {
     it('should reject URLs over size limit', async () => {
+      const oversizeBytes = (logAnalyzerConfig.limits.maxUrlSizeMB + 1) * 1024 * 1024;
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         headers: new Headers({
-          'content-length': String(100 * 1024 * 1024), // 100MB
+          'content-length': String(oversizeBytes),
         }),
-        text: async () => 'x'.repeat(100 * 1024 * 1024),
+        text: async () => 'x'.repeat(oversizeBytes),
       });
 
       await expect(
@@ -131,14 +140,19 @@ describe('dataLoader', () => {
 
   describe('loadFromText', () => {
     it('should reject text over character limit', async () => {
-      const hugeText = 'x'.repeat(20_000_000); // 20M characters
+      const hugeText = 'x'.repeat(logAnalyzerConfig.limits.maxTextLength + 1000);
 
       await expect(loadFromText(hugeText)).rejects.toThrow('exceeds limit');
     });
 
     it('should reject text over token limit', async () => {
       // Text that's under character limit but over token limit
-      const text = 'x'.repeat(10_000_000); // ~2.5M tokens
+      // Use just under the text character limit
+      const charCount = Math.min(
+        logAnalyzerConfig.limits.maxTextLength - 1000,
+        (logAnalyzerConfig.limits.maxTokens * 5) // ~0.25 tokens per char in our mock
+      );
+      const text = 'x'.repeat(charCount);
 
       await expect(loadFromText(text)).rejects.toThrow('tokens, exceeds limit');
     });
