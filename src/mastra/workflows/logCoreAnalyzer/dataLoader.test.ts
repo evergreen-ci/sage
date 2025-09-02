@@ -1,6 +1,6 @@
+import { logAnalyzerConfig } from './config';
 import { SOURCE_TYPE } from './constants';
 import { loadFromFile, loadFromUrl, loadFromText } from './dataLoader';
-import { logAnalyzerConfig } from './config';
 
 // Mock fs/promises
 vi.mock('fs/promises', () => ({
@@ -32,7 +32,8 @@ describe('dataLoader', () => {
       const fs = (await import('fs/promises')).default;
 
       // Mock a file that's over the configured limit
-      const oversizeBytes = (logAnalyzerConfig.limits.maxFileSizeMB + 1) * 1024 * 1024;
+      const oversizeBytes =
+        (logAnalyzerConfig.limits.maxFileSizeMB + 1) * 1024 * 1024;
       vi.mocked(fs.stat).mockResolvedValue({
         size: oversizeBytes,
       } as any);
@@ -44,7 +45,9 @@ describe('dataLoader', () => {
       const fs = (await import('fs/promises')).default;
 
       // Mock a file that's within the configured limit
-      const validSizeBytes = Math.floor(logAnalyzerConfig.limits.maxFileSizeMB * 0.5 * 1024 * 1024);
+      const validSizeBytes = Math.floor(
+        logAnalyzerConfig.limits.maxFileSizeMB * 0.5 * 1024 * 1024
+      );
       vi.mocked(fs.stat).mockResolvedValue({
         size: validSizeBytes,
       } as any);
@@ -62,10 +65,12 @@ describe('dataLoader', () => {
 
       // Mock a file that's under size limit but over token limit
       // Use just under the file size limit to ensure we hit token limit instead
-      const fileSizeBytes = Math.floor(logAnalyzerConfig.limits.maxFileSizeMB * 0.9 * 1024 * 1024);
+      const fileSizeBytes = Math.floor(
+        logAnalyzerConfig.limits.maxFileSizeMB * 0.9 * 1024 * 1024
+      );
       // Create text that will exceed token limit (tokens are ~0.25 per char in our mock)
       // We need > maxTokens, so text length should be > maxTokens * 4
-      const textLength = (logAnalyzerConfig.limits.maxTokens * 5);
+      const textLength = logAnalyzerConfig.limits.maxTokens * 5;
       const hugeText = 'x'.repeat(textLength);
 
       vi.mocked(fs.stat).mockResolvedValue({
@@ -82,7 +87,8 @@ describe('dataLoader', () => {
 
   describe('loadFromUrl', () => {
     it('should reject URLs over size limit', async () => {
-      const oversizeBytes = (logAnalyzerConfig.limits.maxUrlSizeMB + 1) * 1024 * 1024;
+      const oversizeBytes =
+        (logAnalyzerConfig.limits.maxUrlSizeMB + 1) * 1024 * 1024;
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         headers: new Headers({
@@ -140,7 +146,9 @@ describe('dataLoader', () => {
 
   describe('loadFromText', () => {
     it('should reject text over character limit', async () => {
-      const hugeText = 'x'.repeat(logAnalyzerConfig.limits.maxTextLength + 1000);
+      const hugeText = 'x'.repeat(
+        logAnalyzerConfig.limits.maxTextLength + 1000
+      );
 
       await expect(loadFromText(hugeText)).rejects.toThrow('exceeds limit');
     });
@@ -150,7 +158,7 @@ describe('dataLoader', () => {
       // Use just under the text character limit
       const charCount = Math.min(
         logAnalyzerConfig.limits.maxTextLength - 1000,
-        (logAnalyzerConfig.limits.maxTokens * 5) // ~0.25 tokens per char in our mock
+        logAnalyzerConfig.limits.maxTokens * 5 // ~0.25 tokens per char in our mock
       );
       const text = 'x'.repeat(charCount);
 
