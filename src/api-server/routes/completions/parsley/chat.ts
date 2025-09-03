@@ -63,10 +63,26 @@ const chatRoute = async (
   if (messageData.logMetadata) {
     runtimeContext.set('logMetadata', messageData.logMetadata);
   }
-  if (runtimeContext.get('logURL') === undefined) {
+  if (runtimeContext.get('logURL') === undefined && messageData.logMetadata) {
     const logFileUrlWorkflow = mastra.getWorkflowById('get-log-file-url');
-    const run = await logFileUrlWorkflow!.createRunAsync({});
-    const runResult = await run!.start({
+    if (!logFileUrlWorkflow) {
+      logger.error('Log file url workflow not found', {
+        requestId: req.requestId,
+      });
+      res.status(500).json({ message: 'Log file url workflow not found' });
+      return;
+    }
+    const run = await logFileUrlWorkflow.createRunAsync({});
+    if (!run) {
+      logger.error('Failed to create log file url workflow run', {
+        requestId: req.requestId,
+      });
+      res
+        .status(500)
+        .json({ message: 'Failed to create log file url workflow run' });
+      return;
+    }
+    const runResult = await run.start({
       inputData: {
         logMetadata: messageData.logMetadata,
       },

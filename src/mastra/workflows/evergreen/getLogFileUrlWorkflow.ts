@@ -19,8 +19,12 @@ const step1ValidateLogFileUrl = createStep({
   }),
   execute: async ({ inputData }) => {
     const { logMetadata } = inputData;
+    const result = logMetadataSchema.safeParse(logMetadata);
+    if (!result.success) {
+      throw new Error('Invalid log metadata');
+    }
     return {
-      logMetadata: logMetadata,
+      logMetadata: result.data,
     };
   },
 });
@@ -100,11 +104,13 @@ const processTestResultsStep = createStep({
       throw new Error('Task is not defined');
     }
     let logFileUrl = '';
-    getTestResultsStepOutput.task?.tests.testResults.forEach(testResult => {
-      if (testResult.id === testId) {
-        logFileUrl = testResult.logs.urlRaw ?? '';
-      }
-    });
+    const testResult = getTestResultsStepOutput.task?.tests.testResults.find(
+      tr => tr.id === testId
+    );
+    if (!testResult) {
+      throw new Error('Test result not found');
+    }
+    logFileUrl = testResult.logs.urlRaw ?? '';
     if (logFileUrl === '') {
       throw new Error('Test log url not found');
     }
@@ -134,14 +140,19 @@ const step3FinalLogFileUrl = createStep({
   outputSchema: z.string(),
   execute: async ({ inputData }) => {
     const {
-      ['get-dynamic-test-log-url']: getDynamicTestLogUrl,
+      ['get-dynamic-test-log-url']: dynamicTestLogUrl,
       ['simple-log-file-url']: simpleLogFileUrl,
     } = inputData;
+    if (simpleLogFileUrl && dynamicTestLogUrl) {
+      throw new Error(
+        'Both simple log file url and dynamic test log url found for the same log metadata. This is not possible.'
+      );
+    }
     if (simpleLogFileUrl) {
       return simpleLogFileUrl;
     }
-    if (getDynamicTestLogUrl) {
-      return getDynamicTestLogUrl;
+    if (dynamicTestLogUrl) {
+      return dynamicTestLogUrl;
     }
 
     throw new Error('No log file url found');
