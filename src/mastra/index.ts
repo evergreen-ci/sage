@@ -1,20 +1,18 @@
 import { Mastra } from '@mastra/core/mastra';
 import { WinstonMastraLogger } from '../utils/logger/winstonMastraLogger';
 import { evergreenAgent } from './agents/evergreenAgent';
+import { questionClassifierAgent } from './agents/planning/questionClassifierAgent';
+import { sageThinkingAgent } from './agents/planning/sageThinkingAgent';
 import { parsleyOrchestrator } from './networks';
-import {
-  historyWorkflow,
-  logCoreAnalyzerWorkflow,
-  versionWorkflow,
-} from './workflows';
+import * as evergreenWorkflows from './workflows/evergreen';
+import { logCoreAnalyzerWorkflow } from './workflows/logCoreAnalyzerWorkflow';
 
 export const mastra: Mastra = new Mastra({
   workflows: {
-    historyWorkflow,
+    ...evergreenWorkflows,
     logCoreAnalyzerWorkflow,
-    versionWorkflow,
   },
-  agents: { evergreenAgent },
+  agents: { sageThinkingAgent, evergreenAgent, questionClassifierAgent },
   vnext_networks: { parsleyOrchestrator },
   logger: new WinstonMastraLogger({
     name: 'Mastra',

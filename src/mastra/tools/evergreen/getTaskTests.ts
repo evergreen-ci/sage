@@ -1,60 +1,57 @@
-import { ToolExecutionContext } from '@mastra/core';
+import { gql } from 'graphql-tag';
 import { z } from 'zod';
-import { TaskTestsQuery } from '../../../gql/generated/types';
+import {
+  TaskTestsQuery,
+  TaskTestsQueryVariables,
+  SortDirection,
+  TestSortCategory,
+} from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
 import evergreenClient from './graphql/evergreenClient';
 
-const GET_TASK_TESTS = `query TaskTests(
-  $id: String!
-  $execution: Int
-  $pageNum: Int
-  $limitNum: Int
-  $statusList: [String!]!
-  $sort: [TestSortOptions!]
-  $testName: String!
-) {
-  task(taskId: $id, execution: $execution) {
-    id
-    execution
-    tests(
-      opts: {
-        sort: $sort
-        page: $pageNum
-        limit: $limitNum
-        statuses: $statusList
-        testName: $testName
-      }
-    ) {
-      filteredTestCount
-      testResults {
-        id
-        baseStatus
-        duration
-        logs {
-          url
-          urlParsley
-          urlRaw
+const GET_TASK_TESTS = gql`
+  query TaskTests(
+    $id: String!
+    $execution: Int
+    $pageNum: Int
+    $limitNum: Int
+    $statusList: [String!]!
+    $sort: [TestSortOptions!]
+    $testName: String!
+  ) {
+    task(taskId: $id, execution: $execution) {
+      id
+      execution
+      tests(
+        opts: {
+          sort: $sort
+          page: $pageNum
+          limit: $limitNum
+          statuses: $statusList
+          testName: $testName
         }
-        status
-        testFile
+      ) {
+        filteredTestCount
+        testResults {
+          id
+          baseStatus
+          duration
+          logs {
+            urlParsley
+            urlRaw
+          }
+          status
+          testFile
+        }
+        totalTestCount
       }
-      totalTestCount
     }
   }
-}
 `;
 
-const TestSortCategoryEnum = z.enum([
-  'BASE_STATUS',
-  'DURATION',
-  'START_TIME',
-  'STATUS',
-  'TEST_NAME',
-]);
-const SortDirectionEnum = z.enum(['ASC', 'DESC']);
 const TestSortOptionsSchema = z.object({
-  direction: SortDirectionEnum,
-  sortBy: TestSortCategoryEnum,
+  direction: z.nativeEnum(SortDirection),
+  sortBy: z.nativeEnum(TestSortCategory),
 });
 
 const StatusEnum = z.enum(['fail', 'pass']);
@@ -69,16 +66,39 @@ const getTaskTestsInputSchema = z.object({
   testName: z.string(),
 });
 
+const getTaskTestsOutputSchema = z.object({
+  task: z.object({
+    id: z.string(),
+    execution: z.number(),
+    tests: z.object({
+      filteredTestCount: z.number(),
+      totalTestCount: z.number(),
+      testResults: z.array(
+        z.object({
+          id: z.string(),
+          baseStatus: z.string().optional(),
+          duration: z.number().optional(),
+          status: z.string(),
+          testFile: z.string(),
+          logs: z.object({
+            urlParsley: z.string().optional(),
+            urlRaw: z.string().optional(),
+          }),
+        })
+      ),
+    }),
+  }),
+});
 const getTaskTestsTool = createGraphQLTool<
-  typeof getTaskTestsInputSchema,
   TaskTestsQuery,
-  ToolExecutionContext<typeof getTaskTestsInputSchema>
+  TaskTestsQueryVariables
 >({
   id: 'getTaskTests',
   description:
     'Get task test results from Evergreen. This tool is used to get the test results for a task. It requires an id (taskId), statusList, and testName. Other options are optional.',
   query: GET_TASK_TESTS,
   inputSchema: getTaskTestsInputSchema,
+  outputSchema: getTaskTestsOutputSchema,
   client: evergreenClient,
 });
 

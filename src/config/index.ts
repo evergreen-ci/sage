@@ -5,15 +5,15 @@ const cwd = process.cwd();
 const isMastraOutput =
   path.basename(cwd) === 'output' &&
   path.basename(path.dirname(cwd)) === '.mastra';
+
 dotenvFlow.config({
   path: isMastraOutput ? path.resolve(cwd, '..', '..') : cwd,
-  node_env: process.env.DEPLOYMENT_ENV || 'local',
+  node_env: process.env.NODE_ENV || 'development',
 });
 
 export interface Config {
   port: number;
   nodeEnv: string;
-  deploymentEnv: string;
   logging: {
     logLevel: string;
     logToFile: boolean;
@@ -37,6 +37,7 @@ export interface Config {
     apiUser: string;
     apiKey: string;
     userIDHeader: string;
+    evergreenURL: string;
   };
   otelCollectorURL: string;
   honeycomb: {
@@ -88,16 +89,12 @@ const getEnvNumber = (key: string, defaultValue: number): number => {
  * `config` is the configuration object for the application.
  */
 export const config: Config = {
-  port: getEnvNumber('PORT', 3000),
+  port: getEnvNumber('PORT', 8080),
   nodeEnv: getEnvVar('NODE_ENV', 'development'),
   db: {
     mongodbUri: getEnvVar('MONGODB_URI', 'mongodb://localhost:27017'),
-    dbName:
-      getEnvVar('NODE_ENV', 'development') === 'test'
-        ? 'sage-test'
-        : getEnvVar('DB_NAME', 'sage'),
+    dbName: getEnvVar('DB_NAME', ''),
   },
-  deploymentEnv: getEnvVar('DEPLOYMENT_ENV', 'local'),
   logging: {
     logLevel: getEnvVar('LOG_LEVEL', 'info'),
     logToFile: getEnvVar('LOG_TO_FILE', 'true') === 'true',
@@ -117,6 +114,7 @@ export const config: Config = {
     apiUser: getEnvVar('EVERGREEN_API_USER', ''),
     apiKey: getEnvVar('EVERGREEN_API_KEY', ''),
     userIDHeader: getEnvVar('END_USER_HEADER_ID', 'end-user-header-id'),
+    evergreenURL: getEnvVar('EVERGREEN_URL', ''),
   },
   otelCollectorURL: getEnvVar(
     'OTEL_COLLECTOR_URL',
@@ -138,8 +136,8 @@ export const config: Config = {
  */
 export const validateConfig = (): string[] | undefined => {
   if (
-    process.env.DEPLOYMENT_ENV !== 'test' &&
-    process.env.DEPLOYMENT_ENV !== 'local'
+    process.env.NODE_ENV !== 'test' &&
+    process.env.NODE_ENV !== 'development'
   ) {
     const warningMsg = `
 ================================================================================

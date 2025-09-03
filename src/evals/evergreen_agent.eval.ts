@@ -1,0 +1,94 @@
+import { RuntimeContext } from '@mastra/core/runtime-context';
+import { Factuality } from 'autoevals';
+import { Eval } from 'braintrust';
+import { mastra } from 'mastra';
+import { USER_ID, EVERGREEN_AGENT_NAME } from 'mastra/agents/constants';
+import { toolUsage } from './scorers';
+import { callModelWithTrace } from './tracer';
+import { ModelOutput, TestCase, TestInput, TestUser } from './types';
+
+const unrestrictedTaskId =
+  'evergreen_ubuntu1604_test_service_patch_5e823e1f28baeaa22ae00823d83e03082cd148ab_5e4ff3abe3c3317e352062e4_20_02_21_15_13_48';
+const restrictedTaskId =
+  'evg_lint_generate_lint_ecbbf17f49224235d43416ea55566f3b1894bbf7_25_03_21_21_09_20';
+
+const testRegularUserCanGetTaskStatus = {
+  input: {
+    content: `What is the status of this task: ${unrestrictedTaskId}?`,
+    user: TestUser.Regular,
+  },
+  expected: {
+    text: `The status of the task "${unrestrictedTaskId}" is "failed".`,
+    toolsUsed: ['getTaskTool'],
+  },
+  metadata: {
+    testName: 'Regular User Can Access Unrestricted Task',
+    description:
+      'Tests that a user can successfully fetch a task from Evergreen.',
+    thresholds: {
+      factuality: 0.7,
+      toolUsage: 1.0,
+    },
+  },
+};
+
+const testRegularUserCannotAccessRestrictedTask = {
+  input: {
+    content: `What is the status of this task: ${restrictedTaskId}?`,
+    user: TestUser.Regular,
+  },
+  expected: {
+    text: `Unable to retrieve the status of this task due to insufficient permissions.`,
+    toolsUsed: ['getTaskTool'],
+  },
+  metadata: {
+    testName: 'Regular User Cannot Access Restricted Task',
+    description: 'Tests that a regular user cannot access a restricted task.',
+    thresholds: {
+      factuality: 0.5,
+      toolUsage: 1.0,
+    },
+  },
+};
+
+const testCases: TestCase[] = [
+  testRegularUserCanGetTaskStatus,
+  testRegularUserCannotAccessRestrictedTask,
+];
+
+const callEvergreenAgent = async (input: TestInput): ModelOutput => {
+  const runtimeContext = new RuntimeContext();
+  runtimeContext.set(USER_ID, input.user);
+  const agent = mastra.getAgent(EVERGREEN_AGENT_NAME);
+  const response = await agent.generateVNext(input.content, {
+    runtimeContext,
+  });
+  const toolsUsed = response.toolCalls.map(t => t.payload.toolName);
+  const output = {
+    text: response.text,
+    toolsUsed,
+  };
+  return {
+    ...response,
+    input,
+    output,
+  };
+};
+
+Eval('dev-prod-team', {
+  data: testCases,
+  task: async (input: TestInput) =>
+    await callModelWithTrace(() => callEvergreenAgent(input)),
+  // Choose scorers from https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts
+  scores: [
+    ({ expected, input, output }) =>
+      Factuality.partial({})({
+        expected: expected.text,
+        output: output.text,
+        input: input.content,
+      }),
+    toolUsage,
+  ],
+  experimentName: 'Evergreen Agent Eval',
+  description: 'Tests for the Evergreen agent.',
+});

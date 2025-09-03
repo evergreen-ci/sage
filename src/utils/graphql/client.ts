@@ -1,3 +1,4 @@
+import { DocumentNode } from 'graphql';
 import { EVERGREEN_USER_HEADER } from '../../constants/headers';
 import logger from '../logger';
 
@@ -68,16 +69,15 @@ export class GraphQLClient {
     };
   }
 
-  async executeQuery<
-    T = unknown,
-    V extends Record<string, unknown> = Record<string, unknown>,
-  >(
-    query: string,
-    variables: V | undefined,
+  async executeQuery<T = unknown>(
+    query: string | DocumentNode,
+    variables: any | undefined,
     options: ExecuteQueryOptions
   ): Promise<T> {
-    const body: GraphQLRequestOptions<V> = {
-      query,
+    const graphqlQueryBody =
+      typeof query === 'string' ? query : query.loc?.source.body || '';
+    const body: GraphQLRequestOptions<any> = {
+      query: graphqlQueryBody,
       ...(variables && Object.keys(variables).length ? { variables } : {}),
       ...(options.operationName
         ? { operationName: options.operationName }
