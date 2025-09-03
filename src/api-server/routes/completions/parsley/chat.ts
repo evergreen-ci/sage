@@ -63,7 +63,24 @@ const chatRoute = async (
   }
   if (messageData.logMetadata) {
     runtimeContext.set('logMetadata', messageData.logMetadata);
-    runtimeContext.set('logURL', generateLogURL(messageData.logMetadata));
+  }
+  if (runtimeContext.get('logURL') === undefined) {
+    const logFileUrlWorkflow = mastra.getWorkflowById('get-log-file-url');
+    const run = await logFileUrlWorkflow!.createRunAsync({});
+    const runResult = await run!.start({
+      inputData: {
+        logMetadata: messageData.logMetadata,
+      },
+      runtimeContext,
+    });
+    if (runResult.status === 'success') {
+      runtimeContext.set('logURL', runResult.result);
+    } else if (runResult.status === 'failed') {
+      logger.error('Error in get log file url workflow', {
+        requestId: req.requestId,
+        error: runResult.error,
+      });
+    }
   }
   const conversationId = messageData.id;
 
