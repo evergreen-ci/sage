@@ -1,12 +1,12 @@
 import { createWorkflow, createStep } from '@mastra/core';
 import { z } from 'zod';
-import { logMetadataSchema } from '../../../constants/parsley/logMetadata';
+import { logMetadataSchema } from '../../../../constants/parsley/logMetadata';
 import {
   constructEvergreenTaskLogURL,
   getEvergreenTaskFileURL,
-} from '../../../constants/parsley/logURLTemplates';
-import { LogTypes } from '../../../types/parsley';
-import { getTaskTestsTool } from '../../tools/evergreen';
+} from '../../../../constants/parsley/logURLTemplates';
+import { LogTypes } from '../../../../types/parsley';
+import { getTaskTestsTool } from '../../../tools/evergreen';
 
 const step1ValidateLogFileUrl = createStep({
   id: 'validate-log-file-url',
