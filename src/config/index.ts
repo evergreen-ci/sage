@@ -5,15 +5,15 @@ const cwd = process.cwd();
 const isMastraOutput =
   path.basename(cwd) === 'output' &&
   path.basename(path.dirname(cwd)) === '.mastra';
+
 dotenvFlow.config({
   path: isMastraOutput ? path.resolve(cwd, '..', '..') : cwd,
-  node_env: process.env.DEPLOYMENT_ENV || 'local',
+  node_env: process.env.NODE_ENV || 'development',
 });
 
 export interface Config {
   port: number;
   nodeEnv: string;
-  deploymentEnv: string;
   logging: {
     logLevel: string;
     logToFile: boolean;
@@ -99,16 +99,12 @@ const getEnvNumber = (key: string, defaultValue: number): number => {
  * `config` is the configuration object for the application.
  */
 export const config: Config = {
-  port: getEnvNumber('PORT', 3000),
+  port: getEnvNumber('PORT', 8080),
   nodeEnv: getEnvVar('NODE_ENV', 'development'),
   db: {
     mongodbUri: getEnvVar('MONGODB_URI', 'mongodb://localhost:27017'),
-    dbName:
-      getEnvVar('NODE_ENV', 'development') === 'test'
-        ? 'sage-test'
-        : getEnvVar('DB_NAME', 'sage'),
+    dbName: getEnvVar('DB_NAME', ''),
   },
-  deploymentEnv: getEnvVar('DEPLOYMENT_ENV', 'local'),
   logging: {
     logLevel: getEnvVar('LOG_LEVEL', 'info'),
     logToFile: getEnvVar('LOG_TO_FILE', 'true') === 'true',
@@ -140,7 +136,7 @@ export const config: Config = {
   },
   braintrust: {
     apiKey: getEnvVar('BRAINTRUST_API_KEY', ''),
-    parent: getEnvVar('BRAINTRUST_PARENT', 'project_name:dev-prod-team'),
+    parent: getEnvVar('BRAINTRUST_PARENT', 'project_name:sage-staging'),
   },
   sentry: {
     dsn: getEnvVar('SENTRY_DSN', ''),
@@ -163,8 +159,8 @@ export const config: Config = {
  */
 export const validateConfig = (): string[] | undefined => {
   if (
-    process.env.DEPLOYMENT_ENV !== 'test' &&
-    process.env.DEPLOYMENT_ENV !== 'local'
+    process.env.NODE_ENV !== 'test' &&
+    process.env.NODE_ENV !== 'development'
   ) {
     const warningMsg = `
 ================================================================================
