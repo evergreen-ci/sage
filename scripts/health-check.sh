@@ -27,6 +27,6 @@ trap cleanup EXIT
 sleep 5
 
 # Optional: Add a health check here
-curl -f http://localhost:3000/health || exit 1
+curl -f http://localhost:8080/health || exit 1
 
 echo "Server test completed successfully"
