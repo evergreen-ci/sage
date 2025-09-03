@@ -34,31 +34,25 @@ const step2SimpleLogFileUrl = createStep({
     logMetadata: logMetadataSchema,
     logType: z.nativeEnum(LogTypes),
   }),
-  outputSchema: z.object({
-    logFileUrl: z.string(),
-  }),
+  outputSchema: z.string(),
   execute: async ({ inputData }) => {
     const { logMetadata } = inputData;
     switch (logMetadata.log_type) {
       case LogTypes.EVERGREEN_TASK_FILE:
-        return {
-          logFileUrl: getEvergreenTaskFileURL(
-            logMetadata.task_id,
-            logMetadata.execution,
-            logMetadata.fileName
-          ),
-        };
+        return getEvergreenTaskFileURL(
+          logMetadata.task_id,
+          logMetadata.execution,
+          logMetadata.fileName
+        );
       case LogTypes.EVERGREEN_TASK_LOGS:
-        return {
-          logFileUrl: constructEvergreenTaskLogURL(
-            logMetadata.task_id,
-            logMetadata.execution,
-            logMetadata.origin,
-            {
-              text: true,
-            }
-          ),
-        };
+        return constructEvergreenTaskLogURL(
+          logMetadata.task_id,
+          logMetadata.execution,
+          logMetadata.origin,
+          {
+            text: true,
+          }
+        );
       default:
         throw new Error('Unsupported log type for this workflow');
     }
@@ -82,7 +76,6 @@ const getTestResultsStep = createStep({
     if (logMetadata.log_type !== LogTypes.EVERGREEN_TEST_LOGS) {
       throw new Error('Log metadata is not a test log');
     }
-    console.log('filters on', logMetadata.test_id, logMetadata.group_id);
     const getTestResultsStepOutput = await getTaskTestsTool.execute({
       context: {
         id: logMetadata.task_id,
@@ -99,13 +92,11 @@ const getTestResultsStep = createStep({
   },
 });
 
-const getFinalTestLogUrl = createStep({
+const processTestResultsStep = createStep({
   id: 'get-final-test-log-url',
   description: 'Get the final test log url',
   inputSchema: getTestResultsStep.outputSchema,
-  outputSchema: z.object({
-    logFileUrl: z.string(),
-  }),
+  outputSchema: z.string(),
   execute: async ({ inputData }) => {
     const { getTestResultsStepOutput, testId } = inputData;
     if (!getTestResultsStepOutput) {
@@ -120,26 +111,46 @@ const getFinalTestLogUrl = createStep({
     if (logFileUrl === '') {
       throw new Error('Test log url not found');
     }
-    return {
-      logFileUrl: logFileUrl,
-    };
+    return logFileUrl;
   },
 });
 
-const getDynamicTestLogUrlWorkflow = createWorkflow({
+const step2GetDynamicTestLogUrlWorkflow = createWorkflow({
   id: 'get-dynamic-test-log-url',
   description: 'Get the log file url for a test log',
   inputSchema: z.object({
     logMetadata: logMetadataSchema,
     logType: z.nativeEnum(LogTypes),
   }),
-  outputSchema: z.object({
-    logFileUrl: z.string(),
-  }),
+  outputSchema: z.string(),
 })
   .then(getTestResultsStep)
-  .then(getFinalTestLogUrl)
+  .then(processTestResultsStep)
   .commit();
+
+const step3FinalLogFileUrl = createStep({
+  id: 'final-log-file-url',
+  description: 'Final log file url',
+  inputSchema: z.object({
+    'simple-log-file-url': z.string(),
+    'get-dynamic-test-log-url': z.string(),
+  }),
+  outputSchema: z.string(),
+  execute: async ({ inputData }) => {
+    const {
+      ['get-dynamic-test-log-url']: getDynamicTestLogUrl,
+      ['simple-log-file-url']: simpleLogFileUrl,
+    } = inputData;
+    if (simpleLogFileUrl) {
+      return simpleLogFileUrl;
+    }
+    if (getDynamicTestLogUrl) {
+      return getDynamicTestLogUrl;
+    }
+
+    throw new Error('No log file url found');
+  },
+});
 
 const simpleLogTypes = [
   LogTypes.EVERGREEN_TASK_FILE,
@@ -151,9 +162,7 @@ const getLogFileUrlWorkflow = createWorkflow({
   inputSchema: z.object({
     logMetadata: logMetadataSchema,
   }),
-  outputSchema: z.object({
-    logFileUrl: z.string(),
-  }),
+  outputSchema: z.string(),
 })
   .then(step1ValidateLogFileUrl)
   .branch([
@@ -164,9 +173,10 @@ const getLogFileUrlWorkflow = createWorkflow({
     [
       async ({ inputData }) =>
         inputData.logType === LogTypes.EVERGREEN_TEST_LOGS,
-      getDynamicTestLogUrlWorkflow,
+      step2GetDynamicTestLogUrlWorkflow,
     ],
   ])
+  .then(step3FinalLogFileUrl)
   .commit();
 
 export default getLogFileUrlWorkflow;
