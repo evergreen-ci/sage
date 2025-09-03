@@ -142,7 +142,7 @@ export const config: Config = {
     dsn: getEnvVar('SENTRY_DSN', ''),
     environment: getEnvVar(
       'SENTRY_ENVIRONMENT',
-      getEnvVar('DEPLOYMENT_ENV', 'local')
+      getEnvVar('SENTRY_ENV', 'staging')
     ),
     sampleRate: parseFloat(getEnvVar('SENTRY_SAMPLE_RATE', '1.0')),
     tracesSampleRate: parseFloat(getEnvVar('SENTRY_TRACES_SAMPLE_RATE', '0.1')),
