@@ -15,7 +15,7 @@ interface RateMessageRequest extends Request<{ messageId: string }> {
 }
 
 const braintrustLogger = initBraintrustLogger({
-  projectName: config.braintrust.parent,
+  projectName: config.braintrust.project,
   apiKey: config.braintrust.apiKey,
 });
 
@@ -62,9 +62,8 @@ const rateMessageRoute = async (
       braintrustLogger.logFeedback({
         id: messageId,
         scores: {
-          user_rating: score,
+          correctness: score,
         },
-        comment: messageRating.feedback,
         metadata: {
           user_id: messageRating.userId,
           timestamp: messageRating.timestamp || new Date(),

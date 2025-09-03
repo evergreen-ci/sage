@@ -47,6 +47,7 @@ export interface Config {
   braintrust: {
     apiKey: string;
     parent: string;
+    project: string;
   };
 }
 
@@ -130,7 +131,8 @@ export const config: Config = {
   },
   braintrust: {
     apiKey: getEnvVar('BRAINTRUST_API_KEY', ''),
-    parent: getEnvVar('BRAINTRUST_PARENT', 'project_name:dev-prod-team'),
+    parent: getEnvVar('BRAINTRUST_PARENT', 'project_name:sage-staging'),
+    project: getEnvVar('BRAINTRUST_PROJECT', 'sage-staging'),
   },
 };
 
