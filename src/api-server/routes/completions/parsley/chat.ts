@@ -7,7 +7,6 @@ import {
 import { Request, Response } from 'express';
 import z from 'zod';
 import { logMetadataSchema } from 'constants/parsley/logMetadata';
-import { generateLogURL } from 'constants/parsley/logURLTemplates';
 import { mastra } from 'mastra';
 import { createParsleyRuntimeContext } from 'mastra/memory/parsley/runtimeContext';
 import { logger } from 'utils/logger';
