@@ -5027,7 +5027,7 @@ export type TaskTestsQueryVariables = Exact<{
   statusList?: InputMaybe<Array<Scalars['String']['input']>>;
   sort?: InputMaybe<Array<TestSortOptions>>;
   groupId?: InputMaybe<Scalars['String']['input']>;
-  testName: Scalars['String']['input'];
+  testName?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 export type TaskTestsQuery = {

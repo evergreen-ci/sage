@@ -18,7 +18,7 @@ const GET_TASK_TESTS = gql`
     $statusList: [String!]
     $sort: [TestSortOptions!]
     $groupId: String
-    $testName: String!
+    $testName: String
   ) {
     task(taskId: $id, execution: $execution) {
       id
@@ -66,7 +66,7 @@ const getTaskTestsInputSchema = z.object({
   statusList: z.array(StatusEnum).default([]).optional(),
   groupId: z.string().optional(),
   sort: z.array(TestSortOptionsSchema).optional(),
-  testName: z.string(),
+  testName: z.string().optional(),
 });
 
 const getTaskTestsOutputSchema = z.object({
