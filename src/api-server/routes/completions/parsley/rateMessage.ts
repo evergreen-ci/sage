@@ -27,10 +27,6 @@ const rateMessageRoute = async (
   const messageRating = req.body;
 
   try {
-    if (!messageId) {
-      logger.warn('Missing messageId parameter in rating request');
-      return res.status(400).json({ error: 'Missing messageId parameter' });
-    }
 
     if (
       !messageRating ||
