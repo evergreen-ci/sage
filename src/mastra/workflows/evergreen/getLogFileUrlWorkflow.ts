@@ -15,13 +15,11 @@ const step1ValidateLogFileUrl = createStep({
     logMetadata: logMetadataSchema,
   }),
   outputSchema: z.object({
-    logType: z.nativeEnum(LogTypes),
     logMetadata: logMetadataSchema,
   }),
   execute: async ({ inputData }) => {
     const { logMetadata } = inputData;
     return {
-      logType: logMetadata.log_type,
       logMetadata: logMetadata,
     };
   },
@@ -32,7 +30,6 @@ const step2SimpleLogFileUrl = createStep({
   description: 'Get the log file url from a template string',
   inputSchema: z.object({
     logMetadata: logMetadataSchema,
-    logType: z.nativeEnum(LogTypes),
   }),
   outputSchema: z.string(),
   execute: async ({ inputData }) => {
@@ -120,7 +117,6 @@ const step2GetDynamicTestLogUrlWorkflow = createWorkflow({
   description: 'Get the log file url for a test log',
   inputSchema: z.object({
     logMetadata: logMetadataSchema,
-    logType: z.nativeEnum(LogTypes),
   }),
   outputSchema: z.string(),
 })
@@ -167,12 +163,13 @@ const getLogFileUrlWorkflow = createWorkflow({
   .then(step1ValidateLogFileUrl)
   .branch([
     [
-      async ({ inputData }) => simpleLogTypes.includes(inputData.logType),
+      async ({ inputData }) =>
+        simpleLogTypes.includes(inputData.logMetadata.log_type),
       step2SimpleLogFileUrl,
     ],
     [
       async ({ inputData }) =>
-        inputData.logType === LogTypes.EVERGREEN_TEST_LOGS,
+        inputData.logMetadata.log_type === LogTypes.EVERGREEN_TEST_LOGS,
       step2GetDynamicTestLogUrlWorkflow,
     ],
   ])
