@@ -1,5 +1,6 @@
-import { CoreMessage } from '@mastra/core';
+import { convertMessages } from '@mastra/core';
 import { RuntimeContext } from '@mastra/core/runtime-context';
+import { UIMessage } from 'ai';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from 'mastra';
@@ -12,7 +13,7 @@ const getMessagesParamsSchema = z.object({
 });
 
 type GetMessagesOutput = {
-  messages: CoreMessage[];
+  messages: UIMessage[];
 };
 
 type ErrorResponse = {
@@ -113,7 +114,10 @@ const getMessagesRoute = async (
     const messages = await memory.query({
       threadId: conversationId,
     });
-    res.status(200).json({ messages: messages.messages });
+
+    const converter = convertMessages(messages.uiMessages);
+    const convertedMessages = converter.to('AIV5.UI');
+    res.status(200).json({ messages: convertedMessages });
   } catch (error) {
     logger.error('Error in get messages route', {
       error,

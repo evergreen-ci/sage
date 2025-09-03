@@ -1,13 +1,17 @@
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
-import { gpt41Nano } from '../models/openAI/gpt41';
+import { gpt41 } from '../models/openAI/gpt41';
 import {
   getTaskTool,
   getTaskFilesTool,
   getTaskTestsTool,
 } from '../tools/evergreen';
+import { createToolFromAgent } from '../tools/utils';
 import { memoryStore } from '../utils/memory';
-import { historyWorkflow, versionWorkflow } from '../workflows';
+import {
+  getTaskHistoryWorkflow,
+  getVersionWorkflow,
+} from '../workflows/evergreen';
 
 const evergreenAgentMemory = new Memory({
   storage: memoryStore,
@@ -41,7 +45,7 @@ const evergreenAgentMemory = new Memory({
 });
 
 export const evergreenAgent: Agent = new Agent({
-  name: 'Evergreen Agent',
+  name: 'evergreenAgent',
   description:
     'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources',
   instructions: `
@@ -53,11 +57,11 @@ You are **Evergreen AI**, an agent that provides information and support about t
 * When possible, answer directly and concisely without tools.
 * Your role is to provide accurate, domain-specific responses for the orchestrator to use.
 `,
-  model: gpt41Nano,
+  model: gpt41,
   memory: evergreenAgentMemory,
   workflows: {
-    historyWorkflow,
-    versionWorkflow,
+    getTaskHistoryWorkflow,
+    getVersionWorkflow,
   },
   tools: {
     getTaskTool,
@@ -65,3 +69,8 @@ You are **Evergreen AI**, an agent that provides information and support about t
     getTaskTestsTool,
   },
 });
+
+export const askEvergreenAgentTool = createToolFromAgent(
+  evergreenAgent.id,
+  evergreenAgent.getDescription()
+);

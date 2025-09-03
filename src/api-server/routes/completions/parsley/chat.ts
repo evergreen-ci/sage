@@ -1,16 +1,20 @@
 import { AgentMemoryOption } from '@mastra/core/agent';
-import { RuntimeContext } from '@mastra/core/runtime-context';
-import { UIMessage, validateUIMessages } from 'ai';
+import {
+  pipeUIMessageStreamToResponse,
+  UIMessage,
+  validateUIMessages,
+} from 'ai';
 import { Request, Response } from 'express';
 import z from 'zod';
+import { logMetadataSchema } from 'constants/parsley/logMetadata';
+import { generateLogURL } from 'constants/parsley/logURLTemplates';
 import { mastra } from 'mastra';
-import { ORCHESTRATOR_NAME } from 'mastra/networks/constants';
-import { LogTypes } from 'types/parsley';
+import { createParsleyRuntimeContext } from 'mastra/memory/parsley/runtimeContext';
 import { logger } from 'utils/logger';
 import { USER_ID } from '../../../../mastra/agents/constants';
 import { runWithRequestContext } from '../../../../mastra/utils/requestContext';
 import { getUserIdFromRequest } from '../../../middlewares/authentication';
-import { uiMessageSchema, logMetadataSchema } from './validators';
+import { uiMessageSchema } from './validators';
 
 const addMessageInputSchema = z.object({
   id: z.string(),
@@ -27,10 +31,8 @@ const chatRoute = async (
   req: Request,
   res: Response<ReadableStream | ErrorResponse>
 ) => {
-  const runtimeContext = new RuntimeContext();
-
+  const runtimeContext = createParsleyRuntimeContext();
   const authenticatedUserId = getUserIdFromRequest(req);
-
   if (!authenticatedUserId) {
     logger.error('No authentication provided', {
       requestId: req.requestId,
@@ -40,7 +42,6 @@ const chatRoute = async (
   }
 
   runtimeContext.set(USER_ID, authenticatedUserId);
-
   logger.debug('User context set for request', {
     userId: authenticatedUserId,
     requestId: req.requestId,
@@ -56,7 +57,10 @@ const chatRoute = async (
     res.status(400).json({ message: 'Invalid request body' });
     return;
   }
-
+  if (messageData.logMetadata) {
+    runtimeContext.set('logMetadata', messageData.logMetadata);
+    runtimeContext.set('logURL', generateLogURL(messageData.logMetadata));
+  }
   const conversationId = messageData.id;
 
   let validatedMessage: string | UIMessage[];
@@ -78,18 +82,18 @@ const chatRoute = async (
   }
 
   try {
-    const network = mastra.vnext_getNetwork(ORCHESTRATOR_NAME);
-    if (!network) {
-      logger.error('Network not found', {
-        requestId: req.requestId,
-        networkName: ORCHESTRATOR_NAME,
-      });
-      res.status(500).json({ message: 'Network not found' });
-      return;
-    }
-    const memory = await network.getMemory({ runtimeContext });
-    let memoryOptions: AgentMemoryOption;
+    const agent = mastra.getAgent('sageThinkingAgent');
 
+    const memory = await agent.getMemory({
+      runtimeContext,
+    });
+
+    let memoryOptions: AgentMemoryOption = {
+      thread: {
+        id: 'undefined',
+      },
+      resource: 'undefined',
+    };
     // Populate session ID if provided
     const thread = await memory?.getThreadById({ threadId: conversationId });
     if (thread) {
@@ -105,30 +109,8 @@ const chatRoute = async (
         resource: thread.resourceId,
       };
     } else {
-      const { logMetadata } = messageData;
-      const metadata: Record<string, string | number> = {
-        userId: authenticatedUserId,
-      };
-
-      if (logMetadata) {
-        metadata.task_id = logMetadata.task_id;
-        metadata.execution = logMetadata.execution;
-        metadata.log_type = logMetadata.log_type;
-
-        switch (logMetadata.log_type) {
-          case LogTypes.EVERGREEN_TEST_LOGS:
-            metadata.test_id = logMetadata.test_id;
-            break;
-          case LogTypes.EVERGREEN_TASK_LOGS:
-            metadata.origin = logMetadata.origin;
-            break;
-          default:
-            break;
-        }
-      }
-
       const newThread = await memory?.createThread({
-        metadata,
+        metadata: runtimeContext.toJSON(),
         resourceId: 'parsley_completions',
         threadId: conversationId,
       });
@@ -146,28 +128,24 @@ const chatRoute = async (
       };
     }
 
-    const routingAgent = await network.getRoutingAgent({ runtimeContext });
-    if (!routingAgent) {
-      logger.error('Routing agent not found', {
-        requestId: req.requestId,
-        networkName: ORCHESTRATOR_NAME,
-      });
-      res.status(500).json({ message: 'Routing agent not found' });
-      return;
-    }
-
     const stream = await runWithRequestContext(
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>
-        await routingAgent.stream(validatedMessage, {
+        await agent.streamVNext(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
+          format: 'aisdk',
           // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
           // Thread ID is set correctly, which is most important.
           // https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence#setting-up-server-side-id-generation
         })
     );
-    stream.pipeUIMessageStreamToResponse(res);
+
+    // Get the UIMessage stream and pipe it to Express with correct headers & backpressure.
+    pipeUIMessageStreamToResponse({
+      response: res,
+      stream: stream.toUIMessageStream(),
+    });
   } catch (error) {
     logger.error('Error in add message route', {
       error,

@@ -1,5 +1,5 @@
 import { LogTypes } from 'types/parsley';
-import { logMetadataSchema } from '.';
+import { logMetadataSchema } from './logMetadata';
 
 describe('logMetadataSchema (discriminated union)', () => {
   describe('EVERGREEN_TASK_FILE', () => {
@@ -8,6 +8,7 @@ describe('logMetadataSchema (discriminated union)', () => {
         log_type: LogTypes.EVERGREEN_TASK_FILE,
         task_id: 'task-123',
         execution: 0, // min(0) per current schema
+        fileName: 'test.txt',
       });
       expect(result.success).toBe(true);
     });
