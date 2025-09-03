@@ -15,8 +15,9 @@ const GET_TASK_TESTS = gql`
     $execution: Int
     $pageNum: Int
     $limitNum: Int
-    $statusList: [String!]!
+    $statusList: [String!]
     $sort: [TestSortOptions!]
+    $groupId: String
     $testName: String!
   ) {
     task(taskId: $id, execution: $execution) {
@@ -28,6 +29,7 @@ const GET_TASK_TESTS = gql`
           page: $pageNum
           limit: $limitNum
           statuses: $statusList
+          groupID: $groupId
           testName: $testName
         }
       ) {
@@ -54,14 +56,15 @@ const TestSortOptionsSchema = z.object({
   sortBy: z.nativeEnum(TestSortCategory),
 });
 
-const StatusEnum = z.enum(['fail', 'pass']);
+const StatusEnum = z.enum(['fail', 'pass', 'timeout', 'silentfail']);
 
 const getTaskTestsInputSchema = z.object({
   id: z.string(),
   execution: z.number().optional(),
   pageNum: z.number().optional(),
   limitNum: z.number().optional(),
-  statusList: z.array(StatusEnum),
+  statusList: z.array(StatusEnum).default([]).optional(),
+  groupId: z.string().optional(),
   sort: z.array(TestSortOptionsSchema).optional(),
   testName: z.string(),
 });
