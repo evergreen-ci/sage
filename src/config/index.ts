@@ -126,7 +126,7 @@ export const config: Config = {
   },
   braintrust: {
     apiKey: getEnvVar('BRAINTRUST_API_KEY', ''),
-    parent: getEnvVar('BRAINTRUST_PARENT', 'project_name:dev-prod-team'),
+    parent: getEnvVar('BRAINTRUST_PARENT', 'project_name:sage-staging'),
   },
 };
 

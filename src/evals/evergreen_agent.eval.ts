@@ -75,7 +75,7 @@ const callEvergreenAgent = async (input: TestInput): ModelOutput => {
   };
 };
 
-Eval('dev-prod-team', {
+Eval('sage-prod', {
   data: testCases,
   task: async (input: TestInput) =>
     await callModelWithTrace(() => callEvergreenAgent(input)),
