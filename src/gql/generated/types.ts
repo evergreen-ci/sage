@@ -424,11 +424,13 @@ export enum BannerTheme {
 
 export type BetaFeatures = {
   __typename?: 'BetaFeatures';
-  spruceWaterfallEnabled: Scalars['Boolean']['output'];
+  parsleyAIEnabled?: Maybe<Scalars['Boolean']['output']>;
+  spruceWaterfallEnabled?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type BetaFeaturesInput = {
-  spruceWaterfallEnabled: Scalars['Boolean']['input'];
+  parsleyAIEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  spruceWaterfallEnabled?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export enum BootstrapMethod {
@@ -5022,8 +5024,9 @@ export type TaskTestsQueryVariables = Exact<{
   execution?: InputMaybe<Scalars['Int']['input']>;
   pageNum?: InputMaybe<Scalars['Int']['input']>;
   limitNum?: InputMaybe<Scalars['Int']['input']>;
-  statusList: Array<Scalars['String']['input']>;
+  statusList?: InputMaybe<Array<Scalars['String']['input']>>;
   sort?: InputMaybe<Array<TestSortOptions>>;
+  groupId?: InputMaybe<Scalars['String']['input']>;
   testName: Scalars['String']['input'];
 }>;
 
