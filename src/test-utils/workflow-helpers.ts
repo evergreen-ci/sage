@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 /**
  * Expects a workflow result to be successful
- * @param wr - The worflow result to expect
+ * @param wr - The workflow result to expect
  */
 export function expectSuccess(
   wr: WorkflowResult<
