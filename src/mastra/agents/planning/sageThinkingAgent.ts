@@ -45,6 +45,9 @@ export const sageThinkingAgent: Agent = new Agent({
      - Use for: Understanding user intent and deciding which tools to use
 
 
+  ## Rules
+  When answering a user question using markdown avoid using large headings. Keep it simple and concise.
+  
   <ADDITIONAL_CONTEXT>
   User ID: ${userID}
   Log Metadata: ${JSON.stringify(logMetadata)}
