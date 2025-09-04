@@ -78,20 +78,21 @@ const fetchTestResultsForTestLog = createStep({
     testId: z.string(),
     groupId: z.string().optional(),
   }),
-  execute: async ({ inputData, runtimeContext }) => {
+  execute: async ({ inputData, runtimeContext, tracingContext }) => {
     const { logMetadata } = inputData;
 
     if (logMetadata.log_type !== LogTypes.EVERGREEN_TEST_LOGS) {
       throw new Error('Expected test log metadata but received a non-test log');
     }
 
-    const testResults = await getTaskTestsTool.execute({
+    const testResults = await getTaskTestsTool.execute?.({
       context: {
         id: logMetadata.task_id,
         execution: logMetadata.execution,
         groupId: logMetadata.group_id,
       },
       runtimeContext,
+      tracingContext,
     });
 
     return {
