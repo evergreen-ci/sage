@@ -1,6 +1,7 @@
 import { Agent } from '@mastra/core/agent';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
+import { wrapTraced } from 'braintrust';
 import { z } from 'zod';
 import { WinstonMastraLogger } from '../../utils/logger/winstonMastraLogger';
 import { logAnalyzerConfig } from './logCoreAnalyzer/config';
@@ -74,7 +75,7 @@ const loadDataStep = createStep({
     text: z.string(),
     analysisContext: z.string().optional(),
   }),
-  execute: async ({ inputData }) => {
+  execute: wrapTraced(async ({ inputData }) => {
     const { analysisContext, path: filePath, text, url } = inputData;
 
     let result: LoadResult;
@@ -109,7 +110,7 @@ const loadDataStep = createStep({
       text: normalizedText,
       analysisContext,
     };
-  },
+  }),
 });
 
 const ChunkedSchema = z.object({
@@ -126,7 +127,7 @@ const chunkStep = createStep({
     analysisContext: z.string().optional(),
   }),
   outputSchema: ChunkedSchema,
-  execute: async ({ inputData }) => {
+  execute: wrapTraced(async ({ inputData }) => {
     const { analysisContext, text } = inputData;
 
     const doc = MDocument.fromText(text);
@@ -142,7 +143,7 @@ const chunkStep = createStep({
     });
 
     return { chunks, analysisContext };
-  },
+  }),
 });
 
 // This schema passed accross steps during the refinement loop, keeps track of the current chunk index and summary
@@ -169,7 +170,7 @@ const initialStep = createStep({
   description: 'Summarize first chunk using log analyzer agent',
   inputSchema: ChunkedSchema,
   outputSchema: LoopStateSchema,
-  execute: async ({ inputData }) => {
+  execute: wrapTraced(async ({ inputData }) => {
     const { analysisContext, chunks } = inputData;
     const first = chunks[0]?.text ?? '';
     logger.debug('Initial chunk for analysis', {
@@ -191,7 +192,7 @@ const initialStep = createStep({
 
     const summary = result.object?.summary ?? '';
     return { idx: 1, chunks, summary, analysisContext };
-  },
+  }),
 });
 
 // Refinement agent - cheaper model for iterative processing
@@ -215,7 +216,7 @@ const refineStep = createStep({
     'Iteratively refine the summary with context from previous chunks',
   inputSchema: LoopStateSchema,
   outputSchema: LoopStateSchema,
-  execute: async ({ inputData }) => {
+  execute: wrapTraced(async ({ inputData }) => {
     const {
       analysisContext,
       chunks,
@@ -265,7 +266,7 @@ const refineStep = createStep({
       summary: newSummary,
       analysisContext,
     };
-  },
+  }),
 });
 
 // Define the report formatter agent for final output
@@ -282,7 +283,7 @@ const singlePassStep = createStep({
   description: 'Direct analysis and report generation for single-chunk files',
   inputSchema: ChunkedSchema,
   outputSchema: WorkflowOutputSchema,
-  execute: async ({ inputData }) => {
+  execute: wrapTraced(async ({ inputData }) => {
     const { analysisContext, chunks } = inputData;
 
     // Validate we have exactly one chunk
@@ -319,7 +320,7 @@ const singlePassStep = createStep({
       markdown: result.object?.markdown || '',
       summary: result.object?.summary || '',
     };
-  },
+  }),
 });
 
 const finalizeStep = createStep({
@@ -327,7 +328,7 @@ const finalizeStep = createStep({
   description: 'Generate final markdown report and concise summary',
   inputSchema: LoopStateSchema,
   outputSchema: WorkflowOutputSchema,
-  execute: async ({ inputData }) => {
+  execute: wrapTraced(async ({ inputData }) => {
     const { analysisContext, summary } = inputData;
     logger.debug('Generating final markdown report', {
       summary: summary.slice(0, 100),
@@ -358,7 +359,7 @@ const finalizeStep = createStep({
       markdown: markdownRes.text,
       summary: conciseSummaryRes.text,
     };
-  },
+  }),
 });
 
 const iterativeRefinementWorkflow = createWorkflow({
@@ -385,7 +386,7 @@ const decideAndRunStep = createStep({
   description: 'Choose single-pass vs iterative workflow and run it',
   inputSchema: ChunkedSchema,
   outputSchema: WorkflowOutputSchema,
-  execute: async params => {
+  execute: wrapTraced(async params => {
     const { chunks } = params.inputData;
     if (chunks.length === 1) {
       // run the single-pass step directly
@@ -393,7 +394,7 @@ const decideAndRunStep = createStep({
     }
     // run the iterative workflow
     return iterativeRefinementWorkflow.execute(params);
-  },
+  }),
 });
 
 export const logCoreAnalyzerWorkflow = createWorkflow({

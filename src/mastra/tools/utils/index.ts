@@ -1,4 +1,5 @@
 import { createTool } from '@mastra/core';
+import { wrapTraced } from 'braintrust';
 import { z } from 'zod';
 
 const inputSchema = z.object({
@@ -22,7 +23,7 @@ export const createToolFromAgent = (agentId: string, description: string) =>
     id: agentId,
     description,
     inputSchema,
-    execute: async ({ context, mastra, runtimeContext }) => {
+    execute: wrapTraced(async ({ context, mastra, runtimeContext }) => {
       const callableAgent = mastra?.getAgent(agentId);
       if (!callableAgent) {
         throw new Error(`Agent ${agentId} not found`);
@@ -32,5 +33,5 @@ export const createToolFromAgent = (agentId: string, description: string) =>
         runtimeContext,
       });
       return result;
-    },
+    }),
   });

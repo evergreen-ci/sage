@@ -1,4 +1,5 @@
 import { createWorkflow, createStep } from '@mastra/core';
+import { wrapTraced } from 'braintrust';
 import { z } from 'zod';
 import { TaskHistoryDirection } from '../../../gql/generated/types';
 import { getTaskTool, getTaskHistoryTool } from '../../tools/evergreen';
@@ -12,7 +13,7 @@ const getTaskHistoryStep = createStep({
   outputSchema: z.object({
     history: getTaskHistoryTool.outputSchema,
   }),
-  execute: async ({ inputData, runtimeContext }) => {
+  execute: wrapTraced(async ({ inputData, runtimeContext }) => {
     const { task } = inputData;
     if (!task) {
       throw new Error('Previous get-task step did not return a task');
@@ -51,7 +52,7 @@ const getTaskHistoryStep = createStep({
     return {
       history: historyResult,
     };
-  },
+  }),
 });
 
 export const getTaskHistoryWorkflow = createWorkflow({

@@ -1,4 +1,5 @@
 import { createWorkflow, createStep } from '@mastra/core';
+import { wrapTraced } from 'braintrust';
 import { z } from 'zod';
 import { logMetadataSchema } from '../../../../constants/parsley/logMetadata';
 import {
@@ -24,13 +25,13 @@ const validateLogMetadata = createStep({
   outputSchema: z.object({
     logMetadata: logMetadataSchema,
   }),
-  execute: async ({ inputData }) => {
+  execute: wrapTraced(async ({ inputData }) => {
     const result = logMetadataSchema.safeParse(inputData.logMetadata);
     if (!result.success) {
       throw new Error('Invalid log metadata');
     }
     return { logMetadata: result.data };
-  },
+  }),
 });
 
 /** 2a) Build direct URL for task file / task logs */
@@ -41,7 +42,7 @@ const buildDirectLogUrl = createStep({
     logMetadata: logMetadataSchema,
   }),
   outputSchema: z.string(),
-  execute: async ({ inputData }) => {
+  execute: wrapTraced(async ({ inputData }) => {
     const { logMetadata } = inputData;
 
     switch (logMetadata.log_type) {
@@ -63,7 +64,7 @@ const buildDirectLogUrl = createStep({
       default:
         throw new Error('Unsupported log type for direct URL construction');
     }
-  },
+  }),
 });
 
 /** 2b-i) Fetch test results when the log is a test log */
@@ -78,7 +79,7 @@ const fetchTestResultsForTestLog = createStep({
     testId: z.string(),
     groupId: z.string().optional(),
   }),
-  execute: async ({ inputData, runtimeContext }) => {
+  execute: wrapTraced(async ({ inputData, runtimeContext }) => {
     const { logMetadata } = inputData;
 
     if (logMetadata.log_type !== LogTypes.EVERGREEN_TEST_LOGS) {
@@ -99,7 +100,7 @@ const fetchTestResultsForTestLog = createStep({
       testId: logMetadata.test_id,
       groupId: logMetadata.group_id,
     };
-  },
+  }),
 });
 
 /** 2b-ii) Derive the actual test log URL from fetched results */
@@ -108,11 +109,11 @@ const deriveTestLogUrl = createStep({
   description: 'Resolve the final test log URL for a specific test id',
   inputSchema: fetchTestResultsForTestLog.outputSchema,
   outputSchema: z.string(),
-  execute: async ({ inputData }) => {
+  execute: wrapTraced(async ({ inputData }) => {
     const { testId, testResults } = inputData;
 
     const results = testResults.task?.tests?.testResults ?? [];
-    const match = results.find(tr => {
+    const match = results.find((tr: { id: any }) => {
       if (!tr) return false;
       const idMatches = tr.id === testId;
       return idMatches;
@@ -127,7 +128,7 @@ const deriveTestLogUrl = createStep({
       throw new Error('No test log URL available on the matched test result');
     }
     return url;
-  },
+  }),
 });
 
 /** Sub-workflow for test logs */
@@ -154,7 +155,7 @@ const chooseLogUrl = createStep({
     testLogUrl: z.string(),
   }),
   outputSchema: z.string(),
-  execute: async ({ inputData }) => {
+  execute: wrapTraced(async ({ inputData }) => {
     const { buildDirectLogUrl: directUrl, testLogUrl: testUrl } = inputData;
 
     if (directUrl && testUrl) {
@@ -166,7 +167,7 @@ const chooseLogUrl = createStep({
     if (testUrl) return testUrl;
 
     throw new Error('No log URL resolved from the provided metadata');
-  },
+  }),
 });
 
 /**

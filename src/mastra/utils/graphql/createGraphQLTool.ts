@@ -1,4 +1,5 @@
 import { createTool } from '@mastra/core';
+import { wrapTraced } from 'braintrust';
 import { DocumentNode } from 'graphql';
 import { z } from 'zod';
 import {
@@ -47,7 +48,7 @@ export const createGraphQLTool = <
     inputSchema,
     outputSchema,
     description,
-    execute: async ({ context, runtimeContext }) => {
+    execute: wrapTraced(async ({ context, runtimeContext }) => {
       const userId = runtimeContext.get(USER_ID) as string | undefined;
       if (!userId) {
         throw new Error(
@@ -85,5 +86,5 @@ export const createGraphQLTool = <
 
         throw error;
       }
-    },
+    }),
   });

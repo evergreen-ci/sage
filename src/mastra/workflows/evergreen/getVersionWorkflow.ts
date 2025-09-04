@@ -1,4 +1,5 @@
 import { createWorkflow, createStep } from '@mastra/core';
+import { wrapTraced } from 'braintrust';
 import { getTaskTool, getVersionTool } from '../../tools/evergreen';
 
 const getTaskStep = createStep(getTaskTool);
@@ -8,7 +9,7 @@ const getVersionStep = createStep({
   description: 'Get version information from Evergreen using task data',
   inputSchema: getTaskTool.outputSchema,
   outputSchema: getVersionTool.outputSchema,
-  execute: async ({ inputData, runtimeContext }) => {
+  execute: wrapTraced(async ({ inputData, runtimeContext }) => {
     const { task } = inputData;
 
     if (!task) {
@@ -31,7 +32,7 @@ const getVersionStep = createStep({
     });
 
     return versionResult;
-  },
+  }),
 });
 
 const getVersionWorkflow = createWorkflow({
