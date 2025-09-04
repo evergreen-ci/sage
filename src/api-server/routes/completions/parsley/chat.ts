@@ -7,7 +7,6 @@ import {
 import { Request, Response } from 'express';
 import z from 'zod';
 import { logMetadataSchema } from 'constants/parsley/logMetadata';
-import { generateLogURL } from 'constants/parsley/logURLTemplates';
 import { mastra } from 'mastra';
 import { createParsleyRuntimeContext } from 'mastra/memory/parsley/runtimeContext';
 import { logger } from 'utils/logger';
@@ -47,19 +46,58 @@ const chatRoute = async (
     requestId: req.requestId,
   });
 
-  const { data: messageData, success: messageSuccess } =
-    addMessageInputSchema.safeParse(req.body);
+  const {
+    data: messageData,
+    error: messageError,
+    success: messageSuccess,
+  } = addMessageInputSchema.safeParse(req.body);
   if (!messageSuccess) {
     logger.error('Invalid request body', {
       requestId: req.requestId,
       body: req.body,
+      error: messageError,
     });
     res.status(400).json({ message: 'Invalid request body' });
     return;
   }
   if (messageData.logMetadata) {
     runtimeContext.set('logMetadata', messageData.logMetadata);
-    runtimeContext.set('logURL', generateLogURL(messageData.logMetadata));
+  }
+  if (runtimeContext.get('logURL') === undefined && messageData.logMetadata) {
+    const logFileUrlWorkflow = mastra.getWorkflowById('resolve-log-file-url');
+    if (!logFileUrlWorkflow) {
+      logger.error('resolve-log-file-url workflow not found', {
+        requestId: req.requestId,
+      });
+      res
+        .status(500)
+        .json({ message: 'resolve-log-file-url workflow not found' });
+      return;
+    }
+    const run = await logFileUrlWorkflow.createRunAsync({});
+    if (!run) {
+      logger.error('Failed to create log file url workflow run', {
+        requestId: req.requestId,
+      });
+      res
+        .status(500)
+        .json({ message: 'Failed to create log file url workflow run' });
+      return;
+    }
+    const runResult = await run.start({
+      inputData: {
+        logMetadata: messageData.logMetadata,
+      },
+      runtimeContext,
+    });
+    if (runResult.status === 'success') {
+      runtimeContext.set('logURL', runResult.result);
+    } else if (runResult.status === 'failed') {
+      logger.error('Error in get log file url workflow', {
+        requestId: req.requestId,
+        error: runResult.error,
+      });
+    }
   }
   const conversationId = messageData.id;
 
