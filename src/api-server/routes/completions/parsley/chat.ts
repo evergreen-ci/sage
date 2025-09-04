@@ -1,9 +1,5 @@
 import { AgentMemoryOption } from '@mastra/core/agent';
-import {
-  pipeUIMessageStreamToResponse,
-  UIMessage,
-  validateUIMessages,
-} from 'ai';
+import { UIMessage, validateUIMessages } from 'ai';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { logMetadataSchema } from 'constants/parsley/logMetadata';
@@ -22,13 +18,21 @@ const addMessageInputSchema = z.object({
   message: z.union([z.string(), uiMessageSchema]),
 });
 
+type AddMessageOutput = {
+  message: string;
+  requestId: string;
+  timestamp: string;
+  completionUsage: Record<string, number>;
+  conversationId: string;
+};
+
 type ErrorResponse = {
   message: string;
 };
 
 const chatRoute = async (
   req: Request,
-  res: Response<ReadableStream | ErrorResponse>
+  res: Response<AddMessageOutput | ErrorResponse>
 ) => {
   const runtimeContext = createParsleyRuntimeContext();
   const authenticatedUserId = getUserIdFromRequest(req);
@@ -169,7 +173,7 @@ const chatRoute = async (
     const stream = await runWithRequestContext(
       { userId: authenticatedUserId, requestId: req.requestId },
       async () =>
-        await agent.streamVNext(validatedMessage, {
+        await agent.generateVNext(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
           format: 'aisdk',
@@ -180,9 +184,12 @@ const chatRoute = async (
     );
 
     // Get the UIMessage stream and pipe it to Express with correct headers & backpressure.
-    pipeUIMessageStreamToResponse({
-      response: res,
-      stream: stream.toUIMessageStream(),
+    res.json({
+      message: stream.text,
+      requestId: 'req.requestId',
+      timestamp: new Date().toISOString(),
+      completionUsage: stream.usage,
+      conversationId: conversationId,
     });
   } catch (error) {
     logger.error('Error in add message route', {
