@@ -1,17 +1,15 @@
-// getLogFileUrlWorkflow.test.ts
-import { WorkflowResult, Step, DefaultEngineType } from '@mastra/core';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
 import { USER_ID } from 'mastra/agents/constants';
 import { expectSuccess } from 'test-utils/workflow-helpers';
 import { LogTypes } from '../../../../types/parsley';
-import getLogFileUrlWorkflow from '.'; // adjust path
-// mock only the Evergreen GraphQL tool
-const mockExecute = vi.fn();
+import getLogFileUrlWorkflow from '.';
+
+const mockGetTasksTool = vi.fn();
 vi.mock('../../../tools/evergreen', () => ({
   getTaskTestsTool: {
     outputSchema: z.any(),
-    execute: (...args: any[]) => mockExecute(...args),
+    execute: (...args: any[]) => mockGetTasksTool(...args),
   },
 }));
 
@@ -70,7 +68,7 @@ describe('getLogFileUrlWorkflow', () => {
       group_id: 'g1',
     };
 
-    mockExecute.mockResolvedValueOnce({
+    mockGetTasksTool.mockResolvedValueOnce({
       task: {
         id: 't-test-1',
         execution: 0,
@@ -95,7 +93,7 @@ describe('getLogFileUrlWorkflow', () => {
     const wr = await startRun(meta);
 
     // optional sanity check that we passed through variables shape you expect
-    expect(mockExecute).toHaveBeenCalled();
+    expect(mockGetTasksTool).toHaveBeenCalled();
 
     expectSuccess(wr);
     expect(wr.result).toBe('https://example/raw/log.txt');
@@ -109,7 +107,7 @@ describe('getLogFileUrlWorkflow', () => {
       test_id: 'missing-id',
     };
 
-    mockExecute.mockResolvedValueOnce({
+    mockGetTasksTool.mockResolvedValueOnce({
       task: {
         id: 't-missing',
         execution: 1,
@@ -141,7 +139,7 @@ describe('getLogFileUrlWorkflow', () => {
       test_id: 'target',
     };
 
-    mockExecute.mockResolvedValueOnce({
+    mockGetTasksTool.mockResolvedValueOnce({
       task: {
         id: 't-null-logs',
         execution: 2,
