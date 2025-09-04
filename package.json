@@ -30,6 +30,7 @@
     "mastra:build": "mastra build",
     "mastra:start": "node --import=./.mastra/output/instrumentation.mjs .mastra/output/index.mjs",
     "mastra:full": "yarn mastra:build && yarn mastra:start",
+    "prepare": "husky",
     "eval": "npx braintrust eval --no-send-logs src/evals/",
     "eval:send_to_braintrust": "npx braintrust eval src/evals/"
   },
@@ -90,6 +91,8 @@
     "eslint-plugin-prettier": "^5.5.1",
     "eslint-plugin-sort-destructure-keys": "^2.0.0",
     "globals": "^16.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.5",
     "junit-report-builder": "^5.1.1",
     "mastra": "^0.10.23",
     "nodemon": "^3.0.1",
