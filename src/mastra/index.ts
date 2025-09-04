@@ -18,4 +18,11 @@ export const mastra: Mastra = new Mastra({
     name: 'Mastra',
     level: 'info',
   }),
+  telemetry: {
+    serviceName: 'sage',
+    enabled: true,
+    export: {
+      type: 'otlp',
+    },
+  },
 });
