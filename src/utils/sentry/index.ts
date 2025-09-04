@@ -40,7 +40,7 @@ class SentryService {
       Sentry.init({
         dsn: config.sentry.dsn,
         sendDefaultPii: true,
-        environment: config.sentry.environment,
+        environment: config.nodeEnv,
         debug: config.sentry.debug,
         sampleRate: config.sentry.sampleRate,
         tracesSampleRate: config.sentry.tracesSampleRate,
@@ -73,7 +73,7 @@ class SentryService {
 
       this.initialized = true;
       logger.info('Sentry initialized successfully', {
-        environment: config.sentry.environment,
+        environment: config.nodeEnv,
         sampleRate: config.sentry.sampleRate,
         tracesSampleRate: config.sentry.tracesSampleRate,
       });
