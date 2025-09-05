@@ -76,7 +76,7 @@ tasks:
       - func: wait-for-evergreen
       - func: yarn-eval
         vars:
-          eval_dir: src/evals/evergreenAgent
+          eval_dir: evergreenAgent
       - func: attach-braintrust-results
         vars:
           xml_file_name: evergreen_evals.xml
@@ -84,7 +84,7 @@ tasks:
     commands:
       - func: yarn-eval
         vars:
-          eval_dir: src/evals/questionClassifierAgent
+          eval_dir: questionClassifierAgent
       - func: attach-braintrust-results
         vars:
           xml_file_name: question_classifier_evals.xml
