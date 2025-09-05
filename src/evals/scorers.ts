@@ -20,7 +20,7 @@ export const toolUsage = (args: { output: string[]; expected: string[] }) => {
   }
 
   return {
-    name: 'Tool Usage',
+    name: 'ToolUsage',
     score: correctToolsUsed ? 1 : 0,
     metadata: {
       expected_tools: expectedTools,

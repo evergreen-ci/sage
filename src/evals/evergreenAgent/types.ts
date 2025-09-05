@@ -5,20 +5,15 @@ export type TestInput = {
   user: TestUser;
 };
 
-export type Thresholds = {
-  factuality: number;
-  toolUsage: number;
-};
-
 export type Scores = {
   Factuality: number;
-  'Tool Usage': number;
+  ToolUsage: number;
 };
 
 export type TestMetadata = {
   description: string;
   testName: string;
-  scoreThresholds: Thresholds;
+  scoreThresholds: Scores;
 };
 
 export type TestResult = {

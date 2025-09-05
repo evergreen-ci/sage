@@ -3,17 +3,17 @@ import junit from 'junit-report-builder';
 import path from 'path';
 import { ReporterEvalResult } from './types';
 
-export const getReporter = <Input, Output, Metadata, Scores, Thresholds>({
+export const getReporter = <Input, Output, Metadata, Scores>({
   calculateScores,
   printResults,
   reporterName,
   testSuiteName,
   xmlFileOutputName,
 }: {
-  calculateScores: (scores: Scores, scoreThresholds: Thresholds) => string[];
+  calculateScores: (scores: Scores, scoreThresholds: Scores) => string[];
   printResults: (
     scores: Scores,
-    scoreThresholds: Thresholds,
+    scoreThresholds: Scores,
     testName: string
   ) => void;
   reporterName: string;
@@ -33,8 +33,7 @@ export const getReporter = <Input, Output, Metadata, Scores, Thresholds>({
           Input,
           Output,
           Metadata,
-          Scores,
-          Thresholds
+          Scores
         >;
 
         const testCase = testSuite

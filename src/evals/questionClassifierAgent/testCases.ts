@@ -10,7 +10,7 @@ const testIrrelevantQuestion: TestCase = {
     testName: 'Ignore irrelevant questions',
     description: 'Tests that irrelevant questions are ignored.',
     scoreThresholds: {
-      exactMatch: 1.0,
+      ExactMatch: 1.0,
     },
   },
 };
@@ -26,7 +26,7 @@ const testEvergreenQuestion: TestCase = {
     testName: 'Identify Evergreen questions',
     description: 'Tests that agent can identify Evergreen questions.',
     scoreThresholds: {
-      exactMatch: 1.0,
+      ExactMatch: 1.0,
     },
   },
 };
@@ -42,7 +42,7 @@ const testLogQuestion: TestCase = {
     testName: 'Identify log analysis questions',
     description: 'Tests that agent can identify log analysis questions.',
     scoreThresholds: {
-      exactMatch: 1.0,
+      ExactMatch: 1.0,
     },
   },
 };
@@ -57,7 +57,7 @@ const testSelfAnswerableQuestion: TestCase = {
     testName: 'Identify self-answerable questions',
     description: 'Tests that agent knows when it can answer by itself.',
     scoreThresholds: {
-      exactMatch: 1.0,
+      ExactMatch: 1.0,
     },
   },
 };
@@ -74,7 +74,7 @@ const testCombinationQuestion: TestCase = {
     description:
       'Tests that agent can identify combination analysis questions.',
     scoreThresholds: {
-      exactMatch: 1.0,
+      ExactMatch: 1.0,
     },
   },
 };

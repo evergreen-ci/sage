@@ -1,19 +1,13 @@
 import { ReporterName } from 'evals/constants';
 import { getReporter } from 'evals/reporter.eval';
-import {
-  TestInput,
-  TestResult,
-  TestMetadata,
-  Thresholds,
-  Scores,
-} from './types';
+import { TestInput, TestResult, TestMetadata, Scores } from './types';
 
-const calculateScores = (scores: Scores, scoreThresholds: Thresholds) => {
+const calculateScores = (scores: Scores, scoreThresholds: Scores) => {
   const factualityScore = scores.Factuality;
-  const toolUsageScore = scores['Tool Usage'];
+  const toolUsageScore = scores.ToolUsage;
 
-  const factualityPassCutoff = scoreThresholds.factuality;
-  const toolUsagePassCutoff = scoreThresholds.toolUsage;
+  const factualityPassCutoff = scoreThresholds.Factuality;
+  const toolUsagePassCutoff = scoreThresholds.ToolUsage;
 
   const messages: string[] = [];
   if (factualityScore < factualityPassCutoff) {
@@ -31,24 +25,24 @@ const calculateScores = (scores: Scores, scoreThresholds: Thresholds) => {
 
 const printResults = (
   scores: Scores,
-  scoreThresholds: Thresholds,
+  scoreThresholds: Scores,
   testName: string
 ) => {
   const resultsTable = {
     Factuality: {
       actual: scores.Factuality,
-      expected: `>= ${scoreThresholds.factuality}`,
+      expected: `>= ${scoreThresholds.Factuality}`,
     },
     'Tool Usage': {
-      actual: scores['Tool Usage'],
-      expected: `>= ${scoreThresholds.toolUsage}`,
+      actual: scores.ToolUsage,
+      expected: `>= ${scoreThresholds.ToolUsage}`,
     },
   };
   console.log(testName);
   console.table(resultsTable);
 };
 
-getReporter<TestInput, TestResult, TestMetadata, Scores, Thresholds>({
+getReporter<TestInput, TestResult, TestMetadata, Scores>({
   calculateScores,
   printResults,
   reporterName: ReporterName.Evergreen,

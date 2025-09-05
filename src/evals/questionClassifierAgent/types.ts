@@ -9,14 +9,10 @@ export type Scores = {
   ExactMatch: number;
 };
 
-export type Thresholds = {
-  exactMatch: number;
-};
-
 export type TestMetadata = {
   description: string;
   testName: string;
-  scoreThresholds: Thresholds;
+  scoreThresholds: Scores;
 };
 
 export type TestCase = {

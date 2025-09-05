@@ -1,16 +1,10 @@
 import { ReporterName } from 'evals/constants';
 import { getReporter } from 'evals/reporter.eval';
-import {
-  TestInput,
-  TestResult,
-  TestMetadata,
-  Thresholds,
-  Scores,
-} from './types';
+import { TestInput, TestResult, TestMetadata, Scores } from './types';
 
-const calculateScores = (scores: Scores, scoreThresholds: Thresholds) => {
+const calculateScores = (scores: Scores, scoreThresholds: Scores) => {
   const exactMatchScore = scores.ExactMatch;
-  const exactMatchCutoff = scoreThresholds.exactMatch;
+  const exactMatchCutoff = scoreThresholds.ExactMatch;
   const messages: string[] = [];
   if (exactMatchScore < exactMatchCutoff) {
     messages.push(
@@ -22,20 +16,20 @@ const calculateScores = (scores: Scores, scoreThresholds: Thresholds) => {
 
 const printResults = (
   scores: Scores,
-  scoreThresholds: Thresholds,
+  scoreThresholds: Scores,
   testName: string
 ) => {
   const resultsTable = {
     ExactMatch: {
       actual: scores.ExactMatch,
-      expected: scoreThresholds.exactMatch,
+      expected: scoreThresholds.ExactMatch,
     },
   };
   console.log(testName);
   console.table(resultsTable);
 };
 
-getReporter<TestInput, TestResult, TestMetadata, Scores, Thresholds>({
+getReporter<TestInput, TestResult, TestMetadata, Scores>({
   calculateScores,
   printResults,
   reporterName: ReporterName.QuestionClassifier,
