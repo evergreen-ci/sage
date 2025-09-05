@@ -310,7 +310,8 @@ functions:
         AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
         AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
         BRAINTRUST_API_KEY: ${BRAINTRUST_API_KEY}
+        EVAL_DIR: ${eval_dir}
       shell: bash
       script: |
         ${PREPARE_SHELL}
-        yarn eval:send_to_braintrust ${eval_dir}
+        .evergreen/scripts/publish-evals.sh
