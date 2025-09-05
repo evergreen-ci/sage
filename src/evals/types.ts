@@ -1,8 +1,7 @@
-import { OutputType } from '@mastra/core';
-import { AISDKV5OutputStream } from '@mastra/core/dist/stream';
+import { AISDKV5OutputStream, OutputSchema } from '@mastra/core/dist/stream';
 
 export type MastraAgentOutput = Awaited<
-  ReturnType<AISDKV5OutputStream<OutputType>['getFullOutput']>
+  ReturnType<AISDKV5OutputStream<OutputSchema>['getFullOutput']>
 >;
 
 export type ModelOutput<Input, Output> = Promise<
