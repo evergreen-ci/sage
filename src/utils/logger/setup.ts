@@ -1,110 +1,84 @@
+/* eslint-disable camelcase */
+import { trace } from '@opentelemetry/api';
+import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
 import winston from 'winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
 import { config } from '../../config';
 
-// Define log format for production (JSON)
-const productionFormat = winston.format.combine(
-  winston.format.timestamp({
-    format: 'YYYY-MM-DD HH:mm:ss',
-  }),
-  winston.format.errors({ stack: true }),
-  winston.format.json(),
-  winston.format.printf(info => {
-    const { level, message, stack, timestamp, ...extra } = info;
-    const logEntry: Record<string, unknown> = {
-      timestamp,
-      level,
-      message,
-    };
+// Helper to attach OTEL trace context
+const withTrace = winston.format(info => {
+  const span = trace.getActiveSpan();
+  const ctx = span?.spanContext?.();
+  if (ctx) {
+    info.trace_id = ctx.traceId;
+    info.span_id = ctx.spanId;
+  }
+  return info;
+});
 
-    if (stack) {
-      logEntry.stack = stack;
-    }
-
-    Object.assign(logEntry, extra);
-
-    return JSON.stringify(logEntry);
-  })
-);
-
-/**
- * This is a colorized log format for easy to read logs in development
- */
-const developmentFormat = winston.format.combine(
-  winston.format.timestamp({
-    format: 'YYYY-MM-DD HH:mm:ss',
-  }),
-  winston.format.errors({ stack: true }),
-  winston.format.colorize({ all: true }),
-  winston.format.printf(info => {
-    const { level, message, stack, timestamp, ...extra } = info;
-    let log = `${timestamp} [${level}]: ${message}`;
-
-    if (Object.keys(extra).length > 0) {
-      log += `\n${JSON.stringify(extra, null, 2)}`;
-    }
-
-    if (stack) {
-      log += `\n${stack}`;
-    }
-
-    return log;
-  })
-);
-
-// Create console transport this will print to the console
-// Check NODE_ENV directly from environment at runtime, not from config
-// This ensures we get the correct format even when Mastra builds the code
 const isProduction =
   process.env.NODE_ENV === 'production' ||
   (process.env.NODE_ENV === undefined && config.nodeEnv === 'production');
 
-const consoleTransport = new winston.transports.Console({
-  format: isProduction ? productionFormat : developmentFormat,
-});
+const baseFormats = [
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
+  winston.format.splat(),
+  withTrace(),
+];
 
-// Create file transport for all logs
-const fileTransport = new DailyRotateFile({
-  filename: 'logs/application-%DATE%.log',
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: true,
-  maxSize: '20m',
-  maxFiles: '14d',
-  format: productionFormat,
-});
+// Production: JSON logs
+const productionFormat = winston.format.combine(
+  ...baseFormats,
+  winston.format.printf(info => {
+    const { level, message, span_id, stack, timestamp, trace_id, ...rest } =
+      info;
+    const entry: Record<string, unknown> = {
+      timestamp,
+      level,
+      message,
+      ...(typeof trace_id !== 'undefined' ? { trace_id } : {}),
+      ...(typeof span_id !== 'undefined' ? { span_id } : {}),
+      ...(typeof stack !== 'undefined' ? { stack } : {}),
+      ...(Object.keys(rest).length ? rest : {}),
+    };
+    return JSON.stringify(entry);
+  })
+);
 
-// Create file transport for error logs only
-const errorFileTransport = new DailyRotateFile({
-  filename: 'logs/error-%DATE%.log',
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: true,
-  maxSize: '20m',
-  maxFiles: '30d',
-  level: 'error',
-  format: productionFormat,
-});
+// Development: pretty color logs
+const developmentFormat = winston.format.combine(
+  ...baseFormats,
+  winston.format.colorize({ all: true }),
+  winston.format.printf(info => {
+    const { level, message, span_id, stack, timestamp, trace_id, ...rest } =
+      info;
+    let out = `${timestamp} [${level}] ${message}`;
+    if (trace_id || span_id) {
+      out += ` (trace_id=${trace_id || '-'} span_id=${span_id || '-'})`;
+    }
+    if (Object.keys(rest).length) {
+      out += `\n${JSON.stringify(rest, null, 2)}`;
+    }
+    if (stack) {
+      out += `\n${stack}`;
+    }
+    return out;
+  })
+);
 
-// Create the logger instance
-const transports: winston.transport[] = [consoleTransport];
-if (config.logging.logToFile) {
-  transports.push(fileTransport, errorFileTransport);
+const transports: winston.transport[] = [
+  new winston.transports.Console({
+    format: isProduction ? productionFormat : developmentFormat,
+  }),
+];
+
+if (config.honeycomb.apiKey) {
+  transports.push(new OpenTelemetryTransportV3());
 }
 
-/**
- * Sage logger instance
- */
 const loggerInstance = winston.createLogger({
-  level: config.logging.logLevel,
+  level: process.env.NODE_ENV === 'test' ? 'warn' : config.logging.logLevel,
   transports,
-  // Handle uncaught exceptions
-  exceptionHandlers: [
-    new winston.transports.File({ filename: 'logs/exceptions.log' }),
-  ],
-  // Handle unhandled promise rejections
-  rejectionHandlers: [
-    new winston.transports.File({ filename: 'logs/rejections.log' }),
-  ],
-  // Exit on handled exceptions
   exitOnError: false,
 });
 
