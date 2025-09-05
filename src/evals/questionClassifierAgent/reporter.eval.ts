@@ -20,7 +20,7 @@ const printResults = (
   testName: string
 ) => {
   const resultsTable = {
-    ExactMatch: {
+    'Exact Match': {
       actual: scores.ExactMatch,
       expected: scoreThresholds.ExactMatch,
     },
