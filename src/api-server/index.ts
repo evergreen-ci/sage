@@ -39,22 +39,13 @@ class SageServer {
     // Basic Express middleware
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-    // If process.env.CORS_ORIGIN is set, use it as the origin
-    if (process.env.CORS_ORIGIN) {
-      logger.info('CORS_ORIGIN is set, using it as the origin', {
-        CORS_ORIGIN: process.env.CORS_ORIGIN,
-      });
-      this.app.use(
-        cors({
-          origin: process.env.CORS_ORIGIN,
-          credentials: true,
-          allowedHeaders: ['Content-Type', 'Authorization'],
-          methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        })
-      );
-    } else {
-      this.app.use(cors());
-    }
+
+    this.app.use(
+      cors({
+        origin: true,
+        credentials: true,
+      })
+    );
   }
 
   private setupRoutes() {
