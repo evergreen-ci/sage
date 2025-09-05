@@ -57,6 +57,7 @@ interface Config {
   /** OTEL_LOG_COLLECTOR_URL */
   otelLogCollectorURL: string;
   honeycomb: {
+    /** HONEYCOMB_TEAM */
     team: string;
     /** HONEYCOMB_API_KEY */
     apiKey: string;
