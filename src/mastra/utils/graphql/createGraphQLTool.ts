@@ -1,4 +1,4 @@
-import { createTool } from '@mastra/core';
+import { createTool, Tool, ToolExecutionContext } from '@mastra/core';
 import { DocumentNode } from 'graphql';
 import { z } from 'zod';
 import {
@@ -41,7 +41,17 @@ export const createGraphQLTool = <
   inputSchema,
   outputSchema,
   query,
-}: GraphQLToolInputParams<GraphQLQuery, GraphQLQueryVariables>) =>
+}: GraphQLToolInputParams<GraphQLQuery, GraphQLQueryVariables>): Tool<
+  z.ZodType<GraphQLQueryVariables>,
+  z.ZodType<GraphQLQuery>,
+  ToolExecutionContext<z.ZodType<GraphQLQueryVariables>>
+> & {
+  inputSchema: z.ZodType<GraphQLQueryVariables>;
+  outputSchema: z.ZodType<GraphQLQuery>;
+  execute: (
+    context: ToolExecutionContext<z.ZodType<GraphQLQueryVariables>>
+  ) => Promise<GraphQLQuery>;
+} =>
   createTool({
     id,
     inputSchema,
