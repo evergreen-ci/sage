@@ -1,17 +1,6 @@
 import * as Sentry from '@sentry/node';
-import * as profilingModule from '@sentry/profiling-node';
 import { config } from '../../config';
 import { logger } from '../logger';
-
-// Conditionally import profiling to avoid issues with native modules
-let nodeProfilingIntegration: any = null;
-if (process.env.ENABLE_SENTRY_PROFILING !== 'false') {
-  try {
-    nodeProfilingIntegration = profilingModule.nodeProfilingIntegration;
-  } catch (error) {
-    logger.warn('Sentry profiling module not available, profiling disabled');
-  }
-}
 
 export interface SentryUser {
   id?: string;
@@ -30,7 +19,7 @@ export interface SentryTag {
 class SentryService {
   private initialized = false;
 
-  initialize(): void {
+  async initialize(): Promise<void> {
     if (!config.sentry.enabled) {
       logger.info('Sentry is disabled');
       return;
@@ -56,7 +45,6 @@ class SentryService {
         tracesSampleRate: config.sentry.tracesSampleRate,
         attachStacktrace: config.sentry.attachStacktrace,
         integrations: [
-          ...(nodeProfilingIntegration ? [nodeProfilingIntegration()] : []),
           Sentry.httpIntegration(),
           Sentry.expressIntegration(),
           Sentry.mongoIntegration(),
