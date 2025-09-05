@@ -1,5 +1,4 @@
-import { OutputType } from '@mastra/core';
-import { MastraModelOutput } from '@mastra/core/dist/stream';
+import { MastraModelOutput, OutputSchema } from '@mastra/core/dist/stream';
 
 /**
  * These are the users declared in the local Evergreen database.
@@ -38,7 +37,7 @@ export type TestCase = {
 };
 
 type MastraAgentOutput = Awaited<
-  ReturnType<MastraModelOutput<OutputType>['getFullOutput']>
+  ReturnType<MastraModelOutput<OutputSchema>['getFullOutput']>
 >;
 
 export type ModelOutput = Promise<
