@@ -468,8 +468,12 @@ export const logCoreAnalyzerTool: ReturnType<typeof createTool> = createTool({
       return runResult.result;
     }
     if (runResult.status === 'failed') {
-      throw new Error(runResult.error.message);
+      throw new Error(
+        `Log analyzer workflow failed: ${runResult.error.message}`
+      );
     }
-    throw new Error(`Unsupported tool status error ${runResult.status}`);
+    throw new Error(
+      `Unexpected workflow execution status: ${runResult.status}. Expected 'success' or 'failed'.`
+    );
   },
 });
