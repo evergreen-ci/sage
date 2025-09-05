@@ -39,7 +39,6 @@ env:
   OTEL_EXPORTER_OTLP_ENDPOINT: https://api.braintrust.dev/otel
   SENTRY_DSN: https://3db76f0989faad4c102a8708fba9446f@o4504991346720768.ingest.us.sentry.io/4509905876942849
 
-
 envSecrets:
   AZURE_OPENAI_API_KEY: parsley-ai-secrets
   AZURE_OPENAI_ENDPOINT: parsley-ai-secrets
