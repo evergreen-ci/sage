@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { LogTypes } from 'types/parsley';
-import { TaskLogOrigin } from 'types/task';
+import { LogTypes } from '../../types/parsley';
+import { TaskLogOrigin } from '../../types/task';
 
 const evergreenTaskFileSchema = z.object({
   log_type: z.literal(LogTypes.EVERGREEN_TASK_FILE),

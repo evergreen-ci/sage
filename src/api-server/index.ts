@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node';
 import cors from 'cors';
 import express, { Application } from 'express';
 import expressListEndpoints from 'express-list-endpoints';
@@ -9,6 +10,7 @@ import {
   httpLoggingMiddleware,
   errorLoggingMiddleware,
 } from './middlewares/logging';
+import { sentryContextMiddleware } from './middlewares/sentry';
 import { completionsRoute, loginRoute } from './routes';
 import healthRoute from './routes/health';
 import rootRoute from './routes/root';
@@ -28,8 +30,8 @@ class SageServer {
   }
 
   private setupMiddleware() {
-    // Request ID middleware (must be first)
     this.app.use(requestIdMiddleware);
+    this.app.use(sentryContextMiddleware);
 
     // HTTP logging middleware
     this.app.use(httpLoggingMiddleware);
@@ -50,6 +52,7 @@ class SageServer {
   private setupErrorHandling() {
     // Error logging middleware (must be after routes)
     this.app.use(errorLoggingMiddleware);
+    Sentry.setupExpressErrorHandler(this.app);
   }
 
   public async start() {
