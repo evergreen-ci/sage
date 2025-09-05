@@ -15,9 +15,7 @@ const withTrace = winston.format(info => {
   return info;
 });
 
-const isProduction =
-  process.env.NODE_ENV === 'production' ||
-  (process.env.NODE_ENV === undefined && config.nodeEnv === 'production');
+const isProduction = config.nodeEnv === 'production';
 
 const baseFormats = [
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -77,7 +75,7 @@ if (config.honeycomb.team) {
 }
 
 const loggerInstance = winston.createLogger({
-  level: process.env.NODE_ENV === 'test' ? 'warn' : config.logging.logLevel,
+  level: config.nodeEnv === 'test' ? 'warn' : config.logging.logLevel,
   transports,
   exitOnError: false,
 });
