@@ -78,7 +78,7 @@ const fetchTestResultsForTestLog = createStep({
     testId: z.string(),
     groupId: z.string().optional(),
   }),
-  execute: async ({ inputData, runtimeContext }) => {
+  execute: async ({ inputData, runtimeContext, tracingContext }) => {
     const { logMetadata } = inputData;
 
     if (logMetadata.log_type !== LogTypes.EVERGREEN_TEST_LOGS) {
@@ -92,6 +92,7 @@ const fetchTestResultsForTestLog = createStep({
         groupId: logMetadata.group_id,
       },
       runtimeContext,
+      tracingContext,
     });
 
     return {
