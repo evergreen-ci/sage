@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 import { trace } from '@opentelemetry/api';
-import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
 import winston from 'winston';
 import { config } from '../../config';
 
@@ -69,10 +68,6 @@ const transports: winston.transport[] = [
     format: isProduction ? productionFormat : developmentFormat,
   }),
 ];
-
-if (config.honeycomb.team) {
-  transports.push(new OpenTelemetryTransportV3());
-}
 
 const loggerInstance = winston.createLogger({
   level: config.nodeEnv === 'test' ? 'warn' : config.logging.logLevel,
