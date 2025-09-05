@@ -23,7 +23,7 @@ const getVersionStep = createStep({
       );
     }
 
-    const versionResult = await getVersionTool.execute?.({
+    const versionResult = await getVersionTool.execute({
       context: {
         id: versionId,
       },

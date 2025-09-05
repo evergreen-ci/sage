@@ -85,7 +85,7 @@ const fetchTestResultsForTestLog = createStep({
       throw new Error('Expected test log metadata but received a non-test log');
     }
 
-    const testResults = await getTaskTestsTool.execute?.({
+    const testResults = await getTaskTestsTool.execute({
       context: {
         id: logMetadata.task_id,
         execution: logMetadata.execution,

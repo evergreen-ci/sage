@@ -35,7 +35,7 @@ const getTaskHistoryStep = createStep({
       includeCursor: true,
     };
 
-    const historyResult = await getTaskHistoryTool.execute?.({
+    const historyResult = await getTaskHistoryTool.execute({
       context: {
         options: {
           taskName: displayName,
