@@ -1,4 +1,5 @@
 import { AgentMemoryOption } from '@mastra/core/agent';
+import { trace } from '@opentelemetry/api';
 import {
   pipeUIMessageStreamToResponse,
   UIMessage,
@@ -39,6 +40,9 @@ const chatRoute = async (
     res.status(401).json({ message: 'Authentication required' });
     return;
   }
+  const span = trace.getActiveSpan();
+  span?.setAttribute('request_id', req.requestId);
+  span?.setAttribute('user_id', authenticatedUserId);
 
   runtimeContext.set(USER_ID, authenticatedUserId);
   logger.debug('User context set for request', {

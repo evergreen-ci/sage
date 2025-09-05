@@ -1,13 +1,9 @@
-import { trace } from '@opentelemetry/api';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 import { resourceFromAttributes } from '@opentelemetry/resources';
-import {
-  LoggerProvider,
-  BatchLogRecordProcessor,
-} from '@opentelemetry/sdk-logs';
+import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
@@ -29,7 +25,7 @@ const otlpExporter = new OTLPTraceExporter({
 });
 
 const otlpLogExporter = new OTLPLogExporter({
-  url: config.otelCollectorURL,
+  url: config.otelLogCollectorURL,
   headers: {
     'x-honeycomb-team': config.honeycomb.apiKey,
   },

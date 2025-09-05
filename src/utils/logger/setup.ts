@@ -72,7 +72,7 @@ const transports: winston.transport[] = [
   }),
 ];
 
-if (config.honeycomb.apiKey) {
+if (config.honeycomb.team) {
   transports.push(new OpenTelemetryTransportV3());
 }
 
