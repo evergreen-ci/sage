@@ -1,4 +1,4 @@
-import './tracing';
+import './instrumentation';
 import server from 'api-server';
 import { validateConfig } from 'config';
 import { sentryService } from './utils/sentry';
@@ -13,11 +13,13 @@ server.start();
 process.on('SIGINT', async () => {
   await server.stop();
   await sentryService.close();
+
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   await server.stop();
   await sentryService.close();
+
   process.exit(0);
 });
