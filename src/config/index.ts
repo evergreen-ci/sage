@@ -11,50 +11,76 @@ dotenvFlow.config({
   node_env: process.env.NODE_ENV || 'development',
 });
 
-export interface Config {
+interface Config {
+  /** PORT */
   port: number;
+  /** NODE_ENV */
   nodeEnv: string;
   logging: {
+    /** LOG_LEVEL */
     logLevel: string;
     logToFile: boolean;
   };
   db: {
+    /** MONGODB_URI */
     mongodbUri: string;
+    /** DB_NAME */
     dbName: string;
   };
   aiModels: {
     azure: {
       openai: {
+        /** AZURE_OPENAI_API_KEY */
         apiKey: string;
+        /** AZURE_OPENAI_ENDPOINT */
         endpoint: string;
+        /** AZURE_OPENAI_API_VERSION */
         apiVersion: string;
         defaultDeployment: string;
       };
     };
   };
   evergreen: {
+    /** EVERGREEN_GRAPHQL_ENDPOINT */
     graphqlEndpoint: string;
+    /** EVERGREEN_API_USER */
     apiUser: string;
+    /** EVERGREEN_API_KEY */
     apiKey: string;
+    /** END_USER_HEADER_ID */
     userIDHeader: string;
+    /** EVERGREEN_URL */
     evergreenURL: string;
   };
+  /** OTEL_COLLECTOR_URL */
   otelCollectorURL: string;
+  /** OTEL_LOG_COLLECTOR_URL */
+  otelLogCollectorURL: string;
   honeycomb: {
     team: string;
+    /** HONEYCOMB_API_KEY */
     apiKey: string;
   };
   braintrust: {
+    /** BRAINTRUST_API_KEY */
     apiKey: string;
+    /** BRAINTRUST_PARENT */
     parent: string;
   };
   sentry: {
+    /** SENTRY_DSN */
     dsn: string;
+    /** SENTRY_SAMPLE_RATE */
     sampleRate: number;
+    /** SENTRY_TRACES_SAMPLE_RATE */
     tracesSampleRate: number;
+    /** SENTRY_ENABLED */
     enabled: boolean;
+    /** SENTRY_DEBUG */
     debug: boolean;
+    /** SENTRY_ATTACH_STACKTRACE */
     attachStacktrace: boolean;
+    /** SENTRY_CAPTURE_CONSOLE */
     captureConsole: boolean;
   };
 }
@@ -128,6 +154,10 @@ export const config: Config = {
   otelCollectorURL: getEnvVar(
     'OTEL_COLLECTOR_URL',
     'http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces'
+  ),
+  otelLogCollectorURL: getEnvVar(
+    'OTEL_LOG_COLLECTOR_URL',
+    'http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/logs'
   ),
   honeycomb: {
     team: getEnvVar('HONEYCOMB_TEAM', ''),
