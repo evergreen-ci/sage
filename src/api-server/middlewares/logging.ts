@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import expressWinston from 'express-winston';
 import { v4 as uuidv4 } from 'uuid';
+import winston from 'winston';
 import loggerInstance, { logger } from 'utils/logger';
 
 // Extend Request type to include requestId
@@ -38,10 +39,11 @@ export const requestIdMiddleware = (
  */
 export const httpLoggingMiddleware = expressWinston.logger({
   winstonInstance: loggerInstance,
-  meta: false,
-  msg: 'HTTP {{req.method}} {{req.url}} {{res.statusCode}} {{res.responseTime}}ms',
+  meta: true,
+  msg: 'HTTP {{req.method}} {{req.url}} {{res.statusCode}}',
   expressFormat: false,
   colorize: false,
+  format: winston.format.json(),
   dynamicMeta: (req: Request, res: Response) => ({
     requestId: req.requestId,
     method: req.method,
@@ -51,6 +53,8 @@ export const httpLoggingMiddleware = expressWinston.logger({
     ip: req.ip || req.socket.remoteAddress,
     contentLength: res.get('Content-Length'),
     contentType: res.get('Content-Type'),
+    duration: res.get('responseTime'),
+    userId: req.get('userId'),
   }),
 });
 
