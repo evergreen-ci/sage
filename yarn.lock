@@ -2718,6 +2718,14 @@
   dependencies:
     "@opentelemetry/core" "^2.0.0"
 
+"@opentelemetry/winston-transport@^0.14.1":
+  version "0.14.1"
+  resolved "https://registry.yarnpkg.com/@opentelemetry/winston-transport/-/winston-transport-0.14.1.tgz#ba9c0a4af9ed676781381dfb570457e08e8a2baa"
+  integrity sha512-GQmZocc/orXmoLsDOyqKyaZrNQkp2U3748vFO+DfvgP0/438/0hD4b1o4keBVzrSPafbgtPPY7nCTuyZaFi5rA==
+  dependencies:
+    "@opentelemetry/api-logs" "^0.203.0"
+    winston-transport "4.*"
+
 "@optimize-lodash/rollup-plugin@^5.0.2":
   version "5.0.2"
   resolved "https://registry.yarnpkg.com/@optimize-lodash/rollup-plugin/-/rollup-plugin-5.0.2.tgz#76082ca2d9eaf27a0444be0d86f2b62751c61681"
@@ -10219,7 +10227,7 @@ winston-daily-rotate-file@^5.0.0:
     triple-beam "^1.4.1"
     winston-transport "^4.7.0"
 
-winston-transport@^4.7.0, winston-transport@^4.9.0:
+winston-transport@4.*, winston-transport@^4.7.0, winston-transport@^4.9.0:
   version "4.9.0"
   resolved "https://registry.yarnpkg.com/winston-transport/-/winston-transport-4.9.0.tgz#3bba345de10297654ea6f33519424560003b3bf9"
   integrity sha512-8drMJ4rkgaPo1Me4zD/3WLfI/zPdA9o2IipKODunnGDcuqbHwjsbB79ylv04LCGGzU0xQ6vTznOMpQGaLhhm6A==
