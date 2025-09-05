@@ -59,6 +59,7 @@ serviceAccount:
      - methods:
        - POST
        paths:
+       - /v1/logs
        - /v1/traces
        - /opentelemetry.proto.collector.trace.v1.TraceService/Export
        - /opentelemetry.proto.collector.logs.v1.LogsService/Export
