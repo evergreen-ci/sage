@@ -15,7 +15,7 @@ const testIrrelevantQuestion: TestCase = {
   },
 };
 
-const testEvergreen: TestCase = {
+const testEvergreenQuestion: TestCase = {
   input:
     "What's the status of this task: evergreen_ubuntu1604_test_service_patch_5e823e1f28baeaa22ae00823d83e03082cd148ab_5e4ff3abe3c3317e352062e4_20_02_21_15_13_48?",
   expected: {
@@ -31,7 +31,7 @@ const testEvergreen: TestCase = {
   },
 };
 
-const testLog: TestCase = {
+const testLogQuestion: TestCase = {
   input:
     'I want to know more about the cause of failure in this log file: sample_log.txt?',
   expected: {
@@ -47,7 +47,7 @@ const testLog: TestCase = {
   },
 };
 
-const testSelfAnswer: TestCase = {
+const testSelfAnswerableQuestion: TestCase = {
   input: 'What does it mean for a task to be blocked?',
   expected: {
     questionClass: 'CAN_ANSWER_ON_OWN',
@@ -62,7 +62,7 @@ const testSelfAnswer: TestCase = {
   },
 };
 
-const testCombination: TestCase = {
+const testCombinationQuestion: TestCase = {
   input:
     'For this test log, is it the first time the task has failed this way?',
   expected: {
@@ -81,8 +81,8 @@ const testCombination: TestCase = {
 
 export const testCases: TestCase[] = [
   testIrrelevantQuestion,
-  testEvergreen,
-  testLog,
-  testSelfAnswer,
-  testCombination,
+  testEvergreenQuestion,
+  testLogQuestion,
+  testSelfAnswerableQuestion,
+  testCombinationQuestion,
 ];

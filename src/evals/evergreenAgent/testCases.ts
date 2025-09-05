@@ -14,7 +14,7 @@ const testUnauthorized: TestCase = {
     toolsUsed: ['getTaskTool'],
   },
   metadata: {
-    testName: 'Regular User Cannot Access Restricted Task',
+    testName: 'Regular user cannot access restricted task',
     description: 'Tests that a regular user cannot access a restricted task.',
     scoreThresholds: {
       factuality: 0.5,
@@ -36,7 +36,7 @@ const testGetTaskTool: TestCase = {
     toolsUsed: ['getTaskTool'],
   },
   metadata: {
-    testName: 'Regular User Can Access Unrestricted Task',
+    testName: 'Test retrieving task',
     description:
       'Tests that a user can successfully fetch a task from Evergreen.',
     scoreThresholds: {
@@ -59,7 +59,7 @@ const testGetTaskFilesTool: TestCase = {
     toolsUsed: ['getTaskFilesTool'],
   },
   metadata: {
-    testName: 'Test Retrieving Task Files',
+    testName: 'Test retrieving task files',
     description: 'Tests that agent can retrieve and describe task files.',
     scoreThresholds: {
       factuality: 0.5,
@@ -81,7 +81,7 @@ const testGetTaskTestsTool: TestCase = {
     toolsUsed: ['getTaskTestsTool'],
   },
   metadata: {
-    testName: 'Test Retrieving Task Tests',
+    testName: 'Test retrieving task tests',
     description: 'Tests that agent can retrieve and describe task tests.',
     scoreThresholds: {
       factuality: 0.5,
@@ -100,7 +100,7 @@ const testGetVersionWorkflow: TestCase = {
     toolsUsed: ['getVersionWorkflow'],
   },
   metadata: {
-    testName: 'Test Version Workflow',
+    testName: 'Test version workflow',
     description:
       'Tests that agent can retrieve associated version information.',
     scoreThresholds: {
@@ -123,7 +123,7 @@ const testGetTaskHistoryWorkflow: TestCase = {
     toolsUsed: ['getTaskHistoryWorkflow'],
   },
   metadata: {
-    testName: 'Test Task History Workflow',
+    testName: 'Test task history workflow',
     description:
       'Tests that agent can retrieve associated history information.',
     scoreThresholds: {
