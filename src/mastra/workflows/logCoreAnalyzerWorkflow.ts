@@ -453,7 +453,9 @@ export const logCoreAnalyzerWorkflow = createWorkflow({
 
 export const logCoreAnalyzerTool: ReturnType<typeof createTool> = createTool({
   id: 'logCoreAnalyzerTool',
-  description: 'Analyzes log files and text content',
+  description:
+    logCoreAnalyzerWorkflow.description ||
+    'Analyzes log files and text content',
   inputSchema: logCoreAnalyzerWorkflow.inputSchema,
   outputSchema: logCoreAnalyzerWorkflow.outputSchema,
   execute: async ({ context, runtimeContext, tracingContext }) => {
