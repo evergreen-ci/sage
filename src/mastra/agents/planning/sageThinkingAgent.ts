@@ -39,11 +39,15 @@ export const sageThinkingAgent: Agent = new Agent({
      - Use for: Analyzing log files or text content when you have the actual content
      - Accepts: file path (local), URL (direct link to content), or raw text string
      - Does NOT: Fetch from Evergreen (use evergreenAgent for that first)
+     - When providing a url, it should be a direct link to the log content. Do not make any changes to the url.
   
   3. **questionClassifierAgent**: Classifies user questions to determine appropriate response strategy
      - Use for: Understanding user intent and deciding which tools to use
 
 
+  ## Rules
+  When answering a user question using markdown avoid using large headings. Keep it simple and concise.
+  
   <ADDITIONAL_CONTEXT>
   User ID: ${userID}
   Log Metadata: ${JSON.stringify(logMetadata)}

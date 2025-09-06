@@ -1,4 +1,4 @@
-import { convertMessages } from '@mastra/core';
+import { convertMessages } from '@mastra/core/agent';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { UIMessage } from 'ai';
 import { Request, Response } from 'express';
@@ -114,9 +114,10 @@ const getMessagesRoute = async (
     const messages = await memory.query({
       threadId: conversationId,
     });
+    const convertedMessages = convertMessages(messages.uiMessages).to(
+      'AIV5.UI'
+    );
 
-    const converter = convertMessages(messages.uiMessages);
-    const convertedMessages = converter.to('AIV5.UI');
     res.status(200).json({ messages: convertedMessages });
   } catch (error) {
     logger.error('Error in get messages route', {
