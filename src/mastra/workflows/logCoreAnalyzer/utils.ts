@@ -7,9 +7,8 @@ import { SOURCE_TYPE, type SourceType } from './constants';
  * @param text - Text to normalize
  * @returns Normalized text
  */
-export function normalizeLineEndings(text: string): string {
-  return text.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');
-}
+export const normalizeLineEndings = (text: string): string =>
+  text.replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n');
 
 /**
  * Simple validation to check size limits
@@ -50,34 +49,55 @@ export const validateSize = (size: number, source: SourceType): void => {
 };
 
 /**
- * Quick token estimation without full tokenization
- * Tokenization can be expensive, so we use a simple heuristic here.
+ * Fast token estimate using stratified sampling (head/middle/tail).
+ * Keeps work roughly constant regardless of input size.
  * @param text - Text to estimate tokens for
  * @returns Estimated number of tokens
  */
 export const estimateTokens = (text: string): number => {
-  // Sample first 100k characters for accurate estimation
-  const sampleSize = Math.min(text.length, 100_000);
-  const sample = text.slice(0, sampleSize);
-  const sampleTokens = countTokens(sample);
+  const len = text.length;
+  if (len === 0) return 0;
 
-  if (text.length <= sampleSize) {
-    return sampleTokens;
-  }
+  // For small texts just do the real count. It's cheap and exact.
+  const SMALL_THRESHOLD = 8_192; // chars
+  if (len <= SMALL_THRESHOLD) return countTokens(text);
 
-  // Extrapolate for larger texts
-  const tokensPerChar = sampleTokens / sample.length;
-  return Math.ceil(text.length * tokensPerChar);
+  // Sample three windows to reduce bias (head/mid/tail).
+  const WINDOW_SIZE = 4_096; // chars per window
+  const half = Math.floor(WINDOW_SIZE / 2);
+
+  const startStart = 0;
+  const midCenter = Math.floor(len / 2);
+  const endEnd = len;
+
+  const head = text.slice(startStart, Math.min(WINDOW_SIZE, len));
+  const mid = text.slice(
+    Math.max(0, midCenter - half),
+    Math.min(len, midCenter + half)
+  );
+  const tail = text.slice(Math.max(0, endEnd - WINDOW_SIZE), endEnd);
+
+  // Tokenize each window (small, fixed cost).
+  const headTokens = countTokens(head);
+  const midTokens = countTokens(mid);
+  const tailTokens = countTokens(tail);
+
+  const sampledChars = head.length + mid.length + tail.length;
+  const sampledTokens = headTokens + midTokens + tailTokens;
+
+  // Guard against division by zero (shouldn't happen, but be safe).
+  if (sampledChars === 0) return 0;
+
+  const tokensPerChar = sampledTokens / sampledChars;
+  return Math.ceil(len * tokensPerChar);
 };
 
-// Count tokens in text
 /**
- *
- * @param text
+ * Exact token count for a given text (uses your tokenizer).
+ * @param text - Text to count tokens for
+ * @returns Number of tokens
  */
-export function countTokens(text: string): number {
-  return encode(text).length;
-}
+export const countTokens = (text: string): number => encode(text).length;
 
 /**
  * Validate token count against configured limits
@@ -85,7 +105,7 @@ export function countTokens(text: string): number {
  * @returns Estimated number of tokens
  * @throws Error if token count exceeds limit
  */
-export function validateTokenLimit(text: string): number {
+export const validateTokenLimit = (text: string): number => {
   const estimatedTokens = estimateTokens(text);
 
   if (estimatedTokens > logAnalyzerConfig.limits.maxTokens) {
@@ -95,7 +115,7 @@ export function validateTokenLimit(text: string): number {
   }
 
   return estimatedTokens;
-}
+};
 
 /**
  * Crop text to a maximum length, keeping portions from head and tail
@@ -105,12 +125,12 @@ export function validateTokenLimit(text: string): number {
  * @param separator - Separator to insert between head and tail (default '...\n[content truncated]\n...')
  * @returns Cropped text with head and tail portions
  */
-export function cropMiddle(
+export const cropMiddle = (
   text: string,
   maxLength: number,
   headRatio: number = 0.5,
   separator: string = '...\n[content truncated]\n...'
-): string {
+): string => {
   // If text fits, return as-is
   if (text.length <= maxLength) {
     return text;
@@ -134,4 +154,4 @@ export function cropMiddle(
   const tail = tailLength > 0 ? text.substring(text.length - tailLength) : '';
 
   return head + separator + tail;
-}
+};
