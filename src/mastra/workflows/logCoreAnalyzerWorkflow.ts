@@ -20,11 +20,7 @@ import {
   USER_CONCISE_SUMMARY_PROMPT,
   SINGLE_PASS_PROMPT,
 } from './logCoreAnalyzer/prompts';
-import {
-  countTokens,
-  normalizeLineEndings,
-  cropMiddle,
-} from './logCoreAnalyzer/utils';
+import { normalizeLineEndings, cropMiddle } from './logCoreAnalyzer/utils';
 
 // We define here the core workflow for log file analysis. It gives the Parsley Agent the capability to read and understand text files, of any kind and format.
 // Depending on the file size, we either return a summary in a single LLM call, or perform a more complex iterative refinement, combining the usage of cheap and more expensive models.
