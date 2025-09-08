@@ -39,10 +39,18 @@
     "@ai-sdk/provider" "2.0.0"
     "@ai-sdk/provider-utils" "3.0.8"
 
-"@ai-sdk/openai@2.0.24", "@ai-sdk/openai@^2.0.24":
+"@ai-sdk/openai@2.0.24":
   version "2.0.24"
   resolved "https://registry.yarnpkg.com/@ai-sdk/openai/-/openai-2.0.24.tgz#be0ace876054d240a0c6c78ac06a3ebddda00360"
   integrity sha512-8fPFvlb6PpDjy6JtJBP3Hqs4THKFNYOw6+j7nG7iJivNp+uvHlrHwnU6wQgMAesxEDjZRmVB6ntXWxGPCbBeJw==
+  dependencies:
+    "@ai-sdk/provider" "2.0.0"
+    "@ai-sdk/provider-utils" "3.0.8"
+
+"@ai-sdk/openai@^2.0.26":
+  version "2.0.26"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/openai/-/openai-2.0.26.tgz#5f3beb9b98074bdddbdd4e7c36fe3dcc2b06ce89"
+  integrity sha512-SVe6Ufe5LbvE9XeDvTwAluwHWugzVPcmQ+89OgM6CvIQLztg8JglKzgA6QtY0cCSdy2xHE/t7LaQbQsDT4yQmw==
   dependencies:
     "@ai-sdk/provider" "2.0.0"
     "@ai-sdk/provider-utils" "3.0.8"
