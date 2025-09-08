@@ -26,6 +26,7 @@ steps:
     when:
       event:
         - promote
+        - push
 
   - name: deploy-staging
     image: public.ecr.aws/kanopy/drone-helm:v3
