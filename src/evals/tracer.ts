@@ -1,28 +1,38 @@
-// https://www.braintrust.dev/docs/guides/experiments/write#define-your-own-scorers
-// See existing scorers at https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts.
+import { traced } from 'braintrust';
+import { ModelOutput } from './types';
 
 /**
- * This custom scorer evaluates whether the correct tools were used in the evaluation.
- * @param args - Object containing the following:
- * @param args.output - Output from LLM
- * @param args.expected - Expected (originally given in test case)
- * @returns score (1 being correct, 0 being incorrect) along with metadata
+ * https://www.braintrust.dev/docs/guides/experiments/write#tracing
+ * This is a wrapper function that adds tracing spans to the model call.
+ * @param callModel - function to call the given agent
+ * @returns Expected result from calling agent
  */
-export const toolUsage = (args: { output: string[]; expected: string[] }) => {
-  const expectedTools = args.expected;
-  const actualTools = args.output;
+export const callModelWithTrace = async <Input, Output>(
+  callModel: () => ModelOutput<Input, Output>
+) =>
+  traced(async span => {
+    span.setAttributes({ name: 'call-model-span' });
 
-  const correctToolsUsed: boolean =
-    expectedTools.length === actualTools.length &&
-    expectedTools.every(tool => actualTools.includes(tool));
+    const start = Date.now();
+    const { input, output, toolResults, usage } = await callModel();
+    const end = Date.now();
+    const duration = end - start;
 
-  return {
-    name: 'ToolUsage',
-    score: correctToolsUsed ? 1 : 0,
-    metadata: {
-      expected_tools: expectedTools,
-      actual_tools: actualTools,
-      correct: correctToolsUsed,
-    },
-  };
-};
+    span.log({
+      input,
+      output,
+      metrics: {
+        input_tokens: usage.inputTokens,
+        output_tokens: usage.outputTokens,
+        total_tokens: usage.totalTokens,
+        reasoning_tokens: usage.reasoningTokens,
+        cached_input_tokens: usage.cachedInputTokens,
+        duration,
+      },
+      metadata: {
+        tool_results: toolResults,
+      },
+    });
+
+    return { ...output, duration };
+  });
