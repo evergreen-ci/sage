@@ -63,6 +63,8 @@ steps:
         from_secret: prod_kubernetes_token
       wait_for_upgrade: true
     when:
+      branch:
+        - main
       event:
         - promote
       target:

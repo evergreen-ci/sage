@@ -203,11 +203,15 @@ Drone can [promote](https://docs.drone.io/promote/) builds opened on PRs to stag
 
 1. Open a PR with your changes (a draft is okay). This will kick off the `publish` step.
 2. Once completed, either:
-  - Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> staging` from your machine
-  - Click the ellipsis button > Promote on your build's page on Drone. Enter "staging" in the "Target" field.
+    - Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> staging` from your machine.
+    - Click `…` > `Promote` on your build's page on Drone. Enter "staging" in the "Target" field and submit.
 
 #### Local
 
 Local deploys are slower but useful. First install [Rancher Desktop](https://rancherdesktop.io) as your container manager. Open Rancher and then run `yarn deploy:staging` from Sage to kick off the deploy.
 
 Note that Drone's [deployments page](https://drone.corp.mongodb.com/evergreen-ci/sage/deployments) will not reflect local deploys.
+
+### Production
+
+To deploy to production, follow the Drone steps above, using `production` as the target instead of `staging`. Note that you must be promoting a Drone build that pushed a commit to `main`.
