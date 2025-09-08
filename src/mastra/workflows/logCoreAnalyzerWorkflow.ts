@@ -1,3 +1,4 @@
+import { createTool } from '@mastra/core';
 import { Agent } from '@mastra/core/agent';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
@@ -169,7 +170,7 @@ const initialStep = createStep({
   description: 'Summarize first chunk using log analyzer agent',
   inputSchema: ChunkedSchema,
   outputSchema: LoopStateSchema,
-  execute: async ({ inputData }) => {
+  execute: async ({ inputData, tracingContext }) => {
     const { analysisContext, chunks } = inputData;
     const first = chunks[0]?.text ?? '';
     logger.debug('Initial chunk for analysis', {
@@ -180,16 +181,27 @@ const initialStep = createStep({
     logger.debug('Calling LLM for initial summary');
 
     const result = await initialAnalyzerAgent.generateVNext(
-      [{ role: 'user', content: USER_INITIAL_PROMPT(first, analysisContext) }],
+      [
+        {
+          role: 'user',
+          content: USER_INITIAL_PROMPT(first, analysisContext),
+        },
+      ],
       {
         structuredOutput: {
           schema: RefinementAgentOutputSchema,
           model: logAnalyzerConfig.models.initial,
         },
+        tracingContext,
       }
     );
 
-    const summary = result.object?.summary ?? '';
+    const response = result.object as unknown as z.infer<
+      typeof RefinementAgentOutputSchema
+    >;
+
+    const { summary } = response;
+
     return { idx: 1, chunks, summary, analysisContext };
   },
 });
@@ -215,7 +227,7 @@ const refineStep = createStep({
     'Iteratively refine the summary with context from previous chunks',
   inputSchema: LoopStateSchema,
   outputSchema: LoopStateSchema,
-  execute: async ({ inputData }) => {
+  execute: async ({ inputData, tracingContext }) => {
     const {
       analysisContext,
       chunks,
@@ -250,13 +262,18 @@ const refineStep = createStep({
           schema: RefinementAgentOutputSchema,
           model: logAnalyzerConfig.models.refinement,
         }, // TODO: define error handling strategy when schema validation fails
+        tracingContext,
       }
     );
 
-    const updated = result.object?.updated ?? false;
+    const response = result.object as unknown as z.infer<
+      typeof RefinementAgentOutputSchema
+    >;
+
+    const updated = response.updated ?? false;
     let newSummary = existingSummary;
     if (updated) {
-      newSummary = result.object?.summary ?? existingSummary;
+      newSummary = response.summary ?? existingSummary;
     }
 
     return {
@@ -282,7 +299,7 @@ const singlePassStep = createStep({
   description: 'Direct analysis and report generation for single-chunk files',
   inputSchema: ChunkedSchema,
   outputSchema: WorkflowOutputSchema,
-  execute: async ({ inputData }) => {
+  execute: async ({ inputData, tracingContext }) => {
     const { analysisContext, chunks } = inputData;
 
     // Validate we have exactly one chunk
@@ -307,17 +324,21 @@ const singlePassStep = createStep({
           schema: WorkflowOutputSchema,
           model: logAnalyzerConfig.models.formatter,
         },
+        tracingContext,
       }
     );
+    const response = result.object as unknown as z.infer<
+      typeof WorkflowOutputSchema
+    >;
 
     logger.debug('Single-pass analysis complete', {
-      markdownLength: result.object?.markdown?.length ?? 0,
-      summaryLength: result.object?.summary?.length ?? 0,
+      markdownLength: response.markdown?.length ?? 0,
+      summaryLength: response.summary?.length ?? 0,
     });
 
     return {
-      markdown: result.object?.markdown || '',
-      summary: result.object?.summary || '',
+      markdown: response.markdown || '',
+      summary: response.summary || '',
     };
   },
 });
@@ -327,7 +348,7 @@ const finalizeStep = createStep({
   description: 'Generate final markdown report and concise summary',
   inputSchema: LoopStateSchema,
   outputSchema: WorkflowOutputSchema,
-  execute: async ({ inputData }) => {
+  execute: async ({ inputData, tracingContext }) => {
     const { analysisContext, summary } = inputData;
     logger.debug('Generating final markdown report', {
       summary: summary.slice(0, 100),
@@ -335,21 +356,37 @@ const finalizeStep = createStep({
     });
 
     // Generate markdown report
-    const markdownRes = await reportFormatterAgent.generateVNext([
-      { role: 'user', content: USER_MARKDOWN_PROMPT(summary, analysisContext) },
-    ]);
+    const markdownRes = await reportFormatterAgent.generateVNext(
+      [
+        {
+          role: 'user',
+          content: USER_MARKDOWN_PROMPT(summary, analysisContext),
+        },
+      ],
+      {
+        tracingContext,
+      }
+    );
     logger.debug('Final markdown report generated', {
       length: markdownRes.text.length,
     });
 
     // Generate concise summary from the markdown report
     logger.debug('Generating concise summary');
-    const conciseSummaryRes = await reportFormatterAgent.generateVNext([
+    const conciseSummaryRes = await reportFormatterAgent.generateVNext(
+      [
+        {
+          role: 'user',
+          content: USER_CONCISE_SUMMARY_PROMPT(
+            markdownRes.text,
+            analysisContext
+          ),
+        },
+      ],
       {
-        role: 'user',
-        content: USER_CONCISE_SUMMARY_PROMPT(markdownRes.text, analysisContext),
-      },
-    ]);
+        tracingContext,
+      }
+    );
     logger.debug('Concise summary generated', {
       length: conciseSummaryRes.text.length,
     });
@@ -413,3 +450,32 @@ export const logCoreAnalyzerWorkflow = createWorkflow({
   .then(chunkStep)
   .then(decideAndRunStep)
   .commit();
+
+export const logCoreAnalyzerTool: ReturnType<typeof createTool> = createTool({
+  id: 'logCoreAnalyzerTool',
+  description:
+    logCoreAnalyzerWorkflow.description ||
+    'Analyzes log files and text content',
+  inputSchema: logCoreAnalyzerWorkflow.inputSchema,
+  outputSchema: logCoreAnalyzerWorkflow.outputSchema,
+  execute: async ({ context, runtimeContext, tracingContext }) => {
+    const run = await logCoreAnalyzerWorkflow.createRunAsync({});
+
+    const runResult = await run.start({
+      inputData: context,
+      runtimeContext,
+      tracingContext,
+    });
+    if (runResult.status === 'success') {
+      return runResult.result;
+    }
+    if (runResult.status === 'failed') {
+      throw new Error(
+        `Log analyzer workflow failed: ${runResult.error.message}`
+      );
+    }
+    throw new Error(
+      `Unexpected workflow execution status: ${runResult.status}. Expected 'success' or 'failed'.`
+    );
+  },
+});

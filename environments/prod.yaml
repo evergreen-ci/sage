@@ -27,19 +27,19 @@ resources:
     memory: 8Gi
 
 env:
+  BRAINTRUST_PARENT: project_name:sage-prod
+  BRAINTRUST_PROJECT: sage-prod
+  DB_NAME: sage
   EVERGREEN_API_USER: sage
   EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2
   EVERGREEN_URL: https://evergreen.mongodb.com
   EVERGREEN_GRAPHQL_ENDPOINT: https://evergreen.mongodb.com/mcp/graphql/query
-  PORT: 8080
-  OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
   HONEYCOMB_TEAM: sage
-  DEPLOYMENT_ENV: prod
-  DB_NAME: sage
+  NODE_ENV: production
+  OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
   OTEL_EXPORTER_OTLP_ENDPOINT: https://api.braintrust.dev/otel
-  BRAINTRUST_PARENT: project_name:sage-prod
-  BRAINTRUST_PROJECT: sage-prod
-
+  PORT: 8080
+  SENTRY_DSN: https://3db76f0989faad4c102a8708fba9446f@o4504991346720768.ingest.us.sentry.io/4509905876942849
 
 envSecrets:
   AZURE_OPENAI_API_KEY: parsley-ai-secrets
@@ -60,6 +60,7 @@ serviceAccount:
      - methods:
        - POST
        paths:
+       - /v1/logs
        - /v1/traces
        - /opentelemetry.proto.collector.trace.v1.TraceService/Export
        - /opentelemetry.proto.collector.logs.v1.LogsService/Export

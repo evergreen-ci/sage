@@ -35,6 +35,8 @@ const makeRuntimeContext = (userID?: string) => {
   return runtimeContext;
 };
 
+const tracingContext = {};
+
 vi.mock('../../../utils/logger', () => ({
   default: {
     warn: vi.fn(),
@@ -63,6 +65,7 @@ describe('createGraphQLTool', () => {
     const result = await tool.execute?.({
       context,
       runtimeContext: makeRuntimeContext('user-123'),
+      tracingContext,
     });
 
     expect(result).toEqual({ data: 'mockData' });
@@ -89,6 +92,7 @@ describe('createGraphQLTool', () => {
       tool.execute?.({
         context,
         runtimeContext: makeRuntimeContext(undefined),
+        tracingContext,
       })
     ).rejects.toThrow(
       'User ID not available in RuntimeContext unable to execute query'
@@ -116,6 +120,7 @@ describe('createGraphQLTool', () => {
       tool.execute?.({
         context,
         runtimeContext: makeRuntimeContext('user-456'),
+        tracingContext,
       })
     ).rejects.toThrow(GraphQLClientError);
 
@@ -147,6 +152,7 @@ describe('createGraphQLTool', () => {
       tool.execute?.({
         context,
         runtimeContext: makeRuntimeContext('user-789'),
+        tracingContext,
       })
     ).rejects.toThrow('Oops');
 

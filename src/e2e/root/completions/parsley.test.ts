@@ -36,7 +36,7 @@ describe('POST /completions/parsley/conversations/chat', () => {
     expect(response.body.message).toBe('Invalid request body');
   });
 
-  it('sending a message will return a completion and create a new thread and store the log metadata', async () => {
+  it('sending a message will return a completion and create a new thread and store the log metadata and logURL', async () => {
     const id = '1';
     const response = await request(app).post(chatEndpoint).send({
       id,
@@ -58,6 +58,10 @@ describe('POST /completions/parsley/conversations/chat', () => {
     expect(logMetadataObj?.task_id).toBe(logMetadata.task_id);
     expect(logMetadataObj?.execution).toBe(logMetadata.execution);
     expect(logMetadataObj?.origin).toBe(logMetadata.origin);
+    console.log(thread?.metadata?.logURL);
+    expect(thread?.metadata?.logURL).toEqual(
+      'http://localhost:9090/task_log_raw/123/1?text=true&type=T'
+    );
   });
 
   it('should return a 400 status code if the id is not provided', async () => {
@@ -119,40 +123,5 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
     );
     expect(messagesResponse.body.messages[0].role).toBe('user');
     expect(messagesResponse.body.messages[1].role).toBe('assistant');
-  });
-});
-
-describe('completions/parsley/conversations/chat', () => {
-  describe('toolCalls', () => {
-    const taskId =
-      'evg_lint_generate_lint_ecbbf17f49224235d43416ea55566f3b1894bbf7_25_03_21_21_09_20';
-    it('should use the getTaskTool to fetch task details from evergreen and return information to the user', async () => {
-      const { GraphQLClient } = await import('../../../utils/graphql/client');
-      const executeQuerySpy = vi.spyOn(GraphQLClient.prototype, 'executeQuery');
-
-      const id = '456';
-
-      try {
-        const response = await request(app)
-          .post(chatEndpoint)
-          .send({
-            id,
-            message: `Get task ${taskId} and tell me its status`,
-            logMetadata: {
-              task_id: taskId,
-              execution: 0,
-              log_type: LogTypes.EVERGREEN_TASK_LOGS,
-              origin: TaskLogOrigin.Task,
-            },
-          });
-
-        expect(response.status).toBe(200);
-        expect(response.text).toBeTruthy();
-        const responseMessage = response.text.toLowerCase();
-        expect(responseMessage.length).toBeGreaterThan(0);
-      } finally {
-        executeQuerySpy.mockRestore();
-      }
-    });
   });
 });

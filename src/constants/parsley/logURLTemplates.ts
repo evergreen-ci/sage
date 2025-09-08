@@ -1,38 +1,12 @@
 import queryString from 'query-string';
 import { z } from 'zod';
-import { Task as TaskType } from 'gql/generated/types';
-import { LogTypes } from 'types/parsley';
-import { stringifyQuery } from 'utils/query-string';
 import { config } from '../../config';
+import { Task as TaskType } from '../../gql/generated/types';
+import { LogTypes } from '../../types/parsley';
+import { stringifyQuery } from '../../utils/query-string';
 import { logMetadataSchema } from './logMetadata';
 
 const { evergreenURL } = config.evergreen;
-/**
- *
- * @param taskID - the task ID
- * @param execution - the execution number of the task
- * @param testID - the test ID of the test
- * @param options - the options for the test log
- * @param options.text - returns the raw test log
- * @param options.groupID - the group ID
- * @returns an Evergreen URL of the format `/test_log/${taskID}/${execution}?test_name=${testID}&group_id=${groupID}text=true`
- */
-const getEvergreenTestLogURL = (
-  taskID: string,
-  execution: string | number,
-  testID: string,
-  options: { text?: boolean; groupID?: string }
-) => {
-  const { groupID, text } = options;
-  const params = {
-    group_id: groupID,
-    test_name: testID,
-    text,
-  };
-  return `${evergreenURL}/test_log/${taskID}/${execution}?${stringifyQuery(
-    params
-  )}`;
-};
 
 export enum Origin {
   Agent = 'agent',
@@ -117,6 +91,11 @@ const getEvergreenCompleteLogsURL = (
 ) =>
   `${evergreenURL}/rest/v2/tasks/${taskID}/build/TestLogs/${groupID}%2F?execution=${execution}`;
 
+/**
+ * generateLogURL generates a log URL based on the log metadata
+ * @param logMetadata - the log metadata
+ * @returns the log URL
+ */
 const generateLogURL = (logMetadata: z.infer<typeof logMetadataSchema>) => {
   switch (logMetadata.log_type) {
     case LogTypes.EVERGREEN_TASK_FILE:
@@ -134,16 +113,6 @@ const generateLogURL = (logMetadata: z.infer<typeof logMetadataSchema>) => {
           text: true,
         }
       );
-    case LogTypes.EVERGREEN_TEST_LOGS:
-      return getEvergreenTestLogURL(
-        logMetadata.task_id,
-        logMetadata.execution,
-        logMetadata.test_id,
-        {
-          text: true,
-          groupID: logMetadata.group_id ?? undefined,
-        }
-      );
     default:
       throw new Error('Invalid log metadata');
   }
@@ -153,6 +122,5 @@ export {
   getEvergreenCompleteLogsURL,
   getEvergreenTaskFileURL,
   getEvergreenTaskLogURL,
-  getEvergreenTestLogURL,
   generateLogURL,
 };
