@@ -12,12 +12,9 @@ export const toolUsage = (args: { output: string[]; expected: string[] }) => {
   const expectedTools = args.expected;
   const actualTools = args.output;
 
-  let correctToolsUsed: boolean;
-  if (expectedTools.length !== actualTools.length) {
-    correctToolsUsed = false;
-  } else {
-    correctToolsUsed = expectedTools.every(tool => actualTools.includes(tool));
-  }
+  const correctToolsUsed: boolean =
+    expectedTools.length === actualTools.length &&
+    expectedTools.every(tool => actualTools.includes(tool));
 
   return {
     name: 'ToolUsage',
