@@ -25,8 +25,7 @@ steps:
         from_secret: ecr_secret_key
     when:
       event:
-        - pull_request
-        - push
+        - promote
 
   - name: deploy-staging
     image: public.ecr.aws/kanopy/drone-helm:v3
