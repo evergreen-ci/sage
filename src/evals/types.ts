@@ -1,53 +1,21 @@
-import { MastraModelOutput, OutputSchema } from '@mastra/core/dist/stream';
+import { AISDKV5OutputStream, OutputSchema } from '@mastra/core/dist/stream';
 
-/**
- * These are the users declared in the local Evergreen database.
- */
-export enum TestUser {
-  Regular = 'regular',
-  Privileged = 'privileged',
-  Admin = 'admin',
-}
-
-export type TestInput = {
-  content: string;
-  user: TestUser;
-};
-
-export type Thresholds = {
-  factuality: number;
-  toolUsage: number;
-};
-
-export type TestMetadata = {
-  description: string;
-  testName: string;
-  thresholds: Thresholds;
-};
-
-export type TestResult = {
-  text: string;
-  toolsUsed: string[];
-};
-
-export type TestCase = {
-  input: TestInput;
-  expected: TestResult;
-  metadata: TestMetadata;
-};
-
-type MastraAgentOutput = Awaited<
-  ReturnType<MastraModelOutput<OutputSchema>['getFullOutput']>
+export type MastraAgentOutput = Awaited<
+  ReturnType<AISDKV5OutputStream<OutputSchema>['getFullOutput']>
 >;
 
-export type ModelOutput = Promise<
-  MastraAgentOutput & { input: TestInput; output: TestResult }
+export type ModelOutput<Input, Output> = Promise<
+  MastraAgentOutput & { input: Input; output: Output }
 >;
 
-export interface CustomEvalResult {
-  input: TestInput;
-  output: TestResult & { duration: number };
-  metadata: TestMetadata;
-  scores: Record<string, number>;
+export interface ReporterEvalResult<Input, Output, Metadata, Scores> {
+  input: Input;
+  output: Output & { duration: number };
+  metadata: Metadata & {
+    description: string;
+    testName: string;
+    scoreThresholds: Scores;
+  };
+  scores: Scores;
   error?: Error;
 }
