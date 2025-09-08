@@ -32,7 +32,7 @@
     "mastra:full": "yarn mastra:build && yarn mastra:start",
     "prepare": "husky",
     "eval": "ENABLE_SENTRY_PROFILING=false npx braintrust eval --no-send-logs",
-    "eval:send_to_braintrust": "ENABLE_SENTRY_PROFILING=false npx braintrust"
+    "eval:send_to_braintrust": "ENABLE_SENTRY_PROFILING=false npx braintrust eval"
   },
   "dependencies": {
     "@ai-sdk/azure": "^2.0.24",
