@@ -207,7 +207,7 @@ Drone can [promote](https://docs.drone.io/promote/) builds opened on PRs to stag
 
 Local deploys are slower but useful. First install [Rancher Desktop](https://rancherdesktop.io) as your container manager. Open Rancher and then run `yarn deploy:staging` from Sage to kick off the deploy.
 
-Note that Drone's [deployments page](https://drone.corp.mongodb.com/evergreen-ci/sage/deployments) will not reflect local deploys.
+Note that Drone's [deployments page](https://drone.corp.mongodb.com/evergreen-ci/sage/deployments) will not reflect local deploys. To verify your deploy has been pushed, install [Helm](https://kanopy.corp.mongodb.com/docs/configuration/helm/) and run `helm status sage`.
 
 ### Production
 
