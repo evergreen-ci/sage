@@ -28,7 +28,7 @@ export const logAnalyzerConfig = {
    */
   limits: {
     maxFileSizeMB: parseInt(
-      process.env.LOG_ANALYZER_MAX_FILE_SIZE_MB || '10',
+      process.env.LOG_ANALYZER_MAX_FILE_SIZE_MB || '50',
       10
     ), // Max file size in MB
     maxTextLength: parseInt(
