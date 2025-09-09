@@ -6,10 +6,10 @@ A TypeScript-based Express.js server powering the Evergreen AI Service.
 
 ### Prerequisites
 
-* Node.js v22 or higher
-* Yarn package manager
-* MongoDB instance installed and running
-* Azure OpenAI key
+- Node.js v22 or higher
+- Yarn package manager
+- MongoDB instance installed and running
+- Azure OpenAI key
 
 ### Environment Variables
 
@@ -129,9 +129,9 @@ Launches a local Mastra server at `http://localhost:4111` for agent testing.
 
 ### Customizing Agents
 
-* **Agents**: Add or update agents in `src/mastra/agents`.
-* **Tools**: Place reusable tools in `src/mastra/tools`. Tools are composable functions an agent can call.
-* **Workflows**: Add workflows to `src/mastra/workflows`. Workflows define multi-step logic that agents can follow.
+- **Agents**: Add or update agents in `src/mastra/agents`.
+- **Tools**: Place reusable tools in `src/mastra/tools`. Tools are composable functions an agent can call.
+- **Workflows**: Add workflows to `src/mastra/workflows`. Workflows define multi-step logic that agents can follow.
 
 All agents and workflows should be registered in `src/mastra/index.ts`.
 
@@ -184,12 +184,50 @@ types up to date. The command will also run Prettier on the generated file.
 ### Troubleshooting
 
 • If ESLint or codegen cannot find the schema, verify the `sdlschema` symlink
-  path and that the Evergreen repository is on the expected branch.  
+path and that the Evergreen repository is on the expected branch.
+
 - If ESLint or codegen cannot find the schema, verify the `sdlschema` symlink
-  path and that the Evergreen repository is on the expected branch.  
+  path and that the Evergreen repository is on the expected branch.
 - If dependencies appear out of date, try `yarn install` or `yarn clean` followed
   by `yarn install` to refresh `node_modules`.
-  
+
+## Evals
+
+We use **evals** to measure model performance. All evals are run and reported through the [Braintrust platform](https://www.braintrust.dev/docs/start/eval-sdk).
+
+Evals are stored in the `src/evals` folder.
+
+### Datasets
+
+To reduce repository size, we store datasets remotely on Braintrust and keep only the eval code in this repo.
+You can learn more about datasets [here](https://www.braintrust.dev/docs/guides/datasets).
+
+Datasets can be created directly in Braintrust or by using the `load-dataset-into-braintrust` script.
+
+### Loading a CSV into a Braintrust dataset
+
+For large datasets, you can load a CSV file into Braintrust with the following command:
+
+```bash
+yarn load-dataset-into-braintrust <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>
+```
+
+This script reads a CSV of arbitrary format and creates (or updates) a Braintrust dataset.
+
+Braintrust requires the following columns:
+
+- **input** – The model input (can be text or a file).
+- **expected** – The expected model output (typically text).
+- **metadata** – Any additional columns you want to include.
+
+The script validates the CSV columns and maps them as follows:
+
+- `input` → Set to `<input_column_name>`.
+- `expected` → Set to `<expected_column_name>`.
+- `metadata` → A JSON object containing all other columns.
+
+If `<input_column_name>` is `file_name`, the script checks that each file exists in `<path-to-dataset-folder>` and uploads them to Braintrust as dataset inputs.
+
 ## Deployment
 
 ### Staging Deploys
