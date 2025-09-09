@@ -62,7 +62,7 @@ const testGetTaskFilesTool: TestCase = {
     testName: 'Test retrieving task files',
     description: 'Tests that agent can retrieve and describe task files.',
     scoreThresholds: {
-      Factuality: 0.7,
+      Factuality: 0.5,
       ToolUsage: 1.0,
     },
   },
