@@ -24,6 +24,7 @@ export interface Config {
   db: {
     /** MONGODB_URI */
     mongodbUri: string;
+    /** DB_NAME */
     dbName: string;
   };
   aiModels: {
@@ -40,10 +41,12 @@ export interface Config {
   evergreen: {
     /** EVERGREEN_GRAPHQL_ENDPOINT */
     graphqlEndpoint: string;
+    /** EVERGREEN_API_USER */
     apiUser: string;
+    /** EVERGREEN_API_URL */
+    apiURL: string;
     /** EVERGREEN_API_KEY */
     apiKey: string;
-    userIDHeader: string;
     /** EVERGREEN_URL */
     evergreenURL: string;
   };
@@ -139,8 +142,8 @@ export const config: Config = {
   evergreen: {
     graphqlEndpoint: getEnvVar('EVERGREEN_GRAPHQL_ENDPOINT', ''),
     apiUser: getEnvVar('EVERGREEN_API_USER', ''),
+    apiURL: getEnvVar('EVERGREEN_API_URL', ''),
     apiKey: getEnvVar('EVERGREEN_API_KEY', ''),
-    userIDHeader: getEnvVar('END_USER_HEADER_ID', 'end-user-header-id'),
     evergreenURL: getEnvVar('EVERGREEN_URL', ''),
   },
   otelCollectorURL: getEnvVar(
