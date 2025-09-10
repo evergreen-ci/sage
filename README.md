@@ -190,40 +190,9 @@ types up to date. The command will also run Prettier on the generated file.
 
 ## Evals
 
-We use **evals** to measure model performance. All evals are run and reported through the [Braintrust platform](https://www.braintrust.dev/docs/start/eval-sdk).
+We use **evals** to measure model performance through the [Braintrust platform](https://www.braintrust.dev/docs/start/eval-sdk).
 
-Evals are stored in the `src/evals` folder.
-
-### Datasets
-
-To reduce repository size, we store datasets remotely on Braintrust and keep only the eval code in this repo.
-You can learn more about datasets [here](https://www.braintrust.dev/docs/guides/datasets).
-
-Datasets can be created directly in Braintrust or by using the `load-dataset-into-braintrust` script.
-
-### Loading a CSV into a Braintrust dataset
-
-For large datasets, you can load a CSV file into Braintrust with the following command:
-
-```bash
-yarn load-dataset-into-braintrust <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>
-```
-
-This script reads a CSV of arbitrary format and creates (or updates) a Braintrust dataset.
-
-Braintrust requires the following columns:
-
-- **input** – The model input (can be text or a file).
-- **expected** – The expected model output (typically text).
-- **metadata** – Any additional columns you want to include.
-
-The script validates the CSV columns and maps them as follows:
-
-- `input` → Set to `<input_column_name>`.
-- `expected` → Set to `<expected_column_name>`.
-- `metadata` → A JSON object containing all other columns.
-
-If `<input_column_name>` is `file_name`, the script checks that each file exists in `<path-to-dataset-folder>` and uploads them to Braintrust as dataset inputs.
+For detailed information about running evals, managing datasets, scoring, and reporting, see the [Evals documentation](src/evals/README.md).
 
 ## Deployment
 
