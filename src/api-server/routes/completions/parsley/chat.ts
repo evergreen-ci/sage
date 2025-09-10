@@ -165,7 +165,7 @@ const chatRoute = async (
     }
 
     const stream = await runWithRequestContext(
-      { userId: authenticatedUserId, requestId: req.requestId },
+      { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
         await agent.streamVNext(validatedMessage, {
           runtimeContext,
