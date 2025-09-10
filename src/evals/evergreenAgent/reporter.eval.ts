@@ -1,6 +1,6 @@
 import { ReporterName } from 'evals/constants';
 import { getReporter } from 'evals/reporter.eval';
-import { TestInput, TestResult, TestMetadata, Scores } from './types';
+import { TestInput, TestResult, Scores } from './types';
 
 const calculateScores = (scores: Scores, scoreThresholds: Scores) => {
   const factualityScore = scores.Factuality;
@@ -42,7 +42,7 @@ const printResults = (
   console.table(resultsTable);
 };
 
-getReporter<TestInput, TestResult, TestMetadata, Scores>({
+getReporter<TestInput, TestResult, Scores>({
   calculateScores,
   printResults,
   reporterName: ReporterName.Evergreen,

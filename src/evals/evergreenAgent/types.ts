@@ -1,4 +1,5 @@
 import { TestUser } from 'evals/constants';
+import { BaseTestCase } from 'evals/types';
 
 export type TestInput = {
   content: string;
@@ -10,19 +11,9 @@ export type Scores = {
   ToolUsage: number;
 };
 
-export type TestMetadata = {
-  description: string;
-  testName: string;
-  scoreThresholds: Scores;
-};
-
 export type TestResult = {
   text: string;
   toolsUsed: string[];
 };
 
-export type TestCase = {
-  input: TestInput;
-  expected: TestResult;
-  metadata: TestMetadata;
-};
+export type TestCase = BaseTestCase<TestInput, TestResult, Scores>;

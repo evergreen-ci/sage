@@ -1,3 +1,5 @@
+import { BaseTestCase } from 'evals/types';
+
 export type TestInput = string;
 
 export type TestResult = {
@@ -9,14 +11,4 @@ export type Scores = {
   ExactMatch: number;
 };
 
-export type TestMetadata = {
-  description: string;
-  testName: string;
-  scoreThresholds: Scores;
-};
-
-export type TestCase = {
-  input: TestInput;
-  expected: TestResult;
-  metadata: TestMetadata;
-};
+export type TestCase = BaseTestCase<TestInput, TestResult, Scores>;
