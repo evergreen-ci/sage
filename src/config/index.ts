@@ -31,8 +31,11 @@ export interface Config {
       openai: {
         /** AZURE_OPENAI_API_KEY */
         apiKey: string;
+        /** AZURE_OPENAI_ENDPOINT */
         endpoint: string;
+        /** AZURE_OPENAI_API_VERSION */
         apiVersion: string;
+        /** AZURE_OPENAI_DEFAULT_DEPLOYMENT */
         defaultDeployment: string;
       };
     };
@@ -68,9 +71,11 @@ export interface Config {
     dsn: string;
     /** SENTRY_SAMPLE_RATE */
     sampleRate: number;
+    /** SENTRY_TRACES_SAMPLE_RATE */
     tracesSampleRate: number;
     /** SENTRY_ENABLED */
     enabled: boolean;
+    /** SENTRY_DEBUG */
     debug: boolean;
     /** SENTRY_ATTACH_STACKTRACE */
     attachStacktrace: boolean;
