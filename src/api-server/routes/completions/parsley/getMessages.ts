@@ -55,12 +55,6 @@ const getMessagesRoute = async (
     return;
   }
 
-  logger.debug('Get messages authentication', {
-    requestId: req.requestId,
-    conversationId,
-    userId: authenticatedUserId,
-  });
-
   try {
     const network = mastra.vnext_getNetwork(ORCHESTRATOR_NAME);
     if (!network) {

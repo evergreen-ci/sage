@@ -74,6 +74,7 @@ class SageServer {
     logger.info('Starting Sage server', {
       port: config.port,
       nodeEnv: config.nodeEnv,
+      downstreamEvergreenURL: config.evergreen.evergreenURL,
     });
 
     await db.connect();
