@@ -93,7 +93,7 @@ functions:
       aws_key: ${AWS_ACCESS_KEY_ID}
       aws_secret: ${AWS_SECRET_ACCESS_KEY}
       aws_session_token: ${AWS_SESSION_TOKEN}
-      local_file: "sage/bin/mongod-logs.txt"
+      local_file: "sage/evergreen/bin/mongod-logs.txt"
       remote_file: ${build_variant}/${task_id}/${execution}/mongod-logs.txt
       bucket: evg-bucket-sage
       content_type: text/plain
