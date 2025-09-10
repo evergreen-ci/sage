@@ -74,6 +74,7 @@ export const userIdMiddleware = (
     logger.error('No authentication provided', {
       requestId: req.requestId,
     });
+    res.status(401).json({ error: 'No authentication provided' });
     return;
   }
   const span = trace.getSpan(context.active());
