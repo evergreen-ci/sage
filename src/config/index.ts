@@ -12,19 +12,24 @@ dotenvFlow.config({
 });
 
 export interface Config {
+  /** PORT */
   port: number;
+  /** NODE_ENV */
   nodeEnv: string;
   logging: {
+    /** LOG_LEVEL */
     logLevel: string;
     logToFile: boolean;
   };
   db: {
+    /** MONGODB_URI */
     mongodbUri: string;
     dbName: string;
   };
   aiModels: {
     azure: {
       openai: {
+        /** AZURE_OPENAI_API_KEY */
         apiKey: string;
         endpoint: string;
         apiVersion: string;
@@ -33,28 +38,41 @@ export interface Config {
     };
   };
   evergreen: {
+    /** EVERGREEN_GRAPHQL_ENDPOINT */
     graphqlEndpoint: string;
     apiUser: string;
+    /** EVERGREEN_API_KEY */
     apiKey: string;
     userIDHeader: string;
+    /** EVERGREEN_URL */
     evergreenURL: string;
   };
+  /** OTEL_COLLECTOR_URL */
   otelCollectorURL: string;
   honeycomb: {
-    team: string;
+    /** HONEYCOMB_API_KEY */
     apiKey: string;
+    /** OTEL_LOG_COLLECTOR_URL */
+    otelLogCollectorURL: string;
   };
   braintrust: {
+    /** BRAINTRUST_API_KEY */
     apiKey: string;
+    /** BRAINTRUST_PARENT */
     parent: string;
   };
   sentry: {
+    /** SENTRY_DSN */
     dsn: string;
+    /** SENTRY_SAMPLE_RATE */
     sampleRate: number;
     tracesSampleRate: number;
+    /** SENTRY_ENABLED */
     enabled: boolean;
     debug: boolean;
+    /** SENTRY_ATTACH_STACKTRACE */
     attachStacktrace: boolean;
+    /** SENTRY_CAPTURE_CONSOLE */
     captureConsole: boolean;
   };
 }
@@ -130,8 +148,11 @@ export const config: Config = {
     'http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces'
   ),
   honeycomb: {
-    team: getEnvVar('HONEYCOMB_TEAM', ''),
     apiKey: getEnvVar('HONEYCOMB_API_KEY', ''),
+    otelLogCollectorURL: getEnvVar(
+      'OTEL_LOG_COLLECTOR_URL',
+      'http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/logs'
+    ),
   },
   braintrust: {
     apiKey: getEnvVar('BRAINTRUST_API_KEY', ''),
