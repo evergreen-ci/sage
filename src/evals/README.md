@@ -11,8 +11,8 @@ To run the eval tests, do `yarn eval src/evals/<eval_folder_name>` from the root
 
 
 Additional requirements:
-* Make sure your Azure and Braintrust API keys are correctly populated in your `.env` files.
-* If you're running an agent that needs to query the Evergreen GraphQL server, then you must run Evergreen in another terminal (via `make evergreen-local`).
+- Make sure your Azure and Braintrust API keys are correctly populated in your `.env.<NODE_ENV>.local` files.
+- If you're running an agent that needs to query the Evergreen GraphQL server, then you must run Evergreen in another terminal (via `make local-evergreen`).
 
 
 ## Scoring
