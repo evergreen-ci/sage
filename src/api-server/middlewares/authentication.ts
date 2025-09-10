@@ -72,7 +72,7 @@ export const userIdMiddleware = (
   const authenticatedUserId = getUserIdFromRequest(req);
   if (!authenticatedUserId) {
     logger.error('No authentication provided', {
-      requestId: req.requestId,
+      requestId: res.locals.requestId,
     });
     res.status(401).json({ error: 'No authentication provided' });
     return;
@@ -81,5 +81,6 @@ export const userIdMiddleware = (
   if (span) {
     span.setAttribute('user.id', authenticatedUserId);
   }
+  res.locals.userId = authenticatedUserId;
   next();
 };
