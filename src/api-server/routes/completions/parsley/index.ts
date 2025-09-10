@@ -7,7 +7,7 @@ const parsleyOrchestratorRouter = express.Router();
 
 // Route to initiate a chat stream
 parsleyOrchestratorRouter.post('/chat', chatRoute);
+parsleyOrchestratorRouter.post('/rate', rateMessageRoute);
 parsleyOrchestratorRouter.get('/:conversationId/messages', getMessagesRoute);
-parsleyOrchestratorRouter.post('/messages/:messageId/rating', rateMessageRoute);
 
 export default parsleyOrchestratorRouter;

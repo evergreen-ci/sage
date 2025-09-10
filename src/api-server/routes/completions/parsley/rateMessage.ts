@@ -1,18 +1,14 @@
 import { initLogger as initBraintrustLogger } from 'braintrust';
 import { Request, Response } from 'express';
+import z from 'zod';
 import { logger } from 'utils/logger';
 import { config } from '../../../../config';
 
-export interface MessageRating {
-  rating: 0 | 1; // 0 for thumbs down, 1 for thumbs up
-  feedback?: string;
-  userId?: string;
-  timestamp?: Date;
-}
-
-interface RateMessageRequest extends Request<{ messageId: string }> {
-  body: MessageRating;
-}
+export const addRatingInputSchema = z.object({
+  messageId: z.string(),
+  rating: z.union([z.literal(0), z.literal(1)]),
+  feedback: z.string().optional(),
+});
 
 const braintrustLogger = initBraintrustLogger({
   projectName: config.braintrust.project,
@@ -20,73 +16,50 @@ const braintrustLogger = initBraintrustLogger({
 });
 
 const rateMessageRoute = async (
-  req: RateMessageRequest,
+  req: Request,
   res: Response
 ): Promise<Response | void> => {
-  const { messageId } = req.params;
-  const messageRating = req.body;
-
-  try {
-
-    if (
-      !messageRating ||
-      messageRating.rating === undefined ||
-      messageRating.rating === null
-    ) {
-      logger.warn('Invalid rating data', { messageId });
-      return res.status(400).json({ error: 'Invalid rating data' });
-    }
-
-    if (messageRating.rating !== 0 && messageRating.rating !== 1) {
-      logger.warn('Invalid rating value', {
-        messageId,
-        rating: messageRating.rating,
-      });
-      return res
-        .status(400)
-        .json({ error: 'Rating must be 0 (thumbs down) or 1 (thumbs up)' });
-    }
-
-    logger.info('Message rating received', {
-      messageId,
-      rating: messageRating.rating === 1 ? 'thumbs_up' : 'thumbs_down',
-      hasFeedback: !!messageRating.feedback,
+  const {
+    data: ratingData,
+    error: schemaError,
+    success: schemaSuccess,
+  } = addRatingInputSchema.safeParse(req.body);
+  if (!schemaSuccess) {
+    logger.error('Invalid request body', {
+      requestId: req.requestId,
+      body: req.body,
+      error: schemaError,
     });
-
-    const score = messageRating.rating;
-    try {
-      braintrustLogger.logFeedback({
-        id: messageId,
-        scores: {
-          correctness: score,
-        },
-        metadata: {
-          user_id: messageRating.userId,
-          timestamp: messageRating.timestamp || new Date(),
-          message_id: messageId,
-        },
-      });
-
-      logger.info('Feedback logged to Braintrust', {
-        messageId,
-        score,
-        userId: messageRating.userId,
-      });
-    } catch (braintrustError) {
-      logger.error('Failed to log feedback to Braintrust', {
-        error: braintrustError,
-        messageId,
-      });
-    }
-
-    return res.status(204).send();
-  } catch (error) {
-    logger.error('Error processing message rating', {
-      error,
-      messageId,
-    });
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(400).json({ message: 'Invalid request body' });
+    return;
   }
+
+  const score = ratingData.rating;
+  const spanId = '???';
+  try {
+    braintrustLogger.logFeedback({
+      id: spanId,
+      scores: {
+        correctness: score,
+      },
+      metadata: {
+        timestamp: new Date(),
+      },
+    });
+
+    logger.info('Feedback logged to Braintrust', {
+      messageId: ratingData.messageId,
+      score,
+    });
+  } catch (braintrustError) {
+    logger.error('Failed to log feedback to Braintrust', {
+      error: braintrustError,
+    });
+    return res
+      .status(503)
+      .json({ error: 'Failed to log feedback to Braintrust' });
+  }
+  return res.status(204).send();
 };
 
 export default rateMessageRoute;
