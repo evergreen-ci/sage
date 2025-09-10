@@ -52,11 +52,11 @@ export interface Config {
     /** EVERGREEN_URL */
     evergreenURL: string;
   };
-  /** OTEL_COLLECTOR_URL */
-  otelCollectorURL: string;
   honeycomb: {
     /** HONEYCOMB_API_KEY */
     apiKey: string;
+    /** OTEL_COLLECTOR_URL */
+    otelCollectorURL: string;
     /** OTEL_LOG_COLLECTOR_URL */
     otelLogCollectorURL: string;
   };
@@ -149,16 +149,10 @@ export const config: Config = {
     apiKey: getEnvVar('EVERGREEN_API_KEY', ''),
     evergreenURL: getEnvVar('EVERGREEN_URL', ''),
   },
-  otelCollectorURL: getEnvVar(
-    'OTEL_COLLECTOR_URL',
-    'http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces'
-  ),
   honeycomb: {
     apiKey: getEnvVar('HONEYCOMB_API_KEY', ''),
-    otelLogCollectorURL: getEnvVar(
-      'OTEL_LOG_COLLECTOR_URL',
-      'http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/logs'
-    ),
+    otelCollectorURL: getEnvVar('OTEL_COLLECTOR_URL', ''),
+    otelLogCollectorURL: getEnvVar('OTEL_LOG_COLLECTOR_URL', ''),
   },
   braintrust: {
     apiKey: getEnvVar('BRAINTRUST_API_KEY', ''),

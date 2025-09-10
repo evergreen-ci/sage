@@ -16,7 +16,7 @@ const braintrustSpanProcessor = new BraintrustSpanProcessor({
 });
 
 const otlpExporter = new OTLPTraceExporter({
-  url: config.otelCollectorURL,
+  url: config.honeycomb.otelCollectorURL,
   headers: {
     'x-honeycomb-team': config.honeycomb.apiKey,
   },
