@@ -31,14 +31,14 @@ class SageServer {
   }
 
   private setupMiddleware() {
+    // Middleware to add the request id to the request
     this.app.use(requestIdMiddleware);
+    // Middleware to add the authenticated user id to the request trace
+    this.app.use(userIdMiddleware);
     this.app.use(sentryContextMiddleware);
 
     // HTTP logging middleware
     this.app.use(httpLoggingMiddleware);
-
-    // Middleware to add the authenticated user id to the request trace
-    this.app.use(userIdMiddleware);
 
     // Basic Express middleware
     this.app.use(express.json());
