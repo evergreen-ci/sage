@@ -173,16 +173,20 @@ const chatRoute = async (
           runtimeContext,
           memory: memoryOptions,
           format: 'aisdk',
-          // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
-          // Thread ID is set correctly, which is most important.
-          // https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence#setting-up-server-side-id-generation
         })
     );
+
+    const output = await stream.getFullOutput();
 
     // Get the UIMessage stream and pipe it to Express with correct headers & backpressure.
     pipeUIMessageStreamToResponse({
       response: res,
-      stream: stream.toUIMessageStream(),
+      stream: stream.toUIMessageStream({
+        // The next two lines comprise a frankly ridiculous workaround to prevent toUIMessageStream from clobbering the databse message IDs while creating the client stream.
+        // But it works! It can be removed someday.
+        generateMessageId: () => '',
+        originalMessages: output.response.uiMessages,
+      }),
     });
   } catch (error) {
     logger.error('Error in add message route', {
