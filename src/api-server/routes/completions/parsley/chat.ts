@@ -185,7 +185,7 @@ const chatRoute = async (
   } catch (error) {
     logger.error('Error in add message route', {
       error,
-      requestId: req.requestId,
+      requestId: res.locals.requestId,
     });
     res.status(500).json({
       message: 'Error in add message route',
