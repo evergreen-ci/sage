@@ -19,7 +19,6 @@ export interface Config {
   logging: {
     /** LOG_LEVEL */
     logLevel: string;
-    logToFile: boolean;
   };
   db: {
     /** MONGODB_URI */
@@ -127,7 +126,6 @@ export const config: Config = {
   },
   logging: {
     logLevel: getEnvVar('LOG_LEVEL', 'info'),
-    logToFile: getEnvVar('LOG_TO_FILE', 'true') === 'true',
   },
   aiModels: {
     azure: {
