@@ -5,6 +5,7 @@ import expressListEndpoints from 'express-list-endpoints';
 import { config } from 'config';
 import { logger } from 'utils/logger';
 import { db } from '../db/connection';
+import { userIdMiddleware } from './middlewares/authentication';
 import {
   requestIdMiddleware,
   httpLoggingMiddleware,
@@ -35,6 +36,9 @@ class SageServer {
 
     // HTTP logging middleware
     this.app.use(httpLoggingMiddleware);
+
+    // Middleware to add the authenticated user id to the request trace
+    this.app.use(userIdMiddleware);
 
     // Basic Express middleware
     this.app.use(express.json());

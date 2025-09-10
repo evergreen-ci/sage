@@ -1,4 +1,5 @@
-import { Request } from 'express';
+import { context, trace } from '@opentelemetry/api';
+import express from 'express';
 import { KANOPY_AUTH_HEADER } from '../../constants/headers';
 import { logger } from '../../utils/logger';
 
@@ -10,9 +11,9 @@ interface KanopyJWTClaims {
  * @param authHeader - The authorization header string
  * @returns The user ID or null if extraction fails
  */
-export function extractUserIdFromKanopyHeader(
+export const extractUserIdFromKanopyHeader = (
   authHeader: string
-): string | null {
+): string | null => {
   try {
     if (!authHeader) {
       return null;
@@ -39,14 +40,14 @@ export function extractUserIdFromKanopyHeader(
     logger.error('Failed to extract user ID from Kanopy header', { error });
     return null;
   }
-}
+};
 
 /**
  * Extracts the user ID from the Kanopy authentication header in the request
  * @param req - The Express request object
  * @returns The user ID or null if no header is present or extraction fails
  */
-export function getUserIdFromRequest(req: Request): string | null {
+export const getUserIdFromRequest = (req: express.Request): string | null => {
   const kanopyAuthHeader = req.headers[KANOPY_AUTH_HEADER] as
     | string
     | undefined;
@@ -55,4 +56,29 @@ export function getUserIdFromRequest(req: Request): string | null {
     return process.env.USER_NAME || null;
   }
   return extractUserIdFromKanopyHeader(kanopyAuthHeader);
-}
+};
+
+/**
+ * Middleware to add the authenticated user id to the request trace
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function
+ */
+export const userIdMiddleware = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const authenticatedUserId = getUserIdFromRequest(req);
+  if (!authenticatedUserId) {
+    logger.error('No authentication provided', {
+      requestId: req.requestId,
+    });
+    return;
+  }
+  const span = trace.getSpan(context.active());
+  if (span) {
+    span.setAttribute('user.id', authenticatedUserId);
+  }
+  next();
+};
