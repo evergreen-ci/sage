@@ -11,9 +11,7 @@ interface KanopyJWTClaims {
  * @param authHeader - The authorization header string
  * @returns The user ID or null if extraction fails
  */
-export const extractUserIdFromKanopyHeader = (
-  authHeader: string
-): string | null => {
+const extractUserIdFromKanopyHeader = (authHeader: string): string | null => {
   try {
     if (!authHeader) {
       return null;
@@ -47,7 +45,7 @@ export const extractUserIdFromKanopyHeader = (
  * @param req - The Express request object
  * @returns The user ID or null if no header is present or extraction fails
  */
-export const getUserIdFromRequest = (req: express.Request): string | null => {
+const getUserIdFromRequest = (req: express.Request): string | null => {
   const kanopyAuthHeader = req.headers[KANOPY_AUTH_HEADER] as
     | string
     | undefined;

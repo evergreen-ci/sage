@@ -12,7 +12,6 @@ import { createParsleyRuntimeContext } from 'mastra/memory/parsley/runtimeContex
 import { logger } from 'utils/logger';
 import { USER_ID } from '../../../../mastra/agents/constants';
 import { runWithRequestContext } from '../../../../mastra/utils/requestContext';
-import { getUserIdFromRequest } from '../../../middlewares/authentication';
 import { uiMessageSchema } from './validators';
 
 const addMessageInputSchema = z.object({
@@ -31,19 +30,18 @@ const chatRoute = async (
   res: Response<ReadableStream | ErrorResponse>
 ) => {
   const runtimeContext = createParsleyRuntimeContext();
-  const authenticatedUserId = getUserIdFromRequest(req);
-  if (!authenticatedUserId) {
+  if (!res.locals.userId) {
     logger.error('No authentication provided', {
-      requestId: req.requestId,
+      requestId: res.locals.requestId,
     });
     res.status(401).json({ message: 'Authentication required' });
     return;
   }
 
-  runtimeContext.set(USER_ID, authenticatedUserId);
+  runtimeContext.set(USER_ID, res.locals.userId);
   logger.debug('User context set for request', {
-    userId: authenticatedUserId,
-    requestId: req.requestId,
+    userId: res.locals.userId,
+    requestId: res.locals.requestId,
   });
 
   const {
@@ -53,7 +51,7 @@ const chatRoute = async (
   } = addMessageInputSchema.safeParse(req.body);
   if (!messageSuccess) {
     logger.error('Invalid request body', {
-      requestId: req.requestId,
+      requestId: res.locals.requestId,
       body: req.body,
       error: messageError,
     });
@@ -67,7 +65,7 @@ const chatRoute = async (
     const logFileUrlWorkflow = mastra.getWorkflowById('resolve-log-file-url');
     if (!logFileUrlWorkflow) {
       logger.error('resolve-log-file-url workflow not found', {
-        requestId: req.requestId,
+        requestId: res.locals.requestId,
       });
       res
         .status(500)
@@ -77,7 +75,7 @@ const chatRoute = async (
     const run = await logFileUrlWorkflow.createRunAsync({});
     if (!run) {
       logger.error('Failed to create log file url workflow run', {
-        requestId: req.requestId,
+        requestId: res.locals.requestId,
       });
       res
         .status(500)
@@ -94,7 +92,7 @@ const chatRoute = async (
       runtimeContext.set('logURL', runResult.result);
     } else if (runResult.status === 'failed') {
       logger.error('Error in get log file url workflow', {
-        requestId: req.requestId,
+        requestId: res.locals.requestId,
         error: runResult.error,
       });
     }
@@ -112,7 +110,7 @@ const chatRoute = async (
     }
   } catch (error) {
     logger.error('Invalid UIMessage request params', {
-      requestId: req.requestId,
+      requestId: res.locals.requestId,
       params: req.params,
     });
     res.status(400).json({ message: 'Invalid UIMessage request params' });
@@ -136,7 +134,7 @@ const chatRoute = async (
     const thread = await memory?.getThreadById({ threadId: conversationId });
     if (thread) {
       logger.debug('Found existing thread', {
-        requestId: req.requestId,
+        requestId: res.locals.requestId,
         threadId: thread.id,
         resourceId: thread.resourceId,
       });
