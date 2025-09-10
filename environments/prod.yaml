@@ -33,7 +33,7 @@ env:
   EVERGREEN_GRAPHQL_ENDPOINT: https://evergreen.mongodb.com/mcp/graphql/query
   PORT: 8080
   OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
-  OTEL_LOG_COLLECTOR_URL: https://api.honeycomb.io/v1/logs
+  OTEL_LOG_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/logs
   HONEYCOMB_TEAM: sage
   NODE_ENV: production
   DB_NAME: sage
