@@ -183,16 +183,32 @@ types up to date. The command will also run Prettier on the generated file.
 
 ### Troubleshooting
 
-• If ESLint or codegen cannot find the schema, verify the `sdlschema` symlink
-path and that the Evergreen repository is on the expected branch.
-
 - If ESLint or codegen cannot find the schema, verify the `sdlschema` symlink
   path and that the Evergreen repository is on the expected branch.
 - If dependencies appear out of date, try `yarn install` or `yarn clean` followed
   by `yarn install` to refresh `node_modules`.
 
-## Deployment
+## Deploys
 
-### Staging Deploys
+### Staging
 
-To deploy your changes to Sage's staging environment, make changes on a new branch. Update the .drone.yml's `trigger` field to include your branch name, commit, and push up to GitHub. A Drone build will be kicked off automatically.
+Before pushing to staging, drop a note in 🔒evergreen-ai-devs to make sure no one is using it.
+
+#### Drone
+
+Drone can [promote](https://docs.drone.io/promote/) builds opened on PRs to staging. Before starting, [install and configure the Drone CLI](https://kanopy.corp.mongodb.com/docs/cicd/advanced_drone/#drone-cli).
+
+1. Open a PR with your changes (a draft is okay). This will kick off the `publish` step.
+2. Once completed, either:
+    - Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> staging` from your machine.
+    - Click `…` > `Promote` on your build's page on Drone. Enter "staging" in the "Target" field and submit.
+
+#### Local
+
+Local deploys are slower but useful. First install [Rancher Desktop](https://rancherdesktop.io) as your container manager. Open Rancher and then run `yarn deploy:staging` from Sage to kick off the deploy.
+
+Note that Drone's [deployments page](https://drone.corp.mongodb.com/evergreen-ci/sage/deployments) will not reflect local deploys. To verify your deploy has been pushed, install [Helm](https://kanopy.corp.mongodb.com/docs/configuration/helm/) and run `helm status sage`.
+
+### Production
+
+To deploy to production, follow the Drone steps above, using `production` as the target instead of `staging`. Note that you must be promoting a Drone build that pushed a commit to `main`.
