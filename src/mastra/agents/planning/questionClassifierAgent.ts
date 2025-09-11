@@ -116,5 +116,6 @@ A:
 
 export const askQuestionClassifierAgentTool = createToolFromAgent(
   questionClassifierAgent.id,
-  questionClassifierAgent.getDescription()
+  questionClassifierAgent.getDescription(),
+  outputSchema
 );

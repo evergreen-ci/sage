@@ -33,6 +33,7 @@ export const wrapToolWithTracing = <
   if (tool.execute) {
     tool.execute = wrapTraced(tool.execute.bind(tool), {
       name: tool.id,
+      type: 'tool',
     });
   }
   return tool as Tool<TSchemaIn, TSchemaOut, TContext> & {

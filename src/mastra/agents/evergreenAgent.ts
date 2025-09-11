@@ -8,7 +8,10 @@ import {
 } from '../tools/evergreen';
 import { createToolFromAgent } from '../tools/utils';
 import { memoryStore } from '../utils/memory';
-import { wrapAgentWithTracing } from '../utils/tracing/wrapAgentWithTracing';
+import {
+  wrapAgentWithTracing,
+  wrapToolWithTracing,
+} from '../utils/tracing/wrapAgentWithTracing';
 import {
   getTaskHistoryWorkflow,
   getVersionWorkflow,
@@ -73,7 +76,6 @@ You are **Evergreen AI**, an agent that provides information and support about t
   })
 );
 
-export const askEvergreenAgentTool = createToolFromAgent(
-  evergreenAgent.id,
-  evergreenAgent.getDescription()
+export const askEvergreenAgentTool = wrapToolWithTracing(
+  createToolFromAgent(evergreenAgent.id, evergreenAgent.getDescription())
 );
