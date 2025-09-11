@@ -5,7 +5,7 @@ import { logger } from 'utils/logger';
 import { config } from '../../../../config';
 
 export const addRatingInputSchema = z.object({
-  messageId: z.string(),
+  spanId: z.string(),
   rating: z.union([z.literal(0), z.literal(1)]),
   feedback: z.string().optional(),
 });
@@ -35,10 +35,9 @@ const rateMessageRoute = async (
   }
 
   const score = ratingData.rating;
-  const spanId = '???';
   try {
     braintrustLogger.logFeedback({
-      id: spanId,
+      id: ratingData.spanId,
       scores: {
         correctness: score,
       },
@@ -48,7 +47,6 @@ const rateMessageRoute = async (
     });
 
     logger.info('Feedback logged to Braintrust', {
-      messageId: ratingData.messageId,
       score,
     });
   } catch (braintrustError) {
