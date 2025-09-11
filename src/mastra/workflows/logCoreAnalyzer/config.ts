@@ -32,7 +32,7 @@ export const logAnalyzerConfig = {
       process.env.LOG_ANALYZER_MAX_FILE_SIZE_MB || '100',
       10
     ),
-    // Max text length in characters, defaults to 80_000_000.
+    // Max text length in characters, defaults to 80,000,000.
     maxTextLength: parseInt(
       process.env.LOG_ANALYZER_MAX_TEXT_LENGTH || '80000000',
       10
@@ -42,7 +42,7 @@ export const logAnalyzerConfig = {
       process.env.LOG_ANALYZER_MAX_URL_SIZE_MB || '100',
       10
     ),
-    // Max estimated tokens to process, defaults to 10_000_000.
+    // Max estimated tokens to process, defaults to 10,000,000.
     maxTokens: parseInt(process.env.LOG_ANALYZER_MAX_TOKENS || '10000000', 10),
     // URL fetch timeout, defaults to 30 seconds.
     urlTimeoutMs: parseInt(
