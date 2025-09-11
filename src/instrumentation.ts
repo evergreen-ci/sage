@@ -22,17 +22,21 @@ const otlpExporter = new OTLPTraceExporter({
   },
 });
 
-const otlpLogExporter = new OTLPLogExporter({
-  url: config.honeycomb.otelLogCollectorURL,
-  headers: {
-    'x-honeycomb-team': config.honeycomb.apiKey,
-  },
-});
+const otlpLogExporter = config.honeycomb.otelLogCollectorURL
+  ? new OTLPLogExporter({
+      url: config.honeycomb.otelLogCollectorURL,
+      headers: {
+        'x-honeycomb-team': config.honeycomb.apiKey,
+      },
+    })
+  : undefined;
 
 const sentrySpanProcessor = new SentrySpanProcessor();
 
 const sdk = new NodeSDK({
-  logRecordProcessors: [new logs.SimpleLogRecordProcessor(otlpLogExporter)],
+  logRecordProcessors: otlpLogExporter
+    ? [new logs.SimpleLogRecordProcessor(otlpLogExporter)]
+    : [],
   instrumentations: [getNodeAutoInstrumentations()],
   spanProcessors: [
     braintrustSpanProcessor,
