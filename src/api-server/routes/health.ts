@@ -62,6 +62,10 @@ const healthRoute = async (req: Request, res: Response) => {
     database: {
       status: dbStats.ok === 1 ? 'healthy' : 'unhealthy',
     },
+    otelConfig: {
+      logCollectorURL: config.honeycomb.otelLogCollectorURL,
+      traceCollectorURL: config.honeycomb.otelCollectorURL,
+    },
   });
 };
 
