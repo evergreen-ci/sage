@@ -39,6 +39,7 @@ env:
   DB_NAME: sage
   OTEL_EXPORTER_OTLP_ENDPOINT: https://api.braintrust.dev/otel
   BRAINTRUST_PARENT: project_name:sage-prod
+  BRAINTRUST_PROJECT_NAME: sage-prod
   SENTRY_DSN: https://3db76f0989faad4c102a8708fba9446f@o4504991346720768.ingest.us.sentry.io/4509905876942849
 
 envSecrets:

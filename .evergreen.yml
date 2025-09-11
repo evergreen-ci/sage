@@ -20,7 +20,6 @@ post:
   - func: assume-ec2-role
   - func: attach-mongod-logs
   - func: attach-test-results
-  - func: attach-braintrust-results
 
 buildvariants:
   - name: ubuntu2204-small
@@ -40,7 +39,13 @@ buildvariants:
       - name: lint
       - name: test
       - name: e2e
-      - name: eval
+      - name: evergreen-evals
+      - name: question-classifier-evals
+    display_tasks:
+      - name: evals
+        execution_tasks:
+          - "evergreen-evals"
+          - "question-classifier-evals"
 
 tasks:
   - name: compile
@@ -62,7 +67,7 @@ tasks:
       - func: yarn-build
       - func: wait-for-evergreen
       - func: yarn-e2e
-  - name: eval
+  - name: evergreen-evals
     commands:
       - func: setup-mongodb
       - func: run-make-background
@@ -70,8 +75,19 @@ tasks:
           target: local-evergreen
       - func: wait-for-evergreen
       - func: yarn-eval
-
-
+        vars:
+          eval_dir: evergreenAgent
+      - func: attach-braintrust-results
+        vars:
+          xml_file_name: evergreen_evals.xml
+  - name: question-classifier-evals
+    commands:
+      - func: yarn-eval
+        vars:
+          eval_dir: questionClassifierAgent
+      - func: attach-braintrust-results
+        vars:
+          xml_file_name: question_classifier_evals.xml
 
 functions:
   attach-test-results:
@@ -84,7 +100,7 @@ functions:
     command: attach.xunit_results
     params:
       files:
-        - "./sage/bin/braintrust_evals.xml"
+        - ./sage/bin/${xml_file_name}
 
   attach-mongod-logs:
     command: s3.put
@@ -93,7 +109,7 @@ functions:
       aws_key: ${AWS_ACCESS_KEY_ID}
       aws_secret: ${AWS_SECRET_ACCESS_KEY}
       aws_session_token: ${AWS_SESSION_TOKEN}
-      local_file: "sage/bin/mongod-logs.txt"
+      local_file: "sage/evergreen/bin/mongod-logs.txt"
       remote_file: ${build_variant}/${task_id}/${execution}/mongod-logs.txt
       bucket: evg-bucket-sage
       content_type: text/plain
@@ -294,7 +310,8 @@ functions:
         AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
         AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
         BRAINTRUST_API_KEY: ${BRAINTRUST_API_KEY}
+        EVAL_DIR: ${eval_dir}
       shell: bash
       script: |
         ${PREPARE_SHELL}
-        yarn eval:send_to_braintrust
+        .evergreen/scripts/publish-evals.sh
