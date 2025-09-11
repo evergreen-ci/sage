@@ -5,6 +5,7 @@ import {
   GetTaskQueryVariables,
 } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
+import { wrapToolWithTracing } from '../../utils/tracing/wrapAgentWithTracing';
 import evergreenClient from './graphql/evergreenClient';
 
 const GET_TASK = gql`
@@ -73,14 +74,16 @@ const getTaskOutputSchema = z.object({
   }),
 });
 
-const getTaskTool = createGraphQLTool<GetTaskQuery, GetTaskQueryVariables>({
-  id: 'getTask',
-  description:
-    'Get a task from Evergreen. This tool is used to get the details of a task from Evergreen. It is used to get the details of a task from Evergreen. It requires a taskId to be provided. A taskId is a string that is unique to a task in Evergreen',
-  query: GET_TASK,
-  inputSchema: getTaskInputSchema,
-  outputSchema: getTaskOutputSchema,
-  client: evergreenClient,
-});
+const getTaskTool = wrapToolWithTracing(
+  createGraphQLTool<GetTaskQuery, GetTaskQueryVariables>({
+    id: 'getTask',
+    description:
+      'Get a task from Evergreen. This tool is used to get the details of a task from Evergreen. It is used to get the details of a task from Evergreen. It requires a taskId to be provided. A taskId is a string that is unique to a task in Evergreen',
+    query: GET_TASK,
+    inputSchema: getTaskInputSchema,
+    outputSchema: getTaskOutputSchema,
+    client: evergreenClient,
+  })
+);
 
 export default getTaskTool;

@@ -6,6 +6,7 @@ import {
   TaskHistoryDirection,
 } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
+import { wrapToolWithTracing } from '../../utils/tracing/wrapAgentWithTracing';
 import evergreenClient from './graphql/evergreenClient';
 
 const GET_TASK_HISTORY = gql`
@@ -108,17 +109,16 @@ const getTaskHistoryOutputSchema = z.object({
   }),
 });
 
-const getTaskHistoryTool = createGraphQLTool<
-  TaskHistoryQuery,
-  TaskHistoryQueryVariables
->({
-  id: 'getTaskHistory',
-  description:
-    'Get the history of a task from Evergreen. This tool is used to get the details of a task history and its historical statuses from prior executions from Evergreen. It requires TaskHistoryOpts as input.',
-  query: GET_TASK_HISTORY,
-  inputSchema: getTaskHistoryInputSchema,
-  outputSchema: getTaskHistoryOutputSchema,
-  client: evergreenClient,
-});
+const getTaskHistoryTool = wrapToolWithTracing(
+  createGraphQLTool<TaskHistoryQuery, TaskHistoryQueryVariables>({
+    id: 'getTaskHistory',
+    description:
+      'Get the history of a task from Evergreen. This tool is used to get the details of a task history and its historical statuses from prior executions from Evergreen. It requires TaskHistoryOpts as input.',
+    query: GET_TASK_HISTORY,
+    inputSchema: getTaskHistoryInputSchema,
+    outputSchema: getTaskHistoryOutputSchema,
+    client: evergreenClient,
+  })
+);
 
 export default getTaskHistoryTool;
