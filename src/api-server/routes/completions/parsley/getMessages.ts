@@ -23,11 +23,6 @@ const getMessagesRoute = async (
   req: Request,
   res: Response<GetMessagesOutput | ErrorResponse>
 ) => {
-  logger.info('Get messages request received', {
-    requestId: res.locals.requestId,
-    body: req.body,
-  });
-
   const { data: paramsData, success: paramsSuccess } =
     getMessagesParamsSchema.safeParse(req.params);
   if (!paramsSuccess) {
@@ -42,15 +37,6 @@ const getMessagesRoute = async (
   const { conversationId } = paramsData;
 
   const runtimeContext = new RuntimeContext();
-
-  if (!res.locals.userId) {
-    logger.error('No authentication provided', {
-      requestId: res.locals.requestId,
-      conversationId,
-    });
-    res.status(401).json({ message: 'Authentication required' });
-    return;
-  }
 
   try {
     const network = mastra.vnext_getNetwork(ORCHESTRATOR_NAME);

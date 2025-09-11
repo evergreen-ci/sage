@@ -30,13 +30,6 @@ const chatRoute = async (
   res: Response<ReadableStream | ErrorResponse>
 ) => {
   const runtimeContext = createParsleyRuntimeContext();
-  if (!res.locals.userId) {
-    logger.error('No authentication provided', {
-      requestId: res.locals.requestId,
-    });
-    res.status(401).json({ message: 'Authentication required' });
-    return;
-  }
 
   runtimeContext.set(USER_ID, res.locals.userId);
   logger.debug('User context set for request', {
