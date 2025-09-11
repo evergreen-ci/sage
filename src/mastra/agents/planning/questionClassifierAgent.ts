@@ -2,7 +2,10 @@ import { Agent } from '@mastra/core';
 import { z } from 'zod';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { createToolFromAgent } from '../../tools/utils';
-import { wrapAgentWithTracing } from '../../utils/tracing/wrapWithTracing';
+import {
+  wrapAgentWithTracing,
+  wrapToolWithTracing,
+} from '../../utils/tracing/wrapWithTracing';
 
 /** Shared enums so prose, schema, and logic stay in sync */
 const QUESTION_CLASS = [
@@ -114,8 +117,10 @@ A:
   })
 );
 
-export const askQuestionClassifierAgentTool = createToolFromAgent(
-  questionClassifierAgent.id,
-  questionClassifierAgent.getDescription(),
-  outputSchema
+export const askQuestionClassifierAgentTool = wrapToolWithTracing(
+  createToolFromAgent(
+    questionClassifierAgent.id,
+    questionClassifierAgent.getDescription(),
+    outputSchema
+  )
 );
