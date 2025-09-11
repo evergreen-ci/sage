@@ -2,6 +2,10 @@ import { Agent } from '@mastra/core';
 import { z } from 'zod';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { createToolFromAgent } from '../../tools/utils';
+import {
+  wrapAgentWithTracing,
+  wrapToolWithTracing,
+} from '../../utils/tracing/wrapWithTracing';
 
 /** Shared enums so prose, schema, and logic stay in sync */
 const QUESTION_CLASS = [
@@ -27,11 +31,12 @@ const outputSchema = z.object({
   originalQuestion: z.string().min(1),
 });
 
-export const questionClassifierAgent = new Agent({
-  id: 'question-classifier-agent',
-  name: 'Question Classifier Agent',
-  description: 'Classifies a user question and decides the next action.',
-  instructions: `
+export const questionClassifierAgent = wrapAgentWithTracing(
+  new Agent({
+    id: 'question-classifier-agent',
+    name: 'Question Classifier Agent',
+    description: 'Classifies a user question and decides the next action.',
+    instructions: `
 You are a classifier. Do not answer the user’s question. Your job is to:
 1) Assign a single category to the question (questionClass).
 2) Pick the appropriate nextAction.
@@ -82,10 +87,10 @@ You are a classifier. Do not answer the user’s question. Your job is to:
 ## Output contract
 Return **only** a JSON object with keys:
 { "confidence": number 0..1, "questionClass": one of ${QUESTION_CLASS.join(
-    ', '
-  )}, "nextAction": one of ${NEXT_ACTION.join(
-    ', '
-  )}, "originalQuestion": string }
+      ', '
+    )}, "nextAction": one of ${NEXT_ACTION.join(
+      ', '
+    )}, "originalQuestion": string }
 
 ## Few examples
 
@@ -104,14 +109,18 @@ Q: "Did this flake start yesterday? Compare to last passing and show failing tes
 A:
 {"confidence":0.89,"questionClass":"COMBINATION","nextAction":"USE_COMBINATION_ANALYSIS","originalQuestion":"Did this flake start yesterday? Compare to last passing and show failing tests."}
   `,
-  defaultGenerateOptions: {
-    output: outputSchema,
-    temperature: 0,
-  },
-  model: gpt41,
-});
+    defaultGenerateOptions: {
+      output: outputSchema,
+      temperature: 0,
+    },
+    model: gpt41,
+  })
+);
 
-export const askQuestionClassifierAgentTool = createToolFromAgent(
-  questionClassifierAgent.id,
-  questionClassifierAgent.getDescription()
+export const askQuestionClassifierAgentTool = wrapToolWithTracing(
+  createToolFromAgent(
+    questionClassifierAgent.id,
+    questionClassifierAgent.getDescription(),
+    outputSchema
+  )
 );
