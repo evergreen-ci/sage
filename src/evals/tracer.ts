@@ -7,7 +7,9 @@ import { ModelOutput } from './types';
  * @param callModel - function to call the given agent
  * @returns Expected result from calling agent
  */
-export const callModelWithTrace = async (callModel: () => ModelOutput) =>
+export const callModelWithTrace = async <TInput, TOutput>(
+  callModel: () => ModelOutput<TInput, TOutput>
+) =>
   traced(async span => {
     span.setAttributes({ name: 'call-model-span' });
 

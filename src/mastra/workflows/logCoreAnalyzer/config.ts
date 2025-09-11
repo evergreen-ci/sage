@@ -1,8 +1,8 @@
 import { gpt41, gpt41Nano } from '../../models/openAI/gpt41';
 
 /**
- * Configuration for the Log Core Analyzer workflow, some of these parameters may be moved to
- * environment variables in the future
+ * Configuration for the Log Core Analyzer workflow. Some of these parameters may be moved to
+ * environment variables in the future.
  */
 export const logAnalyzerConfig = {
   /**

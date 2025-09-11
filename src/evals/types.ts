@@ -1,53 +1,40 @@
-import { MastraModelOutput, OutputSchema } from '@mastra/core/dist/stream';
+import { AISDKV5OutputStream, OutputSchema } from '@mastra/core/dist/stream';
 
-/**
- * These are the users declared in the local Evergreen database.
- */
-export enum TestUser {
-  Regular = 'regular',
-  Privileged = 'privileged',
-  Admin = 'admin',
-}
+export type MastraAgentOutput = Awaited<
+  ReturnType<AISDKV5OutputStream<OutputSchema>['getFullOutput']>
+>;
 
-export type TestInput = {
-  content: string;
-  user: TestUser;
+export type ModelOutput<TInput, TOutput> = Promise<
+  MastraAgentOutput & { input: TInput; output: TOutput }
+>;
+
+export type Scores = {
+  [key: string]: number;
 };
 
-export type Thresholds = {
-  factuality: number;
-  toolUsage: number;
-};
-
-export type TestMetadata = {
+type TestMetadata<TScores extends Scores> = {
   description: string;
   testName: string;
-  thresholds: Thresholds;
+  scoreThresholds: TScores;
 };
 
-export type TestResult = {
-  text: string;
-  toolsUsed: string[];
-};
-
-export type TestCase = {
-  input: TestInput;
-  expected: TestResult;
-  metadata: TestMetadata;
-};
-
-type MastraAgentOutput = Awaited<
-  ReturnType<MastraModelOutput<OutputSchema>['getFullOutput']>
->;
-
-export type ModelOutput = Promise<
-  MastraAgentOutput & { input: TestInput; output: TestResult }
->;
-
-export interface CustomEvalResult {
-  input: TestInput;
-  output: TestResult & { duration: number };
-  metadata: TestMetadata;
-  scores: Record<string, number>;
+export interface ReporterEvalResult<TInput, TOutput, TScores extends Scores> {
+  input: TInput;
+  output: TOutput & { duration: number };
+  metadata: TestMetadata<TScores>;
+  scores: TScores;
   error?: Error;
 }
+
+/**
+ * Base test case type that all test cases should extend.
+ * @param TInput - The input type for the test case.
+ * @param TExpected - The expected output type for the test case.
+ * @param Tscores - The scores type for the test case. This is a map of score names to their thresholds.
+ * @returns The base test case type.
+ */
+export type BaseTestCase<TInput, TExpected, TScores extends Scores> = {
+  input: TInput;
+  expected: TExpected;
+  metadata: TestMetadata<TScores>;
+};
