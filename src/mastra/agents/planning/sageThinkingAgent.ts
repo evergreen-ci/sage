@@ -1,9 +1,9 @@
 import { Agent } from '@mastra/core/agent';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Memory } from '@mastra/memory';
-import { wrapTraced } from 'braintrust';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { memoryStore } from '../../utils/memory';
+import wrapAgentWithTracing from '../../utils/tracing/wrapAgentWithTracing';
 import { logCoreAnalyzerTool } from '../../workflows/logCoreAnalyzerWorkflow';
 import { askEvergreenAgentTool } from '../evergreenAgent';
 import { askQuestionClassifierAgentTool } from './questionClassifierAgent';
@@ -18,12 +18,13 @@ const sageThinkingAgentMemory = new Memory({
   },
 });
 
-export const sageThinkingAgent: Agent = new Agent({
-  name: 'Sage Thinking Agent',
-  description:
-    'A agent that thinks about the user question and decides the next action.',
-  memory: sageThinkingAgentMemory,
-  instructions: ({ runtimeContext }) => `
+export const sageThinkingAgent: Agent = wrapAgentWithTracing(
+  new Agent({
+    name: 'Sage Thinking Agent',
+    description:
+      'A agent that thinks about the user question and decides the next action.',
+    memory: sageThinkingAgentMemory,
+    instructions: ({ runtimeContext }) => `
   You are Parsley AI. A senior software engineer that can think about a users questions and decide on a course of action to answer the question. 
   You have a deep understanding of the evergreen platform and have access to a series of tools that can help you answer any question.
 
@@ -50,32 +51,13 @@ export const sageThinkingAgent: Agent = new Agent({
   ${stringifyRuntimeContext(runtimeContext)}
   </ADDITIONAL_CONTEXT>
   `,
-  model: gpt41,
-  tools: {
-    askQuestionClassifierAgentTool,
-    askEvergreenAgentTool,
-    logCoreAnalyzerTool,
-  },
-});
-
-// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
-// This wraps the generateVNext method with tracing capabilities to track generation calls
-// TODO: Remove when Mastra observability is fully supported
-sageThinkingAgent.generateVNext = wrapTraced(
-  sageThinkingAgent.generateVNext.bind(sageThinkingAgent),
-  {
-    name: 'sageThinkingAgent.generateVNext',
-  }
-);
-
-// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
-// This wraps the streamVNext method with tracing capabilities to track streaming responses
-// TODO: Remove when Mastra observability is fully supported
-sageThinkingAgent.streamVNext = wrapTraced(
-  sageThinkingAgent.streamVNext.bind(sageThinkingAgent),
-  {
-    name: 'sageThinkingAgent.streamVNext',
-  }
+    model: gpt41,
+    tools: {
+      askQuestionClassifierAgentTool,
+      askEvergreenAgentTool,
+      logCoreAnalyzerTool,
+    },
+  })
 );
 
 const stringifyRuntimeContext = (runtimeContext: RuntimeContext) => {

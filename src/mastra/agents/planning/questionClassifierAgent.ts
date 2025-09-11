@@ -1,8 +1,8 @@
 import { Agent } from '@mastra/core';
-import { wrapTraced } from 'braintrust';
 import { z } from 'zod';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { createToolFromAgent } from '../../tools/utils';
+import wrapAgentWithTracing from '../../utils/tracing/wrapAgentWithTracing';
 
 /** Shared enums so prose, schema, and logic stay in sync */
 const QUESTION_CLASS = [
@@ -28,11 +28,12 @@ const outputSchema = z.object({
   originalQuestion: z.string().min(1),
 });
 
-export const questionClassifierAgent = new Agent({
-  id: 'question-classifier-agent',
-  name: 'Question Classifier Agent',
-  description: 'Classifies a user question and decides the next action.',
-  instructions: `
+export const questionClassifierAgent = wrapAgentWithTracing(
+  new Agent({
+    id: 'question-classifier-agent',
+    name: 'Question Classifier Agent',
+    description: 'Classifies a user question and decides the next action.',
+    instructions: `
 You are a classifier. Do not answer the user’s question. Your job is to:
 1) Assign a single category to the question (questionClass).
 2) Pick the appropriate nextAction.
@@ -83,10 +84,10 @@ You are a classifier. Do not answer the user’s question. Your job is to:
 ## Output contract
 Return **only** a JSON object with keys:
 { "confidence": number 0..1, "questionClass": one of ${QUESTION_CLASS.join(
-    ', '
-  )}, "nextAction": one of ${NEXT_ACTION.join(
-    ', '
-  )}, "originalQuestion": string }
+      ', '
+    )}, "nextAction": one of ${NEXT_ACTION.join(
+      ', '
+    )}, "originalQuestion": string }
 
 ## Few examples
 
@@ -105,31 +106,12 @@ Q: "Did this flake start yesterday? Compare to last passing and show failing tes
 A:
 {"confidence":0.89,"questionClass":"COMBINATION","nextAction":"USE_COMBINATION_ANALYSIS","originalQuestion":"Did this flake start yesterday? Compare to last passing and show failing tests."}
   `,
-  defaultGenerateOptions: {
-    output: outputSchema,
-    temperature: 0,
-  },
-  model: gpt41,
-});
-
-// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
-// This wraps the generateVNext method with tracing capabilities to track generation calls
-// TODO: Remove when Mastra observability is fully supported
-questionClassifierAgent.generateVNext = wrapTraced(
-  questionClassifierAgent.generateVNext.bind(questionClassifierAgent),
-  {
-    name: 'questionClassifierAgent.generateVNext',
-  }
-);
-
-// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
-// This wraps the streamVNext method with tracing capabilities to track streaming responses
-// TODO: Remove when Mastra observability is fully supported
-questionClassifierAgent.streamVNext = wrapTraced(
-  questionClassifierAgent.streamVNext.bind(questionClassifierAgent),
-  {
-    name: 'questionClassifierAgent.streamVNext',
-  }
+    defaultGenerateOptions: {
+      output: outputSchema,
+      temperature: 0,
+    },
+    model: gpt41,
+  })
 );
 
 export const askQuestionClassifierAgentTool = createToolFromAgent(

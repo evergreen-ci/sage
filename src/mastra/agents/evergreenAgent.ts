@@ -1,6 +1,5 @@
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
-import { wrapTraced } from 'braintrust';
 import { gpt41 } from '../models/openAI/gpt41';
 import {
   getTaskTool,
@@ -9,6 +8,7 @@ import {
 } from '../tools/evergreen';
 import { createToolFromAgent } from '../tools/utils';
 import { memoryStore } from '../utils/memory';
+import wrapAgentWithTracing from '../utils/tracing/wrapAgentWithTracing';
 import {
   getTaskHistoryWorkflow,
   getVersionWorkflow,
@@ -45,11 +45,12 @@ const evergreenAgentMemory = new Memory({
   },
 });
 
-export const evergreenAgent: Agent = new Agent({
-  name: 'evergreenAgent',
-  description:
-    'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources',
-  instructions: `
+export const evergreenAgent: Agent = wrapAgentWithTracing(
+  new Agent({
+    name: 'evergreenAgent',
+    description:
+      'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources',
+    instructions: `
 You are **Evergreen AI**, an agent that provides information and support about the Evergreen system.
 
 * Only answer questions related to Evergreen.
@@ -58,37 +59,18 @@ You are **Evergreen AI**, an agent that provides information and support about t
 * When possible, answer directly and concisely without tools.
 * Your role is to provide accurate, domain-specific responses for the orchestrator to use.
 `,
-  model: gpt41,
-  memory: evergreenAgentMemory,
-  workflows: {
-    getTaskHistoryWorkflow,
-    getVersionWorkflow,
-  },
-  tools: {
-    getTaskTool,
-    getTaskFilesTool,
-    getTaskTestsTool,
-  },
-});
-
-// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
-// This wraps the streamVNext method with tracing capabilities to track streaming responses
-// TODO: Remove when Mastra observability is fully supported
-evergreenAgent.streamVNext = wrapTraced(
-  evergreenAgent.streamVNext.bind(evergreenAgent),
-  {
-    name: 'evergreenAgent.streamVNext',
-  }
-);
-
-// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
-// This wraps the generateVNext method with tracing capabilities to track generation calls
-// TODO: Remove when Mastra observability is fully supported
-evergreenAgent.generateVNext = wrapTraced(
-  evergreenAgent.generateVNext.bind(evergreenAgent),
-  {
-    name: 'evergreenAgent.generateVNext',
-  }
+    model: gpt41,
+    memory: evergreenAgentMemory,
+    workflows: {
+      getTaskHistoryWorkflow,
+      getVersionWorkflow,
+    },
+    tools: {
+      getTaskTool,
+      getTaskFilesTool,
+      getTaskTestsTool,
+    },
+  })
 );
 
 export const askEvergreenAgentTool = createToolFromAgent(

@@ -2,9 +2,9 @@ import { createTool } from '@mastra/core';
 import { Agent } from '@mastra/core/agent';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
-import { wrapTraced } from 'braintrust';
 import { z } from 'zod';
 import { WinstonMastraLogger } from '../../utils/logger/winstonMastraLogger';
+import wrapAgentWithTracing from '../utils/tracing/wrapAgentWithTracing';
 import { logAnalyzerConfig } from './logCoreAnalyzer/config';
 import {
   loadFromFile,
@@ -23,7 +23,6 @@ import {
   SINGLE_PASS_PROMPT,
 } from './logCoreAnalyzer/prompts';
 import { normalizeLineEndings } from './logCoreAnalyzer/utils';
-
 // We define here the core workflow for log file analysis. It gives the Parsley Agent the capability to read and understand text files, of any kind and format.
 // Depending on the file size, we either return a summary in a single LLM call, or perform a more complex iterative refinement, combining the usage of cheap and more expensive models.
 
@@ -158,22 +157,14 @@ const LoopStateSchema = z.object({
 // Define the log analyzer agent for chunked processing
 // Initial analyzer - We use a bigger model for the first chunk, for better understanding of the structure and context
 
-const initialAnalyzerAgent = new Agent({
-  name: 'initial-analyzer-agent',
-  description:
-    'Performs initial analysis of technical documents to understand structure and key patterns',
-  instructions: INITIAL_ANALYZER_INSTRUCTIONS,
-  model: logAnalyzerConfig.models.initial,
-});
-
-// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
-// This wraps the generateVNext method with tracing capabilities to track generation calls
-// TODO: Remove when Mastra observability is fully supported
-initialAnalyzerAgent.generateVNext = wrapTraced(
-  initialAnalyzerAgent.generateVNext.bind(initialAnalyzerAgent),
-  {
-    name: 'initialAnalyzerAgent.generateVNext',
-  }
+const initialAnalyzerAgent = wrapAgentWithTracing(
+  new Agent({
+    name: 'initial-analyzer-agent',
+    description:
+      'Performs initial analysis of technical documents to understand structure and key patterns',
+    instructions: INITIAL_ANALYZER_INSTRUCTIONS,
+    model: logAnalyzerConfig.models.initial,
+  })
 );
 
 const initialStep = createStep({
@@ -224,22 +215,14 @@ const RefinementAgentOutputSchema = z.object({
   summary: z.string(),
 });
 
-const refinementAgent = new Agent({
-  name: 'refinement-agent',
-  description:
-    'Iteratively refines and updates technical summaries with new chunks',
-  instructions: REFINEMENT_AGENT_INSTRUCTIONS,
-  model: logAnalyzerConfig.models.refinement,
-});
-
-// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
-// This wraps the generateVNext method with tracing capabilities to track generation calls
-// TODO: Remove when Mastra observability is fully supported
-refinementAgent.generateVNext = wrapTraced(
-  refinementAgent.generateVNext.bind(refinementAgent),
-  {
-    name: 'refinementAgent.generateVNext',
-  }
+const refinementAgent = wrapAgentWithTracing(
+  new Agent({
+    name: 'refinement-agent',
+    description:
+      'Iteratively refines and updates technical summaries with new chunks',
+    instructions: REFINEMENT_AGENT_INSTRUCTIONS,
+    model: logAnalyzerConfig.models.refinement,
+  })
 );
 
 const refineStep = createStep({
@@ -307,21 +290,13 @@ const refineStep = createStep({
 });
 
 // Define the report formatter agent for final output
-const reportFormatterAgent = new Agent({
-  name: 'report-formatter-agent',
-  description: 'Formats technical summaries into various output formats',
-  instructions: REPORT_FORMATTER_INSTRUCTIONS,
-  model: logAnalyzerConfig.models.formatter,
-});
-
-// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
-// This wraps the generateVNext method with tracing capabilities to track generation calls
-// TODO: Remove when Mastra observability is fully supported
-reportFormatterAgent.generateVNext = wrapTraced(
-  reportFormatterAgent.generateVNext.bind(reportFormatterAgent),
-  {
-    name: 'reportFormatterAgent.generateVNext',
-  }
+const reportFormatterAgent = wrapAgentWithTracing(
+  new Agent({
+    name: 'report-formatter-agent',
+    description: 'Formats technical summaries into various output formats',
+    instructions: REPORT_FORMATTER_INSTRUCTIONS,
+    model: logAnalyzerConfig.models.formatter,
+  })
 );
 
 // Single-pass step for files that fit in one chunk - generates both markdown and summary in one call
