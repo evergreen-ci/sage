@@ -28,7 +28,7 @@ resources:
 
 env:
   BRAINTRUST_PARENT: project_name:sage-prod
-  BRAINTRUST_PROJECT: sage-prod
+  BRAINTRUST_PROJECT_NAME: sage-prod
   DB_NAME: sage
   EVERGREEN_API_USER: sage
   EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2

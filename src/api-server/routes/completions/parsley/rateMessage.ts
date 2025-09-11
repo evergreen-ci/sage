@@ -11,7 +11,7 @@ export const addRatingInputSchema = z.object({
 });
 
 const braintrustLogger = initBraintrustLogger({
-  projectName: config.braintrust.project,
+  projectName: config.braintrust.projectName,
   apiKey: config.braintrust.apiKey,
 });
 

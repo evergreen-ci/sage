@@ -3,6 +3,7 @@ import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Memory } from '@mastra/memory';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { memoryStore } from '../../utils/memory';
+import { wrapAgentWithTracing } from '../../utils/tracing/wrapWithTracing';
 import { logCoreAnalyzerTool } from '../../workflows/logCoreAnalyzerWorkflow';
 import { askEvergreenAgentTool } from '../evergreenAgent';
 import { askQuestionClassifierAgentTool } from './questionClassifierAgent';
@@ -17,12 +18,13 @@ const sageThinkingAgentMemory = new Memory({
   },
 });
 
-export const sageThinkingAgent: Agent = new Agent({
-  name: 'Sage Thinking Agent',
-  description:
-    'A agent that thinks about the user question and decides the next action.',
-  memory: sageThinkingAgentMemory,
-  instructions: ({ runtimeContext }) => `
+export const sageThinkingAgent: Agent = wrapAgentWithTracing(
+  new Agent({
+    name: 'Sage Thinking Agent',
+    description:
+      'A agent that thinks about the user question and decides the next action.',
+    memory: sageThinkingAgentMemory,
+    instructions: ({ runtimeContext }) => `
   You are Parsley AI. A senior software engineer that can think about a users questions and decide on a course of action to answer the question. 
   You have a deep understanding of the evergreen platform and have access to a series of tools that can help you answer any question.
 
@@ -49,13 +51,14 @@ export const sageThinkingAgent: Agent = new Agent({
   ${stringifyRuntimeContext(runtimeContext)}
   </ADDITIONAL_CONTEXT>
   `,
-  model: gpt41,
-  tools: {
-    askQuestionClassifierAgentTool,
-    askEvergreenAgentTool,
-    logCoreAnalyzerTool,
-  },
-});
+    model: gpt41,
+    tools: {
+      askQuestionClassifierAgentTool,
+      askEvergreenAgentTool,
+      logCoreAnalyzerTool,
+    },
+  })
+);
 
 const stringifyRuntimeContext = (runtimeContext: RuntimeContext) => {
   const context = runtimeContext.toJSON();
