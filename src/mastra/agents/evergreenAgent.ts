@@ -9,6 +9,10 @@ import {
 import { createToolFromAgent } from '../tools/utils';
 import { memoryStore } from '../utils/memory';
 import {
+  wrapAgentWithTracing,
+  wrapToolWithTracing,
+} from '../utils/tracing/wrapWithTracing';
+import {
   getTaskHistoryWorkflow,
   getVersionWorkflow,
 } from '../workflows/evergreen';
@@ -44,11 +48,12 @@ const evergreenAgentMemory = new Memory({
   },
 });
 
-export const evergreenAgent: Agent = new Agent({
-  name: 'evergreenAgent',
-  description:
-    'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources',
-  instructions: `
+export const evergreenAgent: Agent = wrapAgentWithTracing(
+  new Agent({
+    name: 'evergreenAgent',
+    description:
+      'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources',
+    instructions: `
 You are **Evergreen AI**, an agent that provides information and support about the Evergreen system.
 
 * Only answer questions related to Evergreen.
@@ -57,20 +62,20 @@ You are **Evergreen AI**, an agent that provides information and support about t
 * When possible, answer directly and concisely without tools.
 * Your role is to provide accurate, domain-specific responses for the orchestrator to use.
 `,
-  model: gpt41,
-  memory: evergreenAgentMemory,
-  workflows: {
-    getTaskHistoryWorkflow,
-    getVersionWorkflow,
-  },
-  tools: {
-    getTaskTool,
-    getTaskFilesTool,
-    getTaskTestsTool,
-  },
-});
+    model: gpt41,
+    memory: evergreenAgentMemory,
+    workflows: {
+      getTaskHistoryWorkflow,
+      getVersionWorkflow,
+    },
+    tools: {
+      getTaskTool,
+      getTaskFilesTool,
+      getTaskTestsTool,
+    },
+  })
+);
 
-export const askEvergreenAgentTool = createToolFromAgent(
-  evergreenAgent.id,
-  evergreenAgent.getDescription()
+export const askEvergreenAgentTool = wrapToolWithTracing(
+  createToolFromAgent(evergreenAgent.id, evergreenAgent.getDescription())
 );

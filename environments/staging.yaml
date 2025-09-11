@@ -27,6 +27,7 @@ resources:
     memory: 8Gi
 
 env:
+  BRAINTRUST_PROJECT_NAME: sage-staging
   EVERGREEN_API_USER: sage
   EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2
   EVERGREEN_URL: https://evergreen.mongodb.com
