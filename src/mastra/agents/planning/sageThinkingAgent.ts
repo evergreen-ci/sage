@@ -1,6 +1,7 @@
 import { Agent } from '@mastra/core/agent';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Memory } from '@mastra/memory';
+import { wrapTraced } from 'braintrust';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { memoryStore } from '../../utils/memory';
 import { logCoreAnalyzerTool } from '../../workflows/logCoreAnalyzerWorkflow';
@@ -56,6 +57,20 @@ export const sageThinkingAgent: Agent = new Agent({
     logCoreAnalyzerTool,
   },
 });
+
+sageThinkingAgent.generateVNext = wrapTraced(
+  sageThinkingAgent.generateVNext.bind(sageThinkingAgent),
+  {
+    name: 'sageThinkingAgent.generateVNext',
+  }
+);
+
+sageThinkingAgent.streamVNext = wrapTraced(
+  sageThinkingAgent.streamVNext.bind(sageThinkingAgent),
+  {
+    name: 'sageThinkingAgent.streamVNext',
+  }
+);
 
 const stringifyRuntimeContext = (runtimeContext: RuntimeContext) => {
   const context = runtimeContext.toJSON();

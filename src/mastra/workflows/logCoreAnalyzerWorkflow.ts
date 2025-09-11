@@ -2,6 +2,7 @@ import { createTool } from '@mastra/core';
 import { Agent } from '@mastra/core/agent';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
+import { wrapTraced } from 'braintrust';
 import { z } from 'zod';
 import { WinstonMastraLogger } from '../../utils/logger/winstonMastraLogger';
 import { logAnalyzerConfig } from './logCoreAnalyzer/config';
@@ -165,6 +166,13 @@ const initialAnalyzerAgent = new Agent({
   model: logAnalyzerConfig.models.initial,
 });
 
+initialAnalyzerAgent.generateVNext = wrapTraced(
+  initialAnalyzerAgent.generateVNext.bind(initialAnalyzerAgent),
+  {
+    name: 'initialAnalyzerAgent.generateVNext',
+  }
+);
+
 const initialStep = createStep({
   id: 'initial-summary',
   description: 'Summarize first chunk using log analyzer agent',
@@ -220,6 +228,13 @@ const refinementAgent = new Agent({
   instructions: REFINEMENT_AGENT_INSTRUCTIONS,
   model: logAnalyzerConfig.models.refinement,
 });
+
+refinementAgent.generateVNext = wrapTraced(
+  refinementAgent.generateVNext.bind(refinementAgent),
+  {
+    name: 'refinementAgent.generateVNext',
+  }
+);
 
 const refineStep = createStep({
   id: 'refine-summary',
@@ -292,6 +307,13 @@ const reportFormatterAgent = new Agent({
   instructions: REPORT_FORMATTER_INSTRUCTIONS,
   model: logAnalyzerConfig.models.formatter,
 });
+
+reportFormatterAgent.generateVNext = wrapTraced(
+  reportFormatterAgent.generateVNext.bind(reportFormatterAgent),
+  {
+    name: 'reportFormatterAgent.generateVNext',
+  }
+);
 
 // Single-pass step for files that fit in one chunk - generates both markdown and summary in one call
 const singlePassStep = createStep({

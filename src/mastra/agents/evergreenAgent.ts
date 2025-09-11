@@ -1,5 +1,6 @@
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
+import { wrapTraced } from 'braintrust';
 import { gpt41 } from '../models/openAI/gpt41';
 import {
   getTaskTool,
@@ -69,6 +70,22 @@ You are **Evergreen AI**, an agent that provides information and support about t
     getTaskTestsTool,
   },
 });
+
+// Bind the traced functions to the agent
+evergreenAgent.streamVNext = wrapTraced(
+  evergreenAgent.streamVNext.bind(evergreenAgent),
+  {
+    name: 'evergreenAgent.streamVNext',
+  }
+);
+
+// Bind the traced functions to the agent
+evergreenAgent.generateVNext = wrapTraced(
+  evergreenAgent.generateVNext.bind(evergreenAgent),
+  {
+    name: 'evergreenAgent.generateVNext',
+  }
+);
 
 export const askEvergreenAgentTool = createToolFromAgent(
   evergreenAgent.id,

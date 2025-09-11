@@ -1,4 +1,5 @@
 import { Agent } from '@mastra/core';
+import { wrapTraced } from 'braintrust';
 import { z } from 'zod';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { createToolFromAgent } from '../../tools/utils';
@@ -110,6 +111,20 @@ A:
   },
   model: gpt41,
 });
+
+questionClassifierAgent.generateVNext = wrapTraced(
+  questionClassifierAgent.generateVNext.bind(questionClassifierAgent),
+  {
+    name: 'questionClassifierAgent.generateVNext',
+  }
+);
+
+questionClassifierAgent.streamVNext = wrapTraced(
+  questionClassifierAgent.streamVNext.bind(questionClassifierAgent),
+  {
+    name: 'questionClassifierAgent.streamVNext',
+  }
+);
 
 export const askQuestionClassifierAgentTool = createToolFromAgent(
   questionClassifierAgent.id,
