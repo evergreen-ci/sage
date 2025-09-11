@@ -30,7 +30,6 @@ const chatRoute = async (
   res: Response<ReadableStream | ErrorResponse>
 ) => {
   const runtimeContext = createParsleyRuntimeContext();
-
   runtimeContext.set(USER_ID, res.locals.userId);
   logger.debug('User context set for request', {
     userId: res.locals.userId,
