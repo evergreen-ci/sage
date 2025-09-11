@@ -173,6 +173,7 @@ const chatRoute = async (
     pipeUIMessageStreamToResponse({
       response: res,
       stream: stream.toUIMessageStream({
+        // TODO: Return message span ID in metadata
         messageMetadata: () => ({}),
       }),
     });
