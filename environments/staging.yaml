@@ -35,7 +35,6 @@ env:
   PORT: 8080
   OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
   OTEL_LOG_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/logs
-  HONEYCOMB_TEAM: sage
   NODE_ENV: staging
   DB_NAME: sage
   OTEL_EXPORTER_OTLP_ENDPOINT: https://api.braintrust.dev/otel
