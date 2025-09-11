@@ -5,6 +5,7 @@ import expressListEndpoints from 'express-list-endpoints';
 import { config } from 'config';
 import { logger } from 'utils/logger';
 import { db } from '../db/connection';
+import { userIdMiddleware } from './middlewares/authentication';
 import {
   requestIdMiddleware,
   httpLoggingMiddleware,
@@ -30,7 +31,10 @@ class SageServer {
   }
 
   private setupMiddleware() {
+    // Middleware to add the request id to the request
     this.app.use(requestIdMiddleware);
+    // Middleware to add the authenticated user id to the request trace
+    this.app.use(userIdMiddleware);
     this.app.use(sentryContextMiddleware);
 
     // HTTP logging middleware
@@ -70,6 +74,7 @@ class SageServer {
     logger.info('Starting Sage server', {
       port: config.port,
       nodeEnv: config.nodeEnv,
+      downstreamEvergreenURL: config.evergreen.evergreenURL,
     });
 
     await db.connect();

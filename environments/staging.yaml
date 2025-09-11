@@ -27,13 +27,14 @@ resources:
     memory: 8Gi
 
 env:
+  BRAINTRUST_PROJECT_NAME: sage-staging
   EVERGREEN_API_USER: sage
   EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2
   EVERGREEN_URL: https://evergreen.mongodb.com
   EVERGREEN_GRAPHQL_ENDPOINT: https://evergreen.mongodb.com/mcp/graphql/query
   PORT: 8080
   OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
-  HONEYCOMB_TEAM: sage
+  OTEL_LOG_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/logs
   NODE_ENV: staging
   DB_NAME: sage
   OTEL_EXPORTER_OTLP_ENDPOINT: https://api.braintrust.dev/otel
