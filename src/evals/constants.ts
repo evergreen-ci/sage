@@ -13,6 +13,7 @@ enum ReporterName {
   Evergreen = 'Evergreen Eval Reporter',
   QuestionClassifier = 'Question Classifier Eval Reporter',
   SageThinking = 'Sage Thinking Eval Reporter',
+  LogAnalyzerWorkflow = 'Log Analyzer Workflow Eval Reporter',
 }
 
 export { PROJECT_NAME, TestUser, ReporterName };
