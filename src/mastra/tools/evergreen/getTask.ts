@@ -5,7 +5,7 @@ import {
   GetTaskQueryVariables,
 } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
-import { wrapToolWithTracing } from '../../utils/tracing/wrapAgentWithTracing';
+import { wrapToolWithTracing } from '../../utils/tracing/wrapWithTracing';
 import evergreenClient from './graphql/evergreenClient';
 
 const GET_TASK = gql`

@@ -11,7 +11,7 @@ import { memoryStore } from '../utils/memory';
 import {
   wrapAgentWithTracing,
   wrapToolWithTracing,
-} from '../utils/tracing/wrapAgentWithTracing';
+} from '../utils/tracing/wrapWithTracing';
 import {
   getTaskHistoryWorkflow,
   getVersionWorkflow,

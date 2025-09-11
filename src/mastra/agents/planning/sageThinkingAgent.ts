@@ -3,7 +3,7 @@ import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Memory } from '@mastra/memory';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { memoryStore } from '../../utils/memory';
-import { wrapAgentWithTracing } from '../../utils/tracing/wrapAgentWithTracing';
+import { wrapAgentWithTracing } from '../../utils/tracing/wrapWithTracing';
 import { logCoreAnalyzerTool } from '../../workflows/logCoreAnalyzerWorkflow';
 import { askEvergreenAgentTool } from '../evergreenAgent';
 import { askQuestionClassifierAgentTool } from './questionClassifierAgent';
