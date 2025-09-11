@@ -30,9 +30,9 @@ describe('dataLoader', () => {
     it('should reject files over size limit', async () => {
       const fs = (await import('fs/promises')).default;
 
-      // Mock a 100MB file (way over 10MB limit)
+      // Mock a 200MB file (exceeds 100MB limit)
       vi.mocked(fs.stat).mockResolvedValue({
-        size: 100 * 1024 * 1024,
+        size: 200 * 1024 * 1024,
       } as any);
 
       await expect(loadFromFile('large.log')).rejects.toThrow('exceeds limit');
@@ -58,7 +58,7 @@ describe('dataLoader', () => {
       const fs = (await import('fs/promises')).default;
 
       // Mock a file that's under size limit but over token limit
-      const hugeText = 'x'.repeat(10_000_000); // ~2.5M tokens
+      const hugeText = 'x'.repeat(60_000_000); // ~15M tokens
 
       vi.mocked(fs.stat).mockResolvedValue({
         size: hugeText.length,
@@ -77,9 +77,9 @@ describe('dataLoader', () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         headers: new Headers({
-          'content-length': String(100 * 1024 * 1024), // 100MB
+          'content-length': String(200 * 1024 * 1024), // 200MB
         }),
-        text: async () => 'x'.repeat(100 * 1024 * 1024),
+        text: async () => 'x'.repeat(200 * 1024 * 1024),
       });
 
       await expect(
@@ -131,15 +131,14 @@ describe('dataLoader', () => {
 
   describe('loadFromText', () => {
     it('should reject text over character limit', async () => {
-      const hugeText = 'x'.repeat(20_000_000); // 20M characters
+      const hugeText = 'x'.repeat(100_000_000); // 100M characters
 
       await expect(loadFromText(hugeText)).rejects.toThrow('exceeds limit');
     });
 
     it('should reject text over token limit', async () => {
       // Text that's under character limit but over token limit
-      const text = 'x'.repeat(10_000_000); // ~2.5M tokens
-
+      const text = 'x'.repeat(60_000_000); // ~15M tokens
       await expect(loadFromText(text)).rejects.toThrow('tokens, exceeds limit');
     });
 
