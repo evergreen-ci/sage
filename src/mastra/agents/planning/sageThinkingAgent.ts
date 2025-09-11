@@ -58,6 +58,9 @@ export const sageThinkingAgent: Agent = new Agent({
   },
 });
 
+// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
+// This wraps the generateVNext method with tracing capabilities to track generation calls
+// TODO: Remove when Mastra observability is fully supported
 sageThinkingAgent.generateVNext = wrapTraced(
   sageThinkingAgent.generateVNext.bind(sageThinkingAgent),
   {
@@ -65,6 +68,9 @@ sageThinkingAgent.generateVNext = wrapTraced(
   }
 );
 
+// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
+// This wraps the streamVNext method with tracing capabilities to track streaming responses
+// TODO: Remove when Mastra observability is fully supported
 sageThinkingAgent.streamVNext = wrapTraced(
   sageThinkingAgent.streamVNext.bind(sageThinkingAgent),
   {

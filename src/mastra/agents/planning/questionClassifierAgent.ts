@@ -112,6 +112,9 @@ A:
   model: gpt41,
 });
 
+// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
+// This wraps the generateVNext method with tracing capabilities to track generation calls
+// TODO: Remove when Mastra observability is fully supported
 questionClassifierAgent.generateVNext = wrapTraced(
   questionClassifierAgent.generateVNext.bind(questionClassifierAgent),
   {
@@ -119,6 +122,9 @@ questionClassifierAgent.generateVNext = wrapTraced(
   }
 );
 
+// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
+// This wraps the streamVNext method with tracing capabilities to track streaming responses
+// TODO: Remove when Mastra observability is fully supported
 questionClassifierAgent.streamVNext = wrapTraced(
   questionClassifierAgent.streamVNext.bind(questionClassifierAgent),
   {

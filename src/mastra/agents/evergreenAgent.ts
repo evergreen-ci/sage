@@ -71,7 +71,9 @@ You are **Evergreen AI**, an agent that provides information and support about t
   },
 });
 
-// Bind the traced functions to the agent
+// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
+// This wraps the streamVNext method with tracing capabilities to track streaming responses
+// TODO: Remove when Mastra observability is fully supported
 evergreenAgent.streamVNext = wrapTraced(
   evergreenAgent.streamVNext.bind(evergreenAgent),
   {
@@ -79,7 +81,9 @@ evergreenAgent.streamVNext = wrapTraced(
   }
 );
 
-// Bind the traced functions to the agent
+// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
+// This wraps the generateVNext method with tracing capabilities to track generation calls
+// TODO: Remove when Mastra observability is fully supported
 evergreenAgent.generateVNext = wrapTraced(
   evergreenAgent.generateVNext.bind(evergreenAgent),
   {

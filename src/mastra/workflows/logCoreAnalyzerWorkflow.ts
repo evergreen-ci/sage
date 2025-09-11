@@ -166,6 +166,9 @@ const initialAnalyzerAgent = new Agent({
   model: logAnalyzerConfig.models.initial,
 });
 
+// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
+// This wraps the generateVNext method with tracing capabilities to track generation calls
+// TODO: Remove when Mastra observability is fully supported
 initialAnalyzerAgent.generateVNext = wrapTraced(
   initialAnalyzerAgent.generateVNext.bind(initialAnalyzerAgent),
   {
@@ -229,6 +232,9 @@ const refinementAgent = new Agent({
   model: logAnalyzerConfig.models.refinement,
 });
 
+// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
+// This wraps the generateVNext method with tracing capabilities to track generation calls
+// TODO: Remove when Mastra observability is fully supported
 refinementAgent.generateVNext = wrapTraced(
   refinementAgent.generateVNext.bind(refinementAgent),
   {
@@ -308,6 +314,9 @@ const reportFormatterAgent = new Agent({
   model: logAnalyzerConfig.models.formatter,
 });
 
+// Temporary workaround: Bind the traced functions to the agent for observability and monitoring
+// This wraps the generateVNext method with tracing capabilities to track generation calls
+// TODO: Remove when Mastra observability is fully supported
 reportFormatterAgent.generateVNext = wrapTraced(
   reportFormatterAgent.generateVNext.bind(reportFormatterAgent),
   {
