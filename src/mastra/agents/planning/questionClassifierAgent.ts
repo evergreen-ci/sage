@@ -2,7 +2,7 @@ import { Agent } from '@mastra/core';
 import { z } from 'zod';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { createToolFromAgent } from '../../tools/utils';
-import wrapAgentWithTracing from '../../utils/tracing/wrapAgentWithTracing';
+import { wrapAgentWithTracing } from '../../utils/tracing/wrapAgentWithTracing';
 
 /** Shared enums so prose, schema, and logic stay in sync */
 const QUESTION_CLASS = [

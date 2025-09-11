@@ -8,7 +8,7 @@ import {
 } from '../tools/evergreen';
 import { createToolFromAgent } from '../tools/utils';
 import { memoryStore } from '../utils/memory';
-import wrapAgentWithTracing from '../utils/tracing/wrapAgentWithTracing';
+import { wrapAgentWithTracing } from '../utils/tracing/wrapAgentWithTracing';
 import {
   getTaskHistoryWorkflow,
   getVersionWorkflow,

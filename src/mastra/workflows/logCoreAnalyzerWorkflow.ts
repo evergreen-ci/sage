@@ -4,7 +4,7 @@ import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
 import { z } from 'zod';
 import { WinstonMastraLogger } from '../../utils/logger/winstonMastraLogger';
-import wrapAgentWithTracing from '../utils/tracing/wrapAgentWithTracing';
+import { wrapAgentWithTracing } from '../utils/tracing/wrapAgentWithTracing';
 import { logAnalyzerConfig } from './logCoreAnalyzer/config';
 import {
   loadFromFile,

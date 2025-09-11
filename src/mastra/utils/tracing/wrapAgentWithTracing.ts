@@ -6,7 +6,7 @@ import { wrapTraced } from 'braintrust';
  * @param agent - The agent to wrap with tracing.
  * @returns The agent with the wrapped methods.
  */
-const wrapAgentWithTracing = (agent: Agent) => {
+export const wrapAgentWithTracing = (agent: Agent) => {
   agent.generateVNext = wrapTraced(agent.generateVNext.bind(agent), {
     name: agent.name,
   });
@@ -15,5 +15,3 @@ const wrapAgentWithTracing = (agent: Agent) => {
   });
   return agent;
 };
-
-export default wrapAgentWithTracing;
