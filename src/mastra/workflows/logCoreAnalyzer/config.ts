@@ -32,9 +32,9 @@ export const logAnalyzerConfig = {
       process.env.LOG_ANALYZER_MAX_FILE_SIZE_MB || '50',
       10
     ),
-    // Max text length in characters, defaults to 10000000.
+    // Max text length in characters, defaults to 50000000.
     maxTextLength: parseInt(
-      process.env.LOG_ANALYZER_MAX_TEXT_LENGTH || '10000000',
+      process.env.LOG_ANALYZER_MAX_TEXT_LENGTH || '50000000',
       10
     ),
     // Max size for URL fetches in MB, defaults to 50.
