@@ -26,7 +26,7 @@ const rateMessageRoute = async (
   } = addRatingInputSchema.safeParse(req.body);
   if (!schemaSuccess) {
     logger.error('Invalid request body', {
-      requestId: req.requestId,
+      requestId: res.locals.requestId,
       body: req.body,
       error: schemaError,
     });
