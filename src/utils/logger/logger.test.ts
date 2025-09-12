@@ -18,7 +18,6 @@ vi.mock('config', () => ({
     nodeEnv: 'test',
     logging: {
       logLevel: 'debug',
-      logToFile: false,
     },
   },
 }));

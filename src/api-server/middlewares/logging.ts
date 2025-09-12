@@ -1,17 +1,8 @@
+import { context, trace } from '@opentelemetry/api';
 import { Request, Response, NextFunction } from 'express';
 import expressWinston from 'express-winston';
 import { v4 as uuidv4 } from 'uuid';
 import loggerInstance, { logger } from 'utils/logger';
-
-// Extend Request type to include requestId
-declare global {
-  namespace Express {
-    interface Request {
-      requestId: string;
-      startTime: number;
-    }
-  }
-}
 
 /**
  * Middleware to add request ID to all requests
@@ -24,12 +15,15 @@ export const requestIdMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  req.requestId = uuidv4();
-  req.startTime = Date.now();
+  res.locals.requestId = uuidv4();
+  res.locals.startTime = Date.now();
 
   // Add request ID to response headers
-  res.setHeader('X-Request-ID', req.requestId);
-
+  res.setHeader('X-Request-ID', res.locals.requestId);
+  const span = trace.getSpan(context.active());
+  if (span) {
+    span.setAttribute('request.id', res.locals.requestId);
+  }
   next();
 };
 
@@ -43,7 +37,7 @@ export const httpLoggingMiddleware = expressWinston.logger({
   expressFormat: false,
   colorize: false,
   dynamicMeta: (req: Request, res: Response) => ({
-    requestId: req.requestId,
+    requestId: res.locals.requestId,
     method: req.method,
     url: req.url,
     statusCode: res.statusCode,
@@ -62,7 +56,7 @@ export const errorLoggingMiddleware = expressWinston.errorLogger({
   meta: true,
   msg: 'HTTP Error {{req.method}} {{req.url}} {{res.statusCode}}',
   dynamicMeta: (req: Request, res: Response) => ({
-    requestId: req.requestId,
+    requestId: res.locals.requestId,
     method: req.method,
     url: req.url,
     path: req.path,
@@ -90,7 +84,7 @@ export const slowRequestMiddleware =
 
       if (responseTime > threshold) {
         logger.warn('Slow Request Detected', {
-          requestId: req.requestId,
+          requestId: res.locals.requestId,
           method: req.method,
           url: req.url,
           responseTime,
@@ -101,14 +95,3 @@ export const slowRequestMiddleware =
 
     next();
   };
-
-/**
- * @param req - Express request object
- * @returns Logger instance with request context
- */
-export const getRequestLogger = (req: Request) =>
-  loggerInstance.child({
-    requestId: req.requestId,
-    method: req.method,
-    url: req.url,
-  });
