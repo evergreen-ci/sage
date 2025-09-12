@@ -12,3 +12,6 @@ export const SOURCE_TYPE = {
 } as const;
 
 export type SourceType = (typeof SOURCE_TYPE)[keyof typeof SOURCE_TYPE];
+
+// Constants
+export const MAX_FINAL_SUMMARY_TOKENS = 2048;
