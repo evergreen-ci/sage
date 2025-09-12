@@ -8,8 +8,15 @@ export type ModelOutput<TInput, TOutput> = Promise<
   MastraAgentOutput & { input: TInput; output: TOutput }
 >;
 
+export type WorkflowOutput<TInput, TOutput> = Promise<{
+  input: TInput;
+  output: TOutput;
+}>;
+
 export type Scores = {
-  [key: string]: number;
+  Factuality?: number;
+  ToolUsage?: number;
+  ExactMatch?: number;
 };
 
 type TestMetadata<TScores extends Scores> = {
