@@ -1,5 +1,4 @@
 import winston from 'winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
 import { config } from '../../config';
 
 // Define log format for production (JSON)
@@ -63,32 +62,8 @@ const consoleTransport = new winston.transports.Console({
   format: isProduction ? productionFormat : developmentFormat,
 });
 
-// Create file transport for all logs
-const fileTransport = new DailyRotateFile({
-  filename: 'logs/application-%DATE%.log',
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: true,
-  maxSize: '20m',
-  maxFiles: '14d',
-  format: productionFormat,
-});
-
-// Create file transport for error logs only
-const errorFileTransport = new DailyRotateFile({
-  filename: 'logs/error-%DATE%.log',
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: true,
-  maxSize: '20m',
-  maxFiles: '30d',
-  level: 'error',
-  format: productionFormat,
-});
-
 // Create the logger instance
 const transports: winston.transport[] = [consoleTransport];
-if (config.logging.logToFile) {
-  transports.push(fileTransport, errorFileTransport);
-}
 
 /**
  * Sage logger instance

@@ -1,12 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { sentryService } from '../../utils/sentry';
-import { getUserIdFromRequest } from './authentication';
-
-export interface RequestWithContext {
-  requestId?: string;
-  userId?: string;
-  [key: string]: any;
-}
 
 /**
  * Middleware to enrich Sentry scope with request context
@@ -16,7 +9,7 @@ export interface RequestWithContext {
  * @returns void
  */
 export const sentryContextMiddleware = (
-  req: Request & RequestWithContext,
+  req: Request,
   res: Response,
   next: NextFunction
 ): void => {
@@ -25,10 +18,10 @@ export const sentryContextMiddleware = (
   }
 
   sentryService.configureScope(scope => {
-    if (req.requestId) {
-      scope.setTag('request_id', req.requestId);
+    if (res.locals.requestId) {
+      scope.setTag('request_id', res.locals.requestId);
       scope.setContext('request', {
-        id: req.requestId,
+        id: res.locals.requestId,
         method: req.method,
         url: req.url,
         path: req.path,
@@ -37,13 +30,12 @@ export const sentryContextMiddleware = (
       });
     }
 
-    const authenticatedUserId = getUserIdFromRequest(req);
-    if (authenticatedUserId) {
+    if (res.locals.userId) {
       scope.setUser({
-        id: authenticatedUserId,
+        id: res.locals.userId,
         ip_address: req.ip || null,
       });
-      scope.setTag('user_id', authenticatedUserId);
+      scope.setTag('user_id', res.locals.userId);
     }
 
     scope.setTag('http.method', req.method);
@@ -59,7 +51,7 @@ export const sentryContextMiddleware = (
         url: req.url,
         path: req.path,
         query: req.query,
-        requestId: req.requestId,
+        requestId: res.locals.requestId,
       },
     });
   });

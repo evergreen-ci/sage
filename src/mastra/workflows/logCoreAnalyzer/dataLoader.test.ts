@@ -69,8 +69,8 @@ describe('dataLoader', () => {
         logAnalyzerConfig.limits.maxFileSizeMB * 0.9 * 1024 * 1024
       );
       // Create text that will exceed token limit (tokens are ~0.25 per char in our mock)
-      // We need > maxTokens, so text length should be > maxTokens * 4
-      const textLength = logAnalyzerConfig.limits.maxTokens * 5;
+      // We need > maxChars, so text length should be > maxChars * 4
+      const textLength = logAnalyzerConfig.limits.maxChars * 5;
       const hugeText = 'x'.repeat(textLength);
 
       vi.mocked(fs.stat).mockResolvedValue({
@@ -158,7 +158,7 @@ describe('dataLoader', () => {
       // Use just under the text character limit
       const charCount = Math.min(
         logAnalyzerConfig.limits.maxTextLength - 1000,
-        logAnalyzerConfig.limits.maxTokens * 5 // ~0.25 tokens per char in our mock
+        logAnalyzerConfig.limits.maxChars * 5 // ~0.25 tokens per char in our mock
       );
       const text = 'x'.repeat(charCount);
 
