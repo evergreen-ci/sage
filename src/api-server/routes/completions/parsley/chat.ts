@@ -172,7 +172,10 @@ const chatRoute = async (
     // Get the UIMessage stream and pipe it to Express with correct headers & backpressure.
     pipeUIMessageStreamToResponse({
       response: res,
-      stream: stream.toUIMessageStream(),
+      stream: stream.toUIMessageStream({
+        // TODO: Return message span ID in metadata
+        messageMetadata: () => ({}),
+      }),
     });
   } catch (error) {
     logger.error('Error in add message route', {
