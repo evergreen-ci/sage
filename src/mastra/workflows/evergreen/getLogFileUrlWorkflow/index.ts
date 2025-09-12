@@ -1,4 +1,4 @@
-import { createWorkflow, createStep } from '@mastra/core';
+import { createWorkflow, createStep, createTool } from '@mastra/core';
 import { z } from 'zod';
 import { logMetadataSchema } from '../../../../constants/parsley/logMetadata';
 import {
@@ -178,7 +178,8 @@ const chooseLogUrl = createStep({
  */
 const resolveLogFileUrl = createWorkflow({
   id: 'resolve-log-file-url',
-  description: 'Resolve a log file URL from Evergreen log metadata',
+  description:
+    'Resolve a log file URL from Evergreen log metadata. Ensure you have the task ID before using this workflow.',
   inputSchema: z.object({
     logMetadata: logMetadataSchema,
   }),
@@ -202,4 +203,33 @@ const resolveLogFileUrl = createWorkflow({
   .then(chooseLogUrl)
   .commit();
 
+export const resolveLogFileUrlTool: ReturnType<typeof createTool> = createTool({
+  id: 'resolveLogFileUrlTool',
+  description:
+    'Resolve a log file URL from Evergreen log metadata. Ensure you have the task ID before using this tool.',
+  inputSchema: z.object({
+    logMetadata: logMetadataSchema,
+  }),
+  outputSchema: z.string(),
+  execute: async ({ context, runtimeContext, tracingContext }) => {
+    const run = await resolveLogFileUrl.createRunAsync({});
+
+    const runResult = await run.start({
+      inputData: context,
+      runtimeContext,
+      tracingContext,
+    });
+    if (runResult.status === 'success') {
+      return runResult.result;
+    }
+    if (runResult.status === 'failed') {
+      throw new Error(
+        `Resolve log file URL workflow failed: ${runResult.error.message}`
+      );
+    }
+    throw new Error(
+      `Unexpected workflow execution status: ${runResult.status}. Expected 'success' or 'failed'.`
+    );
+  },
+});
 export default resolveLogFileUrl;
