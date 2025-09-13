@@ -5006,7 +5006,6 @@ export type TaskHistoryQuery = {
       execution: number;
       order: number;
       revision?: string | null;
-      logs: { __typename?: 'TaskLogLinks'; taskLogLink?: string | null };
       tests: {
         __typename?: 'TaskTestResult';
         testResults: Array<{
