@@ -48,10 +48,10 @@ export const sageThinkingAgent: Agent = wrapAgentWithTracing(
    - Classifies user questions to determine the optimal response strategy.
    - Use for: Assessing user intent and selecting appropriate tools.
 
-4. **getLogFileUrlWorkflow**
+4. **resolveLogFileUrlTool**
    - Retrieves the URL for a log file or task logs.
    - Use for: Getting the URL for a log file or task logs.
-   - Accepts: Task ID and execution number.
+   - Accepts: LogMetadata object (containing task ID and execution number).
    - Does NOT fetch directly from Evergreen—use \`evergreenAgent\` to retrieve logs before analyzing.
    - When providing a URL, ensure it is a direct link to the log content. Do not modify the URL.
 
