@@ -28,6 +28,7 @@ type TestMetadata<TScores extends Scores> = {
 export interface ReporterEvalResult<TInput, TOutput, TScores extends Scores> {
   input: TInput;
   output: TOutput & { duration: number };
+  expected: TOutput;
   metadata: TestMetadata<TScores>;
   scores: TScores;
   error?: Error;

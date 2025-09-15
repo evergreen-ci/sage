@@ -10,7 +10,14 @@ export const getReporter = <TInput, TOutput, TScores extends Scores>({
   testSuiteName,
   xmlFileOutputName,
 }: {
-  calculateScores: (scores: TScores, scoreThresholds: TScores) => string[];
+  calculateScores: (
+    scores: TScores,
+    scoreThresholds: TScores,
+    results?: {
+      expected: TOutput;
+      output: TOutput;
+    }
+  ) => string[];
   printResults: (
     scores: TScores,
     scoreThresholds: TScores,
@@ -45,7 +52,11 @@ export const getReporter = <TInput, TOutput, TScores extends Scores>({
 
         const scoreErrors = calculateScores(
           r.scores,
-          r.metadata.scoreThresholds
+          r.metadata.scoreThresholds,
+          {
+            expected: r.expected,
+            output: r.output,
+          }
         );
         messages.push(...scoreErrors);
 
