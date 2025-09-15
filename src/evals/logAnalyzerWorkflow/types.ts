@@ -13,6 +13,7 @@ export type TestResult = {
 
 export type Scores = {
   Factuality: number;
+  TechnicalAccuracy: number;
 };
 
 export type TestCase = BaseTestCase<TestInput, TestResult, Scores>;

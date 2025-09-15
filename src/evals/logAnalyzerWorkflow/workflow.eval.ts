@@ -4,6 +4,7 @@ import { ReporterName, PROJECT_NAME } from 'evals/constants';
 import { WorkflowOutput } from 'evals/types';
 import { mastra } from 'mastra';
 import { LOG_ANALYZER_WORKFLOW_NAME } from 'mastra/agents/constants';
+import { TechnicalAccuracy } from '../scorers';
 import { getTestCases } from './testCases';
 import { TestInput, TestResult } from './types';
 
@@ -41,10 +42,15 @@ Eval(
     task: async (input: TestInput) => await callLogAnalyzerWorkflow(input),
     scores: [
       ({ expected, input, output }) =>
-        Factuality.partial({})({
+        Factuality({
           expected: expected.summary,
           output: output.output.summary,
           input: input.analysisContext,
+        }),
+      ({ expected, output }) =>
+        TechnicalAccuracy({
+          expected: expected.summary,
+          output: output.output.summary,
         }),
     ],
     experimentName: 'Log Analyzer Workflow Eval',
