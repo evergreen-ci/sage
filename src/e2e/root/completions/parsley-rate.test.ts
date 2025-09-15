@@ -1,4 +1,5 @@
 import { TABLE_THREADS, TABLE_MESSAGES } from '@mastra/core/storage';
+import Braintrust from 'braintrust';
 import request from 'supertest';
 import { memoryStore } from '../../../mastra/utils/memory';
 import setupTestAppServer from '../../setup';
@@ -19,7 +20,7 @@ afterAll(async () => {
 }, 30000);
 
 vi.mock('braintrust', async importOriginal => {
-  const actual = await importOriginal();
+  const actual = await importOriginal<typeof Braintrust>();
   return {
     ...actual,
     initLogger: vi.fn().mockReturnValue({
