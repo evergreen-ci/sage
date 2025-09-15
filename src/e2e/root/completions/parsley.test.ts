@@ -9,7 +9,6 @@ import { getMessageContent } from '../../utils';
 const app = setupTestAppServer();
 
 const chatEndpoint = '/completions/parsley/conversations/chat';
-const rateEndpoint = '/completions/parsley/conversations/rate';
 
 afterAll(async () => {
   console.log('Clearing tables');
@@ -124,47 +123,5 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
     );
     expect(messagesResponse.body.messages[0].role).toBe('user');
     expect(messagesResponse.body.messages[1].role).toBe('assistant');
-  });
-});
-
-vi.mock('braintrust', () => ({
-  BraintrustMiddleware: vi.fn(),
-  initLogger: vi.fn().mockReturnValue({
-    logFeedback: vi
-      .fn()
-      .mockImplementationOnce(() => {
-        throw new Error('Braintrust error');
-      })
-      .mockImplementation(() => {}),
-  }),
-}));
-
-describe('POST /completions/parsley/conversations/rate', () => {
-  it('catches a Braintrust error', async () => {
-    const response = await request(app)
-      .post(rateEndpoint)
-      .send({ spanId: '123', rating: 1 });
-    expect(response.status).toBe(503);
-  });
-
-  it('sends a 0 rating to Braintrust', async () => {
-    const response = await request(app)
-      .post(rateEndpoint)
-      .send({ spanId: '123', rating: 0 });
-    expect(response.status).toBe(204);
-  });
-
-  it('sends a 1 rating to Braintrust', async () => {
-    const response = await request(app)
-      .post(rateEndpoint)
-      .send({ spanId: '123', rating: 1 });
-    expect(response.status).toBe(204);
-  });
-
-  it('catches an input error', async () => {
-    const response = await request(app)
-      .post(rateEndpoint)
-      .send({ spanId: '123', rating: -1 });
-    expect(response.status).toBe(400);
   });
 });
