@@ -35,7 +35,7 @@ export interface ReporterEvalResult<TInput, TOutput, TScores extends Scores> {
  */
 export type BaseTestCase<TInput, TExpected, TScores extends Scores> = {
   input: TInput;
-  received: null;
+  received: undefined;
   expected: TExpected;
   metadata: TestMetadata<TScores>;
 };
