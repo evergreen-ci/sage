@@ -123,7 +123,18 @@ const defaultPrintResults = <TScores extends Scores>(
   testName: string
 ) => {
   console.log(`Eval for ${testName}:`);
-  Object.entries(scores).forEach(([key, value]) => {
-    console.log(`${key}: ${value}, Threshold: ${scoreThresholds[key]}`);
-  });
+
+  // Create a table with actual and expected columns for each score
+  const resultsTable = Object.entries(scores).reduce(
+    (acc, [key, value]) => {
+      acc[key] = {
+        actual: value,
+        expected: `>= ${scoreThresholds[key]}`,
+      };
+      return acc;
+    },
+    {} as Record<string, { actual: number; expected: string }>
+  );
+
+  console.table(resultsTable);
 };
