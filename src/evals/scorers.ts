@@ -1,20 +1,32 @@
 // https://www.braintrust.dev/docs/guides/experiments/write#define-your-own-scorers
 // See existing scorers at https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts.
 
+import { ScorerFunction } from './types';
+
 /**
  * Create a generic score checker function
  * @param scoreThresholds - A map of score names to their thresholds
  * @returns A function that checks if scores meet their thresholds
  */
 export const createScoreChecker =
-  (scoreThresholds: Record<string, number>) =>
-  (scores: Record<string, number>): string[] => {
+  (
+    scoreThresholds: Record<string, number>
+  ): ScorerFunction<Record<string, number>> =>
+  (scores, results) => {
     const messages: string[] = [];
 
     Object.entries(scoreThresholds).forEach(([key, threshold]) => {
       const score = scores[key] ?? 0; // Default to 0 if undefined
       if (score < threshold) {
-        messages.push(`${key} score ${score} is below threshold ${threshold}.`);
+        if (results?.[key]) {
+          messages.push(
+            `${key} score ${score} is below threshold ${threshold}.\n Expected: ${JSON.stringify(results[key].expected)}.\n Output: ${JSON.stringify(results[key].output)}.`
+          );
+        } else {
+          messages.push(
+            `${key} score ${score} is below threshold ${threshold}.`
+          );
+        }
       }
     });
 

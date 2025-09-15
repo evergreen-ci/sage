@@ -42,6 +42,26 @@ describe('createScoreChecker', () => {
       'Factuality score 0.6 is below threshold 0.7.',
     ]);
   });
+  it('if results are provided, it should return an error message with the expected and output', () => {
+    const scoreChecker = createScoreChecker({
+      Factuality: 0.7,
+      ToolUsage: 0.8,
+    });
+    const scores = {
+      Factuality: 0.6,
+      ToolUsage: 1,
+    };
+    const results = {
+      Factuality: {
+        expected: 'some correct output',
+        output: 'some incorrect output',
+      },
+    };
+    const detailedErrorMessages = scoreChecker(scores, results);
+    expect(detailedErrorMessages).toEqual([
+      'Factuality score 0.6 is below threshold 0.7.\n Expected: "some correct output".\n Output: "some incorrect output".',
+    ]);
+  });
 });
 
 describe('toolUsage', () => {

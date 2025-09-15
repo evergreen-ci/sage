@@ -47,3 +47,11 @@ export type ResolvedTestCase<
 > = BaseTestCase<TInput, TExpected, TScores> & {
   received: TExpected;
 };
+
+export type ScorerFunction<TScores extends Scores> = (
+  scores: TScores,
+  results?: Record<
+    string,
+    { output?: string | object; expected?: string | object }
+  >
+) => string[];

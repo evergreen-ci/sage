@@ -1,7 +1,7 @@
 import { Reporter, reportFailures } from 'braintrust';
 import junit from 'junit-report-builder';
 import path from 'path';
-import { ReporterEvalResult, Scores } from './types';
+import { ReporterEvalResult, ScorerFunction, Scores } from './types';
 
 /**
  * Configuration for creating a base eval reporter
@@ -17,7 +17,7 @@ export interface BaseEvalConfig<TScores extends Scores> {
   /** Name of the XML output file */
   xmlFileOutputName: string;
   /** Function to calculate scores and generate error messages */
-  calculateScores: (scores: TScores, scoreThresholds: TScores) => string[];
+  calculateScores: ScorerFunction<TScores>;
   /** Function to print evaluation results */
   printResults?: (
     scores: TScores,
