@@ -1,6 +1,8 @@
 // https://www.braintrust.dev/docs/guides/experiments/write#define-your-own-scorers
 // See existing scorers at https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts.
 
+import { LLMClassifierFromTemplate } from 'autoevals';
+
 /**
  * This custom scorer evaluates whether the correct tools were used in the evaluation.
  * @param args - Object containing the following:
@@ -25,4 +27,28 @@ export const toolUsage = (args: { output: string[]; expected: string[] }) => {
       correct: correctToolsUsed,
     },
   };
+};
+
+export const TechnicalAccuracy = (args: {
+  output: string;
+  expected: string;
+}) => {
+  console.log('technicalAccuracy', args);
+  const technicalAccuracyClassifier = LLMClassifierFromTemplate({
+    name: 'TechnicalAccuracy',
+    promptTemplate: `
+      You are an expert technical reviewer. You are given a list of expected results. Evaluate the technical accuracy of the following response based on the input context and the expected results.
+      `,
+    choiceScores: {
+      'Not Accurate': 0.0,
+      'Somewhat Accurate': 0.25,
+      'Partially Accurate': 0.5,
+      'Mostly Accurate': 0.75,
+      Accurate: 1.0,
+    },
+  });
+  return technicalAccuracyClassifier({
+    output: args.output,
+    expected: args.expected,
+  });
 };
