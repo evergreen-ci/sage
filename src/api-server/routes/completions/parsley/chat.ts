@@ -156,6 +156,7 @@ const chatRoute = async (
       };
     }
 
+    // @ts-expect-error
     const { spanId, stream } = await runWithRequestContext(
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>

@@ -128,6 +128,7 @@ describe('GET /completions/parsley/conversations/:conversationId/messages', () =
 });
 
 vi.mock('braintrust', () => ({
+  BraintrustMiddleware: vi.fn(),
   initLogger: vi.fn().mockReturnValue({
     logFeedback: vi
       .fn()
@@ -142,21 +143,28 @@ describe('POST /completions/parsley/conversations/rate', () => {
   it('catches a Braintrust error', async () => {
     const response = await request(app)
       .post(rateEndpoint)
-      .send({ messageId: '123', rating: 1 });
+      .send({ spanId: '123', rating: 1 });
     expect(response.status).toBe(503);
   });
 
-  it('sends a rating to Braintrust', async () => {
+  it('sends a 0 rating to Braintrust', async () => {
     const response = await request(app)
       .post(rateEndpoint)
-      .send({ messageId: '123', rating: 1 });
+      .send({ spanId: '123', rating: 0 });
+    expect(response.status).toBe(204);
+  });
+
+  it('sends a 1 rating to Braintrust', async () => {
+    const response = await request(app)
+      .post(rateEndpoint)
+      .send({ spanId: '123', rating: 1 });
     expect(response.status).toBe(204);
   });
 
   it('catches an input error', async () => {
     const response = await request(app)
       .post(rateEndpoint)
-      .send({ messageId: '123', rating: -1 });
+      .send({ spanId: '123', rating: -1 });
     expect(response.status).toBe(400);
   });
 });
