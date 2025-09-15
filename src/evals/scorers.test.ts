@@ -28,7 +28,7 @@ describe('createScoreChecker', () => {
       'ToolUsage score 0.7 is below threshold 0.8.',
     ]);
   });
-  it('should return an error message if the test partion is not met', () => {
+  it('should return an error message if the test is partially not met', () => {
     const scoreChecker = createScoreChecker({
       Factuality: 0.7,
       ToolUsage: 0.8,
