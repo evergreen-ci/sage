@@ -19,7 +19,7 @@ export interface BaseEvalConfig<TScores extends Scores> {
   /** Function to calculate scores and generate error messages */
   calculateScores: (scores: TScores, scoreThresholds: TScores) => string[];
   /** Function to print evaluation results */
-  printResults: (
+  printResults?: (
     scores: TScores,
     scoreThresholds: TScores,
     testName: string
@@ -30,7 +30,7 @@ export interface BaseEvalConfig<TScores extends Scores> {
  * Create a base eval reporter for consistent evaluation across different agents
  * @param config - Configuration for the eval reporter
  * @param config.calculateScores Function to calculate scores and generate error messages
- * @param config.printResults Function to print evaluation results
+ * @param config.printResults Optional function to print evaluation results (defaults to defaultPrintResults)
  * @param config.reporterName Name of the reporter
  * @param config.testSuiteName Name of the test suite
  * @param config.xmlFileOutputName Name of the XML output file
@@ -44,7 +44,7 @@ export const createBaseEvalReporter = <
   TScores extends Scores,
 >({
   calculateScores,
-  printResults,
+  printResults = defaultPrintResults,
   reporterName,
   testSuiteName,
   xmlFileOutputName,
@@ -109,4 +109,21 @@ export const createBaseEvalReporter = <
   });
 
   return reporter;
+};
+
+/**
+ * Default function to print evaluation results
+ * @param scores - The scores to print
+ * @param scoreThresholds - The score thresholds to print
+ * @param testName - The name of the test
+ */
+const defaultPrintResults = <TScores extends Scores>(
+  scores: TScores,
+  scoreThresholds: TScores,
+  testName: string
+) => {
+  console.log(`Eval for ${testName}:`);
+  Object.entries(scores).forEach(([key, value]) => {
+    console.log(`${key}: ${value}, Threshold: ${scoreThresholds[key]}`);
+  });
 };
