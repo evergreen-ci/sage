@@ -156,16 +156,13 @@ const chatRoute = async (
       };
     }
 
-    const stream = await runWithRequestContext(
+    const { spanId, stream } = await runWithRequestContext(
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
         await agent.streamVNext(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
           format: 'aisdk',
-          // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
-          // Thread ID is set correctly, which is most important.
-          // https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence#setting-up-server-side-id-generation
         })
     );
 
@@ -173,8 +170,9 @@ const chatRoute = async (
     pipeUIMessageStreamToResponse({
       response: res,
       stream: stream.toUIMessageStream({
-        // TODO: Return message span ID in metadata
-        messageMetadata: () => ({}),
+        messageMetadata: () => ({
+          spanId,
+        }),
       }),
     });
   } catch (error) {
