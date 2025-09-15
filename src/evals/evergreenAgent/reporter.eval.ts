@@ -1,51 +1,33 @@
-import { ReporterName } from 'evals/constants';
-import { getReporter } from 'evals/reporter.eval';
-import { TestInput, TestResult, Scores } from './types';
+import { createBaseEvalReporter } from '../baseEval';
+import { ReporterName } from '../constants';
+import { createScoreChecker } from '../scorers';
 
-const calculateScores = (scores: Scores, scoreThresholds: Scores) => {
-  const factualityScore = scores.Factuality;
-  const toolUsageScore = scores.ToolUsage;
-
-  const factualityPassCutoff = scoreThresholds.Factuality;
-  const toolUsagePassCutoff = scoreThresholds.ToolUsage;
-
-  const messages: string[] = [];
-  if (factualityScore < factualityPassCutoff) {
-    messages.push(
-      `Factuality score ${factualityScore} is below threshold ${factualityPassCutoff}.`
-    );
-  }
-  if (toolUsageScore < toolUsagePassCutoff) {
-    messages.push(
-      `Tool Usage score ${toolUsageScore} is below threshold ${toolUsagePassCutoff}.`
-    );
-  }
-  return messages;
-};
-
-const printResults = (
-  scores: Scores,
-  scoreThresholds: Scores,
-  testName: string
-) => {
-  const resultsTable = {
-    Factuality: {
-      actual: scores.Factuality,
-      expected: `>= ${scoreThresholds.Factuality}`,
-    },
-    'Tool Usage': {
-      actual: scores.ToolUsage,
-      expected: `>= ${scoreThresholds.ToolUsage}`,
-    },
-  };
-  console.log(testName);
-  console.table(resultsTable);
-};
-
-getReporter<TestInput, TestResult, Scores>({
-  calculateScores,
-  printResults,
+/**
+ * Create configuration for Evergreen Agent evaluation
+ * @returns Configured eval reporter
+ */
+const createEvalConfig = () => ({
   reporterName: ReporterName.Evergreen,
   testSuiteName: 'Evergreen Evals',
   xmlFileOutputName: 'evergreen_evals',
+  calculateScores: createScoreChecker({
+    Factuality: 0.7,
+    ToolUsage: 0.8,
+  }),
+  printResults: (
+    scores: { Factuality: number; ToolUsage: number },
+    thresholds: { Factuality: number; ToolUsage: number },
+    testName: string
+  ) => {
+    console.log(
+      `Eval for ${testName}:`,
+      `Factuality: ${scores.Factuality}, Threshold: ${thresholds.Factuality}`,
+      `Tool Usage: ${scores.ToolUsage}, Threshold: ${thresholds.ToolUsage}`
+    );
+  },
 });
+
+/**
+ * Evergreen Agent evaluation reporter
+ */
+export const reporter = createBaseEvalReporter(createEvalConfig());

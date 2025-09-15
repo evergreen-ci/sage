@@ -1,38 +1,31 @@
-import { ReporterName } from 'evals/constants';
-import { getReporter } from 'evals/reporter.eval';
-import { TestInput, TestResult, Scores } from './types';
+import { createBaseEvalReporter } from '../baseEval';
+import { ReporterName } from '../constants';
+import { createScoreChecker } from '../scorers';
 
-const calculateScores = (scores: Scores, scoreThresholds: Scores) => {
-  const exactMatchScore = scores.ExactMatch;
-  const exactMatchCutoff = scoreThresholds.ExactMatch;
-  const messages: string[] = [];
-  if (exactMatchScore < exactMatchCutoff) {
-    messages.push(
-      `Exact Match score ${exactMatchScore} is below threshold ${exactMatchCutoff}.`
-    );
-  }
-  return messages;
-};
-
-const printResults = (
-  scores: Scores,
-  scoreThresholds: Scores,
-  testName: string
-) => {
-  const resultsTable = {
-    'Exact Match': {
-      actual: scores.ExactMatch,
-      expected: scoreThresholds.ExactMatch,
-    },
-  };
-  console.log(testName);
-  console.table(resultsTable);
-};
-
-getReporter<TestInput, TestResult, Scores>({
-  calculateScores,
-  printResults,
+/**
+ * Create configuration for Question Classifier Agent evaluation
+ * @returns Configured eval reporter
+ */
+const createEvalConfig = () => ({
   reporterName: ReporterName.QuestionClassifier,
   testSuiteName: 'Question Classifier Evals',
   xmlFileOutputName: 'question_classifier_evals',
+  calculateScores: createScoreChecker({
+    ExactMatch: 0.8,
+  }),
+  printResults: (
+    scores: { ExactMatch: number },
+    thresholds: { ExactMatch: number },
+    testName: string
+  ) => {
+    console.log(
+      `Eval for ${testName}:`,
+      `Exact Match: ${scores.ExactMatch}, Threshold: ${thresholds.ExactMatch}`
+    );
+  },
 });
+
+/**
+ * Question Classifier Agent evaluation reporter
+ */
+export const reporter = createBaseEvalReporter(createEvalConfig());

@@ -2,11 +2,31 @@
 // See existing scorers at https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts.
 
 /**
- * This custom scorer evaluates whether the correct tools were used in the evaluation.
- * @param args - Object containing the following:
- * @param args.output - Output from LLM
- * @param args.expected - Expected (originally given in test case)
- * @returns score (1 being correct, 0 being incorrect) along with metadata
+ * Create a generic score checker function
+ * @param scoreThresholds - A map of score names to their thresholds
+ * @returns A function that checks if scores meet their thresholds
+ */
+export const createScoreChecker =
+  (scoreThresholds: Record<string, number>) =>
+  (scores: Record<string, number>): string[] => {
+    const messages: string[] = [];
+
+    Object.entries(scoreThresholds).forEach(([key, threshold]) => {
+      const score = scores[key] ?? 0; // Default to 0 if undefined
+      if (score < threshold) {
+        messages.push(`${key} score ${score} is below threshold ${threshold}.`);
+      }
+    });
+
+    return messages;
+  };
+
+/**
+ * Custom scorer to evaluate whether the correct tools were used in the evaluation
+ * @param args - Arguments for tool usage evaluation
+ * @param args.output - Tools used in the actual output
+ * @param args.expected - Expected tools to be used
+ * @returns Scoring result with metadata
  */
 export const toolUsage = (args: { output: string[]; expected: string[] }) => {
   const expectedTools = args.expected;
