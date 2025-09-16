@@ -88,7 +88,9 @@ export function createTracedAgent<Input, Output>(
     if (options.responseSchema) {
       const validationResult = options.responseSchema.safeParse(output);
       if (!validationResult.success) {
-        throw new Error(`Invalid response: ${validationResult.error.message}`);
+        throw new Error(
+          `Invalid response for input ${JSON.stringify(input)} and output ${JSON.stringify(output)}: ${validationResult.error.message}`
+        );
       }
     }
 
