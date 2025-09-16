@@ -1,5 +1,5 @@
 import { Reporter, reportFailures } from 'braintrust';
-import junit from 'junit-report-builder';
+import junit, { TestSuite as JUnitTestSuite } from 'junit-report-builder';
 import path from 'path';
 import { ReporterEvalResult, ScorerFunction, Scores } from './types';
 
@@ -9,7 +9,10 @@ import { ReporterEvalResult, ScorerFunction, Scores } from './types';
  * @template TOutput Type of output for the evaluation
  * @template TScores Type of scores used in the evaluation
  */
-export interface BaseEvalConfig<TScores extends Scores> {
+export interface BaseEvalConfig<
+  TScores extends Scores,
+  TOutput extends string | object,
+> {
   /** Name of the reporter */
   reporterName: string;
   /** Name of the test suite */
@@ -17,7 +20,7 @@ export interface BaseEvalConfig<TScores extends Scores> {
   /** Name of the XML output file */
   xmlFileOutputName: string;
   /** Function to calculate scores and generate error messages */
-  calculateScores: ScorerFunction<TScores>;
+  calculateScores: ScorerFunction<TScores, TOutput>;
   /** Function to print evaluation results */
   printResults?: (
     scores: TScores,
@@ -39,8 +42,7 @@ export interface BaseEvalConfig<TScores extends Scores> {
  * @returns A configured Braintrust reporter
  */
 export const createBaseEvalReporter = <
-  TInput,
-  TOutput,
+  TOutput extends string | object,
   TScores extends Scores,
 >({
   calculateScores,
@@ -48,51 +50,36 @@ export const createBaseEvalReporter = <
   reporterName,
   testSuiteName,
   xmlFileOutputName,
-}: BaseEvalConfig<TScores>) => {
+}: BaseEvalConfig<TScores, TOutput>) => {
   const xmlBuilder = junit.newBuilder();
   const testSuite = xmlBuilder.testSuite().name(testSuiteName);
 
   const reporter = Reporter(reporterName, {
+    // Report Eval generates a result for each test case
     reportEval: async (evaluator, result, { jsonl, verbose }) => {
-      const { results } = result;
+      const { results: uncastedResults } = result;
+      const results = uncastedResults as ReporterEvalResult<
+        unknown,
+        unknown,
+        any
+      >[];
 
-      // Process each evaluation result
-      results.forEach(uncasted => {
-        const r = uncasted as ReporterEvalResult<TInput, TOutput, TScores>;
-
-        const testCase = testSuite
-          .testCase()
-          .className(testSuiteName)
-          .name(r.metadata.testName);
-
-        // Record test duration
-        testCase.time(r.output.duration / 1000);
-
-        // Collect error messages
-        const messages: string[] = [];
-        if (r.error) {
-          messages.push(r.error?.toString());
+      // Process each evaluation result and generate an XML report for each test case
+      results.forEach(r => {
+        if (r.metadata === undefined) {
+          throw new Error(
+            'Metadata is undefined did you wrap your agent call in a Tracer?'
+          );
         }
-
-        // Calculate and add score-related error messages
-        const scoreErrors = calculateScores(r.scores);
-        messages.push(...scoreErrors);
-
-        // Mark test case as failed if there are messages
-        if (messages.length > 0) {
-          testCase.failure(messages.join('\n'));
-        }
-
+        buildTestCase(testSuite, testSuiteName, r, calculateScores);
         // Print results using provided print function
         printResults(r.scores, r.metadata.scoreThresholds, r.metadata.testName);
       });
 
       // Report any errors that occurred
-      const failingResults = results.filter(
-        (r: { error: unknown }) => r.error !== undefined
-      );
+      const failingResults = results.filter(r => r.error !== undefined);
       if (failingResults.length > 0) {
-        reportFailures(evaluator, failingResults, { verbose, jsonl });
+        reportFailures(evaluator, failingResults as any, { verbose, jsonl });
       }
       return failingResults.length === 0;
     },
@@ -134,4 +121,35 @@ const defaultPrintResults = <TScores extends Scores>(
   );
 
   console.table(resultsTable);
+};
+
+const buildTestCase = (
+  testSuite: JUnitTestSuite,
+  testSuiteName: string,
+  testResult: ReporterEvalResult<unknown, unknown, any>,
+  calculateScores: ScorerFunction<any, any>
+) => {
+  const testCase = testSuite
+    .testCase()
+    .className(testSuiteName)
+    .name(testResult.metadata.testName);
+
+  // Record test duration
+  testCase.time(testResult.output.duration / 1000);
+
+  // Collect error messages
+  const messages: string[] = [];
+  if (testResult.error) {
+    messages.push(testResult.error?.toString());
+  }
+
+  // Calculate and add score-related error messages
+  const scoreErrors = calculateScores(testResult.scores);
+  messages.push(...scoreErrors);
+
+  // Mark test case as failed if there are messages
+  if (messages.length > 0) {
+    testCase.failure(messages.join('\n'));
+  }
+  return testCase;
 };

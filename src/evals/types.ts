@@ -18,7 +18,11 @@ type TestMetadata<TScores extends Scores> = {
   scoreThresholds: TScores;
 };
 
-export interface ReporterEvalResult<TInput, TOutput, TScores extends Scores> {
+export interface ReporterEvalResult<
+  TInput extends string | object | unknown,
+  TOutput extends string | object | unknown,
+  TScores extends Scores,
+> {
   input: TInput;
   output: TOutput & { duration: number };
   metadata: TestMetadata<TScores>;
@@ -35,7 +39,6 @@ export interface ReporterEvalResult<TInput, TOutput, TScores extends Scores> {
  */
 export type BaseTestCase<TInput, TExpected, TScores extends Scores> = {
   input: TInput;
-  received: undefined;
   expected: TExpected;
   metadata: TestMetadata<TScores>;
 };
@@ -48,10 +51,10 @@ export type ResolvedTestCase<
   received: TExpected;
 };
 
-export type ScorerFunction<TScores extends Scores> = (
+export type ScorerFunction<
+  TScores extends Scores,
+  TOutput extends string | object,
+> = (
   scores: TScores,
-  results?: Record<
-    string,
-    { output?: string | object; expected?: string | object }
-  >
+  results?: Record<string, { output?: TOutput; expected?: TOutput }>
 ) => string[];
