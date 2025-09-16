@@ -75,10 +75,7 @@ export const createBaseEvalReporter = <
         }
 
         // Calculate and add score-related error messages
-        const scoreErrors = calculateScores(
-          r.scores,
-          r.metadata.scoreThresholds
-        );
+        const scoreErrors = calculateScores(r.scores);
         messages.push(...scoreErrors);
 
         // Mark test case as failed if there are messages
