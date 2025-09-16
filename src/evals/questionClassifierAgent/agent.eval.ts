@@ -35,7 +35,7 @@ Eval(
       ),
     scores: [
       ({ expected, output }) =>
-        ExactMatch.partial({})({
+        ExactMatch({
           expected: {
             questionClass: expected.questionClass,
             nextAction: expected.nextAction,

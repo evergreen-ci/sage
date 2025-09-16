@@ -44,7 +44,7 @@ Eval(
       ),
     scores: [
       ({ expected, input, output }) =>
-        Factuality.partial({})({
+        Factuality({
           expected: expected.text,
           output: output.text,
           input: input.content,
