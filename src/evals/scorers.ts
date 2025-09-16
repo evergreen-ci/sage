@@ -9,9 +9,9 @@ import { ScorerFunction } from './types';
  * @returns A function that checks if scores meet their thresholds
  */
 export const createScoreChecker =
-  (
+  <TOutput extends string | object>(
     scoreThresholds: Record<string, number>
-  ): ScorerFunction<Record<string, number>> =>
+  ): ScorerFunction<Record<string, number>, TOutput> =>
   (scores, results) => {
     const messages: string[] = [];
 

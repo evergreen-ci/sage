@@ -1,14 +1,18 @@
 import { BaseEvalConfig, createBaseEvalReporter } from '../baseEval';
 import { ReporterName } from '../constants';
 import { createScoreChecker } from '../scorers';
+import { TestResult } from './types';
 
 /**
  * Create configuration for Question Classifier Agent evaluation
  * @returns Configured eval reporter
  */
-const createEvalConfig = (): BaseEvalConfig<{
-  ExactMatch: number;
-}> => ({
+const createEvalConfig = (): BaseEvalConfig<
+  {
+    ExactMatch: number;
+  },
+  TestResult
+> => ({
   reporterName: ReporterName.QuestionClassifier,
   testSuiteName: 'Question Classifier Evals',
   xmlFileOutputName: 'question_classifier_evals',
