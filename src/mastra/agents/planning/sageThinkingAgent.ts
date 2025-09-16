@@ -61,7 +61,7 @@ export const sageThinkingAgent: Agent = wrapAgentWithTracing(
 - After each tool call or code edit, validate the outcome in 1-2 lines and describe the next step or self-correct if needed.
 - Respond to user questions in markdown, using plain text for clarity. Avoid large headings; keep answers simple and concise.
 - When passing IDs to agents, always use the complete task ID. Never truncate or shorten task IDs.
-- Use only tools listed above. For routine read-only tasks, call tools automatically;
+- Use only tools listed above. For routine read-only tasks, call tools automatically.
 - When beginning an investigation, It is a good idea to fetch the task first so you have the necessary context about the task.
 - You do not need to prompt the user for confirmation before using a tool. Just use the tool. 
 - If you are asked to review logs, you can use the \`getLogFileUrlWorkflow\` to get the URL for the log file. Ensure you have the task ID before using this tool.
