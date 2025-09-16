@@ -1,38 +1,25 @@
 import { ExactMatch } from 'autoevals';
 import { Eval } from 'braintrust';
 import { ReporterName, PROJECT_NAME } from 'evals/constants';
-import { callModelWithTrace } from 'evals/tracer';
-import { ModelOutput } from 'evals/types';
-import { mastra } from 'mastra';
 import { QUESTION_CLASSIFIER_AGENT_NAME } from 'mastra/agents/constants';
+import { tracedAgentEval } from '../utils/tracedAgent';
 import { testCases } from './testCases';
 import { TestInput, TestResult } from './types';
-
-const callQuestionClassifierAgent = async (
-  input: TestInput
-): ModelOutput<TestInput, TestResult> => {
-  const agent = mastra.getAgent(QUESTION_CLASSIFIER_AGENT_NAME);
-  const response = await agent.generateVNext(input, { format: 'aisdk' });
-  const responseJSON = JSON.parse(response.text);
-  const output = {
-    questionClass: responseJSON.questionClass,
-    nextAction: responseJSON.nextAction,
-  };
-  return {
-    ...response,
-    input,
-    output,
-  };
-};
 
 Eval(
   PROJECT_NAME,
   {
     data: testCases,
-    task: async (input: TestInput) =>
-      await callModelWithTrace<TestInput, TestResult>(() =>
-        callQuestionClassifierAgent(input)
-      ),
+    task: tracedAgentEval<TestInput, TestResult>({
+      agentName: QUESTION_CLASSIFIER_AGENT_NAME,
+      transformResponse: response => {
+        const responseJSON = JSON.parse(response.text);
+        return {
+          questionClass: responseJSON.questionClass,
+          nextAction: responseJSON.nextAction,
+        };
+      },
+    }),
     scores: [
       ({ expected, output }) =>
         ExactMatch({

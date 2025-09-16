@@ -1,47 +1,29 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
-import { ToolResultPart } from 'ai';
 import { Factuality } from 'autoevals';
 import { Eval } from 'braintrust';
 import { ReporterName, PROJECT_NAME } from 'evals/constants';
 import { toolUsage } from 'evals/scorers';
-import { callModelWithTrace } from 'evals/tracer';
-import { ModelOutput } from 'evals/types';
-import { mastra } from 'mastra';
 import { USER_ID, EVERGREEN_AGENT_NAME } from 'mastra/agents/constants';
+import { tracedAgentEval } from '../utils/tracedAgent';
 import { testCases } from './testCases';
 import { TestInput, TestResult } from './types';
-
-const callEvergreenAgent = async (
-  input: TestInput
-): ModelOutput<TestInput, TestResult> => {
-  const runtimeContext = new RuntimeContext();
-  runtimeContext.set(USER_ID, input.user);
-  const agent = mastra.getAgent(EVERGREEN_AGENT_NAME);
-  const response = await agent.generateVNext(input.content, {
-    runtimeContext,
-    format: 'aisdk',
-  });
-  const toolResults = response.toolResults as ToolResultPart[];
-  const toolsUsed = toolResults.map(t => t.toolName);
-  const output = {
-    text: response.text,
-    toolsUsed,
-  };
-  return {
-    ...response,
-    input,
-    output,
-  };
-};
 
 Eval(
   PROJECT_NAME,
   {
     data: testCases,
-    task: async (input: TestInput) =>
-      await callModelWithTrace<TestInput, TestResult>(() =>
-        callEvergreenAgent(input)
-      ),
+    task: tracedAgentEval<TestInput, TestResult>({
+      agentName: EVERGREEN_AGENT_NAME,
+      setupRuntimeContext: input => {
+        const runtimeContext = new RuntimeContext();
+        runtimeContext.set(USER_ID, input.user);
+        return runtimeContext;
+      },
+      transformResponse: response => ({
+        text: response.text,
+        toolsUsed: response.toolResults.map(t => t.toolName),
+      }),
+    }),
     scores: [
       ({ expected, input, output }) =>
         Factuality({
