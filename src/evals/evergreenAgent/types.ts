@@ -1,12 +1,12 @@
 import { TestUser } from 'evals/constants';
-import { BaseTestCase } from 'evals/types';
+import { BaseTestCase, BaseScores } from 'evals/types';
 
 export type TestInput = {
   content: string;
   user: TestUser;
 };
 
-export type Scores = {
+export type Scores = BaseScores & {
   Factuality: number;
   ToolUsage: number;
 };
