@@ -43,10 +43,11 @@ export interface TracedAgentOptions<Input, Output> {
  * @param options Configuration options for the traced agent
  * @returns A function that calls the agent with tracing
  */
-export function createTracedAgent<Input, Output>(
-  options: TracedAgentOptions<Input, Output>
-) {
-  return async (input: Input): Promise<ModelOutput<Input, Output>> => {
+export const createTracedAgent =
+  <Input, Output>(
+    options: TracedAgentOptions<Input, Output>
+  ): ((input: Input) => Promise<ModelOutput<Input, Output>>) =>
+  async (input: Input): Promise<ModelOutput<Input, Output>> => {
     // Create runtime context
     const runtimeContext = options.setupRuntimeContext
       ? options.setupRuntimeContext(input)
@@ -101,19 +102,15 @@ export function createTracedAgent<Input, Output>(
       output,
     };
   };
-}
 
 /**
  * Wrapper to create a traced agent and immediately call it with tracing
  * @param options Configuration options for the traced agent
  * @returns A function that can be used directly in evals
  */
-export function tracedAgentEval<Input, Output>(
-  options: TracedAgentOptions<Input, Output>
-) {
-  const tracedAgent = createTracedAgent(options);
-  return async (input: Input) =>
+export const tracedAgentEval =
+  <Input, Output>(options: TracedAgentOptions<Input, Output>) =>
+  async (input: Input) =>
     await callModelWithTrace<Input, Output>(
-      async () => await tracedAgent(input)
+      async () => await createTracedAgent(options)(input)
     );
-}
