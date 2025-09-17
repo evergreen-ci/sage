@@ -22,11 +22,7 @@ export interface BaseEvalConfig<
   /** Function to calculate scores and generate error messages */
   calculateScores: ScorerFunction<TScores, TOutput>;
   /** Function to print evaluation results */
-  printResults?: (
-    scores: TScores,
-    scoreThresholds: TScores,
-    testName: string
-  ) => void;
+  printResults?: (result: ReporterEvalResult<unknown, unknown, any>) => void;
 }
 
 /**
@@ -73,7 +69,7 @@ export const createBaseEvalReporter = <
         }
         buildTestCase(testSuite, testSuiteName, r, calculateScores);
         // Print results using provided print function
-        printResults(r.scores, r.metadata.scoreThresholds, r.metadata.testName);
+        printResults(r);
       });
 
       // Report any errors that occurred
@@ -97,23 +93,19 @@ export const createBaseEvalReporter = <
 
 /**
  * Default function to print evaluation results
- * @param scores - The scores to print
- * @param scoreThresholds - The score thresholds to print
- * @param testName - The name of the test
+ * @param result - The result to print
  */
 const defaultPrintResults = <TScores extends Scores>(
-  scores: TScores,
-  scoreThresholds: TScores,
-  testName: string
+  result: ReporterEvalResult<unknown, unknown, TScores>
 ) => {
-  console.log(`Eval for ${testName}:`);
+  console.log(`Eval for ${result.metadata.testName}:`);
 
   // Create a table with actual and expected columns for each score
-  const resultsTable = Object.entries(scores).reduce(
+  const resultsTable = Object.entries(result.scores).reduce(
     (acc, [key, value]) => {
       acc[key] = {
         actual: value,
-        expected: `>= ${scoreThresholds[key]}`,
+        expected: `>= ${result.metadata.scoreThresholds[key]}`,
       };
       return acc;
     },
