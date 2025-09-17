@@ -1,10 +1,10 @@
 import { Reporter, reportFailures } from 'braintrust';
 import junit from 'junit-report-builder';
 import path from 'path';
-import { ReporterEvalResult, Scores, BaseTestCase } from './types';
+import { ReporterEvalResult, BaseScores, BaseTestCase } from './types';
 
 export const getReporter = <
-  TestCase extends BaseTestCase<unknown, object, Scores>,
+  TestCase extends BaseTestCase<unknown, object, BaseScores>,
 >({
   calculateScores,
   printResults,

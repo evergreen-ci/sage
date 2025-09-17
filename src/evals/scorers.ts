@@ -1,7 +1,7 @@
 // https://www.braintrust.dev/docs/guides/experiments/write#define-your-own-scorers
 // See existing scorers at https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts.
 
-import { ScorerFunction, Scores } from './types';
+import { ScorerFunction, BaseScores } from './types';
 
 /**
  * Create a generic score checker function
@@ -10,7 +10,7 @@ import { ScorerFunction, Scores } from './types';
  * @param results - A map of score names to their expected and actual values
  * @returns A function that checks if scores meet their thresholds
  */
-export const createScoreChecker: ScorerFunction<Scores, object> = (
+export const createScoreChecker: ScorerFunction<BaseScores, object> = (
   scores,
   scoreThresholds,
   results
