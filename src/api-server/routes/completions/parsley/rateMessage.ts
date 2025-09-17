@@ -43,6 +43,7 @@ const rateMessageRoute = async (
     });
 
     logger.info('Feedback logged to Braintrust', {
+      spanId,
       rating,
       feedback,
     });
