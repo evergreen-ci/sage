@@ -1,19 +1,13 @@
 import { BaseEvalConfig, createBaseEvalReporter } from '../baseEval';
 import { ReporterName } from '../constants';
 import { createScoreChecker } from '../scorers';
-import { TestResult } from './types';
+import { TestCase } from './types';
 
 /**
  * Create configuration for Evergreen Agent evaluation
  * @returns Configured eval reporter
  */
-const createEvalConfig = (): BaseEvalConfig<
-  {
-    Factuality: number;
-    ToolUsage: number;
-  },
-  TestResult
-> => ({
+const createEvalConfig = (): BaseEvalConfig<TestCase> => ({
   reporterName: ReporterName.Evergreen,
   testSuiteName: 'Evergreen Evals',
   xmlFileOutputName: 'evergreen_evals',

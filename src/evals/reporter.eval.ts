@@ -1,19 +1,24 @@
 import { Reporter, reportFailures } from 'braintrust';
 import junit from 'junit-report-builder';
 import path from 'path';
-import { ReporterEvalResult, Scores } from './types';
+import { ReporterEvalResult, Scores, BaseTestCase } from './types';
 
-export const getReporter = <TInput, TOutput, TScores extends Scores>({
+export const getReporter = <
+  TestCase extends BaseTestCase<unknown, unknown, Scores>,
+>({
   calculateScores,
   printResults,
   reporterName,
   testSuiteName,
   xmlFileOutputName,
 }: {
-  calculateScores: (scores: TScores, scoreThresholds: TScores) => string[];
+  calculateScores: (
+    scores: TestCase['metadata']['scoreThresholds'],
+    scoreThresholds: TestCase['metadata']['scoreThresholds']
+  ) => string[];
   printResults: (
-    scores: TScores,
-    scoreThresholds: TScores,
+    scores: TestCase['metadata']['scoreThresholds'],
+    scoreThresholds: TestCase['metadata']['scoreThresholds'],
     testName: string
   ) => void;
   reporterName: string;
@@ -29,7 +34,7 @@ export const getReporter = <TInput, TOutput, TScores extends Scores>({
 
       // Check that minimum score thresholds have been met.
       results.forEach(uncasted => {
-        const r = uncasted as ReporterEvalResult<TInput, TOutput, TScores>;
+        const r = uncasted as ReporterEvalResult<TestCase>;
 
         const testCase = testSuite
           .testCase()

@@ -1,6 +1,6 @@
 import { AISDKV5OutputStream, OutputSchema } from '@mastra/core/dist/stream';
 
-export type MastraAgentOutput = Awaited<
+type MastraAgentOutput = Awaited<
   ReturnType<AISDKV5OutputStream<OutputSchema>['getFullOutput']>
 >;
 
@@ -19,15 +19,13 @@ type TestMetadata<TScores extends Scores> = {
 };
 
 export interface ReporterEvalResult<
-  TInput extends string | object | unknown,
-  TOutput extends string | object | unknown,
-  TScores extends Scores,
+  TestCase extends BaseTestCase<unknown, unknown, Scores>,
 > {
-  input: TInput;
-  output: TOutput & { duration: number };
-  expected: TOutput;
-  metadata: TestMetadata<TScores>;
-  scores: TScores;
+  input: TestCase['input'];
+  output: TestCase['expected'] & { duration: number };
+  expected: TestCase['expected'];
+  metadata: TestMetadata<TestCase['metadata']['scoreThresholds']>;
+  scores: TestCase['metadata']['scoreThresholds'];
   error?: Error;
 }
 
@@ -52,10 +50,7 @@ export type ResolvedTestCase<
   received: TExpected;
 };
 
-export type ScorerFunction<
-  TScores extends Scores,
-  TOutput extends string | object,
-> = (
+export type ScorerFunction<TScores extends Scores, TOutput> = (
   scores: TScores,
   scoreThresholds: TScores,
   results?: Record<string, { output?: TOutput; expected?: TOutput }>

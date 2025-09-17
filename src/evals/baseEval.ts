@@ -1,7 +1,12 @@
 import { Reporter, reportFailures } from 'braintrust';
 import junit, { TestSuite as JUnitTestSuite } from 'junit-report-builder';
 import path from 'path';
-import { ReporterEvalResult, ScorerFunction, Scores } from './types';
+import {
+  BaseTestCase,
+  ReporterEvalResult,
+  ScorerFunction,
+  Scores,
+} from './types';
 
 /**
  * Configuration for creating a base eval reporter
@@ -10,8 +15,7 @@ import { ReporterEvalResult, ScorerFunction, Scores } from './types';
  * @template TScores Type of scores used in the evaluation
  */
 export interface BaseEvalConfig<
-  TScores extends Scores,
-  TOutput extends string | object,
+  TestCase extends BaseTestCase<unknown, unknown, Scores>,
 > {
   /** Name of the reporter */
   reporterName: string;
@@ -20,11 +24,12 @@ export interface BaseEvalConfig<
   /** Name of the XML output file */
   xmlFileOutputName: string;
   /** Function to calculate scores and generate error messages */
-  calculateScores: ScorerFunction<TScores, TOutput>;
+  calculateScores: ScorerFunction<
+    TestCase['metadata']['scoreThresholds'],
+    TestCase['expected']
+  >;
   /** Function to print evaluation results */
-  printResults?: (
-    result: ReporterEvalResult<unknown, TOutput, TScores>
-  ) => void;
+  printResults?: (result: ReporterEvalResult<TestCase>) => void;
 }
 
 /**
@@ -40,15 +45,14 @@ export interface BaseEvalConfig<
  * @returns A configured Braintrust reporter
  */
 export const createBaseEvalReporter = <
-  TOutput extends string | object,
-  TScores extends Scores,
+  TestCase extends BaseTestCase<unknown, unknown, Scores>,
 >({
   calculateScores,
   printResults = defaultPrintResults,
   reporterName,
   testSuiteName,
   xmlFileOutputName,
-}: BaseEvalConfig<TScores, TOutput>) => {
+}: BaseEvalConfig<TestCase>) => {
   const xmlBuilder = junit.newBuilder();
   const testSuite = xmlBuilder.testSuite().name(testSuiteName);
 
@@ -56,11 +60,7 @@ export const createBaseEvalReporter = <
     // Report Eval generates a result for each test case
     reportEval: async (evaluator, result, { jsonl, verbose }) => {
       const { results: uncastedResults } = result;
-      const results = uncastedResults as ReporterEvalResult<
-        unknown,
-        TOutput,
-        TScores
-      >[];
+      const results = uncastedResults as ReporterEvalResult<TestCase>[];
 
       // Process each evaluation result and generate an XML report for each test case
       results.forEach(r => {
@@ -97,8 +97,10 @@ export const createBaseEvalReporter = <
  * Default function to print evaluation results
  * @param result - The result to print
  */
-const defaultPrintResults = <TScores extends Scores>(
-  result: ReporterEvalResult<unknown, unknown, TScores>
+const defaultPrintResults = <
+  TestCase extends BaseTestCase<unknown, unknown, Scores>,
+>(
+  result: ReporterEvalResult<TestCase>
 ) => {
   console.log(`Eval for ${result.metadata.testName}:`);
 
@@ -117,11 +119,14 @@ const defaultPrintResults = <TScores extends Scores>(
   console.table(resultsTable);
 };
 
-const buildTestCase = <TScores extends Scores, TOutput extends string | object>(
+const buildTestCase = <TestCase extends BaseTestCase<unknown, unknown, Scores>>(
   testSuite: JUnitTestSuite,
   testSuiteName: string,
-  testResult: ReporterEvalResult<unknown, unknown, TScores>,
-  calculateScores: ScorerFunction<TScores, TOutput>
+  testResult: ReporterEvalResult<TestCase>,
+  calculateScores: ScorerFunction<
+    TestCase['metadata']['scoreThresholds'],
+    TestCase['expected']
+  >
 ) => {
   const testCase = testSuite
     .testCase()
