@@ -1,3 +1,4 @@
+import { Workflow } from '@mastra/core';
 import { AISDKV5OutputStream, OutputSchema } from '@mastra/core/dist/stream';
 
 // Base types
@@ -54,6 +55,11 @@ type MastraAgentOutput = Awaited<
 export type ModelOutput<TInput, TOutput> = Promise<
   MastraAgentOutput & { input: TInput; output: TOutput }
 >;
+
+export type WorkflowOutput<Input, Output> = {
+  input: Input;
+  output: Output;
+};
 
 // Utility types
 export type ScorerFunction<
