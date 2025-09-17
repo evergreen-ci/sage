@@ -54,8 +54,13 @@ describe('createScoreChecker', () => {
       ToolUsage: 1,
     };
     const results = {
-      expected: 'some correct output',
-      output: 'some incorrect output',
+      expected: {
+        text: 'some correct output',
+      },
+      output: {
+        text: 'some incorrect output',
+        duration: 100,
+      },
     };
     const detailedErrorMessages = createScoreChecker(
       scores,
@@ -63,7 +68,7 @@ describe('createScoreChecker', () => {
       results
     );
     expect(detailedErrorMessages).toEqual([
-      'Factuality score 0.6 is below threshold 0.8.\n Expected: "some correct output".\n Output: "some incorrect output".',
+      'Factuality score 0.6 is below threshold 0.8.\n Expected: {"text":"some correct output"}.\n Output: {"text":"some incorrect output"}.',
     ]);
   });
 });

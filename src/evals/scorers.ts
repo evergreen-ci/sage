@@ -1,7 +1,7 @@
 // https://www.braintrust.dev/docs/guides/experiments/write#define-your-own-scorers
 // See existing scorers at https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts.
 
-import { ScorerFunction } from './types';
+import { ScorerFunction, Scores } from './types';
 
 /**
  * Create a generic score checker function
@@ -10,18 +10,33 @@ import { ScorerFunction } from './types';
  * @param results - A map of score names to their expected and actual values
  * @returns A function that checks if scores meet their thresholds
  */
-export const createScoreChecker: ScorerFunction<
-  Record<string, number>,
-  string | object
-> = (scores, scoreThresholds, results) => {
+export const createScoreChecker: ScorerFunction<Scores, object> = (
+  scores,
+  scoreThresholds,
+  results
+) => {
   const messages: string[] = [];
 
   Object.entries(scoreThresholds).forEach(([key, threshold]) => {
     const score = scores[key] ?? 0; // Default to 0 if undefined
     if (score < threshold) {
       if (results?.output && results?.expected) {
+        // Remove 'duration' property from output if present
+        let outputWithoutDuration = results.output as object;
+        if (
+          outputWithoutDuration &&
+          typeof outputWithoutDuration === 'object' &&
+          'duration' in outputWithoutDuration
+        ) {
+          // Create a shallow copy without 'duration'
+          const { duration, ...rest } = outputWithoutDuration as Record<
+            string,
+            unknown
+          >;
+          outputWithoutDuration = rest;
+        }
         messages.push(
-          `${key} score ${score} is below threshold ${threshold}.\n Expected: ${JSON.stringify(results.expected)}.\n Output: ${JSON.stringify(results.output)}.`
+          `${key} score ${score} is below threshold ${threshold}.\n Expected: ${JSON.stringify(results.expected)}.\n Output: ${JSON.stringify(outputWithoutDuration)}.`
         );
       } else {
         messages.push(`${key} score ${score} is below threshold ${threshold}.`);

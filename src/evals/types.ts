@@ -50,7 +50,7 @@ export type ResolvedTestCase<
   received: TExpected;
 };
 
-export type ScorerFunction<TScores extends Scores, TExpected> = (
+export type ScorerFunction<TScores extends Scores, TExpected extends object> = (
   scores: TScores,
   scoreThresholds: TScores,
   results?: { output?: TExpected & { duration: number }; expected?: TExpected }
