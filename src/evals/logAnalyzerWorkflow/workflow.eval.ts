@@ -1,56 +1,34 @@
 import { Factuality } from 'autoevals';
 import { Eval } from 'braintrust';
+import z from 'zod';
 import { ReporterName, PROJECT_NAME } from 'evals/constants';
-import { WorkflowOutput } from 'evals/types';
-import { mastra } from 'mastra';
+import { tracedWorkflowEval } from 'evals/utils/tracedWorkflow';
 import { LOG_ANALYZER_WORKFLOW_NAME } from 'mastra/agents/constants';
-import { TechnicalAccuracy } from '../scorers';
+import { logCoreAnalyzerWorkflow } from 'mastra/workflows/logCoreAnalyzerWorkflow';
 import { getTestCases } from './testCases';
 import { TestInput, TestResult } from './types';
-
-const callLogAnalyzerWorkflow = async (
-  input: TestInput
-): Promise<WorkflowOutput<TestInput, TestResult>> => {
-  const fileBlob = await input.file.data();
-  const inputText = await fileBlob.text();
-
-  const workflow = mastra.getWorkflowById(LOG_ANALYZER_WORKFLOW_NAME);
-  const workflowRun = await workflow.createRunAsync({});
-  const workflowRunResult = await workflowRun.start({
-    inputData: {
-      text: inputText,
-      analysisContext: input.analysisContext,
-    },
-  });
-  if (workflowRunResult.status !== 'success') {
-    throw new Error('Workflow run failed');
-  }
-  const output = {
-    markdown: workflowRunResult.result.markdown,
-    summary: workflowRunResult.result.summary,
-  };
-  return {
-    input,
-    output,
-  };
-};
 
 Eval(
   PROJECT_NAME,
   {
     data: getTestCases(),
-    task: async (input: TestInput) => await callLogAnalyzerWorkflow(input),
+    task: tracedWorkflowEval<
+      TestInput,
+      TestResult,
+      z.infer<typeof logCoreAnalyzerWorkflow.inputSchema>
+    >({
+      workflowName: LOG_ANALYZER_WORKFLOW_NAME,
+      transformInput: async input => ({
+        text: await input.file.data().then(data => data.text()),
+        analysisContext: input.analysisContext,
+      }),
+    }),
     scores: [
       ({ expected, input, output }) =>
         Factuality({
           expected: expected.summary,
-          output: output.output.summary,
-          input: input.analysisContext,
-        }),
-      ({ expected, output }) =>
-        TechnicalAccuracy({
-          expected: expected.summary,
-          output: output.output.summary,
+          output: output.summary,
+          input: input.file.reference.filename,
         }),
     ],
     experimentName: 'Log Analyzer Workflow Eval',
