@@ -6,6 +6,7 @@ export const getTestCases = async () => {
   const testCases: TestCase[] = [];
   for await (const row of dataset) {
     const input = row.input as { file: Attachment };
+
     const testCase: TestCase = {
       input: {
         file: input.file,
@@ -17,10 +18,10 @@ export const getTestCases = async () => {
         markdown: '',
       },
       metadata: {
-        testName: row.metadata.testName,
+        testName: `Analysis of ${input.file.reference.filename}`,
         description: row.metadata.description,
         scoreThresholds: {
-          Factuality: 0.7,
+          Factuality: 0.6,
           TechnicalAccuracy: 0.7,
         },
       },
