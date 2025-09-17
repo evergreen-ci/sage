@@ -1,34 +1,18 @@
 import { AISDKV5OutputStream, OutputSchema } from '@mastra/core/dist/stream';
 
-type MastraAgentOutput = Awaited<
-  ReturnType<AISDKV5OutputStream<OutputSchema>['getFullOutput']>
->;
-
-export type ModelOutput<TInput, TOutput> = Promise<
-  MastraAgentOutput & { input: TInput; output: TOutput }
->;
-
+// Base types
 export type BaseScores = {
   [key: string]: number;
 };
 
+// Metadata types
 type TestMetadata<TScores extends BaseScores> = {
   description: string;
   testName: string;
   scoreThresholds: TScores;
 };
 
-export interface ReporterEvalResult<
-  TestCase extends BaseTestCase<unknown, object, BaseScores>,
-> {
-  input: TestCase['input'];
-  output: TestCase['expected'] & { duration: number };
-  expected: TestCase['expected'];
-  metadata: TestMetadata<TestCase['metadata']['scoreThresholds']>;
-  scores: TestCase['metadata']['scoreThresholds'];
-  error?: Error;
-}
-
+// Test-related types
 /**
  * Base test case type that all test cases should extend.
  * @param TInput - The input type for the test case.
@@ -50,6 +34,28 @@ export type ResolvedTestCase<
   received: TExpected;
 };
 
+// Result types
+export interface ReporterEvalResult<
+  TestCase extends BaseTestCase<unknown, object, BaseScores>,
+> {
+  input: TestCase['input'];
+  output: TestCase['expected'] & { duration: number };
+  expected: TestCase['expected'];
+  metadata: TestMetadata<TestCase['metadata']['scoreThresholds']>;
+  scores: TestCase['metadata']['scoreThresholds'];
+  error?: Error;
+}
+
+// Output types
+type MastraAgentOutput = Awaited<
+  ReturnType<AISDKV5OutputStream<OutputSchema>['getFullOutput']>
+>;
+
+export type ModelOutput<TInput, TOutput> = Promise<
+  MastraAgentOutput & { input: TInput; output: TOutput }
+>;
+
+// Utility types
 export type ScorerFunction<
   TScores extends BaseScores,
   TExpected extends object,
