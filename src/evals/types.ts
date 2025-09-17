@@ -19,7 +19,7 @@ type TestMetadata<TScores extends Scores> = {
 };
 
 export interface ReporterEvalResult<
-  TestCase extends BaseTestCase<unknown, unknown, Scores>,
+  TestCase extends BaseTestCase<unknown, object, Scores>,
 > {
   input: TestCase['input'];
   output: TestCase['expected'] & { duration: number };

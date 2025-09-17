@@ -4,7 +4,7 @@ import path from 'path';
 import { ReporterEvalResult, Scores, BaseTestCase } from './types';
 
 export const getReporter = <
-  TestCase extends BaseTestCase<unknown, unknown, Scores>,
+  TestCase extends BaseTestCase<unknown, object, Scores>,
 >({
   calculateScores,
   printResults,

@@ -15,7 +15,7 @@ import {
  * @template TScores Type of scores used in the evaluation
  */
 export interface BaseEvalConfig<
-  TestCase extends BaseTestCase<unknown, unknown, Scores>,
+  TestCase extends BaseTestCase<unknown, object, Scores>,
 > {
   /** Name of the reporter */
   reporterName: string;
@@ -45,7 +45,7 @@ export interface BaseEvalConfig<
  * @returns A configured Braintrust reporter
  */
 export const createBaseEvalReporter = <
-  TestCase extends BaseTestCase<unknown, unknown, Scores>,
+  TestCase extends BaseTestCase<unknown, object, Scores>,
 >({
   calculateScores,
   printResults = defaultPrintResults,
@@ -98,7 +98,7 @@ export const createBaseEvalReporter = <
  * @param result - The result to print
  */
 const defaultPrintResults = <
-  TestCase extends BaseTestCase<unknown, unknown, Scores>,
+  TestCase extends BaseTestCase<unknown, object, Scores>,
 >(
   result: ReporterEvalResult<TestCase>
 ) => {
@@ -119,7 +119,7 @@ const defaultPrintResults = <
   console.table(resultsTable);
 };
 
-const buildTestCase = <TestCase extends BaseTestCase<unknown, unknown, Scores>>(
+const buildTestCase = <TestCase extends BaseTestCase<unknown, object, Scores>>(
   testSuite: JUnitTestSuite,
   testSuiteName: string,
   testResult: ReporterEvalResult<TestCase>,
