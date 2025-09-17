@@ -12,7 +12,6 @@ import { ScorerFunction } from './types';
  */
 export const createScoreChecker: ScorerFunction<
   Record<string, number>,
-  Record<string, number>,
   string | object
 > = (scores, scoreThresholds, results) => {
   const messages: string[] = [];

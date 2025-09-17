@@ -20,9 +20,11 @@ export interface BaseEvalConfig<
   /** Name of the XML output file */
   xmlFileOutputName: string;
   /** Function to calculate scores and generate error messages */
-  calculateScores: ScorerFunction<TScores, TScores, TOutput>;
+  calculateScores: ScorerFunction<TScores, TOutput>;
   /** Function to print evaluation results */
-  printResults?: (result: ReporterEvalResult<unknown, unknown, any>) => void;
+  printResults?: (
+    result: ReporterEvalResult<unknown, TOutput, TScores>
+  ) => void;
 }
 
 /**
@@ -56,8 +58,8 @@ export const createBaseEvalReporter = <
       const { results: uncastedResults } = result;
       const results = uncastedResults as ReporterEvalResult<
         unknown,
-        unknown,
-        any
+        TOutput,
+        TScores
       >[];
 
       // Process each evaluation result and generate an XML report for each test case
@@ -115,11 +117,11 @@ const defaultPrintResults = <TScores extends Scores>(
   console.table(resultsTable);
 };
 
-const buildTestCase = (
+const buildTestCase = <TScores extends Scores, TOutput extends string | object>(
   testSuite: JUnitTestSuite,
   testSuiteName: string,
-  testResult: ReporterEvalResult<unknown, unknown, any>,
-  calculateScores: ScorerFunction<any, any, any>
+  testResult: ReporterEvalResult<unknown, unknown, TScores>,
+  calculateScores: ScorerFunction<TScores, TOutput>
 ) => {
   const testCase = testSuite
     .testCase()
