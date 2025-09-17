@@ -1,5 +1,5 @@
 import { Attachment } from 'braintrust';
-import { BaseTestCase } from 'evals/types';
+import { BaseTestCase, BaseScores } from 'evals/types';
 
 export type TestInput = {
   file: Attachment;
@@ -11,7 +11,7 @@ export type TestResult = {
   summary: string;
 };
 
-export type Scores = {
+export type Scores = BaseScores & {
   Factuality: number;
   TechnicalAccuracy: number;
 };

@@ -1,4 +1,3 @@
-import { Workflow } from '@mastra/core';
 import { AISDKV5OutputStream, OutputSchema } from '@mastra/core/dist/stream';
 
 // Base types
