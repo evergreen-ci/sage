@@ -17,7 +17,7 @@ const testUnauthorized: TestCase = {
     testName: 'Regular user cannot access restricted task',
     description: 'Tests that a regular user cannot access a restricted task.',
     scoreThresholds: {
-      Factuality: 0.5,
+      Factuality: 0.6,
       ToolUsage: 1.0,
     },
   },
