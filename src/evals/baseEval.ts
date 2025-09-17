@@ -17,18 +17,13 @@ import {
 export interface BaseEvalConfig<
   TestCase extends BaseTestCase<unknown, object, BaseScores>,
 > {
-  /** Name of the reporter */
   reporterName: string;
-  /** Name of the test suite */
   testSuiteName: string;
-  /** Name of the XML output file */
   xmlFileOutputName: string;
-  /** Function to calculate scores and generate error messages */
   calculateScores: ScorerFunction<
     TestCase['metadata']['scoreThresholds'],
     TestCase['expected']
   >;
-  /** Function to print evaluation results */
   printResults?: (result: ReporterEvalResult<TestCase>) => void;
 }
 
@@ -57,12 +52,10 @@ export const createBaseEvalReporter = <
   const testSuite = xmlBuilder.testSuite().name(testSuiteName);
 
   const reporter = Reporter(reporterName, {
-    // Report Eval generates a result for each test case
     reportEval: async (evaluator, result, { jsonl, verbose }) => {
       const { results: uncastedResults } = result;
       const results = uncastedResults as ReporterEvalResult<TestCase>[];
 
-      // Process each evaluation result and generate an XML report for each test case
       results.forEach(r => {
         if (r.metadata === undefined) {
           throw new Error(
@@ -70,11 +63,9 @@ export const createBaseEvalReporter = <
           );
         }
         buildTestCase(testSuite, testSuiteName, r, calculateScores);
-        // Print results using provided print function
         printResults(r);
       });
 
-      // Report any errors that occurred
       const failingResults = results.filter(r => r.error !== undefined);
       if (failingResults.length > 0) {
         reportFailures(evaluator, failingResults as any, { verbose, jsonl });
@@ -82,7 +73,6 @@ export const createBaseEvalReporter = <
       return failingResults.length === 0;
     },
     reportRun: async (evalReports: boolean[]) => {
-      // Write XML report to file
       xmlBuilder.writeTo(
         path.join(process.cwd(), `/bin/${xmlFileOutputName}.xml`)
       );
@@ -104,7 +94,6 @@ const defaultPrintResults = <
 ) => {
   console.log(`Eval for ${result.metadata.testName}:`);
 
-  // Create a table with actual and expected columns for each score
   const resultsTable = Object.entries(result.scores).reduce(
     (acc, [key, value]) => {
       acc[key] = {
@@ -135,16 +124,13 @@ const buildTestCase = <
     .className(testSuiteName)
     .name(testResult.metadata.testName);
 
-  // Record test duration
   testCase.time(testResult.output.duration / 1000);
 
-  // Collect error messages
   const messages: string[] = [];
   if (testResult.error) {
     messages.push(testResult.error?.toString());
   }
 
-  // Calculate and add score-related error messages
   const scoreErrors = calculateScores(
     testResult.scores,
     testResult.metadata.scoreThresholds,
@@ -155,7 +141,6 @@ const buildTestCase = <
   );
   messages.push(...scoreErrors);
 
-  // Mark test case as failed if there are messages
   if (messages.length > 0) {
     testCase.failure(messages.join('\n'));
   }

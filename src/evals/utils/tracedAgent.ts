@@ -38,12 +38,7 @@ export interface TracedAgentOptions<Input, Output> {
   responseSchema?: z.ZodType<Output>;
 }
 
-/**
- * Create a traced agent utility for consistent evaluation
- * @param options Configuration options for the traced agent
- * @returns A function that calls the agent with tracing
- */
-export const createTracedAgent =
+const createTracedAgent =
   <Input, Output>(
     options: TracedAgentOptions<Input, Output>
   ): ((input: Input) => Promise<ModelOutput<Input, Output>>) =>
