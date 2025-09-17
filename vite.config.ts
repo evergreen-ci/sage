@@ -24,7 +24,7 @@ const vitestConfig = defineTestConfig({
         test: {
           name: { label: 'unit', color: 'green' },
           include: ['src/**/*.test.ts', '!src/e2e/**/*.test.ts'],
-          fileParallelism: false,
+          poolOptions: { forks: { singleFork: true } },
         },
       },
     ],
