@@ -55,7 +55,7 @@ export const wrapAgentWithTracing = (agent: Agent) => {
         event: { input },
         propagatedEvent: { metadata: { root_input: input } },
       }
-    ) as ReturnType<StreamVNextFn>;
+    );
   } as StreamVNextFn;
 
   return agent;
