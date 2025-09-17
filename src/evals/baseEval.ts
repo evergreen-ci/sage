@@ -145,7 +145,11 @@ const buildTestCase = <TestCase extends BaseTestCase<unknown, unknown, Scores>>(
   // Calculate and add score-related error messages
   const scoreErrors = calculateScores(
     testResult.scores,
-    testResult.metadata.scoreThresholds
+    testResult.metadata.scoreThresholds,
+    {
+      output: testResult.output,
+      expected: testResult.expected,
+    }
   );
   messages.push(...scoreErrors);
 

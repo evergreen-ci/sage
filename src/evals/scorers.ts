@@ -19,9 +19,9 @@ export const createScoreChecker: ScorerFunction<
   Object.entries(scoreThresholds).forEach(([key, threshold]) => {
     const score = scores[key] ?? 0; // Default to 0 if undefined
     if (score < threshold) {
-      if (results?.[key]) {
+      if (results?.output && results?.expected) {
         messages.push(
-          `${key} score ${score} is below threshold ${threshold}.\n Expected: ${JSON.stringify(results[key].expected)}.\n Output: ${JSON.stringify(results[key].output)}.`
+          `${key} score ${score} is below threshold ${threshold}.\n Expected: ${JSON.stringify(results.expected)}.\n Output: ${JSON.stringify(results.output)}.`
         );
       } else {
         messages.push(`${key} score ${score} is below threshold ${threshold}.`);

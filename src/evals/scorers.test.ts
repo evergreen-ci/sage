@@ -54,10 +54,8 @@ describe('createScoreChecker', () => {
       ToolUsage: 1,
     };
     const results = {
-      Factuality: {
-        expected: 'some correct output',
-        output: 'some incorrect output',
-      },
+      expected: 'some correct output',
+      output: 'some incorrect output',
     };
     const detailedErrorMessages = createScoreChecker(
       scores,

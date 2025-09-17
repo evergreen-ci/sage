@@ -53,5 +53,5 @@ export type ResolvedTestCase<
 export type ScorerFunction<TScores extends Scores, TOutput> = (
   scores: TScores,
   scoreThresholds: TScores,
-  results?: Record<string, { output?: TOutput; expected?: TOutput }>
+  results?: { output?: TOutput; expected?: TOutput }
 ) => string[];
