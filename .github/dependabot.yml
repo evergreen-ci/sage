@@ -16,6 +16,21 @@ updates:
     labels:
       - "dependencies"
       - "javascript"
+    groups:
+      otel:
+        applies-to: version-updates
+        patterns:
+          - "@opentelemetry/*"
+      mastra:
+        applies-to: version-updates
+        patterns:
+          - "mastra"
+          - "@mastra/*"
+      ai-sdk:
+        applies-to: version-updates
+        patterns:
+          - "ai"
+          - "@ai-sdk/*"
     # Ignore specific packages if needed (uncomment and modify as needed)
     # ignore:
     #   - dependency-name: "package-name"

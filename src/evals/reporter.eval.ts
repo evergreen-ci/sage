@@ -1,9 +1,11 @@
 import { Reporter, reportFailures } from 'braintrust';
 import junit from 'junit-report-builder';
 import path from 'path';
-import { ReporterEvalResult, Scores } from './types';
+import { ReporterEvalResult, BaseScores, BaseTestCase } from './types';
 
-export const getReporter = <TInput, TOutput, TScores extends Scores>({
+export const getReporter = <
+  TestCase extends BaseTestCase<unknown, object, BaseScores>,
+>({
   calculateScores,
   printResults,
   reporterName,
@@ -11,16 +13,12 @@ export const getReporter = <TInput, TOutput, TScores extends Scores>({
   xmlFileOutputName,
 }: {
   calculateScores: (
-    scores: TScores,
-    scoreThresholds: TScores,
-    results?: {
-      expected: TOutput;
-      output: TOutput;
-    }
+    scores: TestCase['metadata']['scoreThresholds'],
+    scoreThresholds: TestCase['metadata']['scoreThresholds']
   ) => string[];
   printResults: (
-    scores: TScores,
-    scoreThresholds: TScores,
+    scores: TestCase['metadata']['scoreThresholds'],
+    scoreThresholds: TestCase['metadata']['scoreThresholds'],
     testName: string
   ) => void;
   reporterName: string;
@@ -36,7 +34,7 @@ export const getReporter = <TInput, TOutput, TScores extends Scores>({
 
       // Check that minimum score thresholds have been met.
       results.forEach(uncasted => {
-        const r = uncasted as ReporterEvalResult<TInput, TOutput, TScores>;
+        const r = uncasted as ReporterEvalResult<TestCase>;
 
         const testCase = testSuite
           .testCase()
@@ -52,11 +50,7 @@ export const getReporter = <TInput, TOutput, TScores extends Scores>({
 
         const scoreErrors = calculateScores(
           r.scores,
-          r.metadata.scoreThresholds,
-          {
-            expected: r.expected,
-            output: r.output,
-          }
+          r.metadata.scoreThresholds
         );
         messages.push(...scoreErrors);
 

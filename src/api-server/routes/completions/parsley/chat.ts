@@ -4,6 +4,7 @@ import {
   UIMessage,
   validateUIMessages,
 } from 'ai';
+import { currentSpan } from 'braintrust';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { logMetadataSchema } from 'constants/parsley/logMetadata';
@@ -156,6 +157,7 @@ const chatRoute = async (
       };
     }
 
+    let spanId: string;
     const stream = await runWithRequestContext(
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
@@ -163,16 +165,20 @@ const chatRoute = async (
           runtimeContext,
           memory: memoryOptions,
           format: 'aisdk',
-          // TODO: We should be able to use generateMessageId here to standardize the ID returned to the client and saved in MongoDB. However, this isn't working right in the alpha version yet.
-          // Thread ID is set correctly, which is most important.
-          // https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence#setting-up-server-side-id-generation
+          onFinish: () => {
+            spanId = currentSpan()?.id;
+          },
         })
     );
 
     // Get the UIMessage stream and pipe it to Express with correct headers & backpressure.
     pipeUIMessageStreamToResponse({
       response: res,
-      stream: stream.toUIMessageStream(),
+      stream: stream.toUIMessageStream({
+        messageMetadata: () => ({
+          spanId,
+        }),
+      }),
     });
   } catch (error) {
     logger.error('Error in add message route', {
