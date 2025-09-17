@@ -2106,7 +2106,7 @@
     "@opentelemetry/resources" "2.0.1"
     "@opentelemetry/sdk-trace-base" "2.0.1"
 
-"@opentelemetry/exporter-trace-otlp-http@0.204.0", "@opentelemetry/exporter-trace-otlp-http@^0.204.0":
+"@opentelemetry/exporter-trace-otlp-http@0.204.0":
   version "0.204.0"
   resolved "https://registry.yarnpkg.com/@opentelemetry/exporter-trace-otlp-http/-/exporter-trace-otlp-http-0.204.0.tgz#31c6295901746bf987ef6dde44fcf846f98b40b6"
   integrity sha512-yS/yPKJF0p+/9aE3MaZuB12NGTPGeBky1NwE3jUGzSM7cQ8tLxpSTPN3uMtLMoNtHRiGTWgE4nkaGgX2vQIqkA==
@@ -2117,7 +2117,7 @@
     "@opentelemetry/resources" "2.1.0"
     "@opentelemetry/sdk-trace-base" "2.1.0"
 
-"@opentelemetry/exporter-trace-otlp-http@0.205.0":
+"@opentelemetry/exporter-trace-otlp-http@0.205.0", "@opentelemetry/exporter-trace-otlp-http@^0.205.0":
   version "0.205.0"
   resolved "https://registry.yarnpkg.com/@opentelemetry/exporter-trace-otlp-http/-/exporter-trace-otlp-http-0.205.0.tgz#b49407fe807b2cebcfdf4e8b121ab93fae46bb47"
   integrity sha512-vr2bwwPCSc9u7rbKc74jR+DXFvyMFQo9o5zs+H/fgbK672Whw/1izUKVf+xfWOdJOvuwTnfWxy+VAY+4TSo74Q==
