@@ -60,7 +60,7 @@ const createTracedWorkflow =
     const output = options.transformResponse
       ? options.transformResponse(baseResponse, input)
       : ({
-          result: response.result,
+          ...response.result,
         } as unknown as Output);
 
     // Validate output if schema is provided
