@@ -66,7 +66,7 @@ export const createBaseEvalReporter = <
       results.forEach(r => {
         if (r.metadata === undefined) {
           throw new Error(
-            'Metadata is undefined did you wrap your agent call in a Tracer?'
+            'Metadata is undefined. Did you wrap your agent call in a Tracer?'
           );
         }
         buildTestCase(testSuite, testSuiteName, r, calculateScores);
