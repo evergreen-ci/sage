@@ -20,7 +20,7 @@ export interface BaseEvalConfig<
   /** Name of the XML output file */
   xmlFileOutputName: string;
   /** Function to calculate scores and generate error messages */
-  calculateScores: ScorerFunction<TScores, TOutput>;
+  calculateScores: ScorerFunction<TScores, TScores, TOutput>;
   /** Function to print evaluation results */
   printResults?: (result: ReporterEvalResult<unknown, unknown, any>) => void;
 }
@@ -119,7 +119,7 @@ const buildTestCase = (
   testSuite: JUnitTestSuite,
   testSuiteName: string,
   testResult: ReporterEvalResult<unknown, unknown, any>,
-  calculateScores: ScorerFunction<any, any>
+  calculateScores: ScorerFunction<any, any, any>
 ) => {
   const testCase = testSuite
     .testCase()
@@ -136,7 +136,10 @@ const buildTestCase = (
   }
 
   // Calculate and add score-related error messages
-  const scoreErrors = calculateScores(testResult.scores);
+  const scoreErrors = calculateScores(
+    testResult.scores,
+    testResult.metadata.scoreThresholds
+  );
   messages.push(...scoreErrors);
 
   // Mark test case as failed if there are messages

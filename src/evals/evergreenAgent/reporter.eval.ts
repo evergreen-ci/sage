@@ -17,10 +17,7 @@ const createEvalConfig = (): BaseEvalConfig<
   reporterName: ReporterName.Evergreen,
   testSuiteName: 'Evergreen Evals',
   xmlFileOutputName: 'evergreen_evals',
-  calculateScores: createScoreChecker({
-    Factuality: 0.7,
-    ToolUsage: 1,
-  }),
+  calculateScores: createScoreChecker,
 });
 
 /**

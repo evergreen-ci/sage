@@ -5,33 +5,33 @@ import { ScorerFunction } from './types';
 
 /**
  * Create a generic score checker function
+ * @param scores - A map of score names to their values
  * @param scoreThresholds - A map of score names to their thresholds
+ * @param results - A map of score names to their expected and actual values
  * @returns A function that checks if scores meet their thresholds
  */
-export const createScoreChecker =
-  <TOutput extends string | object>(
-    scoreThresholds: Record<string, number>
-  ): ScorerFunction<Record<string, number>, TOutput> =>
-  (scores, results) => {
-    const messages: string[] = [];
+export const createScoreChecker: ScorerFunction<
+  Record<string, number>,
+  Record<string, number>,
+  string | object
+> = (scores, scoreThresholds, results) => {
+  const messages: string[] = [];
 
-    Object.entries(scoreThresholds).forEach(([key, threshold]) => {
-      const score = scores[key] ?? 0; // Default to 0 if undefined
-      if (score < threshold) {
-        if (results?.[key]) {
-          messages.push(
-            `${key} score ${score} is below threshold ${threshold}.\n Expected: ${JSON.stringify(results[key].expected)}.\n Output: ${JSON.stringify(results[key].output)}.`
-          );
-        } else {
-          messages.push(
-            `${key} score ${score} is below threshold ${threshold}.`
-          );
-        }
+  Object.entries(scoreThresholds).forEach(([key, threshold]) => {
+    const score = scores[key] ?? 0; // Default to 0 if undefined
+    if (score < threshold) {
+      if (results?.[key]) {
+        messages.push(
+          `${key} score ${score} is below threshold ${threshold}.\n Expected: ${JSON.stringify(results[key].expected)}.\n Output: ${JSON.stringify(results[key].output)}.`
+        );
+      } else {
+        messages.push(`${key} score ${score} is below threshold ${threshold}.`);
       }
-    });
+    }
+  });
 
-    return messages;
-  };
+  return messages;
+};
 
 /**
  * Custom scorer to evaluate whether the correct tools were used in the evaluation

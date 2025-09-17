@@ -16,9 +16,7 @@ const createEvalConfig = (): BaseEvalConfig<
   reporterName: ReporterName.QuestionClassifier,
   testSuiteName: 'Question Classifier Evals',
   xmlFileOutputName: 'question_classifier_evals',
-  calculateScores: createScoreChecker({
-    ExactMatch: 0.8,
-  }),
+  calculateScores: createScoreChecker,
 });
 
 /**
