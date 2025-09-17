@@ -2,51 +2,53 @@ import { createScoreChecker, toolUsage } from './scorers';
 
 describe('createScoreChecker', () => {
   it('should create a score checker', () => {
-    const scoreChecker = createScoreChecker({
-      Factuality: 0.7,
-      ToolUsage: 0.8,
-    });
+    const scoreThresholds = {
+      Factuality: 0.6,
+      ToolUsage: 1,
+    };
     const scores = {
       Factuality: 1,
       ToolUsage: 1,
     };
-    const detailedErrorMessages = scoreChecker(scores);
+    const detailedErrorMessages = createScoreChecker(scores, scoreThresholds);
     expect(detailedErrorMessages).toEqual([]);
   });
   it('should return an error message if the score is below the threshold', () => {
-    const scoreChecker = createScoreChecker({
-      Factuality: 0.7,
-      ToolUsage: 0.8,
-    });
+    const scoreThresholds = {
+      Factuality: 0.8,
+      ToolUsage: 1,
+    };
     const scores = {
       Factuality: 0.6,
-      ToolUsage: 0.7,
+      ToolUsage: 0,
     };
-    const detailedErrorMessages = scoreChecker(scores);
+    const detailedErrorMessages = createScoreChecker(scores, scoreThresholds);
     expect(detailedErrorMessages).toEqual([
-      'Factuality score 0.6 is below threshold 0.7.',
-      'ToolUsage score 0.7 is below threshold 0.8.',
+      'Factuality score 0.6 is below threshold 0.8.',
+      'ToolUsage score 0 is below threshold 1.',
     ]);
   });
-  it('should return an error message if the test is partially not met', () => {
-    const scoreChecker = createScoreChecker({
-      Factuality: 0.7,
-      ToolUsage: 0.8,
-    });
+
+  it('should return a single error message if the test is partially not met', () => {
+    const scoreThresholds = {
+      Factuality: 0.8,
+      ToolUsage: 1,
+    };
     const scores = {
       Factuality: 0.6,
       ToolUsage: 1,
     };
-    const detailedErrorMessages = scoreChecker(scores);
+    const detailedErrorMessages = createScoreChecker(scores, scoreThresholds);
     expect(detailedErrorMessages).toEqual([
-      'Factuality score 0.6 is below threshold 0.7.',
+      'Factuality score 0.6 is below threshold 0.8.',
     ]);
   });
+
   it('if results are provided, it should return an error message with the expected and output', () => {
-    const scoreChecker = createScoreChecker({
-      Factuality: 0.7,
-      ToolUsage: 0.8,
-    });
+    const scoreThresholds = {
+      Factuality: 0.8,
+      ToolUsage: 1,
+    };
     const scores = {
       Factuality: 0.6,
       ToolUsage: 1,
@@ -57,9 +59,13 @@ describe('createScoreChecker', () => {
         output: 'some incorrect output',
       },
     };
-    const detailedErrorMessages = scoreChecker(scores, results);
+    const detailedErrorMessages = createScoreChecker(
+      scores,
+      scoreThresholds,
+      results
+    );
     expect(detailedErrorMessages).toEqual([
-      'Factuality score 0.6 is below threshold 0.7.\n Expected: "some correct output".\n Output: "some incorrect output".',
+      'Factuality score 0.6 is below threshold 0.8.\n Expected: "some correct output".\n Output: "some incorrect output".',
     ]);
   });
 });
