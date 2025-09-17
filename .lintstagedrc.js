@@ -1,7 +1,6 @@
-module.exports = {
+export default {
   // Run ESLint on TypeScript and JavaScript files
   '*.{ts,tsx,js,jsx}': ['yarn eslint:strict'],
-
   // Run Prettier formatting check on all supported files
-  '*.{ts,tsx,js,jsx,json,md}': ['yarn format:check'],
+  '*.{ts,tsx,js,jsx}': ['yarn format:check'],
 };

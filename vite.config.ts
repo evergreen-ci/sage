@@ -1,13 +1,18 @@
-import { defineConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths'
+import { defineConfig, mergeConfig } from 'vite';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig as defineTestConfig } from 'vitest/config';
 
-export default defineConfig({
+const viteConfig = defineConfig({
+  plugins: [tsconfigPaths()],
+});
+
+const vitestConfig = defineTestConfig({
   test: {
     globals: true,
     environment: 'node',
     setupFiles: ['dotenv-flow/config'],
     projects: [
-       {
+      {
         extends: true,
         test: {
           include: ['src/e2e/**/*.test.ts'],
@@ -42,5 +47,6 @@ export default defineConfig({
       ],
     },
   },
-  plugins: [tsconfigPaths()],
 });
+
+export default mergeConfig(viteConfig, vitestConfig);
