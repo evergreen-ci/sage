@@ -8,18 +8,18 @@ export type ModelOutput<TInput, TOutput> = Promise<
   MastraAgentOutput & { input: TInput; output: TOutput }
 >;
 
-export type Scores = {
+export type BaseScores = {
   [key: string]: number;
 };
 
-type TestMetadata<TScores extends Scores> = {
+type TestMetadata<TScores extends BaseScores> = {
   description: string;
   testName: string;
   scoreThresholds: TScores;
 };
 
 export interface ReporterEvalResult<
-  TestCase extends BaseTestCase<unknown, object, Scores>,
+  TestCase extends BaseTestCase<unknown, object, BaseScores>,
 > {
   input: TestCase['input'];
   output: TestCase['expected'] & { duration: number };
@@ -36,7 +36,7 @@ export interface ReporterEvalResult<
  * @param Tscores - The scores type for the test case. This is a map of score names to their thresholds.
  * @returns The base test case type.
  */
-export type BaseTestCase<TInput, TExpected, TScores extends Scores> = {
+export type BaseTestCase<TInput, TExpected, TScores extends BaseScores> = {
   input: TInput;
   expected: TExpected;
   metadata: TestMetadata<TScores>;
@@ -45,12 +45,15 @@ export type BaseTestCase<TInput, TExpected, TScores extends Scores> = {
 export type ResolvedTestCase<
   TInput,
   TExpected,
-  TScores extends Scores,
+  TScores extends BaseScores,
 > = BaseTestCase<TInput, TExpected, TScores> & {
   received: TExpected;
 };
 
-export type ScorerFunction<TScores extends Scores, TExpected extends object> = (
+export type ScorerFunction<
+  TScores extends BaseScores,
+  TExpected extends object,
+> = (
   scores: TScores,
   scoreThresholds: TScores,
   results?: { output?: TExpected & { duration: number }; expected?: TExpected }

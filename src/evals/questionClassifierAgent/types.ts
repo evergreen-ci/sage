@@ -1,4 +1,4 @@
-import { BaseTestCase } from 'evals/types';
+import { BaseTestCase, BaseScores } from 'evals/types';
 
 export type TestInput = string;
 
@@ -7,7 +7,7 @@ export type TestResult = {
   nextAction: string;
 };
 
-export type Scores = {
+export type Scores = BaseScores & {
   ExactMatch: number;
 };
 
