@@ -4,6 +4,7 @@ import {
   UIMessage,
   validateUIMessages,
 } from 'ai';
+import { currentSpan } from 'braintrust';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { logMetadataSchema } from 'constants/parsley/logMetadata';
@@ -156,14 +157,17 @@ const chatRoute = async (
       };
     }
 
-    // @ts-expect-error
-    const { spanId, stream } = await runWithRequestContext(
+    let spanId: string;
+    const stream = await runWithRequestContext(
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
         await agent.streamVNext(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
           format: 'aisdk',
+          onFinish: () => {
+            spanId = currentSpan()?.id;
+          },
         })
     );
 

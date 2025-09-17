@@ -1,18 +1,12 @@
-import { initLogger as initBraintrustLogger } from 'braintrust';
 import { Request, Response } from 'express';
 import z from 'zod';
+import { braintrustLogger } from 'mastra';
 import { logger } from 'utils/logger';
-import { config } from '../../../../config';
 
 export const addRatingInputSchema = z.object({
   spanId: z.string(),
   rating: z.union([z.literal(0), z.literal(1)]),
   feedback: z.string().optional(),
-});
-
-const braintrustLogger = initBraintrustLogger({
-  projectName: config.braintrust.projectName,
-  apiKey: config.braintrust.apiKey,
 });
 
 const rateMessageRoute = async (
@@ -34,20 +28,23 @@ const rateMessageRoute = async (
     return;
   }
 
-  const score = ratingData.rating;
+  const { feedback, rating, spanId } = ratingData;
   try {
     braintrustLogger.logFeedback({
-      id: ratingData.spanId,
+      id: spanId,
+      comment: feedback,
       scores: {
-        correctness: score,
+        correctness: rating,
       },
       metadata: {
         timestamp: new Date(),
+        user_id: res.locals.userId,
       },
     });
 
     logger.info('Feedback logged to Braintrust', {
-      score,
+      rating,
+      feedback,
     });
   } catch (braintrustError) {
     logger.error('Failed to log feedback to Braintrust', {

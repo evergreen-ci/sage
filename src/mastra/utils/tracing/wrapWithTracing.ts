@@ -35,7 +35,9 @@ export const wrapAgentWithTracing = (agent: Agent) => {
 
   const _originalStreamVNext = agent.streamVNext.bind(agent);
   type StreamVNextFn = typeof _originalStreamVNext;
-  agent.streamVNext = function (...args: Parameters<StreamVNextFn>) {
+  agent.streamVNext = function (
+    ...args: Parameters<StreamVNextFn>
+  ): ReturnType<StreamVNextFn> {
     const input = args[0];
     return traced(
       async span => {
@@ -46,7 +48,7 @@ export const wrapAgentWithTracing = (agent: Agent) => {
           span.log({ output: text });
         });
 
-        return { stream: result, spanId: span.id };
+        return result;
       },
       {
         name: `${agent.name}.streamVNext`,
@@ -54,8 +56,7 @@ export const wrapAgentWithTracing = (agent: Agent) => {
         propagatedEvent: { metadata: { root_input: input } },
       }
     );
-    // Cast this type so we can return the span ID
-  } as unknown as StreamVNextFn;
+  } as StreamVNextFn;
 
   return agent;
 };
