@@ -25,6 +25,7 @@ export interface ReporterEvalResult<
 > {
   input: TInput;
   output: TOutput & { duration: number };
+  expected: TOutput;
   metadata: TestMetadata<TScores>;
   scores: TScores;
   error?: Error;
