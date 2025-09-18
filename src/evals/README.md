@@ -44,6 +44,70 @@ The script validates the CSV columns and maps them as follows:
 
 If `<input_column_name>` is `file_name`, the script checks that each file exists in `<path-to-dataset-folder>` and uploads them to Braintrust as dataset inputs.
 
+### CSV Format Examples
+
+#### Text Input Dataset
+
+A text input dataset CSV might look like this:
+
+```csv
+prompt,expected,difficulty,category
+"Sort these numbers","[1,2,3]","easy","sorting"
+"Explain recursion","Recursion is a method where a function calls itself...","medium","programming"
+"Translate to Spanish","Hola","easy","translation"
+```
+
+#### File Input Dataset
+
+A file input dataset CSV might look like this:
+
+```csv
+file_name,expected,source
+"document1.txt","Approved","internal_review"
+"image_analysis.jpg","Detailed description","quality_check"
+```
+
+In this case, `document1.txt` and `image_analysis.jpg` must exist in the specified dataset folder.
+
+Notes:
+
+- The first row always contains column headers
+- The `<input_column_name>` can be any column (like `prompt` or `file_name`)
+- All columns except input and expected become metadata
+- When using `file_name`, ensure files exist in the specified folder
+
+### Running the Dataset Load Command
+
+#### Text Input Dataset Command
+
+For the text input dataset example, you would run:
+
+```bash
+yarn load-dataset-into-braintrust data.csv ./dataset-files my-text-dataset my-project prompt expected
+```
+
+- `data.csv`: Your CSV file with text inputs
+- `./dataset-files`: Folder for any supplementary files (optional in this case)
+- `my-text-dataset`: Name of the dataset in Braintrust
+- `my-project`: Name of the Braintrust project
+- `prompt`: The column to use as input
+- `expected`: The column with expected outputs
+
+#### File Input Dataset Command
+
+For the file input dataset example, you would run:
+
+```bash
+yarn load-dataset-into-braintrust data.csv ./document-files my-file-dataset my-project file_name expected
+```
+
+- `data.csv`: Your CSV file with file names
+- `./document-files`: Folder containing the referenced files (document1.txt, image_analysis.jpg)
+- `my-file-dataset`: Name of the dataset in Braintrust
+- `my-project`: Name of the Braintrust project
+- `file_name`: Tells the script to use file paths as inputs
+- `expected`: The column with expected outputs
+
 ## Scoring
 
 Agent responses are evaluated using scorers. There are many scorers already available to you via Braintrust's `autoevals` package. You can choose from any of the existing scorers [here](https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts).
