@@ -2,7 +2,9 @@ import { Attachment, initDataset } from 'braintrust';
 import { TestCase } from './types';
 
 export const getTestCases = async () => {
-  const dataset = initDataset('sage-prod', { dataset: 'small_file_dataset' });
+  const dataset = initDataset('sage-prod', {
+    dataset: 'log_analysis_dataset_for_testing',
+  });
   const testCases: TestCase[] = [];
   for await (const row of dataset) {
     const input = row.input as { file: Attachment };
