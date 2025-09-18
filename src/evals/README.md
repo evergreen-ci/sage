@@ -1,6 +1,6 @@
 # Evals
 
-We use **evals** to measure model performance. All evals are run and reported through the [Braintrust platform](https://www.braintrust.dev/docs/start/eval-sdk).
+We use **evals** to measure model performance. All evals are run and reported through the [Braintrust Platform](https://www.braintrust.dev/docs/start/eval-sdk).
 
 Evals are stored in the `src/evals` folder.
 

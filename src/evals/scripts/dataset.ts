@@ -71,6 +71,7 @@ import fs from 'fs';
 import path from 'path';
 
 const FILE_NAME_COLUMN = 'file_name';
+const MAX_ERROR_DISPLAY = 10;
 
 const args = process.argv.slice(2);
 if (args.length < 6) {
@@ -173,9 +174,10 @@ async function main() {
 
     if (bad.length) {
       console.warn(`Skipping ${bad.length} invalid row(s):`);
-      for (const b of bad.slice(0, 10))
+      for (const b of bad.slice(0, MAX_ERROR_DISPLAY))
         console.warn(`  #${b.index}: ${b.error}`);
-      if (bad.length > 10) console.warn(`  ...and ${bad.length - 10} more`);
+      if (bad.length > MAX_ERROR_DISPLAY)
+        console.warn(`  ...and ${bad.length - MAX_ERROR_DISPLAY} more`);
     }
 
     const dataset = initDataset({ project: projectName, dataset: datasetName });
