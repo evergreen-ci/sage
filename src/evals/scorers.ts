@@ -90,6 +90,5 @@ export const TechnicalAccuracy = (args: { output: string }) => {
   });
   return technicalAccuracyClassifier({
     output: args.output,
-    expected: args.expected,
   });
 };
