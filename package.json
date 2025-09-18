@@ -36,7 +36,7 @@
     "eval:send_to_braintrust": "ENABLE_SENTRY_PROFILING=false npx braintrust eval"
   },
   "dependencies": {
-    "@ai-sdk/azure": "^2.0.24",
+    "@ai-sdk/azure": "^2.0.32",
     "@ai-sdk/openai": "^2.0.26",
     "@ai-sdk/provider": "^2.0.0",
     "@mastra/core": "^0.16.2",
@@ -54,7 +54,7 @@
     "@opentelemetry/winston-transport": "^0.16.0",
     "@sentry/node": "^10.10.0",
     "@sentry/profiling-node": "^10.11.0",
-    "ai": "^5.0.33",
+    "ai": "^5.0.45",
     "braintrust": "^0.3.7",
     "cors": "^2.8.5",
     "dotenv-flow": "^4.1.0",
