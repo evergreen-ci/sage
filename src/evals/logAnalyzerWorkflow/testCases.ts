@@ -31,7 +31,5 @@ export const getTestCases = async () => {
     testCases.push(testCase);
   }
 
-  // Only get the first entry from the dataset
-
   return testCases;
 };
