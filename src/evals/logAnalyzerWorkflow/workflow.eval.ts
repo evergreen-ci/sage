@@ -38,6 +38,7 @@ Eval(
     ],
     experimentName: 'Log Analyzer Workflow Eval',
     description: 'Tests for the Log Analyzer Workflow.',
+    maxConcurrency: 2,
   },
   {
     reporter: ReporterName.LogAnalyzerWorkflow,
