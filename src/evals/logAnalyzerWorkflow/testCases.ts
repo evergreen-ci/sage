@@ -11,7 +11,7 @@ export const getTestCases = async () => {
       input: {
         file: input.file,
         analysisContext:
-          'Analyze the log file and provide a detailed analysis of the log file.',
+          'Analyze the log file and attempt to identify the root cause of the failure.',
       },
       expected: {
         summary: row.expected,
