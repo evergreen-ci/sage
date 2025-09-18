@@ -110,6 +110,11 @@ const readCSV = (filePath: string): Promise<Record<string, string>[]> =>
   });
 
 type InputValue = { file: Attachment } | string;
+type BadRow = {
+  index: number;
+  error: string;
+};
+
 type OutputRow = {
   input: InputValue;
   expected: string;
@@ -123,7 +128,7 @@ async function main() {
   try {
     const rows = await readCSV(csvFilePath);
 
-    const bad: { index: number; error: string }[] = [];
+    const bad: BadRow[] = [];
     const good: OutputRow[] = [];
 
     rows.forEach((row, index) => {
@@ -167,8 +172,11 @@ async function main() {
           expected,
           metadata,
         });
-      } catch (e: any) {
-        bad.push({ index, error: e?.message ?? String(e) });
+      } catch (e: unknown) {
+        bad.push({
+          index,
+          error: e instanceof Error ? e.message : String(e),
+        });
       }
     });
 
