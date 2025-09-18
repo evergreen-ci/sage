@@ -2,6 +2,7 @@ import { Factuality } from 'autoevals';
 import { Eval } from 'braintrust';
 import z from 'zod';
 import { ReporterName, PROJECT_NAME } from 'evals/constants';
+import { TechnicalAccuracy } from 'evals/scorers';
 import { tracedWorkflowEval } from 'evals/utils/tracedWorkflow';
 import { LOG_ANALYZER_WORKFLOW_NAME } from 'mastra/agents/constants';
 import { logCoreAnalyzerWorkflow } from 'mastra/workflows/logCoreAnalyzerWorkflow';
@@ -29,6 +30,10 @@ Eval(
           expected: expected.summary,
           output: output.summary,
           input: input.file.reference.filename,
+        }),
+      ({ output }) =>
+        TechnicalAccuracy({
+          output: output.summary,
         }),
     ],
     experimentName: 'Log Analyzer Workflow Eval',

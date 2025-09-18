@@ -1,7 +1,7 @@
 // https://www.braintrust.dev/docs/guides/experiments/write#define-your-own-scorers
 // See existing scorers at https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts.
 
-import { LLMClassifierFromTemplate } from 'braintrust';
+import { LLMClassifierFromTemplate } from 'autoevals';
 import { ScorerFunction, BaseScores } from './types';
 
 /**
@@ -74,11 +74,7 @@ export const toolUsage = (args: { output: string[]; expected: string[] }) => {
   };
 };
 
-export const TechnicalAccuracy = (args: {
-  output: string;
-  expected: string;
-}) => {
-  console.log('technicalAccuracy', args);
+export const TechnicalAccuracy = (args: { output: string }) => {
   const technicalAccuracyClassifier = LLMClassifierFromTemplate({
     name: 'TechnicalAccuracy',
     promptTemplate: `
