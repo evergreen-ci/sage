@@ -5,15 +5,8 @@ import { resourceFromAttributes } from '@opentelemetry/resources';
 import { NodeSDK, logs } from '@opentelemetry/sdk-node';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
-import { BraintrustSpanProcessor } from 'braintrust';
 import { config } from 'config';
 import { SentrySpanProcessor } from './utils/sentry/otel-integration';
-
-const braintrustSpanProcessor = new BraintrustSpanProcessor({
-  apiKey: config.braintrust.apiKey,
-  parent: config.braintrust.parent,
-  filterAISpans: true,
-});
 
 const otlpExporter = new OTLPTraceExporter({
   url: config.honeycomb.otelCollectorURL,
@@ -38,11 +31,7 @@ const sdk = new NodeSDK({
     ? [new logs.SimpleLogRecordProcessor(otlpLogExporter)]
     : [],
   instrumentations: [getNodeAutoInstrumentations()],
-  spanProcessors: [
-    braintrustSpanProcessor,
-    new BatchSpanProcessor(otlpExporter),
-    sentrySpanProcessor,
-  ],
+  spanProcessors: [new BatchSpanProcessor(otlpExporter), sentrySpanProcessor],
   resource: resourceFromAttributes({
     [ATTR_SERVICE_NAME]: 'sage',
   }),
