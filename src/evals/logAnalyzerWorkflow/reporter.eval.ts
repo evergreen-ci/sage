@@ -6,7 +6,7 @@ import { TestCase } from './types';
 const createEvalConfig = (): BaseEvalConfig<TestCase> => ({
   reporterName: ReporterName.LogAnalyzerWorkflow,
   testSuiteName: 'Log Analyzer Workflow Eval',
-  xmlFileOutputName: 'log_analyzer_workflow_eval',
+  xmlFileOutputName: 'log_analyzer_workflow_evals',
   calculateScores: createScoreChecker,
 });
 
