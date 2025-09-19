@@ -5,12 +5,14 @@ A Mastra workflow that analyzes technical files of any format and produces struc
 ## Overview
 
 This workflow takes log files or technical documents (via file path, URL, or raw text) and generates:
+
 - A detailed markdown analysis report
 - A concise summary
 
 ## Architecture
 
 ### Input Processing
+
 - **Data Loading** (`dataLoader.ts`): Handles file/URL/text input with size and token validation
 - **Configurable Limits** (`config.ts`): Max file size, max tokens, configurable via env vars
 
@@ -19,16 +21,20 @@ This workflow takes log files or technical documents (via file path, URL, or raw
 The workflow automatically chooses between two approaches based on file size:
 
 #### Single-Pass (small files)
+
 Files that fit in one chunk are processed in a single LLM call for efficiency.
 
 #### Iterative Refinement (large files)
+
 Larger files are processed through:
+
 1. **Initial Analysis**: High-quality model analyzes the first chunk to understand structure
 2. **Refinement Loop**: Cheaper model iteratively updates the summary with each chunk
 3. **Final Report**: Formatter model generates the final markdown and summary
 
 ### Models Used
-- **Initial Analysis**: `gpt-4.1` - understands document structure  
+
+- **Initial Analysis**: `gpt-4.1` - understands document structure
 - **Refinement**: `gpt-4.1-nano` - cost-effective incremental updates
 - **Formatting**: `gpt-4.1` - generates final outputs
 
@@ -37,12 +43,12 @@ Larger files are processed through:
 ```typescript
 const result = await logCoreAnalyzerWorkflow.execute({
   // One of these input methods:
-  path: '/path/to/file.log',     // Local file
-  url: 'https://...',             // Remote file  
-  text: 'raw log content',        // Direct text
-  
+  path: '/path/to/file.log', // Local file
+  url: 'https://...', // Remote file
+  text: 'raw log content', // Direct text
+
   // Optional context for analysis
-  analysisContext: 'Focus on error patterns'
+  analysisContext: 'Focus on error patterns',
 });
 
 // Returns:
@@ -54,7 +60,7 @@ const result = await logCoreAnalyzerWorkflow.execute({
 
 ## Configuration
 
-Various parameters can be adjusted in `config.ts` such as token/size limits, models used etc... 
+Various parameters can be adjusted in `config.ts` such as token/size limits, models used etc...
 
 ## Key Features
 

@@ -5,10 +5,11 @@ Scripts for testing the Sage intelligent chatbot locally and with staging.
 ## Available Scripts
 
 ### test-thinking-agent.ts
+
 Tests the sageThinkingAgent locally.
 
 ```bash
-# Interactive chat mode (simulates UI chatbot) 
+# Interactive chat mode (simulates UI chatbot)
 yarn test-thinking-agent --interactive
 
 # Single question
@@ -19,6 +20,7 @@ yarn test-thinking-agent --task "task_id" --execution 0 --interactive
 ```
 
 ### chat-with-staging.js
+
 Tests against the deployed staging environment using cookie authentication.
 
 ```bash
@@ -30,6 +32,7 @@ node src/mastra/tests/scripts/chat-with-staging.js
 ```
 
 ### run-log-analyzer.ts
+
 Tests the log analyzer workflow in isolation.
 
 ```bash

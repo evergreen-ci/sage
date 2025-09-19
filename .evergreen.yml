@@ -41,12 +41,13 @@ buildvariants:
       - name: e2e
       - name: evergreen-evals
       - name: question-classifier-evals
+      - name: log-analyzer-workflow-evals
     display_tasks:
       - name: evals
         execution_tasks:
           - "evergreen-evals"
           - "question-classifier-evals"
-
+          - "log-analyzer-workflow-evals"
 tasks:
   - name: compile
     commands:
@@ -88,6 +89,14 @@ tasks:
       - func: attach-braintrust-results
         vars:
           xml_file_name: question_classifier_evals.xml
+  - name: log-analyzer-workflow-evals
+    commands:
+      - func: yarn-eval
+        vars:
+          eval_dir: logAnalyzerWorkflow
+      - func: attach-braintrust-results
+        vars:
+          xml_file_name: log_analyzer_workflow_evals.xml
 
 functions:
   attach-test-results:
