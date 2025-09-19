@@ -1,8 +1,9 @@
 import { Attachment, initDataset } from 'braintrust';
+import { PROJECT_NAME } from 'evals/constants';
 import { TestCase } from './types';
 
 export const getTestCases = async () => {
-  const dataset = initDataset('sage-prod', {
+  const dataset = initDataset(PROJECT_NAME, {
     dataset: 'log_analysis_dataset_for_testing',
   });
   const testCases: TestCase[] = [];
