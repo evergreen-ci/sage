@@ -88,7 +88,7 @@ if (dryRunIndex !== -1) {
 
 if (args.length < 6) {
   console.error(
-    'Usage: ts-node dataset.ts [--dry-run] <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>'
+    'Usage: ts-node braintrust-dataset-loader.ts [--dry-run] <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>'
   );
   process.exit(1);
 }
