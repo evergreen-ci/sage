@@ -166,7 +166,14 @@ const chatRoute = async (
           memory: memoryOptions,
           format: 'aisdk',
           onFinish: () => {
-            spanId = currentSpan()?.id;
+            const span = currentSpan();
+            span?.log({
+              metadata: {
+                userID: res.locals.userId,
+                requestId: res.locals.requestId,
+              },
+            });
+            spanId = span?.id;
           },
         })
     );
