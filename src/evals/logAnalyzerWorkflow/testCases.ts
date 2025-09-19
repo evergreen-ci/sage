@@ -30,6 +30,7 @@ export const getTestCases = async () => {
     };
     testCases.push(testCase);
   }
+  console.log(`Loaded ${testCases.length} test cases from Braintrust`);
 
   return testCases;
 };
