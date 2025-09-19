@@ -26,9 +26,22 @@ For large datasets, you can load a CSV file into Braintrust with the following c
 
 ```bash
 yarn load-dataset-into-braintrust <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>
+
+# Dry run mode (validates CSV without inserting)
+yarn load-dataset-into-braintrust --dry-run <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>
 ```
 
 This script reads a CSV of arbitrary format and creates (or updates) a Braintrust dataset.
+
+### Dry Run Mode
+
+The `--dry-run` flag allows you to validate your dataset without actually inserting records. When used, the script will:
+
+- Validate the CSV file and its contents
+- Check file existence (for file inputs)
+- Display the number of valid and invalid records
+- Show details of the first 5 valid records
+- List any errors encountered during processing
 
 Braintrust requires the following columns:
 
