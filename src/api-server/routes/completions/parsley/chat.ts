@@ -170,7 +170,7 @@ const chatRoute = async (
             span?.log({
               metadata: {
                 userID: res.locals.userId,
-                requestId: res.locals.requestId,
+                requestID: res.locals.requestId,
               },
             });
             spanId = span?.id;
