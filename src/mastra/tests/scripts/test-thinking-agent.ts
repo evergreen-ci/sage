@@ -1,8 +1,8 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env vite-node --script
 
 import readline from 'readline';
-import { mastra } from 'mastra';
 import { createParsleyRuntimeContext } from 'mastra/memory/parsley/runtimeContext';
+import { mastra } from '../..';
 import { USER_ID } from '../../agents/constants';
 
 /**

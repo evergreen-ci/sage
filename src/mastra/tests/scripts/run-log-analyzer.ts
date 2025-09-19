@@ -1,8 +1,8 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env vite-node --script
 
 import fs from 'fs';
 import path from 'path';
-import { mastra } from 'mastra';
+import { mastra } from '../..';
 import { analyzeWorkflowSteps } from './analyze-workflow-steps';
 
 // Helper script for local development, run log analyzer workflow on one or more log files. Display benchmark data

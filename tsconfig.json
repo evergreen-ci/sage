@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "commonjs",
-    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "outDir": "./dist",
-    "rootDir": "./src",
     "baseUrl": "src",
     "strict": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "declarationMap": true,
@@ -22,25 +22,8 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    "types": ["vitest/globals"],
-    "paths": {
-      "src/*": ["./src/*"],
-    }
+    "types": ["vitest/globals"]
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    ".mastra"
-  ],
-  "ts-node": {
-    "require": ["tsconfig-paths/register"]
-  },
-  "tsc-alias": {
-    "resolveFullPaths": true,
-    "verbose": false,
-    "basePath": "./src"
-  }
-} 
+  "include": ["src", "vite.config.ts"],
+  "exclude": ["node_modules", "dist", ".mastra"]
+}
