@@ -1,8 +1,6 @@
 // Prompts for log files analysis
-// TODO: decouple prompts from output schemas, if we can confirm that structured_output passes the expected schema to the agent automatically.
 
-// Constants
-export const MAX_FINAL_SUMMARY_TOKENS = 2048;
+import { MAX_FINAL_SUMMARY_TOKENS } from './constants';
 
 // Agent Instructions
 export const INITIAL_ANALYZER_INSTRUCTIONS = `You are a senior engineer performing initial analysis of technical text (logs, code, configs, telemetry, build output).

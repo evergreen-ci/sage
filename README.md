@@ -200,8 +200,8 @@ Drone can [promote](https://docs.drone.io/promote/) builds opened on PRs to stag
 
 1. Open a PR with your changes (a draft is okay). This will kick off the `publish` step.
 2. Once completed, either:
-    - Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> staging` from your machine.
-    - Click `…` > `Promote` on your build's page on Drone. Enter "staging" in the "Target" field and submit.
+   - Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> staging` from your machine.
+   - Click `…` > `Promote` on your build's page on Drone. Enter "staging" in the "Target" field and submit.
 
 #### Local
 
