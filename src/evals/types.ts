@@ -55,9 +55,9 @@ export type ModelOutput<TInput, TOutput> = Promise<
   MastraAgentOutput & { input: TInput; output: TOutput }
 >;
 
-export type WorkflowOutput<Input, Output> = {
-  input: Input;
-  output: Output;
+export type WorkflowOutput<TInput, TOutput> = {
+  input: TInput;
+  output: TOutput;
 };
 
 // Utility types
