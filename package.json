@@ -54,7 +54,7 @@
     "@opentelemetry/winston-transport": "^0.16.0",
     "@sentry/node": "^10.10.0",
     "@sentry/profiling-node": "^10.11.0",
-    "ai": "^5.0.45",
+    "ai": "^5.0.48",
     "braintrust": "^0.3.7",
     "cors": "^2.8.5",
     "dotenv-flow": "^4.1.0",
