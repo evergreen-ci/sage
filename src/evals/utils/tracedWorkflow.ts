@@ -36,11 +36,11 @@ const createTracedWorkflow =
       ? options.setupRuntimeContext(input)
       : new RuntimeContext();
 
-    // Get the agent
-    const agent = mastra.getWorkflow(options.workflowName);
+    // Get the workflow
+    const workflow = mastra.getWorkflow(options.workflowName);
 
     // Generate response with default or provided options
-    const run = await agent.createRunAsync({});
+    const run = await workflow.createRunAsync({});
     const response = await run.start({
       inputData: transformedInput,
       runtimeContext,
