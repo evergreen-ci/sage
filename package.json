@@ -34,7 +34,7 @@
     "prepare": "husky",
     "eval": "ENABLE_SENTRY_PROFILING=false npx braintrust eval --no-send-logs",
     "eval:send_to_braintrust": "ENABLE_SENTRY_PROFILING=false npx braintrust eval",
-    "load-dataset-into-braintrust": "ts-node-dev src/evals/scripts/braintrust-dataset-loader.ts"
+    "load-dataset-into-braintrust": "vite-node src/evals/scripts/braintrust-dataset-loader.ts"
   },
   "dependencies": {
     "@ai-sdk/azure": "^2.0.32",
