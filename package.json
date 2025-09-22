@@ -33,7 +33,7 @@
     "mastra:full": "yarn mastra:build && yarn mastra:start",
     "prepare": "husky",
     "eval": "ENABLE_SENTRY_PROFILING=false npx braintrust eval --no-send-logs",
-    "eval:send_to_braintrust": "ENABLE_SENTRY_PROFILING=false npx braintrust eval",
+    "eval:send_to_braintrust": "ENABLE_SENTRY_PROFILING=false npx braintrust eval --no-progress-bars",
     "load-dataset-into-braintrust": "vite-node src/evals/scripts/braintrust-dataset-loader.ts"
   },
   "dependencies": {
