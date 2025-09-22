@@ -94,7 +94,7 @@ sage/
 yarn dev
 ```
 
-Starts the server using `ts-node-dev`, with hot-reloading and TypeScript support. Default port: `8080` (or set via the `PORT` environment variable).
+Starts the server using `vite-node`, with hot-reloading and TypeScript support. Default port: `8080` (or set via the `PORT` environment variable).
 
 ### Production
 
