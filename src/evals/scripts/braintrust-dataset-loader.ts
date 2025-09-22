@@ -37,7 +37,7 @@
  *     <path-to-dataset-folder>/sample2.txt
  *
  *   Command:
- *     ts-node dataset.ts data.csv ./dataset-files my-dataset my-project file_name expected
+ *     vite-node dataset.ts data.csv ./dataset-files my-dataset my-project file_name expected
  *
  * Example (text input with dry run)
  *   CSV (data.csv):
@@ -46,7 +46,7 @@
  *     "Say hi","hello","greeting"
  *
  *   Command:
- *     ts-node dataset.ts --dry-run data.csv ./dataset-files my-dataset my-project prompt expected
+ *     vite-node dataset.ts --dry-run data.csv ./dataset-files my-dataset my-project prompt expected
  *
  * What it does
  * - Validates required columns and file existence (when using file inputs).
@@ -88,7 +88,7 @@ if (dryRunIndex !== -1) {
 
 if (args.length < 6) {
   console.error(
-    'Usage: ts-node braintrust-dataset-loader.ts [--dry-run] <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>'
+    'Usage: vite-node braintrust-dataset-loader.ts [--dry-run] <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>'
   );
   process.exit(1);
 }
