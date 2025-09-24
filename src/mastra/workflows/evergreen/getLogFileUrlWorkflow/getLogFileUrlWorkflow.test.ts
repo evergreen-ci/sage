@@ -16,7 +16,7 @@ vi.mock('../../../tools/evergreen', () => ({
 const startRun = async (logMetadata: any) => {
   const runtimeContext = new RuntimeContext();
   runtimeContext.set(USER_ID, 'test_user');
-  const run = getLogFileUrlWorkflow.createRun({});
+  const run = await getLogFileUrlWorkflow.createRunAsync({});
   const wr = await run.start({ inputData: { logMetadata }, runtimeContext });
   console.log('wr', wr);
   return wr;
