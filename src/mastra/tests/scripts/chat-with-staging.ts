@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env vite-node --script
 
 /**
  * Test script for chatting with the Sage agent deployed on staging

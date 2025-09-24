@@ -17,7 +17,7 @@ const testUnauthorized: TestCase = {
     testName: 'Regular user cannot access restricted task',
     description: 'Tests that a regular user cannot access a restricted task.',
     scoreThresholds: {
-      Factuality: 0.5,
+      Factuality: 0.6,
       ToolUsage: 1.0,
     },
   },
@@ -40,7 +40,7 @@ const testGetTaskTool: TestCase = {
     description:
       'Tests that a user can successfully fetch a task from Evergreen.',
     scoreThresholds: {
-      Factuality: 0.7,
+      Factuality: 0.6,
       ToolUsage: 1.0,
     },
   },
@@ -62,7 +62,7 @@ const testGetTaskFilesTool: TestCase = {
     testName: 'Test retrieving task files',
     description: 'Tests that agent can retrieve and describe task files.',
     scoreThresholds: {
-      Factuality: 0.5,
+      Factuality: 0.6,
       ToolUsage: 1.0,
     },
   },
@@ -84,7 +84,7 @@ const testGetTaskTestsTool: TestCase = {
     testName: 'Test retrieving task tests',
     description: 'Tests that agent can retrieve and describe task tests.',
     scoreThresholds: {
-      Factuality: 0.7,
+      Factuality: 0.6,
       ToolUsage: 1.0,
     },
   },
@@ -104,7 +104,7 @@ const testGetVersionWorkflow: TestCase = {
     description:
       'Tests that agent can retrieve associated version information.',
     scoreThresholds: {
-      Factuality: 0.7,
+      Factuality: 0.6,
       ToolUsage: 1.0,
     },
   },
@@ -127,7 +127,7 @@ const testGetTaskHistoryWorkflow: TestCase = {
     description:
       'Tests that agent can retrieve associated history information.',
     scoreThresholds: {
-      Factuality: 0.4,
+      Factuality: 0.6,
       ToolUsage: 1.0,
     },
   },

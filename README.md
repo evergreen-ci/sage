@@ -94,7 +94,7 @@ sage/
 yarn dev
 ```
 
-Starts the server using `ts-node-dev`, with hot-reloading and TypeScript support. Default port: `8080` (or set via the `PORT` environment variable).
+Starts the server using `vite-node`, with hot-reloading and TypeScript support. Default port: `8080` (or set via the `PORT` environment variable).
 
 ### Production
 
@@ -187,6 +187,14 @@ types up to date. The command will also run Prettier on the generated file.
   path and that the Evergreen repository is on the expected branch.
 - If dependencies appear out of date, try `yarn install` or `yarn clean` followed
   by `yarn install` to refresh `node_modules`.
+
+## Evals
+
+We use **evals** to measure model performance through the [Braintrust platform](https://www.braintrust.dev/docs/start/eval-sdk).
+
+For detailed information about running evals, managing datasets, scoring, and reporting, see the [Evals documentation](src/evals/README.md).
+
+## Deployment
 
 ## Deploys
 

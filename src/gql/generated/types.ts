@@ -486,6 +486,7 @@ export type BucketsConfig = {
   credentials?: Maybe<S3Credentials>;
   internalBuckets?: Maybe<Array<Scalars['String']['output']>>;
   logBucket?: Maybe<BucketConfig>;
+  logBucketFailedTasks?: Maybe<BucketConfig>;
   logBucketLongRetention?: Maybe<BucketConfig>;
   longRetentionProjects?: Maybe<Array<Scalars['String']['output']>>;
   testResultsBucket?: Maybe<BucketConfig>;
@@ -495,6 +496,7 @@ export type BucketsConfigInput = {
   credentials?: InputMaybe<S3CredentialsInput>;
   internalBuckets?: InputMaybe<Array<Scalars['String']['input']>>;
   logBucket?: InputMaybe<BucketConfigInput>;
+  logBucketFailedTasks?: InputMaybe<BucketConfigInput>;
   logBucketLongRetention?: InputMaybe<BucketConfigInput>;
   longRetentionProjects?: InputMaybe<Array<Scalars['String']['input']>>;
   testResultsBucket?: InputMaybe<BucketConfigInput>;
@@ -1635,6 +1637,12 @@ export type ImageToolchainsPayload = {
   totalCount: Scalars['Int']['output'];
 };
 
+export type IncludedLocalModule = {
+  __typename?: 'IncludedLocalModule';
+  fileName: Scalars['String']['output'];
+  module: Scalars['String']['output'];
+};
+
 export type InstanceTag = {
   __typename?: 'InstanceTag';
   canBeModified: Scalars['Boolean']['output'];
@@ -2451,6 +2459,7 @@ export type Patch = {
   githubPatchData?: Maybe<GithubPatch>;
   hidden: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
+  includedLocalModules: Array<IncludedLocalModule>;
   moduleCodeChanges: Array<ModuleCodeChange>;
   parameters: Array<Parameter>;
   patchNumber: Scalars['Int']['output'];
@@ -3638,6 +3647,7 @@ export type ServiceFlags = {
   jiraNotificationsDisabled?: Maybe<Scalars['Boolean']['output']>;
   jwtTokenForCLIDisabled?: Maybe<Scalars['Boolean']['output']>;
   largeParserProjectsDisabled?: Maybe<Scalars['Boolean']['output']>;
+  legacyUIAdminPageDisabled?: Maybe<Scalars['Boolean']['output']>;
   monitorDisabled?: Maybe<Scalars['Boolean']['output']>;
   podAllocatorDisabled?: Maybe<Scalars['Boolean']['output']>;
   podInitDisabled?: Maybe<Scalars['Boolean']['output']>;
@@ -3676,6 +3686,7 @@ export type ServiceFlagsInput = {
   jiraNotificationsDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   jwtTokenForCLIDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   largeParserProjectsDisabled?: InputMaybe<Scalars['Boolean']['input']>;
+  legacyUIAdminPageDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   monitorDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   podAllocatorDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   podInitDisabled?: InputMaybe<Scalars['Boolean']['input']>;

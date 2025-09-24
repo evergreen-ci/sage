@@ -9,10 +9,11 @@ import { parsleyOrchestrator } from './networks';
 import * as evergreenWorkflows from './workflows/evergreen';
 import { logCoreAnalyzerWorkflow } from './workflows/logCoreAnalyzerWorkflow';
 
-initLogger({
+export const braintrustLogger = initLogger({
   projectName: config.braintrust.projectName,
   apiKey: config.braintrust.apiKey,
 });
+
 export const mastra: Mastra = new Mastra({
   workflows: {
     ...evergreenWorkflows,
