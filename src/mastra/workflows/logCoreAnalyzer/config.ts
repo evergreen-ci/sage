@@ -21,6 +21,7 @@ export const logAnalyzerConfig = {
     initial: gpt41, // Used for initial analysis (first chunk)
     refinement: gpt41Nano, // Used for iterative refinement (subsequent chunks, smaller model)
     formatter: gpt41, // Used for final report generation
+    schemaFormatter: gpt41Nano, // Used for output schema formatting
   },
 
   /**

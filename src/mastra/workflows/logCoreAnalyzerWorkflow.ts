@@ -200,7 +200,7 @@ const initialStep = createStep({
       {
         structuredOutput: {
           schema: RefinementAgentOutputSchema,
-          model: logAnalyzerConfig.models.initial,
+          model: logAnalyzerConfig.models.schemaFormatter,
         },
         tracingContext,
       }
@@ -272,7 +272,7 @@ const refineStep = createStep({
       {
         structuredOutput: {
           schema: RefinementAgentOutputSchema,
-          model: logAnalyzerConfig.models.refinement,
+          model: logAnalyzerConfig.models.schemaFormatter,
         }, // TODO: define error handling strategy when schema validation fails
         tracingContext,
       }
@@ -336,7 +336,7 @@ const singlePassStep = createStep({
       {
         structuredOutput: {
           schema: WorkflowOutputSchema,
-          model: logAnalyzerConfig.models.formatter,
+          model: logAnalyzerConfig.models.schemaFormatter,
         },
         tracingContext,
       }
