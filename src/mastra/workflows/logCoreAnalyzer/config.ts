@@ -34,6 +34,7 @@ export const logAnalyzerConfig = {
     urlTimeoutMs: 30000, // URL fetch timeout in milliseconds (30s)
     // Limit for processing
     maxChars: 10_000_000, // Max estimated characters to process (10M)
+    maxTokens: 10_000_000, // Max estimated tokens to process (10M)
   },
 
   /**
