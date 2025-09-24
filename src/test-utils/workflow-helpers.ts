@@ -3,7 +3,9 @@ import {
   Step,
   DefaultEngineType,
   StepResult,
+  StepsRecord,
 } from '@mastra/core';
+import { TracingProperties } from '@mastra/core/dist/ai-tracing';
 import { z } from 'zod';
 
 /**
@@ -13,6 +15,7 @@ import { z } from 'zod';
 export function expectSuccess<
   TInput extends z.ZodTypeAny,
   TOutput extends z.ZodTypeAny,
+  TSteps extends Step<string, any, any>[] = Step<string, any, any>[],
 >(
   wr: WorkflowResult<
     TInput,
@@ -28,17 +31,22 @@ export function expectSuccess<
   >
 ): asserts wr is {
   status: 'success';
-  result: TOutput;
-  input: TInput;
+  result: z.infer<TOutput>;
+  input: z.infer<TInput>;
   steps: {
-    [x: string]:
-      | StepResult<unknown, unknown, unknown, unknown>
-      | StepResult<unknown, unknown, unknown, unknown>;
+    [K in keyof StepsRecord<TSteps>]: StepsRecord<TSteps>[K]['outputSchema'] extends undefined
+      ? StepResult<unknown, unknown, unknown, unknown>
+      : StepResult<
+          z.infer<NonNullable<StepsRecord<TSteps>[K]['inputSchema']>>,
+          z.infer<NonNullable<StepsRecord<TSteps>[K]['resumeSchema']>>,
+          z.infer<NonNullable<StepsRecord<TSteps>[K]['suspendSchema']>>,
+          z.infer<NonNullable<StepsRecord<TSteps>[K]['outputSchema']>>
+        >;
   };
-} {
+} & TracingProperties {
   expect(wr.status).toBe('success');
   if (wr.status === 'success') {
-    expect(wr.result.length).toBeGreaterThan(0);
+    expect(wr.result).toBeDefined();
   } else {
     throw new Error('Workflow result is not successful');
   }

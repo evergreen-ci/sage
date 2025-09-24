@@ -468,7 +468,7 @@ export const logCoreAnalyzerTool: ReturnType<typeof createTool> = createTool({
     const run = await logCoreAnalyzerWorkflow.createRunAsync({});
 
     const runResult = await run.start({
-      inputData: context,
+      inputData: context as z.infer<typeof logCoreAnalyzerWorkflow.inputSchema>,
       runtimeContext,
       tracingContext,
     });

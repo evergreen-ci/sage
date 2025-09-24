@@ -1,5 +1,12 @@
-import { MessageListInput } from '@mastra/core/dist/agent/message-list';
+type MessageInput = {
+  role: 'user' | 'assistant' | 'system';
+  parts: {
+    type: 'text';
+    text: string;
+  }[];
+};
 
+type MessageListInput = string | string[] | MessageInput | MessageInput[];
 /**
  * Extracts the text from a MessageListInput
  * @param input - The MessageListInput to extract the text from
