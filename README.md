@@ -188,6 +188,14 @@ types up to date. The command will also run Prettier on the generated file.
 - If dependencies appear out of date, try `yarn install` or `yarn clean` followed
   by `yarn install` to refresh `node_modules`.
 
+## Evals
+
+We use **evals** to measure model performance through the [Braintrust platform](https://www.braintrust.dev/docs/start/eval-sdk).
+
+For detailed information about running evals, managing datasets, scoring, and reporting, see the [Evals documentation](src/evals/README.md).
+
+## Deployment
+
 ## Deploys
 
 ### Staging

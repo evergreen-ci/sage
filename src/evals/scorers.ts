@@ -1,6 +1,7 @@
 // https://www.braintrust.dev/docs/guides/experiments/write#define-your-own-scorers
 // See existing scorers at https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts.
 
+import { LLMClassifierFromTemplate } from 'autoevals';
 import { ScorerFunction, BaseScores } from './types';
 
 /**
@@ -71,4 +72,45 @@ export const toolUsage = (args: { output: string[]; expected: string[] }) => {
       correct: correctToolsUsed,
     },
   };
+};
+
+export const TechnicalAccuracy = (args: {
+  output: string;
+  expected: string;
+}) => {
+  const technicalAccuracyClassifier = LLMClassifierFromTemplate({
+    name: 'TechnicalAccuracy',
+    promptTemplate: `
+      You are comparing a submitted answer to an expert answer on a given question. Here is the data:
+      [BEGIN DATA]
+      ************
+      [Question]: {{input}}
+      ************
+      [Expert]: {{expected}}
+      ************
+      [Submission]: {{output}}
+      ************
+      [END DATA]
+
+      You are an expert technical reviewer. You are given a expected output and an output. Evaluate the technical accuracy of the following response based on the input context and the expected results.
+      Ignore any differences in style, grammar, or punctuation. Focus on the technical accuracy of the response.
+
+      Return the score based on the following scale:
+      (Not Accurate) The submitted answer is not accurate or does make sense.
+      (Somewhat Accurate) The submitted answer is somewhat accurate but there are some minor inaccuracies.
+      (Partially Accurate) The submitted answer is partially accurate but there are some major inaccuracies.
+      (Mostly Accurate) The submitted answer is mostly accurate but there are some minor inaccuracies.
+      (Accurate) The submitted answer is accurate and makes sense.
+      `,
+    choiceScores: {
+      'Not Accurate': 0.0,
+      'Somewhat Accurate': 0.25,
+      'Partially Accurate': 0.5,
+      'Mostly Accurate': 0.75,
+      Accurate: 1.0,
+    },
+  });
+  return technicalAccuracyClassifier({
+    output: args.output,
+  });
 };

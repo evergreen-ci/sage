@@ -22,8 +22,8 @@
     "eslint:fix": "yarn eslint:strict --fix",
     "eslint:staged": "STRICT=1 eslint",
     "eslint:strict": "STRICT=1 eslint .",
-    "format": "prettier --write src/**/*.ts",
-    "format:check": "prettier --check src/**/*.ts",
+    "format": "prettier --write src/**/*.ts \"**/*.md\" \"*.md\"",
+    "format:check": "prettier --check src/**/*.ts \"**/*.md\" \"*.md\"",
     "run-analyzer": "vite-node src/mastra/tests/scripts/run-log-analyzer.ts",
     "test-thinking-agent": "vite-node src/mastra/tests/scripts/test-thinking-agent.ts",
     "chat-with-staging": "vite-node src/mastra/tests/scripts/chat-with-staging.ts",
@@ -33,7 +33,8 @@
     "mastra:full": "yarn mastra:build && yarn mastra:start",
     "prepare": "husky",
     "eval": "ENABLE_SENTRY_PROFILING=false npx braintrust eval --no-send-logs",
-    "eval:send_to_braintrust": "ENABLE_SENTRY_PROFILING=false npx braintrust eval"
+    "eval:send_to_braintrust": "ENABLE_SENTRY_PROFILING=false npx braintrust eval --no-progress-bars",
+    "load-dataset-into-braintrust": "vite-node src/evals/scripts/braintrust-dataset-loader.ts"
   },
   "dependencies": {
     "@ai-sdk/azure": "^2.0.32",
@@ -86,6 +87,7 @@
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
     "autoevals": "^0.0.131",
+    "csv-parse": "^6.1.0",
     "dotenv-flow-cli": "^1.1.1",
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.5",

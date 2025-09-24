@@ -55,6 +55,11 @@ export type ModelOutput<TInput, TOutput> = Promise<
   MastraAgentOutput & { input: TInput; output: TOutput }
 >;
 
+export type WorkflowOutput<TInput, TOutput> = {
+  input: TInput;
+  output: TOutput;
+};
+
 // Utility types
 export type ScorerFunction<
   TScores extends BaseScores,
