@@ -12,7 +12,7 @@ const getTaskHistoryStep = createStep({
   outputSchema: z.object({
     history: getTaskHistoryTool.outputSchema,
   }),
-  execute: async ({ inputData, runtimeContext, tracingContext }) => {
+  execute: async ({ inputData, runtimeContext, suspend, tracingContext }) => {
     const { task } = inputData;
     if (!task) {
       throw new Error('Previous get-task step did not return a task');
@@ -45,6 +45,7 @@ const getTaskHistoryStep = createStep({
           limit: 30,
         },
       },
+      suspend,
       tracingContext,
       runtimeContext,
     });

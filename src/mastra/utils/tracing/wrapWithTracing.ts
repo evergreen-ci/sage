@@ -69,9 +69,19 @@ export const wrapAgentWithTracing = (agent: Agent) => {
 export const wrapToolWithTracing = <
   TSchemaIn extends ZodType,
   TSchemaOut extends ZodType,
-  TContext extends ToolExecutionContext<TSchemaIn>,
+  TContext extends ToolExecutionContext<
+    TSchemaIn,
+    ZodType<unknown>,
+    ZodType<unknown>
+  >,
 >(
-  tool: Tool<TSchemaIn, TSchemaOut, TContext>
+  tool: Tool<
+    TSchemaIn,
+    TSchemaOut,
+    ZodType<unknown>,
+    ZodType<unknown>,
+    TContext
+  >
 ) => {
   if (tool.execute) {
     tool.execute = wrapTraced(tool.execute.bind(tool), {
@@ -79,7 +89,13 @@ export const wrapToolWithTracing = <
       type: 'tool',
     });
   }
-  return tool as Tool<TSchemaIn, TSchemaOut, TContext> & {
+  return tool as Tool<
+    TSchemaIn,
+    TSchemaOut,
+    ZodType<unknown>,
+    ZodType<unknown>,
+    TContext
+  > & {
     inputSchema: TSchemaIn;
     outputSchema: TSchemaOut;
     execute: (context: ToolExecutionContext<TSchemaIn>) => Promise<TSchemaOut>;
