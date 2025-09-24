@@ -5,7 +5,6 @@ import {
   VersionQueryVariables,
 } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
-import { wrapToolWithTracing } from '../../utils/tracing/wrapWithTracing';
 import evergreenClient from './graphql/evergreenClient';
 
 const GET_VERSION = gql`
@@ -74,16 +73,14 @@ const getVersionOutputSchema = z.object({
     }),
   }),
 });
-const getVersionTool = wrapToolWithTracing(
-  createGraphQLTool<VersionQuery, VersionQueryVariables>({
-    id: 'getVersion',
-    description:
-      'Get a version from Evergreen. This tool is used to get the details of a version from Evergreen. It requires an id (versionId) and can optionally include never activated tasks.',
-    query: GET_VERSION,
-    inputSchema: getVersionInputSchema,
-    outputSchema: getVersionOutputSchema,
-    client: evergreenClient,
-  })
-);
+const getVersionTool = createGraphQLTool<VersionQuery, VersionQueryVariables>({
+  id: 'getVersion',
+  description:
+    'Get a version from Evergreen. This tool is used to get the details of a version from Evergreen. It requires an id (versionId) and can optionally include never activated tasks.',
+  query: GET_VERSION,
+  inputSchema: getVersionInputSchema,
+  outputSchema: getVersionOutputSchema,
+  client: evergreenClient,
+});
 
 export default getVersionTool;

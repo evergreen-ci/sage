@@ -13,10 +13,6 @@ import {
 } from '../tools/evergreen';
 import { createToolFromAgent } from '../tools/utils';
 import { memoryStore } from '../utils/memory';
-import {
-  wrapAgentWithTracing,
-  wrapToolWithTracing,
-} from '../utils/tracing/wrapWithTracing';
 
 const evergreenAgentMemory = new Memory({
   storage: memoryStore,
@@ -49,12 +45,11 @@ const evergreenAgentMemory = new Memory({
   },
 });
 
-export const evergreenAgent: Agent = wrapAgentWithTracing(
-  new Agent({
-    name: 'evergreenAgent',
-    description:
-      'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources',
-    instructions: `
+export const evergreenAgent: Agent = new Agent({
+  name: 'evergreenAgent',
+  description:
+    'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources',
+  instructions: `
 System: # Role and Objective
 You are **Evergreen AI**, a researcher agent providing information and support specifically about the Evergreen system.
 
@@ -84,34 +79,34 @@ You are **Evergreen AI**, a researcher agent providing information and support s
 - Respond only when requirements are fully satisfied.
 - If unsure or if the query is outside Evergreen scope, ask for clarification or escalate appropriately.
 `,
-    model: gpt41,
-    memory: evergreenAgentMemory,
-    workflows: {
-      getTaskHistoryWorkflow: getTaskHistoryWorkflow as Workflow<
-        any,
-        any,
-        any,
-        any,
-        any,
-        any
-      >,
-      getVersionWorkflow: getVersionWorkflow as Workflow<
-        any,
-        any,
-        any,
-        any,
-        any,
-        any
-      >,
-    },
-    tools: {
-      getTaskTool,
-      getTaskFilesTool,
-      getTaskTestsTool,
-    },
-  })
-);
+  model: gpt41,
+  memory: evergreenAgentMemory,
+  workflows: {
+    getTaskHistoryWorkflow: getTaskHistoryWorkflow as Workflow<
+      any,
+      any,
+      any,
+      any,
+      any,
+      any
+    >,
+    getVersionWorkflow: getVersionWorkflow as Workflow<
+      any,
+      any,
+      any,
+      any,
+      any,
+      any
+    >,
+  },
+  tools: {
+    getTaskTool,
+    getTaskFilesTool,
+    getTaskTestsTool,
+  },
+});
 
-export const askEvergreenAgentTool = wrapToolWithTracing(
-  createToolFromAgent(evergreenAgent.id, evergreenAgent.getDescription())
+export const askEvergreenAgentTool = createToolFromAgent(
+  evergreenAgent.id,
+  evergreenAgent.getDescription()
 );
