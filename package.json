@@ -40,6 +40,7 @@
     "@ai-sdk/azure": "^2.0.32",
     "@ai-sdk/openai": "^2.0.26",
     "@ai-sdk/provider": "^2.0.0",
+    "@mastra/braintrust": "^0.1.4",
     "@mastra/core": "^0.18.0",
     "@mastra/libsql": "^0.14.3",
     "@mastra/loggers": "^0.10.13",
@@ -122,8 +123,5 @@
     "typescript"
   ],
   "author": "",
-  "license": "ISC",
-  "resolutions": {
-    "ai": "^5.x"
-  }
+  "license": "ISC"
 }
