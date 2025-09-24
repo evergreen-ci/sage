@@ -1,3 +1,4 @@
+import { Workflow } from '@mastra/core';
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import {
@@ -86,8 +87,22 @@ You are **Evergreen AI**, a researcher agent providing information and support s
     model: gpt41,
     memory: evergreenAgentMemory,
     workflows: {
-      getTaskHistoryWorkflow: getTaskHistoryWorkflow,
-      getVersionWorkflow: getVersionWorkflow,
+      getTaskHistoryWorkflow: getTaskHistoryWorkflow as Workflow<
+        any,
+        any,
+        any,
+        any,
+        any,
+        any
+      >,
+      getVersionWorkflow: getVersionWorkflow as Workflow<
+        any,
+        any,
+        any,
+        any,
+        any,
+        any
+      >,
     },
     tools: {
       getTaskTool,
