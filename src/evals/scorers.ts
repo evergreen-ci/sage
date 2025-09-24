@@ -74,11 +74,33 @@ export const toolUsage = (args: { output: string[]; expected: string[] }) => {
   };
 };
 
-export const TechnicalAccuracy = (args: { output: string }) => {
+export const TechnicalAccuracy = (args: {
+  output: string;
+  expected: string;
+}) => {
   const technicalAccuracyClassifier = LLMClassifierFromTemplate({
     name: 'TechnicalAccuracy',
     promptTemplate: `
-      You are an expert technical reviewer. You are given a list of expected results. Evaluate the technical accuracy of the following response based on the input context and the expected results.
+      You are comparing a submitted answer to an expert answer on a given question. Here is the data:
+      [BEGIN DATA]
+      ************
+      [Question]: {{input}}
+      ************
+      [Expert]: {{expected}}
+      ************
+      [Submission]: {{output}}
+      ************
+      [END DATA]
+
+      You are an expert technical reviewer. You are given a expected output and an output. Evaluate the technical accuracy of the following response based on the input context and the expected results.
+      Ignore any differences in style, grammar, or punctuation. Focus on the technical accuracy of the response.
+
+      Return the score based on the following scale:
+      (Not Accurate) The submitted answer is not accurate or does make sense.
+      (Somewhat Accurate) The submitted answer is somewhat accurate but there are some minor inaccuracies.
+      (Partially Accurate) The submitted answer is partially accurate but there are some major inaccuracies.
+      (Mostly Accurate) The submitted answer is mostly accurate but there are some minor inaccuracies.
+      (Accurate) The submitted answer is accurate and makes sense.
       `,
     choiceScores: {
       'Not Accurate': 0.0,

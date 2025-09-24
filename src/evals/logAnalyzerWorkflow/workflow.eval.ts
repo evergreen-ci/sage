@@ -40,9 +40,10 @@ Eval(
           output: output.summary,
           input: input.file.reference.filename,
         }),
-      ({ output }) =>
+      ({ expected, output }) =>
         TechnicalAccuracy({
           output: output.summary,
+          expected: expected.summary,
         }),
     ],
     experimentName: 'Log Analyzer Workflow Eval',
