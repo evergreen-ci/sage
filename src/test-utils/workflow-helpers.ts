@@ -10,21 +10,36 @@ import { z } from 'zod';
  * Expects a workflow result to be successful
  * @param wr - The workflow result to expect
  */
-export function expectSuccess(
+export function expectSuccess<
+  TInput extends z.ZodTypeAny,
+  TOutput extends z.ZodTypeAny,
+>(
   wr: WorkflowResult<
-    z.ZodString,
-    Step<string, any, any, any, any, DefaultEngineType>[]
+    TInput,
+    TOutput,
+    Step<
+      string,
+      z.ZodTypeAny,
+      z.ZodTypeAny,
+      z.ZodTypeAny,
+      z.ZodTypeAny,
+      DefaultEngineType
+    >[]
   >
 ): asserts wr is {
   status: 'success';
-  result: string;
+  result: TOutput;
+  input: TInput;
   steps: {
     [x: string]:
       | StepResult<unknown, unknown, unknown, unknown>
-      | StepResult<any, any, any, any>;
+      | StepResult<unknown, unknown, unknown, unknown>;
   };
 } {
-  expect((wr as any).status).toBe('success');
-  expect(typeof (wr as any).result).toBe('string');
-  expect((wr as any).result.length).toBeGreaterThan(0);
+  expect(wr.status).toBe('success');
+  if (wr.status === 'success') {
+    expect(wr.result.length).toBeGreaterThan(0);
+  } else {
+    throw new Error('Workflow result is not successful');
+  }
 }
