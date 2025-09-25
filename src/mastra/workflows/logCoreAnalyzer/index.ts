@@ -3,15 +3,15 @@ import { Agent } from '@mastra/core/agent';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
 import { z } from 'zod';
-import { WinstonMastraLogger } from '../../utils/logger/winstonMastraLogger';
-import { wrapAgentWithTracing } from '../utils/tracing/wrapWithTracing';
-import { logAnalyzerConfig } from './logCoreAnalyzer/config';
+import { WinstonMastraLogger } from '../../../utils/logger/winstonMastraLogger';
+import { wrapAgentWithTracing } from '../../utils/tracing/wrapWithTracing';
+import { logAnalyzerConfig } from './config';
 import {
   loadFromFile,
   loadFromUrl,
   loadFromText,
   type LoadResult,
-} from './logCoreAnalyzer/dataLoader';
+} from './dataLoader';
 import {
   INITIAL_ANALYZER_INSTRUCTIONS,
   REFINEMENT_AGENT_INSTRUCTIONS,
@@ -21,8 +21,8 @@ import {
   USER_MARKDOWN_PROMPT,
   USER_CONCISE_SUMMARY_PROMPT,
   SINGLE_PASS_PROMPT,
-} from './logCoreAnalyzer/prompts';
-import { normalizeLineEndings, cropMiddle } from './logCoreAnalyzer/utils';
+} from './prompts';
+import { normalizeLineEndings, cropMiddle } from './utils';
 
 // We define here the core workflow for log file analysis. It gives the Parsley Agent the capability to read and understand text files, of any kind and format.
 // Depending on the file size, we either return a summary in a single LLM call, or perform a more complex iterative refinement, combining the usage of cheap and more expensive models.
