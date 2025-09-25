@@ -101,6 +101,11 @@ tasks:
           xml_file_name: log_analyzer_workflow_evals.xml
   - name: sage-thinking-evals
     commands:
+      - func: setup-mongodb
+      - func: run-make-background
+        vars:
+          target: local-evergreen
+      - func: wait-for-evergreen
       - func: yarn-eval
         vars:
           eval_dir: sageThinkingAgent
