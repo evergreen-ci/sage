@@ -121,7 +121,17 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
  * @param text - Raw text to validate and load
  * @returns Loaded text and metadata
  */
-export async function loadFromText(text: string): Promise<LoadResult> {
+export const loadFromText = async (
+  text: string | null | undefined
+): Promise<LoadResult> => {
+  if (text === null || text === undefined) {
+    throw new Error('Text cannot be null or undefined');
+  }
+
+  if (text.length === 0) {
+    throw new Error('Text cannot be empty');
+  }
+
   const size = text.length;
   validateSize(size, SOURCE_TYPE.TEXT);
 
@@ -141,4 +151,4 @@ export async function loadFromText(text: string): Promise<LoadResult> {
       estimatedTokens,
     },
   };
-}
+};

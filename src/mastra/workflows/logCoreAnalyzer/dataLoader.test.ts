@@ -2,25 +2,37 @@ import { logAnalyzerConfig } from './config';
 import { SOURCE_TYPE } from './constants';
 import { loadFromFile, loadFromUrl, loadFromText } from './dataLoader';
 
-// Mock fs/promises
-vi.mock('fs/promises', () => ({
-  default: {
-    stat: vi.fn(),
-    readFile: vi.fn(),
-  },
+const fsMock = vi.hoisted(() => ({
+  stat: vi.fn(),
+  readFile: vi.fn(),
 }));
 
-// Mock global fetch
-global.fetch = vi.fn();
+vi.mock('fs/promises', () => ({ default: fsMock, ...fsMock }));
 
-// Mock gpt-tokenizer
 vi.mock('gpt-tokenizer', () => ({
-  encode: vi.fn(
-    (text: string) =>
-      // Simple mock: ~0.25 tokens per character
-      new Array(Math.ceil(text.length * 0.25))
-  ),
+  encode: vi.fn((text: string) => new Array(Math.ceil(text.length * 0.25))),
 }));
+
+const createFileSizeMock = (sizeInBytes: number) =>
+  ({ size: sizeInBytes }) as unknown as import('fs').Stats;
+
+// Constants for test scenarios
+const TEST_CONSTANTS = {
+  OVERSIZE_MULTIPLIER: 1.1,
+  TOKEN_MULTIPLIER: 5,
+  TEST_URLS: {
+    INVALID: 'https://example.com/non-evergreen.log',
+    VALID: 'http://localhost:9090/valid.log',
+    MISSING: 'http://localhost:9090/missing.log',
+    TIMEOUT: 'https://example.com/timeout.log',
+  },
+  ERROR_MESSAGES: {
+    SIZE_LIMIT: 'exceeds limit',
+    TOKEN_LIMIT: 'tokens, exceeds limit',
+    URL_INVALID: 'Invalid URL needs to start with the Evergreen API endpoint',
+    FETCH_FAILURE: 'Failed to fetch URL',
+  },
+};
 
 describe('dataLoader', () => {
   beforeEach(() => {
@@ -30,28 +42,32 @@ describe('dataLoader', () => {
   describe('loadFromFile', () => {
     it('should reject files over size limit', async () => {
       const fs = (await import('fs/promises')).default;
+      const oversizeBytes = Math.floor(
+        logAnalyzerConfig.limits.maxFileSizeMB *
+          TEST_CONSTANTS.OVERSIZE_MULTIPLIER *
+          1024 *
+          1024
+      );
 
-      // Mock a file that's over the configured limit
-      const oversizeBytes =
-        (logAnalyzerConfig.limits.maxFileSizeMB + 1) * 1024 * 1024;
-      vi.mocked(fs.stat).mockResolvedValue({
-        size: oversizeBytes,
-      } as any);
+      vi.mocked(fs.stat).mockResolvedValue(createFileSizeMock(oversizeBytes));
 
-      await expect(loadFromFile('large.log')).rejects.toThrow('exceeds limit');
+      await expect(loadFromFile('large.log')).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGES.SIZE_LIMIT
+      );
     });
 
-    it('should load valid files', async () => {
-      const fs = (await import('fs/promises')).default;
+    it('should reject invalid or null file paths', async () => {
+      await expect(loadFromFile('')).rejects.toThrow();
+      await expect(loadFromFile(null as unknown as string)).rejects.toThrow();
+    });
 
-      // Mock a file that's within the configured limit
+    it('should load valid files within size and token limits', async () => {
+      const fs = (await import('fs/promises')).default;
       const validSizeBytes = Math.floor(
         logAnalyzerConfig.limits.maxFileSizeMB * 0.5 * 1024 * 1024
       );
-      vi.mocked(fs.stat).mockResolvedValue({
-        size: validSizeBytes,
-      } as any);
 
+      vi.mocked(fs.stat).mockResolvedValue(createFileSizeMock(validSizeBytes));
       vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('log content'));
 
       const result = await loadFromFile('valid.log');
@@ -62,41 +78,37 @@ describe('dataLoader', () => {
 
     it('should reject files with too many tokens', async () => {
       const fs = (await import('fs/promises')).default;
-
-      // Mock a file that's under size limit but over token limit
-      // Use just under the file size limit to ensure we hit token limit instead
       const fileSizeBytes = Math.floor(
         logAnalyzerConfig.limits.maxFileSizeMB * 0.9 * 1024 * 1024
       );
-      // Create text that will exceed token limit (tokens are ~0.25 per char in our mock)
-      // We need > maxChars, so text length should be > maxChars * 4
-      const textLength = logAnalyzerConfig.limits.maxChars * 5;
+      const textLength =
+        logAnalyzerConfig.limits.maxChars * TEST_CONSTANTS.TOKEN_MULTIPLIER;
       const hugeText = 'x'.repeat(textLength);
 
-      vi.mocked(fs.stat).mockResolvedValue({
-        size: fileSizeBytes,
-      } as any);
-
+      vi.mocked(fs.stat).mockResolvedValue(createFileSizeMock(fileSizeBytes));
       vi.mocked(fs.readFile).mockResolvedValue(Buffer.from(hugeText));
 
       await expect(loadFromFile('huge-tokens.log')).rejects.toThrow(
-        'tokens, exceeds limit'
+        TEST_CONSTANTS.ERROR_MESSAGES.TOKEN_LIMIT
       );
     });
   });
 
   describe('loadFromUrl', () => {
-    it('should reject non evergreen URLs', async () => {
+    it('should reject non-evergreen URLs', async () => {
       await expect(
-        loadFromUrl('https://example.com/non-evergreen.log')
-      ).rejects.toThrow(
-        'Invalid URL needs to start with the Evergreen API endpoint'
-      );
+        loadFromUrl(TEST_CONSTANTS.TEST_URLS.INVALID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGES.URL_INVALID);
     });
 
     it('should reject URLs over size limit', async () => {
-      const oversizeBytes =
-        (logAnalyzerConfig.limits.maxUrlSizeMB + 1) * 1024 * 1024;
+      const oversizeBytes = Math.floor(
+        logAnalyzerConfig.limits.maxUrlSizeMB *
+          TEST_CONSTANTS.OVERSIZE_MULTIPLIER *
+          1024 *
+          1024
+      );
+
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         headers: new Headers({
@@ -105,9 +117,9 @@ describe('dataLoader', () => {
         text: async () => 'x'.repeat(oversizeBytes),
       });
 
-      await expect(
-        loadFromUrl('http://localhost:9090/large.log')
-      ).rejects.toThrow('exceeds limit');
+      await expect(loadFromUrl(TEST_CONSTANTS.TEST_URLS.VALID)).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGES.SIZE_LIMIT
+      );
     });
 
     it('should load valid URLs', async () => {
@@ -121,12 +133,12 @@ describe('dataLoader', () => {
         text: async () => content,
       });
 
-      const result = await loadFromUrl('http://localhost:9090/valid.log');
+      const result = await loadFromUrl(TEST_CONSTANTS.TEST_URLS.VALID);
       expect(result.text).toBe(content);
       expect(result.metadata.source).toBe(SOURCE_TYPE.URL);
     });
 
-    it('should handle fetch failures', async () => {
+    it('should handle fetch failures with detailed error message', async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 404,
@@ -134,11 +146,13 @@ describe('dataLoader', () => {
       });
 
       await expect(
-        loadFromUrl('http://localhost:9090/missing.log')
-      ).rejects.toThrow('Failed to fetch URL: 404 Not Found');
+        loadFromUrl(TEST_CONSTANTS.TEST_URLS.MISSING)
+      ).rejects.toThrow(
+        `${TEST_CONSTANTS.ERROR_MESSAGES.FETCH_FAILURE}: 404 Not Found`
+      );
     });
 
-    it('should handle timeout', async () => {
+    it('should handle network timeout', async () => {
       global.fetch = vi.fn().mockImplementation(
         () =>
           new Promise((_, reject) => {
@@ -147,30 +161,39 @@ describe('dataLoader', () => {
       );
 
       await expect(
-        loadFromUrl('https://example.com/timeout.log')
+        loadFromUrl(TEST_CONSTANTS.TEST_URLS.TIMEOUT)
       ).rejects.toThrow();
     });
   });
 
   describe('loadFromText', () => {
-    it('should reject text over character limit', async () => {
+    it('should reject extremely long text', async () => {
       const hugeText = 'x'.repeat(
         logAnalyzerConfig.limits.maxTextLength + 1000
       );
 
-      await expect(loadFromText(hugeText)).rejects.toThrow('exceeds limit');
+      await expect(loadFromText(hugeText)).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGES.SIZE_LIMIT
+      );
     });
 
     it('should reject text over token limit', async () => {
-      // Text that's under character limit but over token limit
-      // Use just under the text character limit
       const charCount = Math.min(
         logAnalyzerConfig.limits.maxTextLength - 1000,
-        logAnalyzerConfig.limits.maxChars * 5 // ~0.25 tokens per char in our mock
+        logAnalyzerConfig.limits.maxChars * TEST_CONSTANTS.TOKEN_MULTIPLIER
       );
       const text = 'x'.repeat(charCount);
 
-      await expect(loadFromText(text)).rejects.toThrow('tokens, exceeds limit');
+      await expect(loadFromText(text)).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGES.TOKEN_LIMIT
+      );
+    });
+
+    it('should reject empty or null text', async () => {
+      await expect(loadFromText('')).rejects.toThrow('Text cannot be empty');
+      await expect(loadFromText(null as any)).rejects.toThrow(
+        'Text cannot be null or undefined'
+      );
     });
 
     it('should accept valid text', async () => {
