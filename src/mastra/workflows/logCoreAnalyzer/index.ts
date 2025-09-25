@@ -466,7 +466,12 @@ export const logCoreAnalyzerWorkflow = createWorkflow({
   .then(decideAndRunStep)
   .commit();
 
-export const logCoreAnalyzerTool: ReturnType<typeof createTool> = createTool({
+export const logCoreAnalyzerTool: ReturnType<
+  typeof createTool<
+    typeof logCoreAnalyzerWorkflow.inputSchema,
+    typeof logCoreAnalyzerWorkflow.outputSchema
+  >
+> = createTool({
   id: 'logCoreAnalyzerTool',
   description:
     logCoreAnalyzerWorkflow.description ||
