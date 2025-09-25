@@ -92,14 +92,16 @@ const defaultPrintResults = <
 >(
   result: ReporterEvalResult<TestCase>
 ) => {
-  console.log(`Eval for ${result.metadata.testName}:`);
+  console.log(`Eval for '${result.metadata.testName}':`);
 
   const resultsTable = Object.entries(result.scores).reduce(
     (acc, [key, value]) => {
-      acc[key] = {
-        actual: value,
-        expected: `>= ${result.metadata.scoreThresholds[key]}`,
-      };
+      if (result.metadata.scoreThresholds[key]) {
+        acc[key] = {
+          actual: value,
+          expected: `>= ${result.metadata.scoreThresholds[key]}`,
+        };
+      }
       return acc;
     },
     {} as Record<string, { actual: number; expected: string }>

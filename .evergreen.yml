@@ -42,12 +42,14 @@ buildvariants:
       - name: evergreen-evals
       - name: question-classifier-evals
       - name: log-analyzer-workflow-evals
+      - name: sage-thinking-evals
     display_tasks:
       - name: evals
         execution_tasks:
           - "evergreen-evals"
           - "question-classifier-evals"
           - "log-analyzer-workflow-evals"
+          - "sage-thinking-evals"
 tasks:
   - name: compile
     commands:
@@ -97,6 +99,14 @@ tasks:
       - func: attach-braintrust-results
         vars:
           xml_file_name: log_analyzer_workflow_evals.xml
+  - name: log-analyzer-workflow-evals
+    commands:
+      - func: yarn-eval
+        vars:
+          eval_dir: sageThinkingAgent
+      - func: attach-braintrust-results
+        vars:
+          xml_file_name: sage_thinking_evals.xml
 
 functions:
   attach-test-results:
