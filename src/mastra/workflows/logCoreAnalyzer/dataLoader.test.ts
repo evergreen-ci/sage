@@ -86,6 +86,14 @@ describe('dataLoader', () => {
   });
 
   describe('loadFromUrl', () => {
+    it('should reject non evergreen URLs', async () => {
+      await expect(
+        loadFromUrl('https://example.com/non-evergreen.log')
+      ).rejects.toThrow(
+        'Invalid URL needs to start with the Evergreen API endpoint'
+      );
+    });
+
     it('should reject URLs over size limit', async () => {
       const oversizeBytes =
         (logAnalyzerConfig.limits.maxUrlSizeMB + 1) * 1024 * 1024;
@@ -98,7 +106,7 @@ describe('dataLoader', () => {
       });
 
       await expect(
-        loadFromUrl('https://example.com/large.log')
+        loadFromUrl('http://localhost:9090/large.log')
       ).rejects.toThrow('exceeds limit');
     });
 
@@ -113,7 +121,7 @@ describe('dataLoader', () => {
         text: async () => content,
       });
 
-      const result = await loadFromUrl('https://example.com/valid.log');
+      const result = await loadFromUrl('http://localhost:9090/valid.log');
       expect(result.text).toBe(content);
       expect(result.metadata.source).toBe(SOURCE_TYPE.URL);
     });
@@ -126,7 +134,7 @@ describe('dataLoader', () => {
       });
 
       await expect(
-        loadFromUrl('https://example.com/missing.log')
+        loadFromUrl('http://localhost:9090/missing.log')
       ).rejects.toThrow('Failed to fetch URL: 404 Not Found');
     });
 
