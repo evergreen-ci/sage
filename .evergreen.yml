@@ -99,7 +99,7 @@ tasks:
       - func: attach-braintrust-results
         vars:
           xml_file_name: log_analyzer_workflow_evals.xml
-  - name: log-analyzer-workflow-evals
+  - name: sage-thinking-evals
     commands:
       - func: yarn-eval
         vars:
