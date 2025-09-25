@@ -8,15 +8,12 @@ import { config } from '../../config';
  * @returns The response from the fetch function
  */
 const authenticatedEvergreenFetch = (url: string, options: RequestInit) => {
-  if (!isValidEvergreenURL(url)) {
-    throw new Error(
-      'Invalid URL needs to start with the Evergreen API endpoint'
-    );
-  }
   const headers = new Headers(options.headers);
+  if (isValidEvergreenURL(url)) {
+    headers.set('Api-User', config.evergreen.apiUser);
+    headers.set('Api-Key', config.evergreen.apiKey);
+  }
   headers.set('Accept', 'text/plain,application/json');
-  headers.set('Api-User', config.evergreen.apiUser);
-  headers.set('Api-Key', config.evergreen.apiKey);
   const response = fetch(url, {
     ...options,
     headers,
