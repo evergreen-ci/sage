@@ -267,7 +267,7 @@ const refineStep = createStep({
         structuredOutput: {
           schema: RefinementAgentOutputSchema,
           model: logAnalyzerConfig.models.schemaFormatter,
-        }, // TODO: define error handling strategy when schema validation fails
+        },
         tracingContext,
       }
     );
