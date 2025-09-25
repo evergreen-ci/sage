@@ -87,7 +87,7 @@ const loadDataStep = createStep({
       } else if (url) {
         result = await loadFromUrl(url);
       } else if (text) {
-        result = await loadFromText(text);
+        result = loadFromText(text);
       } else {
         throw new Error(
           'No input source provided (path, url, or text required)'
@@ -121,7 +121,7 @@ const loadDataStep = createStep({
   },
 });
 
-const ChunkedSchema = z.object({
+const ChunkedSchemaOutput = z.object({
   chunks: z.array(z.object({ text: z.string() })), // from MDocument.chunk
   analysisContext: z.string().optional(),
 });
@@ -134,7 +134,7 @@ const chunkStep = createStep({
     text: z.string(),
     analysisContext: z.string().optional(),
   }),
-  outputSchema: ChunkedSchema,
+  outputSchema: ChunkedSchemaOutput,
   execute: async ({ inputData }) => {
     const { analysisContext, text } = inputData;
 
@@ -154,7 +154,7 @@ const chunkStep = createStep({
   },
 });
 
-// This schema passed accross steps during the refinement loop, keeps track of the current chunk index and summary
+// This schema passed across steps during the refinement loop, keeps track of the current chunk index and summary
 const LoopStateSchema = z.object({
   idx: z.number(),
   chunks: z.array(z.object({ text: z.string() })),
@@ -178,7 +178,7 @@ const initialAnalyzerAgent = wrapAgentWithTracing(
 const initialStep = createStep({
   id: 'initial-summary',
   description: 'Summarize first chunk using log analyzer agent',
-  inputSchema: ChunkedSchema,
+  inputSchema: ChunkedSchemaOutput,
   outputSchema: LoopStateSchema,
   execute: async ({ inputData, tracingContext }) => {
     const { analysisContext, chunks } = inputData;
@@ -311,7 +311,7 @@ const reportFormatterAgent = wrapAgentWithTracing(
 const singlePassStep = createStep({
   id: 'single-pass-analysis',
   description: 'Direct analysis and report generation for single-chunk files',
-  inputSchema: ChunkedSchema,
+  inputSchema: ChunkedSchemaOutput,
   outputSchema: WorkflowOutputSchema,
   execute: async ({ inputData, tracingContext }) => {
     const { analysisContext, chunks } = inputData;
@@ -401,6 +401,7 @@ const finalizeStep = createStep({
         tracingContext,
       }
     );
+
     logger.debug('Concise summary generated', {
       length: conciseSummaryRes.text.length,
     });
@@ -416,7 +417,7 @@ const iterativeRefinementWorkflow = createWorkflow({
   id: 'iterative-refinement',
   description: `Perform a 3 step iterative refinement process: initial and final analysis with an expensive model, 
     and a lightweight refinement loop going through the whole document`,
-  inputSchema: ChunkedSchema,
+  inputSchema: ChunkedSchemaOutput,
   outputSchema: WorkflowOutputSchema,
 })
   .then(initialStep)
@@ -434,7 +435,7 @@ const iterativeRefinementWorkflow = createWorkflow({
 const decideAndRunStep = createStep({
   id: 'decide-and-run',
   description: 'Choose single-pass vs iterative workflow and run it',
-  inputSchema: ChunkedSchema,
+  inputSchema: ChunkedSchemaOutput,
   outputSchema: WorkflowOutputSchema,
   execute: async params => {
     const { chunks } = params.inputData;

@@ -121,9 +121,7 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
  * @param text - Raw text to validate and load
  * @returns Loaded text and metadata
  */
-export const loadFromText = async (
-  text: string | null | undefined
-): Promise<LoadResult> => {
+export const loadFromText = (text: string | null | undefined): LoadResult => {
   if (text === null || text === undefined) {
     throw new Error('Text cannot be null or undefined');
   }
