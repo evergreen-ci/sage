@@ -48,20 +48,41 @@ export const createScoreChecker: ScorerFunction<BaseScores, object> = (
   return messages;
 };
 
+export enum ToolUsageMode {
+  // Use this if you can't predict exactly what tools the agent will use, but know that specific tools should be called.
+  Subset = 'subset',
+  // Use if you can predict exactly what tools the agent will use.
+  ExactMatch = 'exactMatch',
+}
+
 /**
- * Custom scorer to evaluate whether the correct tools were used in the evaluation
+ * Custom scorer to evaluate whether the correct tools were used in the evaluation.
  * @param args - Arguments for tool usage evaluation
  * @param args.output - Tools used in the actual output
  * @param args.expected - Expected tools to be used
+ * @param args.mode - Mode that describes how the scorer should be evaluated
  * @returns Scoring result with metadata
  */
-export const toolUsage = (args: { output: string[]; expected: string[] }) => {
+export const ToolUsage = (args: {
+  output: string[];
+  expected: string[];
+  mode: ToolUsageMode;
+}) => {
   const expectedTools = args.expected;
   const actualTools = args.output;
 
-  const correctToolsUsed: boolean =
-    expectedTools.length === actualTools.length &&
-    expectedTools.every(tool => actualTools.includes(tool));
+  let correctToolsUsed = false;
+
+  if (args.mode === ToolUsageMode.Subset) {
+    correctToolsUsed =
+      expectedTools.length <= actualTools.length &&
+      expectedTools.every(tool => actualTools.includes(tool));
+  }
+  if (args.mode === ToolUsageMode.ExactMatch) {
+    correctToolsUsed =
+      expectedTools.length === actualTools.length &&
+      expectedTools.every(tool => actualTools.includes(tool));
+  }
 
   return {
     name: 'ToolUsage',
@@ -74,6 +95,14 @@ export const toolUsage = (args: { output: string[]; expected: string[] }) => {
   };
 };
 
+/**
+ * Custom scorer to evaluate the technical accuracy of an agent's response.
+ * For example, it can be used to evaluate whether a log analysis seems correct.
+ * @param args - Arguments for technical accuracy evaluation
+ * @param args.output - Actual output from the agent
+ * @param args.expected - Expected output
+ * @returns Score result
+ */
 export const TechnicalAccuracy = (args: {
   output: string;
   expected: string;

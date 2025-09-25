@@ -250,7 +250,7 @@ const refineStep = createStep({
       };
     }
 
-    logger.debug('Refine step for chunk #:', {
+    logger.debug(`Refine step for chunk #${idx + 1}:`, {
       current: idx + 1,
       total: chunks.length,
     });
