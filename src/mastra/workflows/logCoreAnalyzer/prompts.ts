@@ -1,6 +1,6 @@
 // Prompts for log files analysis
 
-import { MAX_FINAL_SUMMARY_TOKENS } from './constants';
+const MAX_FINAL_SUMMARY_TOKENS = 2048;
 
 // Agent Instructions
 export const INITIAL_ANALYZER_INSTRUCTIONS = `You are a senior engineer performing initial analysis of technical text (logs, code, configs, telemetry, build output).

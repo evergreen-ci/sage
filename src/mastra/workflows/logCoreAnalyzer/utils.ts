@@ -2,6 +2,10 @@ import { encode } from 'gpt-tokenizer';
 import { logAnalyzerConfig } from './config';
 import { SOURCE_TYPE } from './constants';
 
+// Constants for size and token estimation
+const SMALL_TEXT_THRESHOLD = 8_192; // chars
+const SAMPLING_WINDOW_SIZE = 4_096; // chars per window
+
 /**
  * Normalize text by standardizing line endings
  * @param text - Text to normalize
@@ -15,36 +19,52 @@ export const normalizeLineEndings = (text: string): string =>
  * @param size - Size in bytes or characters to validate
  * @param source - Source type (file, url, or text)
  */
+/**
+ * Create a size limit error message
+ * @param size Actual size of the input
+ * @param maxSize Maximum allowed size
+ * @param source Source type (file, url, text)
+ * @returns Formatted error message
+ */
+const createSizeLimitError = (
+  size: number,
+  maxSize: number,
+  source: SOURCE_TYPE
+): Error => {
+  const sizeLabel =
+    source === SOURCE_TYPE.TEXT
+      ? `${size} characters`
+      : `${(size / 1024 / 1024).toFixed(2)}MB`;
+  const maxSizeLabel =
+    source === SOURCE_TYPE.TEXT
+      ? `${maxSize} characters`
+      : `${(maxSize / 1024 / 1024).toFixed(2)}MB`;
+
+  return new Error(
+    `Input too large: ${sizeLabel} exceeds limit of ${maxSizeLabel} for ${source}`
+  );
+};
+
 export const validateSize = (size: number, source: SOURCE_TYPE): void => {
   const { limits } = logAnalyzerConfig;
 
   let maxSize: number;
-  let label: string;
   switch (source) {
     case SOURCE_TYPE.FILE:
       maxSize = limits.maxFileSizeMB * 1024 * 1024;
-      label = `${limits.maxFileSizeMB}MB`;
       break;
     case SOURCE_TYPE.URL:
       maxSize = limits.maxUrlSizeMB * 1024 * 1024;
-      label = `${limits.maxUrlSizeMB}MB`;
       break;
     case SOURCE_TYPE.TEXT:
       maxSize = limits.maxTextLength;
-      label = `${limits.maxTextLength} characters`;
       break;
     default:
       throw new Error(`Unknown source type: ${source}`);
   }
 
   if (size > maxSize) {
-    const sizeLabel =
-      source === SOURCE_TYPE.TEXT
-        ? `${size} characters`
-        : `${(size / 1024 / 1024).toFixed(2)}MB`;
-    throw new Error(
-      `Input too large: ${sizeLabel} exceeds limit of ${label} for ${source}`
-    );
+    throw createSizeLimitError(size, maxSize, source);
   }
 };
 
@@ -59,23 +79,21 @@ export const estimateTokens = (text: string): number => {
   if (len === 0) return 0;
 
   // For small texts just do the real count. It's cheap and exact.
-  const SMALL_THRESHOLD = 8_192; // chars
-  if (len <= SMALL_THRESHOLD) return countTokens(text);
+  if (len <= SMALL_TEXT_THRESHOLD) return countTokens(text);
 
   // Sample three windows to reduce bias (head/mid/tail).
-  const WINDOW_SIZE = 4_096; // chars per window
-  const half = Math.floor(WINDOW_SIZE / 2);
+  const half = Math.floor(SAMPLING_WINDOW_SIZE / 2);
 
   const startStart = 0;
   const midCenter = Math.floor(len / 2);
   const endEnd = len;
 
-  const head = text.slice(startStart, Math.min(WINDOW_SIZE, len));
+  const head = text.slice(startStart, Math.min(SAMPLING_WINDOW_SIZE, len));
   const mid = text.slice(
     Math.max(0, midCenter - half),
     Math.min(len, midCenter + half)
   );
-  const tail = text.slice(Math.max(0, endEnd - WINDOW_SIZE), endEnd);
+  const tail = text.slice(Math.max(0, endEnd - SAMPLING_WINDOW_SIZE), endEnd);
 
   // Tokenize each window (small, fixed cost).
   const headTokens = countTokens(head);
@@ -105,13 +123,26 @@ export const countTokens = (text: string): number => encode(text).length;
  * @returns Estimated number of tokens
  * @throws Error if token count exceeds limit
  */
+/**
+ * Create a token limit error message
+ * @param estimatedTokens Actual number of tokens
+ * @param maxTokens Maximum allowed tokens
+ * @returns Formatted error message
+ */
+const createTokenLimitError = (
+  estimatedTokens: number,
+  maxTokens: number
+): Error =>
+  new Error(
+    `Content has ~${estimatedTokens.toLocaleString()} tokens, exceeds limit of ${maxTokens.toLocaleString()}`
+  );
+
 export const validateTokenLimit = (text: string): number => {
   const estimatedTokens = estimateTokens(text);
+  const { maxTokens } = logAnalyzerConfig.limits;
 
-  if (estimatedTokens > logAnalyzerConfig.limits.maxTokens) {
-    throw new Error(
-      `Content has ~${estimatedTokens.toLocaleString()} tokens, exceeds limit of ${logAnalyzerConfig.limits.maxTokens.toLocaleString()}`
-    );
+  if (estimatedTokens > maxTokens) {
+    throw createTokenLimitError(estimatedTokens, maxTokens);
   }
 
   return estimatedTokens;
