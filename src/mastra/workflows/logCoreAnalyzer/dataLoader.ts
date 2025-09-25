@@ -3,13 +3,13 @@ import path from 'path';
 import { authenticatedEvergreenFetch } from '../../../utils/fetch';
 import { logger } from '../../../utils/logger';
 import { logAnalyzerConfig } from './config';
-import { SOURCE_TYPE, type SourceType } from './constants';
+import { SOURCE_TYPE } from './constants';
 import { validateSize, validateTokenLimit } from './utils';
 
 export interface LoadResult {
   text: string;
   metadata: {
-    source: SourceType;
+    source: SOURCE_TYPE;
     originalSize: number;
     estimatedTokens: number;
   };

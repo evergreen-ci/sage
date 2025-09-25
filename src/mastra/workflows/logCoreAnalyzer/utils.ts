@@ -1,6 +1,6 @@
 import { encode } from 'gpt-tokenizer';
 import { logAnalyzerConfig } from './config';
-import { SOURCE_TYPE, type SourceType } from './constants';
+import { SOURCE_TYPE } from './constants';
 
 /**
  * Normalize text by standardizing line endings
@@ -15,7 +15,7 @@ export const normalizeLineEndings = (text: string): string =>
  * @param size - Size in bytes or characters to validate
  * @param source - Source type (file, url, or text)
  */
-export const validateSize = (size: number, source: SourceType): void => {
+export const validateSize = (size: number, source: SOURCE_TYPE): void => {
   const { limits } = logAnalyzerConfig;
 
   let maxSize: number;
