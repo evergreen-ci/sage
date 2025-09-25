@@ -23,8 +23,6 @@ import {
   SINGLE_PASS_PROMPT,
 } from './prompts';
 import { normalizeLineEndings, cropMiddle } from './utils';
-// We define here the core workflow for log file analysis. It gives the Parsley Agent the capability to read and understand text files, of any kind and format.
-// Depending on the file size, we either return a summary in a single LLM call, or perform a more complex iterative refinement, combining the usage of cheap and more expensive models.
 
 // Initialize logCoreAnalyzerLogger for this workflow
 const logCoreAnalyzerLogger = logger.child({
@@ -264,12 +262,7 @@ const refineStep = createStep({
       total: chunks.length,
     });
     const result = await refinementAgent.generateVNext(
-      [
-        {
-          role: 'user',
-          content: USER_REFINE(existingSummary, chunk, analysisContext),
-        },
-      ],
+      USER_REFINE(existingSummary, chunk, analysisContext),
       {
         structuredOutput: {
           schema: RefinementAgentOutputSchema,
@@ -336,7 +329,7 @@ const singlePassStep = createStep({
 
     // Use structured output to get both markdown and summary
     const result = await reportFormatterAgent.generateVNext(
-      [{ role: 'user', content: SINGLE_PASS_PROMPT(text, analysisContext) }],
+      SINGLE_PASS_PROMPT(text, analysisContext),
       {
         structuredOutput: {
           schema: WorkflowOutputSchema,
@@ -375,12 +368,7 @@ const finalizeStep = createStep({
 
     // Generate markdown report
     const markdownRes = await reportFormatterAgent.generateVNext(
-      [
-        {
-          role: 'user',
-          content: USER_MARKDOWN_PROMPT(summary, analysisContext),
-        },
-      ],
+      USER_MARKDOWN_PROMPT(summary, analysisContext),
       {
         tracingContext,
       }
@@ -392,15 +380,7 @@ const finalizeStep = createStep({
     // Generate concise summary from the markdown report
     logCoreAnalyzerLogger.debug('Generating concise summary');
     const conciseSummaryRes = await reportFormatterAgent.generateVNext(
-      [
-        {
-          role: 'user',
-          content: USER_CONCISE_SUMMARY_PROMPT(
-            markdownRes.text,
-            analysisContext
-          ),
-        },
-      ],
+      USER_CONCISE_SUMMARY_PROMPT(markdownRes.text, analysisContext),
       {
         tracingContext,
       }
