@@ -9,8 +9,8 @@ export const logAnalyzerConfig = {
    * Chunking configuration
    */
   chunking: {
-    maxSize: 20_000, // Maximum chunk size in tokens
-    overlapTokens: 800, // Overlap to maintain context between chunks
+    maxSize: 60_000, // Maximum chunk size in tokens
+    overlapTokens: 6000, // Overlap to maintain context between chunks (~10% of maxSize is a good rule of thumb)
     tokenizer: 'o200k_base' as const, // Tokenizer for GPT-4
   },
 
@@ -21,34 +21,25 @@ export const logAnalyzerConfig = {
     initial: gpt41, // Used for initial analysis (first chunk)
     refinement: gpt41Nano, // Used for iterative refinement (subsequent chunks, smaller model)
     formatter: gpt41, // Used for final report generation
+    schemaFormatter: gpt41Nano, // Used for output schema formatting
   },
 
   /**
    * Input limits
    */
   limits: {
-    // Max file size in MB, defaults to 100.
-    maxFileSizeMB: parseInt(
-      process.env.LOG_ANALYZER_MAX_FILE_SIZE_MB || '100',
-      10
-    ),
-    // Max text length in characters, defaults to 80,000,000.
-    maxTextLength: parseInt(
-      process.env.LOG_ANALYZER_MAX_TEXT_LENGTH || '80000000',
-      10
-    ),
-    // Max size for URL fetches in MB, defaults to 100.
-    maxUrlSizeMB: parseInt(
-      process.env.LOG_ANALYZER_MAX_URL_SIZE_MB || '100',
-      10
-    ),
-    // Max estimated tokens to process, defaults to 10,000,000.
-    maxTokens: parseInt(process.env.LOG_ANALYZER_MAX_TOKENS || '10000000', 10),
-    // URL fetch timeout, defaults to 30 seconds.
-    urlTimeoutMs: parseInt(
-      process.env.LOG_ANALYZER_URL_TIMEOUT_MS || '30000',
-      10
-    ),
+    // Limits for loading
+    // File size limits
+    maxFileSizeMB: 500, // Max file size in MB
+    // Text length limits
+    maxTextLength: 500_000_000, // Max text length in characters (500M)
+    // URL limits
+    maxUrlSizeMB: 500, // Max size for URL fetches in MB
+    urlTimeoutMs: 30_000, // URL fetch timeout in milliseconds (30s)
+
+    // Limit for processing
+    maxChars: 10_000_000, // Max estimated characters to process (10M)
+    maxTokens: 10_000_000, // Max estimated tokens to process (10M)
   },
 
   /**
@@ -59,5 +50,3 @@ export const logAnalyzerConfig = {
     level: 'debug' as const,
   },
 } as const;
-
-export type LogAnalyzerConfig = typeof logAnalyzerConfig;

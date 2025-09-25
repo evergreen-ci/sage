@@ -5,7 +5,7 @@ import { ReporterName, PROJECT_NAME } from 'evals/constants';
 import { TechnicalAccuracy } from 'evals/scorers';
 import { tracedWorkflowEval } from 'evals/utils/tracedWorkflow';
 import { LOG_ANALYZER_WORKFLOW_NAME } from 'mastra/agents/constants';
-import { logCoreAnalyzerWorkflow } from 'mastra/workflows/logCoreAnalyzerWorkflow';
+import { logCoreAnalyzerWorkflow } from 'mastra/workflows/logCoreAnalyzer';
 import { getTestCases } from './testCases';
 import { TestInput, TestResult } from './types';
 

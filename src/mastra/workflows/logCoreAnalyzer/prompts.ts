@@ -1,8 +1,6 @@
 // Prompts for log files analysis
-// TODO: decouple prompts from output schemas, if we can confirm that structured_output passes the expected schema to the agent automatically.
 
-// Constants
-export const MAX_FINAL_SUMMARY_TOKENS = 2048;
+const MAX_FINAL_SUMMARY_TOKENS = 2048;
 
 // Agent Instructions
 export const INITIAL_ANALYZER_INSTRUCTIONS = `You are a senior engineer performing initial analysis of technical text (logs, code, configs, telemetry, build output).
@@ -26,12 +24,12 @@ You respond ONLY with the requested format - no JSON wrapper, no additional fiel
 Focus on clarity, precision, and appropriate formatting for the requested output type.`;
 
 // Formatting Requirements
-export const CONCISE_SUMMARY_REQUIREMENTS = `- 3-4 lines maximum
+const CONCISE_SUMMARY_REQUIREMENTS = `- 3-4 lines maximum
 - Focus on: what happened, key impacts/metrics, critical actions needed
 - Plain text only, no markdown formatting
 - Be direct and factual`;
 
-export const MARKDOWN_REPORT_FORMAT = `Use the following structure with proper Markdown headers:
+const MARKDOWN_REPORT_FORMAT = `Use the following structure with proper Markdown headers:
 # Technical Analysis Report
 
 ## Overview

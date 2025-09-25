@@ -1,15 +1,15 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { config } from '../../../config';
+import { authenticatedEvergreenFetch } from '../../../utils/fetch';
 import { logger } from '../../../utils/logger';
 import { logAnalyzerConfig } from './config';
-import { SOURCE_TYPE, type SourceType } from './constants';
+import { SOURCE_TYPE } from './constants';
 import { validateSize, validateTokenLimit } from './utils';
 
 export interface LoadResult {
   text: string;
   metadata: {
-    source: SourceType;
+    source: SOURCE_TYPE;
     originalSize: number;
     estimatedTokens: number;
   };
@@ -56,19 +56,6 @@ export const loadFromFile = async (filePath: string): Promise<LoadResult> => {
  * @returns Loaded text and metadata
  */
 export const loadFromUrl = async (url: string): Promise<LoadResult> => {
-  // Build headers
-  const headers = new Headers();
-  headers.set('Accept', 'text/plain,application/json');
-
-  if (config.evergreen.apiUser && config.evergreen.apiKey) {
-    headers.set('Api-User', config.evergreen.apiUser);
-    headers.set('Api-Key', config.evergreen.apiKey);
-  } else {
-    logger.debug('No Evergreen API credentials configured for URL fetch', {
-      url,
-    });
-  }
-
   // Fetch with timeout
   const controller = new AbortController();
   const timeout = setTimeout(
@@ -77,8 +64,7 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
   );
 
   try {
-    const response = await fetch(url, {
-      headers,
+    const response = await authenticatedEvergreenFetch(url, {
       signal: controller.signal,
     });
 
@@ -135,7 +121,15 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
  * @param text - Raw text to validate and load
  * @returns Loaded text and metadata
  */
-export async function loadFromText(text: string): Promise<LoadResult> {
+export const loadFromText = (text: string | null | undefined): LoadResult => {
+  if (text === null || text === undefined) {
+    throw new Error('Text cannot be null or undefined');
+  }
+
+  if (text.length === 0) {
+    throw new Error('Text cannot be empty');
+  }
+
   const size = text.length;
   validateSize(size, SOURCE_TYPE.TEXT);
 
@@ -155,4 +149,4 @@ export async function loadFromText(text: string): Promise<LoadResult> {
       estimatedTokens,
     },
   };
-}
+};

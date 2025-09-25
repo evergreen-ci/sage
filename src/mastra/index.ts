@@ -7,7 +7,7 @@ import { questionClassifierAgent } from './agents/planning/questionClassifierAge
 import { sageThinkingAgent } from './agents/planning/sageThinkingAgent';
 import { parsleyOrchestrator } from './networks';
 import * as evergreenWorkflows from './workflows/evergreen';
-import { logCoreAnalyzerWorkflow } from './workflows/logCoreAnalyzerWorkflow';
+import { logCoreAnalyzerWorkflow } from './workflows/logCoreAnalyzer';
 
 export const braintrustLogger = initLogger({
   projectName: config.braintrust.projectName,
