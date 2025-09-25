@@ -3,7 +3,7 @@ import { Agent } from '@mastra/core/agent';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
 import { z } from 'zod';
-import { WinstonMastraLogger } from '../../../utils/logger/winstonMastraLogger';
+import logger from '../../../utils/logger';
 import { wrapAgentWithTracing } from '../../utils/tracing/wrapWithTracing';
 import { logAnalyzerConfig } from './config';
 import {
@@ -23,12 +23,11 @@ import {
   SINGLE_PASS_PROMPT,
 } from './prompts';
 import { normalizeLineEndings, cropMiddle } from './utils';
-
 // We define here the core workflow for log file analysis. It gives the Parsley Agent the capability to read and understand text files, of any kind and format.
 // Depending on the file size, we either return a summary in a single LLM call, or perform a more complex iterative refinement, combining the usage of cheap and more expensive models.
 
-// Initialize logger for this workflow
-const logger = new WinstonMastraLogger({
+// Initialize logCoreAnalyzerLogger for this workflow
+const logCoreAnalyzerLogger = logger.child({
   name: logAnalyzerConfig.logging.name,
   level: logAnalyzerConfig.logging.level,
 });
@@ -94,7 +93,7 @@ const loadDataStep = createStep({
         );
       }
     } catch (error) {
-      logger.error('Failed to load data', error);
+      logCoreAnalyzerLogger.error('Failed to load data', error);
       throw error;
     }
 
@@ -108,7 +107,7 @@ const loadDataStep = createStep({
       0.2
     );
 
-    logger.info('Data loaded successfully', {
+    logCoreAnalyzerLogger.info('Data loaded successfully', {
       source: result.metadata.source,
       sizeMB: (result.metadata.originalSize / 1024 / 1024).toFixed(2),
       estimatedTokens: result.metadata.estimatedTokens,
@@ -146,7 +145,7 @@ const chunkStep = createStep({
       overlap: logAnalyzerConfig.chunking.overlapTokens,
     });
 
-    logger.debug('Chunking complete', {
+    logCoreAnalyzerLogger.debug('Chunking complete', {
       chunkCount: chunks.length,
     });
 
@@ -183,12 +182,12 @@ const initialStep = createStep({
   execute: async ({ inputData, tracingContext }) => {
     const { analysisContext, chunks } = inputData;
     const first = chunks[0]?.text ?? '';
-    logger.debug('Initial chunk for analysis', {
+    logCoreAnalyzerLogger.debug('Initial chunk for analysis', {
       first: first.slice(0, 100),
       analysisContext,
     });
-    logger.debug('Chunk length', { length: first.length });
-    logger.debug('Calling LLM for initial summary');
+    logCoreAnalyzerLogger.debug('Chunk length', { length: first.length });
+    logCoreAnalyzerLogger.debug('Calling LLM for initial summary');
 
     const result = await initialAnalyzerAgent.generateVNext(
       [
@@ -216,13 +215,15 @@ const initialStep = createStep({
   },
 });
 
-// Refinement agent - cheaper model for iterative processing
-
 const RefinementAgentOutputSchema = z.object({
   updated: z.boolean(),
   summary: z.string(),
 });
 
+/*
+ * Refinement agent - cheaper model for iterative processing
+ * This model is used when we have larger files and we need to iterate through the whole document to get a better summary
+ */
 const refinementAgent = wrapAgentWithTracing(
   new Agent({
     name: 'refinement-agent',
@@ -258,7 +259,7 @@ const refineStep = createStep({
       };
     }
 
-    logger.debug('Refine step for chunk #:', {
+    logCoreAnalyzerLogger.debug('Refine step for chunk #:', {
       current: idx + 1,
       total: chunks.length,
     });
@@ -318,14 +319,17 @@ const singlePassStep = createStep({
 
     // Validate we have exactly one chunk
     if (chunks.length !== 1) {
-      logger.warn('Single-pass step called with multiple chunks', {
-        chunkCount: chunks.length,
-      });
+      logCoreAnalyzerLogger.warn(
+        'Single-pass step called with multiple chunks',
+        {
+          chunkCount: chunks.length,
+        }
+      );
     }
 
     const text = chunks[0]?.text ?? '';
 
-    logger.debug('Single-pass analysis starting', {
+    logCoreAnalyzerLogger.debug('Single-pass analysis starting', {
       textLength: text.length,
       analysisContext,
     });
@@ -345,7 +349,7 @@ const singlePassStep = createStep({
       typeof WorkflowOutputSchema
     >;
 
-    logger.debug('Single-pass analysis complete', {
+    logCoreAnalyzerLogger.debug('Single-pass analysis complete', {
       markdownLength: response.markdown?.length ?? 0,
       summaryLength: response.summary?.length ?? 0,
     });
@@ -364,7 +368,7 @@ const finalizeStep = createStep({
   outputSchema: WorkflowOutputSchema,
   execute: async ({ inputData, tracingContext }) => {
     const { analysisContext, summary } = inputData;
-    logger.debug('Generating final markdown report', {
+    logCoreAnalyzerLogger.debug('Generating final markdown report', {
       summary: summary.slice(0, 100),
       analysisContext,
     });
@@ -381,12 +385,12 @@ const finalizeStep = createStep({
         tracingContext,
       }
     );
-    logger.debug('Final markdown report generated', {
+    logCoreAnalyzerLogger.debug('Final markdown report generated', {
       length: markdownRes.text.length,
     });
 
     // Generate concise summary from the markdown report
-    logger.debug('Generating concise summary');
+    logCoreAnalyzerLogger.debug('Generating concise summary');
     const conciseSummaryRes = await reportFormatterAgent.generateVNext(
       [
         {
@@ -402,7 +406,7 @@ const finalizeStep = createStep({
       }
     );
 
-    logger.debug('Concise summary generated', {
+    logCoreAnalyzerLogger.debug('Concise summary generated', {
       length: conciseSummaryRes.text.length,
     });
 
