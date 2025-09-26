@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "module": "commonjs",
+    "lib": ["ESNext"],
     "outDir": "./dist",
     "baseUrl": "src",
+    "rootDir": "src",
     "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -24,6 +24,6 @@
     "noImplicitOverride": true,
     "types": ["vitest/globals"]
   },
-  "include": ["src", "vite.config.ts"],
+  "include": ["src"],
   "exclude": ["node_modules", "dist", ".mastra"]
 }
