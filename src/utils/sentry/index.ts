@@ -1,19 +1,19 @@
 import * as Sentry from '@sentry/node';
 import { config } from '../../config';
 
-interface SentryUser {
+type SentryUser = {
   id?: string;
   email?: string;
   ip_address?: string;
-}
+};
 
-interface SentryContext {
+type SentryContext = {
   [key: string]: Record<string, unknown>;
-}
+};
 
-interface SentryTag {
+type SentryTag = {
   [key: string]: string | number | boolean;
-}
+};
 
 class SentryService {
   private initialized = false;
@@ -69,11 +69,14 @@ class SentryService {
       });
 
       this.initialized = true;
-      console.log('Sentry initialized successfully', {
-        environment: config.nodeEnv,
-        sampleRate: config.sentry.sampleRate,
-        tracesSampleRate: config.sentry.tracesSampleRate,
-      });
+      console.log(
+        'Sentry initialized successfully',
+        JSON.stringify({
+          environment: config.nodeEnv,
+          sampleRate: config.sentry.sampleRate,
+          tracesSampleRate: config.sentry.tracesSampleRate,
+        })
+      );
     } catch (error) {
       console.error('Failed to initialize Sentry', error);
     }
