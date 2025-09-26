@@ -204,7 +204,10 @@ const resolveLogFileUrl = createWorkflow({
   .then(chooseLogUrl)
   .commit();
 
-export const resolveLogFileUrlTool = createTool({
+export const resolveLogFileUrlTool = createTool<
+  typeof resolveLogFileUrl.inputSchema,
+  typeof resolveLogFileUrl.outputSchema
+>({
   id: 'resolveLogFileUrlTool',
   description:
     'Resolve a log file URL from Evergreen log metadata. Ensure you have the task ID before using this tool.',
