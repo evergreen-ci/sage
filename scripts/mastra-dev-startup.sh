@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-# Function to check for errors
 check_for_errors() {
     local log_file="$1"
     if grep -E "Error|triggerUncaughtException" "$log_file"; then
