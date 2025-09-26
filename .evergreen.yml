@@ -336,4 +336,4 @@ functions:
       shell: bash
       script: |
         ${PREPARE_SHELL}
-        .scripts/mastra-dev-startup.sh
+        ./scripts/mastra-dev-startup.sh
