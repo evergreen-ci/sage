@@ -103,6 +103,10 @@ tasks:
     commands:
       - func: yarn-build
       - func: mastra-dev-startup
+  - name: check-sage-prod-startup
+    commands:
+      - func: yarn-build
+      - func: sage-prod-startup
 
 functions:
   attach-test-results:
@@ -340,7 +344,7 @@ functions:
         ${PREPARE_SHELL}
         ./scripts/mastra-dev-startup.sh
 
-  check-sage-prod-startup:
+  sage-prod-startup:
     command: shell.exec
     params:
       working_dir: sage
