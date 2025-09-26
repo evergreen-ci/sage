@@ -42,6 +42,7 @@ buildvariants:
       - name: evergreen-evals
       - name: question-classifier-evals
       - name: log-analyzer-workflow-evals
+      - name: mastra-dev-startup
     display_tasks:
       - name: evals
         execution_tasks:
@@ -97,6 +98,9 @@ tasks:
       - func: attach-braintrust-results
         vars:
           xml_file_name: log_analyzer_workflow_evals.xml
+  - name: mastra-dev-startup
+    commands:
+      - func: mastra-dev-startup
 
 functions:
   attach-test-results:
@@ -324,3 +328,12 @@ functions:
       script: |
         ${PREPARE_SHELL}
         .evergreen/scripts/publish-evals.sh
+
+  mastra-dev-startup:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+scripts/mastra-dev-startup.sh

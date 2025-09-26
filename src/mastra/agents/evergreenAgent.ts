@@ -1,6 +1,10 @@
 import { Workflow } from '@mastra/core';
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
+import {
+  getTaskHistoryWorkflow,
+  getVersionWorkflow,
+} from 'mastra/workflows/evergreen';
 import { gpt41 } from '../models/openAI/gpt41';
 import {
   getTaskTool,
@@ -13,10 +17,6 @@ import {
   wrapAgentWithTracing,
   wrapToolWithTracing,
 } from '../utils/tracing/wrapWithTracing';
-import {
-  getTaskHistoryWorkflow,
-  getVersionWorkflow,
-} from '../workflows/evergreen';
 
 const evergreenAgentMemory = new Memory({
   storage: memoryStore,
