@@ -1,18 +1,17 @@
 import * as Sentry from '@sentry/node';
 import { config } from '../../config';
-import { logger } from '../logger';
 
-export interface SentryUser {
+interface SentryUser {
   id?: string;
   email?: string;
   ip_address?: string;
 }
 
-export interface SentryContext {
-  [key: string]: any;
+interface SentryContext {
+  [key: string]: Record<string, unknown>;
 }
 
-export interface SentryTag {
+interface SentryTag {
   [key: string]: string | number | boolean;
 }
 
@@ -21,17 +20,17 @@ class SentryService {
 
   async initialize(): Promise<void> {
     if (!config.sentry.enabled) {
-      logger.info('Sentry is disabled');
+      console.log('Sentry is disabled');
       return;
     }
 
     if (!config.sentry.dsn) {
-      logger.warn('Sentry DSN not configured, skipping initialization');
+      console.warn('Sentry DSN not configured, skipping initialization');
       return;
     }
 
     if (this.initialized) {
-      logger.warn('Sentry already initialized');
+      console.warn('Sentry already initialized');
       return;
     }
 
@@ -57,26 +56,26 @@ class SentryService {
         ],
         beforeSend: event => {
           if (config.nodeEnv === 'development') {
-            logger.debug('Sentry event:', event as any);
+            console.debug('Sentry event:', event);
           }
           return event;
         },
         beforeSendTransaction: event => {
           if (config.nodeEnv === 'development') {
-            logger.debug('Sentry transaction:', event as any);
+            console.debug('Sentry transaction:', event);
           }
           return event;
         },
       });
 
       this.initialized = true;
-      logger.info('Sentry initialized successfully', {
+      console.log('Sentry initialized successfully', {
         environment: config.nodeEnv,
         sampleRate: config.sentry.sampleRate,
         tracesSampleRate: config.sentry.tracesSampleRate,
       });
     } catch (error) {
-      logger.error('Failed to initialize Sentry', error);
+      console.error('Failed to initialize Sentry', error);
     }
   }
 
@@ -86,7 +85,7 @@ class SentryService {
       user?: SentryUser;
       tags?: SentryTag;
       contexts?: SentryContext;
-      extra?: Record<string, any>;
+      extra?: Record<string, unknown>;
       level?: Sentry.SeverityLevel;
       fingerprint?: string[];
     }
@@ -139,17 +138,6 @@ class SentryService {
     }
 
     Sentry.addBreadcrumb(breadcrumb);
-  }
-
-  startTransaction(
-    name: string,
-    options?: Record<string, any>
-  ): Sentry.Span | undefined {
-    if (!this.initialized || !config.sentry.enabled) {
-      return undefined;
-    }
-
-    return Sentry.startSpan({ name, ...options }, () => {}) as any;
   }
 
   async flush(timeout?: number): Promise<boolean> {
