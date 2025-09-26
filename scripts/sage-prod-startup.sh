@@ -10,10 +10,12 @@ check_for_errors() {
     fi
 }
 
-# Capture server output to a log file and terminal
+# Capture server output to a log file
 log_file=$(mktemp)
 echo "Starting Sage prod server..."
-timeout 30 yarn start 2>&1 | tee "$log_file" &
+
+# Use process substitution and capture the actual process PID
+timeout 30 bash -c 'yarn start' > >(tee "$1") 2>&1 "$log_file" &
 server_pid=$!
 
 # Wait for server to start or timeout
@@ -30,12 +32,12 @@ fi
 # Check for errors
 if ! check_for_errors "$log_file"; then
     # Errors found
-    kill $server_pid
+    kill $server_pid 2>/dev/null || true
     rm "$log_file"
     exit 1
 else
     # No errors, clean up
-    kill $server_pid
+    kill $server_pid 2>/dev/null || true
     rm "$log_file"
     exit 0
 fi
