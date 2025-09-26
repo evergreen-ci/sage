@@ -43,6 +43,7 @@ buildvariants:
       - name: question-classifier-evals
       - name: log-analyzer-workflow-evals
       - name: check-mastra-dev-startup
+      - name: check-sage-prod-startup
     display_tasks:
       - name: evals
         execution_tasks:
@@ -100,6 +101,7 @@ tasks:
           xml_file_name: log_analyzer_workflow_evals.xml
   - name: check-mastra-dev-startup
     commands:
+      - func: yarn-build
       - func: mastra-dev-startup
 
 functions:
@@ -337,3 +339,12 @@ functions:
       script: |
         ${PREPARE_SHELL}
         ./scripts/mastra-dev-startup.sh
+
+  check-sage-prod-startup:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        ./scripts/sage-prod-startup.sh
