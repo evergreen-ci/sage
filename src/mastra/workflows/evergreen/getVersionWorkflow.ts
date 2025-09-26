@@ -8,7 +8,7 @@ const getVersionStep = createStep({
   description: 'Get version information from Evergreen using task data',
   inputSchema: getTaskTool.outputSchema,
   outputSchema: getVersionTool.outputSchema,
-  execute: async ({ inputData, runtimeContext, tracingContext }) => {
+  execute: async ({ inputData, runtimeContext, suspend, tracingContext }) => {
     const { task } = inputData;
 
     if (!task) {
@@ -29,6 +29,7 @@ const getVersionStep = createStep({
       },
       tracingContext,
       runtimeContext,
+      suspend,
     });
 
     return versionResult;

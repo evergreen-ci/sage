@@ -64,6 +64,7 @@ describe('createGraphQLTool', () => {
 
     const result = await tool.execute?.({
       context,
+      suspend: async () => {},
       runtimeContext: makeRuntimeContext('user-123'),
       tracingContext,
     });
@@ -91,6 +92,7 @@ describe('createGraphQLTool', () => {
     await expect(
       tool.execute?.({
         context,
+        suspend: async () => {},
         runtimeContext: makeRuntimeContext(undefined),
         tracingContext,
       })
@@ -119,6 +121,7 @@ describe('createGraphQLTool', () => {
     await expect(
       tool.execute?.({
         context,
+        suspend: async () => {},
         runtimeContext: makeRuntimeContext('user-456'),
         tracingContext,
       })
@@ -151,6 +154,7 @@ describe('createGraphQLTool', () => {
     await expect(
       tool.execute?.({
         context,
+        suspend: async () => {},
         runtimeContext: makeRuntimeContext('user-789'),
         tracingContext,
       })

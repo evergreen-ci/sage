@@ -78,7 +78,7 @@ const fetchTestResultsForTestLog = createStep({
     testId: z.string(),
     groupId: z.string().optional(),
   }),
-  execute: async ({ inputData, runtimeContext, tracingContext }) => {
+  execute: async ({ inputData, runtimeContext, suspend, tracingContext }) => {
     const { logMetadata } = inputData;
 
     if (logMetadata.log_type !== LogTypes.EVERGREEN_TEST_LOGS) {
@@ -91,6 +91,7 @@ const fetchTestResultsForTestLog = createStep({
         execution: logMetadata.execution,
         groupId: logMetadata.group_id,
       },
+      suspend,
       runtimeContext,
       tracingContext,
     });
@@ -203,7 +204,10 @@ const resolveLogFileUrl = createWorkflow({
   .then(chooseLogUrl)
   .commit();
 
-export const resolveLogFileUrlTool: ReturnType<typeof createTool> = createTool({
+export const resolveLogFileUrlTool = createTool<
+  typeof resolveLogFileUrl.inputSchema,
+  typeof resolveLogFileUrl.outputSchema
+>({
   id: 'resolveLogFileUrlTool',
   description:
     'Resolve a log file URL from Evergreen log metadata. Ensure you have the task ID before using this tool.',
