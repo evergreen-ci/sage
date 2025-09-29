@@ -7,7 +7,6 @@ import {
   TestSortCategory,
 } from '../../../gql/generated/types';
 import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
-import { wrapToolWithTracing } from '../../utils/tracing/wrapWithTracing';
 import evergreenClient from './graphql/evergreenClient';
 
 const GET_TASK_TESTS = gql`
@@ -93,16 +92,17 @@ const getTaskTestsOutputSchema = z.object({
     }),
   }),
 });
-const getTaskTestsTool = wrapToolWithTracing(
-  createGraphQLTool<TaskTestsQuery, TaskTestsQueryVariables>({
-    id: 'getTaskTests',
-    description:
-      'Get task test results from Evergreen. This tool is used to get the test results for a task. It requires an id (taskId), statusList, and testName. Other options are optional.',
-    query: GET_TASK_TESTS,
-    inputSchema: getTaskTestsInputSchema,
-    outputSchema: getTaskTestsOutputSchema,
-    client: evergreenClient,
-  })
-);
+const getTaskTestsTool = createGraphQLTool<
+  TaskTestsQuery,
+  TaskTestsQueryVariables
+>({
+  id: 'getTaskTests',
+  description:
+    'Get task test results from Evergreen. This tool is used to get the test results for a task. It requires an id (taskId), statusList, and testName. Other options are optional.',
+  query: GET_TASK_TESTS,
+  inputSchema: getTaskTestsInputSchema,
+  outputSchema: getTaskTestsOutputSchema,
+  client: evergreenClient,
+});
 
 export default getTaskTestsTool;

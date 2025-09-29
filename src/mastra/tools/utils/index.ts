@@ -24,6 +24,8 @@ const constructAgentMessage = (input: z.infer<typeof inputSchema>) => `
 export const createToolFromAgent = <
   TInputSchema extends ZodType = typeof inputSchema,
   TOutputSchema extends ZodType = typeof outputSchema,
+  TSuspendSchema extends ZodType = ZodType<unknown>,
+  TResumeSchema extends ZodType = ZodType<unknown>,
 >(
   agentId: string,
   description: string,
@@ -45,4 +47,10 @@ export const createToolFromAgent = <
       });
       return result.text;
     },
-  }) as Tool<TInputSchema, TOutputSchema, ToolExecutionContext<TInputSchema>>;
+  }) as Tool<
+    TInputSchema,
+    TOutputSchema,
+    TSuspendSchema,
+    TResumeSchema,
+    ToolExecutionContext<TInputSchema>
+  >;
