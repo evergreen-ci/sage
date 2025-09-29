@@ -25,7 +25,7 @@
     "format": "prettier --write src/**/*.ts \"**/*.md\" \"*.md\"",
     "format:check": "prettier --check src/**/*.ts \"**/*.md\" \"*.md\"",
     "run-analyzer": "vite-node src/mastra/tests/scripts/run-log-analyzer.ts",
-    "typecheck": "yarn tsc -p tsconfig.app.json --noEmit",
+    "typecheck": "yarn tsc",
     "test-thinking-agent": "vite-node src/mastra/tests/scripts/test-thinking-agent.ts",
     "chat-with-staging": "vite-node src/mastra/tests/scripts/chat-with-staging.ts",
     "mastra:dev": "mastra dev -p 4111",

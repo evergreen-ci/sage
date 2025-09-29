@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "moduleResolution": "Node",
-    "composite": false
-  },
-  // Exclude mastra directory from build. It should be built by mastra dev command.
-  "exclude": ["node_modules", "dist"]
-}
