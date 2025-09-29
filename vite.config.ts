@@ -4,6 +4,22 @@ import { defineConfig as defineTestConfig } from 'vitest/config';
 
 const viteConfig = defineConfig({
   plugins: [tsconfigPaths()],
+  build: {
+    ssr: true,
+    outDir: 'dist',
+    lib: {
+      entry: 'src/main.ts',
+      formats: ['es', 'cjs'],
+      fileName: format => `index.${format === 'es' ? 'mjs' : 'js'}`,
+    },
+    sourcemap: true,
+    rollupOptions: {
+      external: [/node_modules/],
+      output: {
+        preserveModules: false,
+      },
+    },
+  },
 });
 
 const vitestConfig = defineTestConfig({

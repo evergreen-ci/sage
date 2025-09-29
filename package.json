@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "evergreen-ai-service",
   "main": "dist/main.js",
+  "type": "module",
   "scripts": {
-    "build": "tsc && tsc-alias",
+    "build": "vite build",
     "start": "NODE_ENV=production node dist/main.js",
     "dev": "NODE_ENV=development yarn dev-run",
     "dev-run": "vite-node --watch src/main.ts",
