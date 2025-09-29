@@ -2,8 +2,8 @@
   "compilerOptions": {
     /* Basic Options */
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
     "lib": ["ES2022"],
     "esModuleInterop": true,
     "strict": true,
@@ -12,6 +12,7 @@
     "paths": {
       "*": ["*"]
     },
+    "types": ["node", "vitest/globals"],
     "baseUrl": "./src",
 
     /* Directory Options */

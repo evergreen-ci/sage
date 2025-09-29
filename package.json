@@ -5,7 +5,7 @@
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "yarn tsc && vite build",
     "start": "NODE_ENV=production node dist/main.js",
     "dev": "NODE_ENV=development yarn dev-run",
     "dev-run": "vite-node --watch src/main.ts",
