@@ -96,7 +96,7 @@ const defaultPrintResults = <
 
   const resultsTable = Object.entries(result.scores).reduce(
     (acc, [key, value]) => {
-      if (result.metadata.scoreThresholds[key]) {
+      if (result.metadata.scoreThresholds[key] !== undefined) {
         acc[key] = {
           actual: value,
           expected: `>= ${result.metadata.scoreThresholds[key]}`,

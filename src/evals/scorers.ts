@@ -77,8 +77,7 @@ export const ToolUsage = (args: {
     correctToolsUsed =
       expectedTools.length <= actualTools.length &&
       expectedTools.every(tool => actualTools.includes(tool));
-  }
-  if (args.mode === ToolUsageMode.ExactMatch) {
+  } else if (args.mode === ToolUsageMode.ExactMatch) {
     correctToolsUsed =
       expectedTools.length === actualTools.length &&
       expectedTools.every(tool => actualTools.includes(tool));
