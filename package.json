@@ -37,7 +37,7 @@
     "load-dataset-into-braintrust": "vite-node src/evals/scripts/braintrust-dataset-loader.ts"
   },
   "dependencies": {
-    "@ai-sdk/azure": "^2.0.32",
+    "@ai-sdk/azure": "^2.0.39",
     "@ai-sdk/openai": "^2.0.26",
     "@ai-sdk/provider": "^2.0.0",
     "@mastra/core": "^0.17.1",
@@ -55,7 +55,7 @@
     "@opentelemetry/winston-transport": "^0.16.0",
     "@sentry/node": "^10.10.0",
     "@sentry/profiling-node": "^10.11.0",
-    "ai": "^5.0.48",
+    "ai": "^5.0.57",
     "braintrust": "^0.3.8",
     "cors": "^2.8.5",
     "dotenv-flow": "^4.1.0",
