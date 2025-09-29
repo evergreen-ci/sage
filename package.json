@@ -5,7 +5,7 @@
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
-    "build": "yarn tsc && vite build",
+    "build": "yarn typecheck && vite build",
     "start": "NODE_ENV=production node dist/main.js",
     "dev": "NODE_ENV=development yarn dev-run",
     "dev-run": "vite-node --watch src/main.ts",
@@ -25,6 +25,7 @@
     "format": "prettier --write src/**/*.ts \"**/*.md\" \"*.md\"",
     "format:check": "prettier --check src/**/*.ts \"**/*.md\" \"*.md\"",
     "run-analyzer": "vite-node src/mastra/tests/scripts/run-log-analyzer.ts",
+    "typecheck": "yarn tsc -p tsconfig.app.json --noEmit",
     "test-thinking-agent": "vite-node src/mastra/tests/scripts/test-thinking-agent.ts",
     "chat-with-staging": "vite-node src/mastra/tests/scripts/chat-with-staging.ts",
     "mastra:dev": "mastra dev -p 4111",
@@ -114,13 +115,6 @@
   "engines": {
     "node": ">=22.0.0"
   },
-  "keywords": [
-    "express",
-    "server",
-    "evergreen",
-    "ai-service",
-    "typescript"
-  ],
   "author": "",
   "license": "ISC"
 }
