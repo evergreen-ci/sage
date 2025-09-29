@@ -39,6 +39,7 @@ buildvariants:
       - name: lint
       - name: test
       - name: e2e
+      - name: check-mastra-dev-startup
       - name: evergreen-evals
       - name: question-classifier-evals
       - name: log-analyzer-workflow-evals
@@ -70,6 +71,9 @@ tasks:
       - func: yarn-build
       - func: wait-for-evergreen
       - func: yarn-e2e
+  - name: check-mastra-dev-startup
+    commands:
+      - func: mastra-dev-startup
   - name: evergreen-evals
     commands:
       - func: setup-mongodb
@@ -339,3 +343,12 @@ functions:
       script: |
         ${PREPARE_SHELL}
         .evergreen/scripts/publish-evals.sh
+
+  mastra-dev-startup:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        ./scripts/mastra-dev-startup.sh
