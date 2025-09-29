@@ -3,17 +3,22 @@ import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { NodeSDK, logs } from '@opentelemetry/sdk-node';
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import {
+  BatchSpanProcessor,
+  SpanProcessor,
+} from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { config } from 'config';
 import { SentrySpanProcessor } from './utils/sentry/otel-integration';
 
-const otlpExporter = new OTLPTraceExporter({
-  url: config.honeycomb.otelCollectorURL,
-  headers: {
-    'x-honeycomb-team': config.honeycomb.apiKey,
-  },
-});
+const otlpExporter = config.honeycomb.otelCollectorURL
+  ? new OTLPTraceExporter({
+      url: config.honeycomb.otelCollectorURL,
+      headers: {
+        'x-honeycomb-team': config.honeycomb.apiKey,
+      },
+    })
+  : undefined;
 
 const otlpLogExporter = config.honeycomb.otelLogCollectorURL
   ? new OTLPLogExporter({
@@ -26,12 +31,23 @@ const otlpLogExporter = config.honeycomb.otelLogCollectorURL
 
 const sentrySpanProcessor = new SentrySpanProcessor();
 
+const spanProcessors: SpanProcessor[] = [];
+if (otlpExporter) {
+  spanProcessors.push(new BatchSpanProcessor(otlpExporter));
+}
+if (sentrySpanProcessor) {
+  spanProcessors.push(sentrySpanProcessor);
+}
+
+const logRecordProcessors: logs.LogRecordProcessor[] = [];
+if (otlpLogExporter) {
+  logRecordProcessors.push(new logs.SimpleLogRecordProcessor(otlpLogExporter));
+}
+
 const sdk = new NodeSDK({
-  logRecordProcessors: otlpLogExporter
-    ? [new logs.SimpleLogRecordProcessor(otlpLogExporter)]
-    : [],
+  logRecordProcessors,
   instrumentations: [getNodeAutoInstrumentations()],
-  spanProcessors: [new BatchSpanProcessor(otlpExporter), sentrySpanProcessor],
+  spanProcessors,
   resource: resourceFromAttributes({
     [ATTR_SERVICE_NAME]: 'sage',
   }),
