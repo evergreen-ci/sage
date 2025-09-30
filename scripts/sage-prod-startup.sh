@@ -14,8 +14,9 @@ check_for_errors() {
 log_file=$(mktemp)
 echo "Starting Sage prod server..."
 
+yarn build
 # Use process substitution and capture the actual process PID
-timeout 30 bash -c 'yarn start' > >(tee "$1") 2>&1 "$log_file" &
+timeout 30 bash -c 'yarn start' 2>&1 | tee "$log_file" &
 server_pid=$!
 
 # Wait for server to start or timeout
@@ -35,9 +36,9 @@ if ! check_for_errors "$log_file"; then
     kill $server_pid 2>/dev/null || true
     rm "$log_file"
     exit 1
-else
-    # No errors, clean up
-    kill $server_pid 2>/dev/null || true
-    rm "$log_file"
-    exit 0
 fi
+
+# No errors, clean up
+kill $server_pid 2>/dev/null || true
+rm "$log_file"
+exit 0
