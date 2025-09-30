@@ -29,14 +29,9 @@ const otlpLogExporter = config.honeycomb.otelLogCollectorURL
     })
   : undefined;
 
-const sentrySpanProcessor = new SentrySpanProcessor();
-
-const spanProcessors: SpanProcessor[] = [];
+const spanProcessors: SpanProcessor[] = [new SentrySpanProcessor()];
 if (otlpExporter) {
   spanProcessors.push(new BatchSpanProcessor(otlpExporter));
-}
-if (sentrySpanProcessor) {
-  spanProcessors.push(sentrySpanProcessor);
 }
 
 const logRecordProcessors: logs.LogRecordProcessor[] = [];
