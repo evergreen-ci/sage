@@ -8,12 +8,7 @@ export const getTestCases = async () => {
   });
   const testCases: TestCase[] = [];
   for await (const row of dataset) {
-    const testCase: TestCase = {
-      input: row.input,
-      expected: row.expected,
-      metadata: row.metadata,
-    };
-    testCases.push(testCase);
+    testCases.push(row as TestCase);
   }
   console.log(`Loaded ${testCases.length} test cases from Braintrust`);
   return testCases;

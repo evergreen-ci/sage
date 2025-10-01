@@ -6,13 +6,13 @@ import { ReporterName, PROJECT_NAME } from 'evals/constants';
 import { ToolUsage, ToolUsageMode } from 'evals/scorers';
 import { USER_ID, EVERGREEN_AGENT_NAME } from 'mastra/agents/constants';
 import { tracedAgentEval } from '../utils/tracedAgent';
-import { testCases } from './testCases';
+import { getTestCases } from './testCases';
 import { TestInput, TestResult } from './types';
 
 Eval(
   PROJECT_NAME,
   {
-    data: testCases,
+    data: getTestCases(),
     task: tracedAgentEval<TestInput, TestResult>({
       agentName: EVERGREEN_AGENT_NAME,
       setupRuntimeContext: input => {
