@@ -4969,6 +4969,8 @@ export type GetTaskQuery = {
     patchNumber?: number | null;
     buildVariant: string;
     projectIdentifier?: string | null;
+    requester: string;
+    baseTask?: { __typename?: 'Task'; id: string } | null;
     versionMetadata: {
       __typename?: 'Version';
       id: string;
