@@ -111,9 +111,18 @@ const loadDataStep = createStep({
       estimatedTokens: result.metadata.estimatedTokens,
     });
 
+    // Append truncation warning to analysis context if content was truncated
+    let enrichedContext = analysisContext;
+    if (result.metadata.truncated) {
+      const truncationNote = `\n\nIMPORTANT: The source content exceeded the ${logAnalyzerConfig.limits.maxSizeMB}MB size limit and was truncated during download. You are analyzing only the first ${logAnalyzerConfig.limits.maxSizeMB}MB of the original content. Keep this in mind when drawing conclusions - there may be additional information in the truncated portion.`;
+      enrichedContext = analysisContext
+        ? `${analysisContext}${truncationNote}`
+        : truncationNote.trim();
+    }
+
     return {
       text: normalizedText,
-      analysisContext,
+      analysisContext: enrichedContext,
     };
   },
 });

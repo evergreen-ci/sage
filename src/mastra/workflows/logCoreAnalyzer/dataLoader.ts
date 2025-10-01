@@ -12,6 +12,7 @@ export interface LoadResult {
     source: SOURCE_TYPE;
     originalSize: number;
     estimatedTokens: number;
+    truncated?: boolean;
   };
 }
 
@@ -81,27 +82,60 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
       validateSize(size, SOURCE_TYPE.URL);
     }
 
-    const text = await response.text();
+    // Stream download with size limit enforcement
+    const maxSizeBytes = logAnalyzerConfig.limits.maxSizeMB * 1024 * 1024;
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Response body is not readable');
+    }
 
-    // Validate actual size
-    const actualSize = Buffer.byteLength(text, 'utf8');
-    validateSize(actualSize, SOURCE_TYPE.URL);
+    const chunks: Uint8Array[] = [];
+    let totalSize = 0;
+    let truncated = false;
+
+    while (true) {
+      // eslint-disable-next-line no-await-in-loop
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      totalSize += value.length;
+
+      // Stop downloading if size limit exceeded
+      if (totalSize > maxSizeBytes) {
+        truncated = true;
+        reader.cancel();
+        logger.warn('URL content truncated due to size limit', {
+          url,
+          limitMB: logAnalyzerConfig.limits.maxSizeMB,
+          downloadedMB: (totalSize / 1024 / 1024).toFixed(2),
+        });
+        break;
+      }
+
+      chunks.push(value);
+    }
+
+    // Combine chunks into text
+    const buffer = Buffer.concat(chunks);
+    const text = buffer.toString('utf8');
 
     // Check token limit
     const estimatedTokens = validateTokenLimit(text);
 
     logger.debug('URL loaded successfully', {
       url,
-      sizeMB: (actualSize / 1024 / 1024).toFixed(2),
+      sizeMB: (totalSize / 1024 / 1024).toFixed(2),
       estimatedTokens,
+      truncated,
     });
 
     return {
       text,
       metadata: {
         source: SOURCE_TYPE.URL,
-        originalSize: actualSize,
+        originalSize: totalSize,
         estimatedTokens,
+        truncated,
       },
     };
   } catch (error) {
