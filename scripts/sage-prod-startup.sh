@@ -10,6 +10,16 @@ check_for_errors() {
     fi
 }
 
+check_for_success() {
+    local log_file="$1"
+    if grep -q "Sage server is running on port" "$log_file"; then
+        return 0
+    else
+        echo "Sage prod server did not output expected startup message"
+        return 1
+    fi
+}
+
 # Capture server output to a log file
 log_file=$(mktemp)
 echo "Starting Sage prod server..."
@@ -34,6 +44,14 @@ fi
 if ! check_for_errors "$log_file"; then
     # Errors found
     kill $server_pid 2>/dev/null || true
+    rm "$log_file"
+    exit 1
+fi
+
+# Check for expected success message
+if ! check_for_success "$log_file"; then
+    kill $server_pid 2>/dev/null || true
+    cat "$log_file"
     rm "$log_file"
     exit 1
 fi
