@@ -136,7 +136,7 @@ const createTokenLimitError = (
   maxTokens: number
 ): Error =>
   new Error(
-    `Token limit constraint violated: Estimated ~${estimatedTokens.toLocaleString()} tokens, which exceeds the configured maximum of ${maxTokens.toLocaleString()} tokens`
+    `Token limit constraint violated: Estimated ~${estimatedTokens} tokens, which exceeds the configured maximum of ${maxTokens} tokens`
   );
 
 export const validateTokenLimit = (text: string): number => {

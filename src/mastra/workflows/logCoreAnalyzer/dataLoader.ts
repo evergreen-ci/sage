@@ -70,7 +70,7 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch URL: ${response.status} ${response.statusText}`
+        `URL fetch operation failed: ${response.status} ${response.statusText}`
       );
     }
 
