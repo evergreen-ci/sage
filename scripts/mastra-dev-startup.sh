@@ -10,6 +10,19 @@ check_for_errors() {
     fi
 }
 
+check_playground() {
+    local url="http://localhost:4111"
+    for i in {1..10}; do
+        if curl -s --head "$url" | grep "200 OK" > /dev/null; then
+            echo "Playground is up at $url"
+            return 0
+        fi
+        sleep 2
+    done
+    echo "Playground not detected at $url after waiting."
+    return 1
+}
+
 # Capture server output to a log file and terminal
 log_file=$(mktemp)
 echo "Starting Mastra dev server..."
@@ -33,9 +46,17 @@ if ! check_for_errors "$log_file"; then
     kill $server_pid
     rm "$log_file"
     exit 1
-else
-    # No errors, clean up
+fi
+
+# Check for Playground
+if ! check_playground; then
+    echo "Playground check failed."
     kill $server_pid
     rm "$log_file"
-    exit 0
+    exit 1
 fi
+
+# No errors, clean up
+kill $server_pid
+rm "$log_file"
+exit 0
