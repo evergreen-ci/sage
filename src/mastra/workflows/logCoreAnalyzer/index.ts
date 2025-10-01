@@ -6,6 +6,7 @@ import { z } from 'zod';
 import logger from '../../../utils/logger';
 import { wrapAgentWithTracing } from '../../utils/tracing/wrapWithTracing';
 import { logAnalyzerConfig } from './config';
+import { MB_TO_BYTES } from './constants';
 import {
   loadFromFile,
   loadFromUrl,
@@ -107,7 +108,7 @@ const loadDataStep = createStep({
 
     logCoreAnalyzerLogger.info('Data loaded successfully', {
       source: result.metadata.source,
-      sizeMB: (result.metadata.originalSize / 1024 / 1024).toFixed(2),
+      sizeMB: (result.metadata.originalSize / MB_TO_BYTES).toFixed(2),
       estimatedTokens: result.metadata.estimatedTokens,
     });
 

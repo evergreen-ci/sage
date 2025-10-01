@@ -1,6 +1,6 @@
 import { encode } from 'gpt-tokenizer';
 import { logAnalyzerConfig } from './config';
-import { SOURCE_TYPE } from './constants';
+import { SOURCE_TYPE, MB_TO_BYTES } from './constants';
 
 // Constants for size and token estimation
 const SMALL_TEXT_THRESHOLD = 8_192; // chars
@@ -34,11 +34,11 @@ const createSizeLimitError = (
   const sizeLabel =
     source === SOURCE_TYPE.TEXT
       ? `${size} characters`
-      : `${(size / 1024 / 1024).toFixed(2)}MB`;
+      : `${(size / MB_TO_BYTES).toFixed(2)}MB`;
   const maxSizeLabel =
     source === SOURCE_TYPE.TEXT
       ? `${maxSize} characters`
-      : `${(maxSize / 1024 / 1024).toFixed(2)}MB`;
+      : `${(maxSize / MB_TO_BYTES).toFixed(2)}MB`;
 
   return new Error(
     `Content size constraint exceeded: Received ${sizeLabel}, which surpasses the configured limit of ${maxSizeLabel} for ${source} input`
@@ -52,7 +52,7 @@ export const validateSize = (size: number, source: SOURCE_TYPE): void => {
   switch (source) {
     case SOURCE_TYPE.FILE:
     case SOURCE_TYPE.URL:
-      maxSize = limits.maxSizeMB * 1024 * 1024;
+      maxSize = limits.maxSizeMB * MB_TO_BYTES;
       break;
     case SOURCE_TYPE.TEXT:
       maxSize = limits.maxTextLength;

@@ -3,7 +3,7 @@ import path from 'path';
 import { authenticatedEvergreenFetch } from '../../../utils/fetch';
 import { logger } from '../../../utils/logger';
 import { logAnalyzerConfig } from './config';
-import { SOURCE_TYPE } from './constants';
+import { SOURCE_TYPE, MB_TO_BYTES } from './constants';
 import { validateSize, validateTokenLimit } from './utils';
 
 export interface LoadResult {
@@ -37,7 +37,7 @@ export const loadFromFile = async (filePath: string): Promise<LoadResult> => {
 
   logger.debug('File loaded successfully', {
     path: filePath,
-    sizeMB: (stats.size / 1024 / 1024).toFixed(2),
+    sizeMB: (stats.size / MB_TO_BYTES).toFixed(2),
     estimatedTokens,
   });
 
@@ -76,7 +76,7 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
     }
 
     // Stream download with size limit enforcement
-    const maxSizeBytes = logAnalyzerConfig.limits.maxSizeMB * 1024 * 1024;
+    const maxSizeBytes = logAnalyzerConfig.limits.maxSizeMB * MB_TO_BYTES;
     const reader = response.body?.getReader();
     if (!reader) {
       throw new Error('Response body is not readable');
@@ -100,7 +100,7 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
         logger.warn('URL content truncated due to size limit', {
           url,
           limitMB: logAnalyzerConfig.limits.maxSizeMB,
-          downloadedMB: (totalSize / 1024 / 1024).toFixed(2),
+          downloadedMB: (totalSize / MB_TO_BYTES).toFixed(2),
         });
         break;
       }
@@ -117,7 +117,7 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
 
     logger.debug('URL loaded successfully', {
       url,
-      sizeMB: (totalSize / 1024 / 1024).toFixed(2),
+      sizeMB: (totalSize / MB_TO_BYTES).toFixed(2),
       estimatedTokens,
       truncated,
     });
