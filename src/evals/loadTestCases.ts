@@ -1,10 +1,9 @@
 import { initDataset } from 'braintrust';
 import { PROJECT_NAME } from 'evals/constants';
-import { TestCase } from './types';
 
-export const getTestCases = async () => {
+export const loadTestCases = async <TestCase>(datasetName: string) => {
   const dataset = initDataset(PROJECT_NAME, {
-    dataset: 'question_classifier_agent_dataset',
+    dataset: datasetName,
   });
   const testCases: TestCase[] = [];
   for await (const row of dataset) {

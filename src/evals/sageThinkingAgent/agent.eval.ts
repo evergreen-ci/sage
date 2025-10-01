@@ -3,16 +3,16 @@ import { ToolResultPart } from 'ai';
 import { Factuality } from 'autoevals';
 import { Eval } from 'braintrust';
 import { ReporterName, PROJECT_NAME } from 'evals/constants';
+import { loadTestCases } from 'evals/loadTestCases';
 import { ToolUsage, TechnicalAccuracy, ToolUsageMode } from 'evals/scorers';
 import { USER_ID, SAGE_THINKING_AGENT_NAME } from 'mastra/agents/constants';
 import { tracedAgentEval } from '../utils/tracedAgent';
-import { getTestCases } from './testCases';
-import { TestInput, TestResult } from './types';
+import { TestCase, TestInput, TestResult } from './types';
 
 Eval(
   PROJECT_NAME,
   {
-    data: getTestCases(),
+    data: loadTestCases<TestCase>('sage_thinking_agent_dataset'),
     task: tracedAgentEval<TestInput, TestResult>({
       agentName: SAGE_THINKING_AGENT_NAME,
       setupRuntimeContext: input => {
