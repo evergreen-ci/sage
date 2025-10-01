@@ -69,3 +69,33 @@ steps:
         - promote
       target:
         - production
+
+  - name: fetch-pre-deploy-version
+    image: alpine/git
+    commands:
+      - apk add --no-cache bash curl
+      - curl -s https://sage.prod.corp.mongodb.com/version > /tmp/previous_version.txt
+    when:
+      branch:
+        - main
+      event:
+        - promote
+      target:
+        - production
+
+  - name: send-deployment-email
+    image: alpine/git
+    commands:
+      - apk add --no-cache bash curl mailx git
+      - chmod +x scripts/fetch_deployment_commits.sh
+      - PREVIOUS_VERSION=$(cat /tmp/previous_version.txt)
+      - ./scripts/fetch_deployment_commits.sh "$PREVIOUS_VERSION"
+    when:
+      branch:
+        - main
+      event:
+        - promote
+      target:
+        - production
+      status:
+        - success
