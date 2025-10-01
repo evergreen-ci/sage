@@ -75,13 +75,6 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
       );
     }
 
-    // Check content length if available
-    const contentLength = response.headers.get('content-length');
-    if (contentLength) {
-      const size = parseInt(contentLength, 10);
-      validateSize(size, SOURCE_TYPE.URL);
-    }
-
     // Stream download with size limit enforcement
     const maxSizeBytes = logAnalyzerConfig.limits.maxSizeMB * 1024 * 1024;
     const reader = response.body?.getReader();
