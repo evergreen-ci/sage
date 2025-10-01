@@ -101,25 +101,46 @@ describe('dataLoader', () => {
   });
 
   describe('loadFromUrl', () => {
-    it('should reject URLs over size limit', async () => {
+    const createMockReadableStream = (content: string, chunkSize = 1024) => {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(content);
+      let position = 0;
+
+      return new ReadableStream({
+        pull(controller) {
+          if (position >= data.length) {
+            controller.close();
+            return;
+          }
+          const chunk = data.slice(position, position + chunkSize);
+          controller.enqueue(chunk);
+          position += chunkSize;
+        },
+      });
+    };
+
+    it('should truncate URLs over size limit', async () => {
       const oversizeBytes = Math.floor(
         logAnalyzerConfig.limits.maxSizeMB *
           TEST_CONSTANTS.OVERSIZE_MULTIPLIER *
           1024 *
           1024
       );
+      const oversizeContent = 'x'.repeat(oversizeBytes);
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        headers: new Headers({
-          'content-length': String(oversizeBytes),
-        }),
-        text: async () => 'x'.repeat(oversizeBytes),
+        headers: new Headers(),
+        body: createMockReadableStream(oversizeContent),
       });
 
-      await expect(loadFromUrl(TEST_CONSTANTS.TEST_URLS.VALID)).rejects.toThrow(
-        /Content size constraint exceeded/
+      const result = await loadFromUrl(TEST_CONSTANTS.TEST_URLS.VALID);
+      expect(result.metadata.truncated).toBe(true);
+      // Size can be slightly over due to chunk boundaries
+      expect(result.metadata.originalSize).toBeGreaterThan(
+        logAnalyzerConfig.limits.maxSizeMB * 1024 * 1024
       );
+      expect(result.text.length).toBeLessThanOrEqual(oversizeBytes);
     });
 
     it('should load valid URLs', async () => {
@@ -130,12 +151,13 @@ describe('dataLoader', () => {
         headers: new Headers({
           'content-length': String(content.length),
         }),
-        text: async () => content,
+        body: createMockReadableStream(content),
       });
 
       const result = await loadFromUrl(TEST_CONSTANTS.TEST_URLS.VALID);
       expect(result.text).toBe(content);
       expect(result.metadata.source).toBe(SOURCE_TYPE.URL);
+      expect(result.metadata.truncated).toBe(false);
     });
 
     it('should handle fetch failures with detailed error message', async () => {
@@ -180,24 +202,20 @@ describe('dataLoader', () => {
       }
     });
 
-    it('should reject text over token limit', async () => {
-      const charCount = Math.min(
-        logAnalyzerConfig.limits.maxTextLength - 1000,
-        logAnalyzerConfig.limits.maxChars * TEST_CONSTANTS.TOKEN_MULTIPLIER
+    it('should accept large text within limits', () => {
+      // Test with text that's large but within both size and token limits
+      const charCount = Math.floor(
+        logAnalyzerConfig.limits.maxTextLength * 0.9
       );
       const text = 'x'.repeat(charCount);
 
-      try {
-        loadFromText(text);
-        throw new Error('Should have thrown an error');
-      } catch (error) {
-        expect((error as Error).message).toMatch(
-          /Token limit constraint violated/
-        );
-      }
+      const result = loadFromText(text);
+      expect(result.text).toBe(text);
+      expect(result.metadata.source).toBe(SOURCE_TYPE.TEXT);
+      expect(result.metadata.originalSize).toBe(charCount);
     });
 
-    it('should reject empty or null text', async () => {
+    it('should reject empty or null text', () => {
       try {
         loadFromText('');
         throw new Error('Should have thrown an error');
@@ -206,7 +224,7 @@ describe('dataLoader', () => {
       }
 
       try {
-        loadFromText(null as any);
+        loadFromText(null as unknown as string);
         throw new Error('Should have thrown an error');
       } catch (error) {
         expect((error as Error).message).toMatch(
@@ -215,10 +233,10 @@ describe('dataLoader', () => {
       }
     });
 
-    it('should accept valid text', async () => {
+    it('should accept valid text', () => {
       const text = 'Valid log content';
 
-      const result = await loadFromText(text);
+      const result = loadFromText(text);
       expect(result.text).toBe(text);
       expect(result.metadata.source).toBe(SOURCE_TYPE.TEXT);
       expect(result.metadata.originalSize).toBe(text.length);
