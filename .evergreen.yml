@@ -101,10 +101,12 @@ tasks:
           xml_file_name: log_analyzer_workflow_evals.xml
   - name: check-mastra-dev-startup
     commands:
+      - func: setup-mongodb
       - func: yarn-build
       - func: mastra-dev-startup
   - name: check-sage-prod-startup
     commands:
+      - func: setup-mongodb
       - func: yarn-build
       - func: sage-prod-startup
 
