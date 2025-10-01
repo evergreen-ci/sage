@@ -25,19 +25,17 @@ export const logAnalyzerConfig = {
   },
 
   /**
-   * Input limits
+   * Input limits - centralized configuration
    */
   limits: {
-    // Limits for loading
-    // File size limits
-    maxFileSizeMB: 500, // Max file size in MB
-    // Text length limits
-    maxTextLength: 500_000_000, // Max text length in characters (500M)
-    // URL limits
-    maxUrlSizeMB: 500, // Max size for URL fetches in MB
+    // Central size limit for all input sources (file, URL, text)
+    maxSizeMB: 250, // Max size in MB for files and URLs
+    maxTextLength: 250 * 1024 * 1024, // Max text length in characters (250MB)
+
+    // URL-specific settings
     urlTimeoutMs: 30_000, // URL fetch timeout in milliseconds (30s)
 
-    // Limit for processing
+    // Processing limits
     maxChars: 10_000_000, // Max estimated characters to process (10M)
     maxTokens: 10_000_000, // Max estimated tokens to process (10M)
   },

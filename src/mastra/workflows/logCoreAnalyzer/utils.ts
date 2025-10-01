@@ -51,10 +51,8 @@ export const validateSize = (size: number, source: SOURCE_TYPE): void => {
   let maxSize: number;
   switch (source) {
     case SOURCE_TYPE.FILE:
-      maxSize = limits.maxFileSizeMB * 1024 * 1024;
-      break;
     case SOURCE_TYPE.URL:
-      maxSize = limits.maxUrlSizeMB * 1024 * 1024;
+      maxSize = limits.maxSizeMB * 1024 * 1024;
       break;
     case SOURCE_TYPE.TEXT:
       maxSize = limits.maxTextLength;

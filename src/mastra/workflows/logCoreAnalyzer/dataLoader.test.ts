@@ -43,7 +43,7 @@ describe('dataLoader', () => {
     it('should reject files over size limit', async () => {
       const fs = (await import('fs/promises')).default;
       const oversizeBytes = Math.floor(
-        logAnalyzerConfig.limits.maxFileSizeMB *
+        logAnalyzerConfig.limits.maxSizeMB *
           TEST_CONSTANTS.OVERSIZE_MULTIPLIER *
           1024 *
           1024
@@ -64,7 +64,7 @@ describe('dataLoader', () => {
     it('should load valid files within size and token limits', async () => {
       const fs = (await import('fs/promises')).default;
       const validSizeBytes = Math.floor(
-        logAnalyzerConfig.limits.maxFileSizeMB * 0.5 * 1024 * 1024
+        logAnalyzerConfig.limits.maxSizeMB * 0.5 * 1024 * 1024
       );
 
       vi.mocked(fs.stat).mockResolvedValue(createFileSizeMock(validSizeBytes));
@@ -79,7 +79,7 @@ describe('dataLoader', () => {
     it('should reject files with too many tokens', async () => {
       const fs = (await import('fs/promises')).default;
       const fileSizeBytes = Math.floor(
-        logAnalyzerConfig.limits.maxFileSizeMB * 0.9 * 1024 * 1024
+        logAnalyzerConfig.limits.maxSizeMB * 0.9 * 1024 * 1024
       );
       const textLength =
         logAnalyzerConfig.limits.maxChars * TEST_CONSTANTS.TOKEN_MULTIPLIER;
@@ -103,7 +103,7 @@ describe('dataLoader', () => {
   describe('loadFromUrl', () => {
     it('should reject URLs over size limit', async () => {
       const oversizeBytes = Math.floor(
-        logAnalyzerConfig.limits.maxUrlSizeMB *
+        logAnalyzerConfig.limits.maxSizeMB *
           TEST_CONSTANTS.OVERSIZE_MULTIPLIER *
           1024 *
           1024
