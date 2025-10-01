@@ -40,6 +40,7 @@ buildvariants:
       - name: test
       - name: e2e
       - name: check-mastra-dev-startup
+      - name: check-sage-prod-startup
       - name: evergreen-evals
       - name: question-classifier-evals
       - name: log-analyzer-workflow-evals
@@ -73,7 +74,13 @@ tasks:
       - func: yarn-e2e
   - name: check-mastra-dev-startup
     commands:
+      - func: yarn-build
       - func: mastra-dev-startup
+  - name: check-sage-prod-startup
+    commands:
+      - func: setup-mongodb
+      - func: yarn-build
+      - func: sage-prod-startup
   - name: evergreen-evals
     commands:
       - func: setup-mongodb
@@ -352,3 +359,12 @@ functions:
       script: |
         ${PREPARE_SHELL}
         ./scripts/mastra-dev-startup.sh
+
+  sage-prod-startup:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        ./scripts/sage-prod-startup.sh
