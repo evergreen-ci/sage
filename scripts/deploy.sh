@@ -26,7 +26,7 @@ AWS_ACCESS_KEY_ID=$ECR_ACCESS_KEY AWS_SECRET_ACCESS_KEY=$ECR_SECRET_KEY \
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${REGISTRY}
 
 echo "Building Docker image..."
-docker build --platform linux/amd64 -t ${FULL_IMAGE}:${IMAGE_TAG} -t ${FULL_IMAGE}:latest .
+docker build -t ${FULL_IMAGE}:${IMAGE_TAG} -t ${FULL_IMAGE}:latest .
 
 echo "Pushing image to ECR..."
 docker push ${FULL_IMAGE}:${IMAGE_TAG}
