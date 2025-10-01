@@ -5,12 +5,12 @@
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
-    "build": "tsc && tsc-alias",
+    "build": "yarn typecheck && vite build",
     "start": "NODE_ENV=production node dist/main.js",
     "dev": "NODE_ENV=development yarn dev-run",
     "dev-run": "vite-node --watch src/main.ts",
-    "dev:staging": "NODE_ENV=staging yarn dev-run",
-    "dev:prod": "NODE_ENV=production yarn dev-run",
+    "dev:staging": "NODE_ENV=staging dotenv-flow yarn dev-run",
+    "dev:prod": "NODE_ENV=production dotenv-flow yarn dev-run",
     "deploy:staging": "NODE_ENV=staging dotenv-flow -- sh scripts/deploy.sh",
     "clean": "rm -rf dist bin node_modules",
     "codegen": "graphql-codegen-esm --config graphql.config.ts",
@@ -25,6 +25,7 @@
     "format": "prettier --write src/**/*.ts \"**/*.md\" \"*.md\"",
     "format:check": "prettier --check src/**/*.ts \"**/*.md\" \"*.md\"",
     "run-analyzer": "vite-node src/mastra/tests/scripts/run-log-analyzer.ts",
+    "typecheck": "yarn tsc",
     "test-thinking-agent": "vite-node src/mastra/tests/scripts/test-thinking-agent.ts",
     "chat-with-staging": "vite-node src/mastra/tests/scripts/chat-with-staging.ts",
     "mastra:dev": "mastra dev -p 4111",
@@ -104,9 +105,9 @@
     "nodemon": "^3.0.1",
     "prettier": "^3.6.2",
     "supertest": "^7.1.4",
-    "tsc-alias": "^1.8.16",
     "typescript": "^5.1.6",
     "typescript-eslint": "^8.42.0",
+    "vite": "^7.1.7",
     "vite-node": "^3.2.4",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
@@ -114,13 +115,6 @@
   "engines": {
     "node": ">=22.0.0"
   },
-  "keywords": [
-    "express",
-    "server",
-    "evergreen",
-    "ai-service",
-    "typescript"
-  ],
   "author": "",
   "license": "ISC"
 }

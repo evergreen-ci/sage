@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "types": ["node"],
+    "target": "ES2022"
+  },
+  "include": ["vite.config.ts"],
+  "exclude": ["src/mastra/**"]
+}
