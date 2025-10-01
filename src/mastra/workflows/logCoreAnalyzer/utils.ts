@@ -41,7 +41,7 @@ const createSizeLimitError = (
       : `${(maxSize / 1024 / 1024).toFixed(2)}MB`;
 
   return new Error(
-    `Input too large: ${sizeLabel} exceeds limit of ${maxSizeLabel} for ${source}`
+    `Content size constraint exceeded: Received ${sizeLabel}, which surpasses the configured limit of ${maxSizeLabel} for ${source} input`
   );
 };
 
@@ -60,7 +60,9 @@ export const validateSize = (size: number, source: SOURCE_TYPE): void => {
       maxSize = limits.maxTextLength;
       break;
     default:
-      throw new Error(`Unknown source type: ${source}`);
+      throw new Error(
+        `Unrecognized input source type: ${source}. Please provide a valid source type.`
+      );
   }
 
   if (size > maxSize) {
@@ -134,7 +136,7 @@ const createTokenLimitError = (
   maxTokens: number
 ): Error =>
   new Error(
-    `Content has ~${estimatedTokens.toLocaleString()} tokens, exceeds limit of ${maxTokens.toLocaleString()}`
+    `Token limit constraint violated: Estimated ~${estimatedTokens.toLocaleString()} tokens, which exceeds the configured maximum of ${maxTokens.toLocaleString()} tokens`
   );
 
 export const validateTokenLimit = (text: string): number => {
@@ -169,13 +171,17 @@ export const cropMiddle = (
 
   // Validate headRatio
   if (headRatio < 0 || headRatio > 1) {
-    throw new Error('headRatio must be between 0 and 1');
+    throw new Error(
+      'Invalid head ratio: Must be a decimal value between 0 and 1 (inclusive)'
+    );
   }
 
   // Reserve space for separator
   const availableLength = maxLength - separator.length;
   if (availableLength <= 0) {
-    throw new Error('maxLength too small to accommodate separator');
+    throw new Error(
+      'Insufficient maximum length: Unable to apply truncation with the specified separator'
+    );
   }
 
   // Extract head and tail

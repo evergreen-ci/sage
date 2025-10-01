@@ -44,10 +44,10 @@ describe('cropMiddle', () => {
     const text = 'Some log content that needs cropping';
     const separator = '...';
     expect(() => cropMiddle(text, 30, -0.1, separator)).toThrow(
-      'headRatio must be between 0 and 1'
+      'Invalid head ratio: Must be a decimal value between 0 and 1 (inclusive)'
     );
     expect(() => cropMiddle(text, 30, 1.5, separator)).toThrow(
-      'headRatio must be between 0 and 1'
+      'Invalid head ratio: Must be a decimal value between 0 and 1 (inclusive)'
     );
   });
 
@@ -55,7 +55,7 @@ describe('cropMiddle', () => {
     const text = 'Log entry that needs cropping';
     const longSeparator = '...[content omitted for brevity]...';
     expect(() => cropMiddle(text, 10, 0.5, longSeparator)).toThrow(
-      'maxLength too small to accommodate separator'
+      'Insufficient maximum length: Unable to apply truncation with the specified separator'
     );
   });
 });
