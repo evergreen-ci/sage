@@ -1,4 +1,4 @@
-import { createScoreChecker, toolUsage } from './scorers';
+import { createScoreChecker, ToolUsage, ToolUsageMode } from './scorers';
 
 describe('createScoreChecker', () => {
   it('should create a score checker', () => {
@@ -74,34 +74,75 @@ describe('createScoreChecker', () => {
 });
 
 describe('toolUsage', () => {
-  it('should create a tool usage scorer', () => {
-    const toolUsageScorer = toolUsage({
-      output: ['tool1', 'tool2'],
-      expected: ['tool1', 'tool2'],
+  describe('exact match mode', () => {
+    it('should return a score of 1 if the tools are used', () => {
+      const toolUsageScorer = ToolUsage({
+        output: ['tool1', 'tool2'],
+        expected: ['tool1', 'tool2'],
+        mode: ToolUsageMode.ExactMatch,
+      });
+      expect(toolUsageScorer).toEqual({
+        name: 'ToolUsage',
+        score: 1,
+        metadata: {
+          expected_tools: ['tool1', 'tool2'],
+          actual_tools: ['tool1', 'tool2'],
+          correct: true,
+        },
+      });
     });
-    expect(toolUsageScorer).toEqual({
-      name: 'ToolUsage',
-      score: 1,
-      metadata: {
-        expected_tools: ['tool1', 'tool2'],
-        actual_tools: ['tool1', 'tool2'],
-        correct: true,
-      },
+
+    it('should return a score of 0 if the tools are not used', () => {
+      const toolUsageScorer = ToolUsage({
+        output: ['tool1', 'tool2'],
+        expected: ['tool1', 'tool3'],
+        mode: ToolUsageMode.ExactMatch,
+      });
+      expect(toolUsageScorer).toEqual({
+        name: 'ToolUsage',
+        score: 0,
+        metadata: {
+          expected_tools: ['tool1', 'tool3'],
+          actual_tools: ['tool1', 'tool2'],
+          correct: false,
+        },
+      });
     });
   });
-  it('should return a score of 0 if the tools are not used', () => {
-    const toolUsageScorer = toolUsage({
-      output: ['tool1', 'tool2'],
-      expected: ['tool1', 'tool3'],
+
+  describe('subset mode', () => {
+    it('should return a score of 1 if subset of tools are used', () => {
+      const toolUsageScorer = ToolUsage({
+        output: ['tool1', 'tool2', 'tool3'],
+        expected: ['tool1'],
+        mode: ToolUsageMode.Subset,
+      });
+      expect(toolUsageScorer).toEqual({
+        name: 'ToolUsage',
+        score: 1,
+        metadata: {
+          expected_tools: ['tool1'],
+          actual_tools: ['tool1', 'tool2', 'tool3'],
+          correct: true,
+        },
+      });
     });
-    expect(toolUsageScorer).toEqual({
-      name: 'ToolUsage',
-      score: 0,
-      metadata: {
-        expected_tools: ['tool1', 'tool3'],
-        actual_tools: ['tool1', 'tool2'],
-        correct: false,
-      },
+
+    it('should return a score of 0 if subset of tools are not used', () => {
+      const toolUsageScorer = ToolUsage({
+        output: ['tool1', 'tool2'],
+        expected: ['tool1', 'tool3'],
+        mode: ToolUsageMode.Subset,
+      });
+      expect(toolUsageScorer).toEqual({
+        name: 'ToolUsage',
+        score: 0,
+        metadata: {
+          expected_tools: ['tool1', 'tool3'],
+          actual_tools: ['tool1', 'tool2'],
+          correct: false,
+        },
+      });
     });
   });
 });

@@ -39,17 +39,19 @@ buildvariants:
       - name: lint
       - name: test
       - name: e2e
+      - name: check-mastra-dev-startup
+      - name: check-sage-prod-startup
       - name: evergreen-evals
       - name: question-classifier-evals
       - name: log-analyzer-workflow-evals
-      - name: check-mastra-dev-startup
-      - name: check-sage-prod-startup
+      - name: sage-thinking-evals
     display_tasks:
       - name: evals
         execution_tasks:
           - "evergreen-evals"
           - "question-classifier-evals"
           - "log-analyzer-workflow-evals"
+          - "sage-thinking-evals"
 tasks:
   - name: compile
     commands:
@@ -70,6 +72,15 @@ tasks:
       - func: yarn-build
       - func: wait-for-evergreen
       - func: yarn-e2e
+  - name: check-mastra-dev-startup
+    commands:
+      - func: yarn-build
+      - func: mastra-dev-startup
+  - name: check-sage-prod-startup
+    commands:
+      - func: setup-mongodb
+      - func: yarn-build
+      - func: sage-prod-startup
   - name: evergreen-evals
     commands:
       - func: setup-mongodb
@@ -99,16 +110,19 @@ tasks:
       - func: attach-braintrust-results
         vars:
           xml_file_name: log_analyzer_workflow_evals.xml
-  - name: check-mastra-dev-startup
+  - name: sage-thinking-evals
     commands:
       - func: setup-mongodb
-      - func: yarn-build
-      - func: mastra-dev-startup
-  - name: check-sage-prod-startup
-    commands:
-      - func: setup-mongodb
-      - func: yarn-build
-      - func: sage-prod-startup
+      - func: run-make-background
+        vars:
+          target: local-evergreen
+      - func: wait-for-evergreen
+      - func: yarn-eval
+        vars:
+          eval_dir: sageThinkingAgent
+      - func: attach-braintrust-results
+        vars:
+          xml_file_name: sage_thinking_evals.xml
 
 functions:
   attach-test-results:
