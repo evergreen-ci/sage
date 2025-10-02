@@ -1,20 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 
-# Check if deployment URL is provided
+# Check if deployed commit hash is provided
 if [ $# -eq 0 ]; then
-    echo "Usage: $0 <deployment_url>"
+    echo "Usage: $0 <deployed_commit_hash>"
     exit 1
 fi
 
-DEPLOYMENT_URL="$1"
+DEPLOYED_COMMIT="$1"
 COMMITS_FILE="/tmp/deployment_commits.txt"
 # Generate email subject with date and first 7 characters of current commit hash
 EMAIL_SUBJECT="$(date '+%Y-%m-%d') Sage deploy to $(git rev-parse HEAD | cut -c1-7)"
 EMAIL_RECIPIENT="evergreen-deploys@mongodb.com"
 
-# Fetch the deployed commit hash
-DEPLOYED_COMMIT=$(curl -s "$DEPLOYMENT_URL")
 CURRENT_COMMIT=$(git rev-parse HEAD)
 
 # Validate commit hashes
