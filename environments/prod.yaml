@@ -1,3 +1,5 @@
+replicaCount: 2
+
 arch: "amd64"
 
 ingress:
@@ -51,3 +53,14 @@ envSecrets:
 
 serviceAccount:
   enabled: true
+
+autoscaling:
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
