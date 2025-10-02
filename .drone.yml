@@ -33,13 +33,23 @@ steps:
         - push
 
   - name: fetch-pre-deploy-version
-    image: alpine/git
+    image: bitnami/kubectl:latest
     volumes:
       - name: cache
         path: /cache
+    environment:
+      KUBERNETES_TOKEN:
+        from_secret: staging_kubernetes_token
     commands:
-      - apk add --no-cache bash curl
-      - curl -s https://sage.devprod-evergreen.staging.corp.mongodb.com/version > /cache/previous_version.txt
+      - kubectl config set-cluster default --server=https://api.staging.corp.mongodb.com --insecure-skip-tls-verify=true
+      - kubectl config set-credentials default --token="$KUBERNETES_TOKEN"
+      - kubectl config set-context default --cluster=default --user=default --namespace=devprod-evergreen
+      - kubectl config use-context default
+      - CURRENT_IMAGE=$(kubectl get deployment sage -n devprod-evergreen -o jsonpath='{.spec.template.spec.containers[0].image}')
+      - echo "Current deployed image - $CURRENT_IMAGE"
+      - SHORT_SHA=$(echo "$CURRENT_IMAGE" | sed -n 's/.*git-\([a-f0-9]\{7\}\).*/\1/p')
+      - echo "Extracted short SHA - $SHORT_SHA"
+      - echo "$SHORT_SHA" > /cache/previous_version.txt
       - cat /cache/previous_version.txt
     when:
       event:

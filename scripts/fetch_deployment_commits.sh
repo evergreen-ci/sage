@@ -7,7 +7,7 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
-DEPLOYED_COMMIT="$1"
+DEPLOYED_COMMIT_INPUT="$1"
 COMMITS_FILE="/tmp/deployment_commits.txt"
 # Generate email subject with date and first 7 characters of current commit hash
 EMAIL_SUBJECT="$(date '+%Y-%m-%d') Sage deploy to $(git rev-parse HEAD | cut -c1-7)"
@@ -15,9 +15,17 @@ EMAIL_RECIPIENT="evergreen-deploys@mongodb.com"
 
 CURRENT_COMMIT=$(git rev-parse HEAD)
 
+# Expand short SHA to full SHA if needed
+if [[ ${#DEPLOYED_COMMIT_INPUT} -eq 7 ]]; then
+    echo "Expanding short SHA: $DEPLOYED_COMMIT_INPUT"
+    DEPLOYED_COMMIT=$(git rev-parse "$DEPLOYED_COMMIT_INPUT")
+else
+    DEPLOYED_COMMIT="$DEPLOYED_COMMIT_INPUT"
+fi
+
 # Validate commit hashes
 if [[ ! "$DEPLOYED_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
-    echo "Invalid deployed commit hash"
+    echo "Invalid deployed commit hash: $DEPLOYED_COMMIT"
     exit 1
 fi
 
