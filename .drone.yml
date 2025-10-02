@@ -28,6 +28,17 @@ steps:
         - promote
         - push
 
+  - name: fetch-pre-deploy-version
+    image: alpine/git
+    commands:
+      - apk add --no-cache bash curl
+      - curl -s https://sage.devprod-evergreen.staging.corp.mongodb.com/version > /tmp/previous_version.txt
+    when:
+      event:
+        - promote
+      target:
+        - staging
+
   - name: deploy-staging
     depends_on: [fetch-pre-deploy-version]
     image: public.ecr.aws/kanopy/drone-helm:v3
@@ -50,7 +61,6 @@ steps:
         - staging
 
   - name: deploy-prod
-    depends_on: [fetch-pre-deploy-version]
     image: public.ecr.aws/kanopy/drone-helm:v3
     settings:
       chart: mongodb/web-app
@@ -71,17 +81,6 @@ steps:
         - promote
       target:
         - production
-
-  - name: fetch-pre-deploy-version
-    image: alpine/git
-    commands:
-      - apk add --no-cache bash curl
-      - curl -s https://sage.devprod-evergreen.staging.corp.mongodb.com/version > /tmp/previous_version.txt
-    when:
-      event:
-        - promote
-      target:
-        - staging
 
   - name: send-deployment-email
     depends_on: [deploy-staging]
