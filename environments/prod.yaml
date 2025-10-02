@@ -53,7 +53,7 @@ serviceAccount:
   enabled: true
 
 autoscaling:
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 5
   metrics:
     - type: Resource
