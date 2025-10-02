@@ -40,6 +40,7 @@ steps:
     commands:
       - apk add --no-cache bash curl
       - curl -s https://sage.devprod-evergreen.staging.corp.mongodb.com/version > /cache/previous_version.txt
+      - cat /cache/previous_version.txt
     when:
       event:
         - promote
