@@ -48,7 +48,7 @@ const getTaskHistoryStep = createStep({
       cursorId = baseTask.id;
     }
     const cursorParams = {
-      cursorId: cursorId,
+      cursorId,
       direction: TaskHistoryDirection.Before,
       includeCursor: true,
     };

@@ -56,9 +56,12 @@ const getTaskOutputSchema = z.object({
     buildVariant: z.string(),
     projectIdentifier: z.string().optional().nullable(),
     requester: z.string(),
-    baseTask: z.object({
-      id: z.string(),
-    }),
+    baseTask: z
+      .object({
+        id: z.string(),
+      })
+      .optional()
+      .nullable(),
     versionMetadata: z.object({
       id: z.string(),
       isPatch: z.boolean(),
