@@ -9,6 +9,10 @@ trigger:
   branch:
     - main
 
+volumes:
+  - name: cache
+    temp: {}
+
 steps:
   - name: publish
     image: plugins/kaniko-ecr
@@ -30,9 +34,12 @@ steps:
 
   - name: fetch-pre-deploy-version
     image: alpine/git
+    volumes:
+      - name: cache
+        path: /cache
     commands:
       - apk add --no-cache bash curl
-      - curl -s https://sage.devprod-evergreen.staging.corp.mongodb.com/version > /tmp/previous_version.txt
+      - curl -s https://sage.devprod-evergreen.staging.corp.mongodb.com/version > /cache/previous_version.txt
     when:
       event:
         - promote
@@ -83,10 +90,13 @@ steps:
 
   - name: send-deployment-email
     image: alpine/git
+    volumes:
+      - name: cache
+        path: /cache
     commands:
       - apk add --no-cache bash curl mailx git
       - chmod +x scripts/fetch_deployment_commits.sh
-      - PREVIOUS_VERSION=$(cat /tmp/previous_version.txt)
+      - PREVIOUS_VERSION=$(cat /cache/previous_version.txt)
       - ./scripts/fetch_deployment_commits.sh "$PREVIOUS_VERSION"
     when:
       event:
