@@ -49,6 +49,7 @@ steps:
         - staging
 
   - name: deploy-prod
+    depends_on: [fetch-pre-deploy-version]
     image: public.ecr.aws/kanopy/drone-helm:v3
     settings:
       chart: mongodb/web-app
@@ -84,6 +85,7 @@ steps:
         - production
 
   - name: send-deployment-email
+    depends_on: [deploy-prod]
     image: alpine/git
     commands:
       - apk add --no-cache bash curl mailx git
