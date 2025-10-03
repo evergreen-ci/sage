@@ -9,8 +9,8 @@ export const logAnalyzerConfig = {
    * Chunking configuration
    */
   chunking: {
-    maxSize: 20_000, // Maximum chunk size in tokens
-    overlapTokens: 800, // Overlap to maintain context between chunks
+    maxSize: 60_000, // Maximum chunk size in tokens
+    overlapTokens: 6000, // Overlap to maintain context between chunks (~10% of maxSize is a good rule of thumb)
     tokenizer: 'o200k_base' as const, // Tokenizer for GPT-4
   },
 
@@ -21,34 +21,23 @@ export const logAnalyzerConfig = {
     initial: gpt41, // Used for initial analysis (first chunk)
     refinement: gpt41Nano, // Used for iterative refinement (subsequent chunks, smaller model)
     formatter: gpt41, // Used for final report generation
+    schemaFormatter: gpt41Nano, // Used for output schema formatting
   },
 
   /**
-   * Input limits
+   * Input limits - centralized configuration
    */
   limits: {
-    // Max file size in MB, defaults to 100.
-    maxFileSizeMB: parseInt(
-      process.env.LOG_ANALYZER_MAX_FILE_SIZE_MB || '100',
-      10
-    ),
-    // Max text length in characters, defaults to 80,000,000.
-    maxTextLength: parseInt(
-      process.env.LOG_ANALYZER_MAX_TEXT_LENGTH || '80000000',
-      10
-    ),
-    // Max size for URL fetches in MB, defaults to 100.
-    maxUrlSizeMB: parseInt(
-      process.env.LOG_ANALYZER_MAX_URL_SIZE_MB || '100',
-      10
-    ),
-    // Max estimated tokens to process, defaults to 10,000,000.
-    maxTokens: parseInt(process.env.LOG_ANALYZER_MAX_TOKENS || '10000000', 10),
-    // URL fetch timeout, defaults to 30 seconds.
-    urlTimeoutMs: parseInt(
-      process.env.LOG_ANALYZER_URL_TIMEOUT_MS || '30000',
-      10
-    ),
+    // Central size limit for all input sources (file, URL, text)
+    maxSizeMB: 100,
+    maxTextLength: 100 * 1024 * 1024, // Max text length in characters (100MB)
+
+    // URL-specific settings
+    urlTimeoutMs: 30_000, // 30 seconds
+
+    // Processing limits
+    maxChars: 100_000_000,
+    maxTokens: 100_000_000,
   },
 
   /**
@@ -59,5 +48,3 @@ export const logAnalyzerConfig = {
     level: 'debug' as const,
   },
 } as const;
-
-export type LogAnalyzerConfig = typeof logAnalyzerConfig;

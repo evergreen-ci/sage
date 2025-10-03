@@ -5,7 +5,7 @@ import { wrapMastraAgent } from 'braintrust';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { memoryStore } from '../../utils/memory';
 import { resolveLogFileUrlTool } from '../../workflows/evergreen/getLogFileUrlWorkflow';
-import { logCoreAnalyzerTool } from '../../workflows/logCoreAnalyzerWorkflow';
+import { logCoreAnalyzerTool } from '../../workflows/logCoreAnalyzer';
 import { askEvergreenAgentTool } from '../evergreenAgent';
 import { askQuestionClassifierAgentTool } from './questionClassifierAgent';
 
