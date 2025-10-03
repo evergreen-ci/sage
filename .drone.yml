@@ -9,6 +9,10 @@ trigger:
   branch:
     - main
 
+volumes:
+  - name: cache
+    temp: {}
+
 steps:
   - name: publish
     image: plugins/kaniko-ecr
@@ -27,6 +31,31 @@ steps:
       event:
         - promote
         - push
+
+  - name: fetch-pre-deploy-version
+    image: bitnami/kubectl:latest
+    volumes:
+      - name: cache
+        path: /cache
+    environment:
+      KUBERNETES_TOKEN:
+        from_secret: staging_kubernetes_token
+    commands:
+      - kubectl config set-cluster default --server=https://api.staging.corp.mongodb.com --insecure-skip-tls-verify=true
+      - kubectl config set-credentials default --token="$KUBERNETES_TOKEN"
+      - kubectl config set-context default --cluster=default --user=default --namespace=devprod-evergreen
+      - kubectl config use-context default
+      - CURRENT_IMAGE=$(kubectl get deployment sage -n devprod-evergreen -o jsonpath='{.spec.template.spec.containers[0].image}')
+      - echo "Current deployed image - $CURRENT_IMAGE"
+      - SHORT_SHA=$(echo "$CURRENT_IMAGE" | sed -n 's/.*git-\([a-f0-9]\{7\}\).*/\1/p')
+      - echo "Extracted short SHA - $SHORT_SHA"
+      - echo "$SHORT_SHA" > /cache/previous_version.txt
+      - cat /cache/previous_version.txt
+    when:
+      event:
+        - promote
+      target:
+        - staging
 
   - name: deploy-staging
     image: public.ecr.aws/kanopy/drone-helm:v3
@@ -69,3 +98,23 @@ steps:
         - promote
       target:
         - production
+
+  - name: send-deployment-email
+    image: alpine/git
+    depends_on:
+      - deploy-staging
+    volumes:
+      - name: cache
+        path: /cache
+    commands:
+      - apk add --no-cache bash curl mailx git
+      - chmod +x scripts/fetch_deployment_commits.sh
+      - PREVIOUS_VERSION=$(cat /cache/previous_version.txt)
+      - ./scripts/fetch_deployment_commits.sh "$PREVIOUS_VERSION"
+    when:
+      event:
+        - promote
+      target:
+        - staging
+      status:
+        - success
