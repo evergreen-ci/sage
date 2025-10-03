@@ -1,3 +1,4 @@
+import { simulateReadableStream } from 'ai';
 import { logAnalyzerConfig } from './config';
 import { SOURCE_TYPE } from './constants';
 import { loadFromFile, loadFromUrl, loadFromText } from './dataLoader';
@@ -101,25 +102,7 @@ describe('dataLoader', () => {
   });
 
   describe('loadFromUrl', () => {
-    const createMockReadableStream = (content: string, chunkSize = 1024) => {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(content);
-      let position = 0;
-
-      return new ReadableStream({
-        pull(controller) {
-          if (position >= data.length) {
-            controller.close();
-            return;
-          }
-          const chunk = data.slice(position, position + chunkSize);
-          controller.enqueue(chunk);
-          position += chunkSize;
-        },
-      });
-    };
-
-    it('should truncate URLs over size limit', async () => {
+    it('should truncate downloaded content over size limit', async () => {
       const oversizeBytes = Math.floor(
         logAnalyzerConfig.limits.maxSizeMB *
           TEST_CONSTANTS.OVERSIZE_MULTIPLIER *
@@ -127,11 +110,20 @@ describe('dataLoader', () => {
           1024
       );
       const oversizeContent = 'x'.repeat(oversizeBytes);
+      const CHUNK_SIZE = 4096 * 1000; // 4MB
+      const oversizeContentChunks = [];
+      for (let i = 0; i < oversizeContent.length; i += CHUNK_SIZE) {
+        oversizeContentChunks.push(
+          Buffer.from(oversizeContent.slice(i, i + CHUNK_SIZE))
+        );
+      }
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         headers: new Headers(),
-        body: createMockReadableStream(oversizeContent),
+        body: simulateReadableStream({
+          chunks: oversizeContentChunks,
+        }),
       });
 
       const result = await loadFromUrl(TEST_CONSTANTS.TEST_URLS.VALID);
@@ -151,7 +143,7 @@ describe('dataLoader', () => {
         headers: new Headers({
           'content-length': String(content.length),
         }),
-        body: createMockReadableStream(content),
+        body: simulateReadableStream({ chunks: [Buffer.from(content)] }),
       });
 
       const result = await loadFromUrl(TEST_CONSTANTS.TEST_URLS.VALID);
