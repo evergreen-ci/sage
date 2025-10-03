@@ -72,7 +72,7 @@ describe('dataLoader', () => {
 
       const result = await loadFromFile('valid.log');
       expect(result.text).toBe('log content');
-      expect(result.metadata.source).toBe(SOURCE_TYPE.FILE);
+      expect(result.metadata.source).toBe(SOURCE_TYPE.File);
       expect(result.metadata.originalSize).toBe(validSizeBytes);
     });
 
@@ -211,7 +211,7 @@ describe('dataLoader', () => {
 
       const result = loadFromText(text);
       expect(result.text).toBe(text);
-      expect(result.metadata.source).toBe(SOURCE_TYPE.TEXT);
+      expect(result.metadata.source).toBe(SOURCE_TYPE.Text);
       expect(result.metadata.originalSize).toBe(charCount);
     });
 
@@ -238,7 +238,7 @@ describe('dataLoader', () => {
 
       const result = loadFromText(text);
       expect(result.text).toBe(text);
-      expect(result.metadata.source).toBe(SOURCE_TYPE.TEXT);
+      expect(result.metadata.source).toBe(SOURCE_TYPE.Text);
       expect(result.metadata.originalSize).toBe(text.length);
     });
   });

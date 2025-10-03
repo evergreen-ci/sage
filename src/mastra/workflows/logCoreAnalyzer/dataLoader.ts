@@ -26,7 +26,7 @@ export const loadFromFile = async (filePath: string): Promise<LoadResult> => {
 
   // Check file size first
   const stats = await fs.stat(resolvedPath);
-  validateSize(stats.size, SOURCE_TYPE.FILE);
+  validateSize(stats.size, SOURCE_TYPE.File);
 
   // Read file
   const buffer = await fs.readFile(resolvedPath);
@@ -44,7 +44,7 @@ export const loadFromFile = async (filePath: string): Promise<LoadResult> => {
   return {
     text,
     metadata: {
-      source: SOURCE_TYPE.FILE,
+      source: SOURCE_TYPE.File,
       originalSize: stats.size,
       estimatedTokens,
     },
@@ -158,7 +158,7 @@ export const loadFromText = (text: string | null | undefined): LoadResult => {
   }
 
   const size = text.length;
-  validateSize(size, SOURCE_TYPE.TEXT);
+  validateSize(size, SOURCE_TYPE.Text);
 
   // Check token limit
   const estimatedTokens = validateTokenLimit(text);
@@ -171,7 +171,7 @@ export const loadFromText = (text: string | null | undefined): LoadResult => {
   return {
     text,
     metadata: {
-      source: SOURCE_TYPE.TEXT,
+      source: SOURCE_TYPE.Text,
       originalSize: size,
       estimatedTokens,
     },

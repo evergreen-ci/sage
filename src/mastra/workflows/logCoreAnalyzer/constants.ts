@@ -2,9 +2,9 @@
  * Input source types
  */
 export enum SOURCE_TYPE {
-  FILE = 'file',
+  File = 'file',
   URL = 'url',
-  TEXT = 'text',
+  Text = 'text',
 }
 
 /**

@@ -32,11 +32,11 @@ const createSizeLimitError = (
   source: SOURCE_TYPE
 ): Error => {
   const sizeLabel =
-    source === SOURCE_TYPE.TEXT
+    source === SOURCE_TYPE.Text
       ? `${size} characters`
       : `${(size / MB_TO_BYTES).toFixed(2)}MB`;
   const maxSizeLabel =
-    source === SOURCE_TYPE.TEXT
+    source === SOURCE_TYPE.Text
       ? `${maxSize} characters`
       : `${(maxSize / MB_TO_BYTES).toFixed(2)}MB`;
 
@@ -50,11 +50,11 @@ export const validateSize = (size: number, source: SOURCE_TYPE): void => {
 
   let maxSize: number;
   switch (source) {
-    case SOURCE_TYPE.FILE:
+    case SOURCE_TYPE.File:
     case SOURCE_TYPE.URL:
       maxSize = limits.maxSizeMB * MB_TO_BYTES;
       break;
-    case SOURCE_TYPE.TEXT:
+    case SOURCE_TYPE.Text:
       maxSize = limits.maxTextLength;
       break;
     default:
