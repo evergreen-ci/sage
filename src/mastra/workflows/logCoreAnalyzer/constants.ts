@@ -1,14 +1,13 @@
 /**
- * Constants for the Log Core Analyzer workflow
- */
-
-/**
  * Input source types
  */
-export const SOURCE_TYPE = {
-  FILE: 'file',
-  URL: 'url',
-  TEXT: 'text',
-} as const;
+export enum SourceType {
+  File = 'file',
+  URL = 'url',
+  Text = 'text',
+}
 
-export type SourceType = (typeof SOURCE_TYPE)[keyof typeof SOURCE_TYPE];
+/**
+ * Conversion constants
+ */
+export const MB_TO_BYTES = 1024 * 1024;

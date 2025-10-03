@@ -1,9 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { config } from '../../../config';
+import { authenticatedEvergreenFetch } from '../../../utils/fetch';
 import { logger } from '../../../utils/logger';
 import { logAnalyzerConfig } from './config';
-import { SOURCE_TYPE, type SourceType } from './constants';
+import { SourceType, MB_TO_BYTES } from './constants';
 import { validateSize, validateTokenLimit } from './utils';
 
 export interface LoadResult {
@@ -12,6 +12,7 @@ export interface LoadResult {
     source: SourceType;
     originalSize: number;
     estimatedTokens: number;
+    truncated?: boolean;
   };
 }
 
@@ -25,7 +26,7 @@ export const loadFromFile = async (filePath: string): Promise<LoadResult> => {
 
   // Check file size first
   const stats = await fs.stat(resolvedPath);
-  validateSize(stats.size, SOURCE_TYPE.FILE);
+  validateSize(stats.size, SourceType.File);
 
   // Read file
   const buffer = await fs.readFile(resolvedPath);
@@ -36,14 +37,14 @@ export const loadFromFile = async (filePath: string): Promise<LoadResult> => {
 
   logger.debug('File loaded successfully', {
     path: filePath,
-    sizeMB: (stats.size / 1024 / 1024).toFixed(2),
+    sizeMB: (stats.size / MB_TO_BYTES).toFixed(2),
     estimatedTokens,
   });
 
   return {
     text,
     metadata: {
-      source: SOURCE_TYPE.FILE,
+      source: SourceType.File,
       originalSize: stats.size,
       estimatedTokens,
     },
@@ -56,19 +57,6 @@ export const loadFromFile = async (filePath: string): Promise<LoadResult> => {
  * @returns Loaded text and metadata
  */
 export const loadFromUrl = async (url: string): Promise<LoadResult> => {
-  // Build headers
-  const headers = new Headers();
-  headers.set('Accept', 'text/plain,application/json');
-
-  if (config.evergreen.apiUser && config.evergreen.apiKey) {
-    headers.set('Api-User', config.evergreen.apiUser);
-    headers.set('Api-Key', config.evergreen.apiKey);
-  } else {
-    logger.debug('No Evergreen API credentials configured for URL fetch', {
-      url,
-    });
-  }
-
   // Fetch with timeout
   const controller = new AbortController();
   const timeout = setTimeout(
@@ -77,45 +65,70 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
   );
 
   try {
-    const response = await fetch(url, {
-      headers,
+    const response = await authenticatedEvergreenFetch(url, {
       signal: controller.signal,
     });
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch URL: ${response.status} ${response.statusText}`
+        `URL fetch operation failed: ${response.status} ${response.statusText}`
       );
     }
 
-    // Check content length if available
-    const contentLength = response.headers.get('content-length');
-    if (contentLength) {
-      const size = parseInt(contentLength, 10);
-      validateSize(size, SOURCE_TYPE.URL);
+    // Stream download with size limit enforcement
+    const maxSizeBytes = logAnalyzerConfig.limits.maxSizeMB * MB_TO_BYTES;
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Response body is not readable');
     }
 
-    const text = await response.text();
+    const chunks: Uint8Array[] = [];
+    let totalSize = 0;
+    let truncated = false;
 
-    // Validate actual size
-    const actualSize = Buffer.byteLength(text, 'utf8');
-    validateSize(actualSize, SOURCE_TYPE.URL);
+    while (true) {
+      // eslint-disable-next-line no-await-in-loop
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      totalSize += value.length;
+
+      // Stop downloading if size limit exceeded
+      if (totalSize > maxSizeBytes) {
+        truncated = true;
+        reader.cancel();
+        logger.warn('URL content truncated due to size limit', {
+          url,
+          limitMB: logAnalyzerConfig.limits.maxSizeMB,
+          downloadedMB: (totalSize / MB_TO_BYTES).toFixed(2),
+        });
+        break;
+      }
+
+      chunks.push(value);
+    }
+
+    // Combine chunks into text
+    const buffer = Buffer.concat(chunks);
+    const text = buffer.toString('utf8');
 
     // Check token limit
     const estimatedTokens = validateTokenLimit(text);
 
     logger.debug('URL loaded successfully', {
       url,
-      sizeMB: (actualSize / 1024 / 1024).toFixed(2),
+      sizeMB: (totalSize / MB_TO_BYTES).toFixed(2),
       estimatedTokens,
+      truncated,
     });
 
     return {
       text,
       metadata: {
-        source: SOURCE_TYPE.URL,
-        originalSize: actualSize,
+        source: SourceType.URL,
+        originalSize: totalSize,
         estimatedTokens,
+        truncated,
       },
     };
   } catch (error) {
@@ -135,9 +148,17 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
  * @param text - Raw text to validate and load
  * @returns Loaded text and metadata
  */
-export async function loadFromText(text: string): Promise<LoadResult> {
+export const loadFromText = (text: string | null | undefined): LoadResult => {
+  if (text === null || text === undefined) {
+    throw new Error('Text cannot be null or undefined');
+  }
+
+  if (text.length === 0) {
+    throw new Error('Text cannot be empty');
+  }
+
   const size = text.length;
-  validateSize(size, SOURCE_TYPE.TEXT);
+  validateSize(size, SourceType.Text);
 
   // Check token limit
   const estimatedTokens = validateTokenLimit(text);
@@ -150,9 +171,9 @@ export async function loadFromText(text: string): Promise<LoadResult> {
   return {
     text,
     metadata: {
-      source: SOURCE_TYPE.TEXT,
+      source: SourceType.Text,
       originalSize: size,
       estimatedTokens,
     },
   };
-}
+};
