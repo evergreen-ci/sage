@@ -101,6 +101,8 @@ steps:
 
   - name: send-deployment-email
     image: alpine/git
+    depends_on:
+      - deploy-staging
     volumes:
       - name: cache
         path: /cache
