@@ -1,6 +1,6 @@
 import { simulateReadableStream } from 'ai';
 import { logAnalyzerConfig } from './config';
-import { SOURCE_TYPE } from './constants';
+import { SourceType } from './constants';
 import { loadFromFile, loadFromUrl, loadFromText } from './dataLoader';
 
 const fsMock = vi.hoisted(() => ({
@@ -73,7 +73,7 @@ describe('dataLoader', () => {
 
       const result = await loadFromFile('valid.log');
       expect(result.text).toBe('log content');
-      expect(result.metadata.source).toBe(SOURCE_TYPE.File);
+      expect(result.metadata.source).toBe(SourceType.File);
       expect(result.metadata.originalSize).toBe(validSizeBytes);
     });
 
@@ -148,7 +148,7 @@ describe('dataLoader', () => {
 
       const result = await loadFromUrl(TEST_CONSTANTS.TEST_URLS.VALID);
       expect(result.text).toBe(content);
-      expect(result.metadata.source).toBe(SOURCE_TYPE.URL);
+      expect(result.metadata.source).toBe(SourceType.URL);
       expect(result.metadata.truncated).toBe(false);
     });
 
@@ -203,7 +203,7 @@ describe('dataLoader', () => {
 
       const result = loadFromText(text);
       expect(result.text).toBe(text);
-      expect(result.metadata.source).toBe(SOURCE_TYPE.Text);
+      expect(result.metadata.source).toBe(SourceType.Text);
       expect(result.metadata.originalSize).toBe(charCount);
     });
 
@@ -230,7 +230,7 @@ describe('dataLoader', () => {
 
       const result = loadFromText(text);
       expect(result.text).toBe(text);
-      expect(result.metadata.source).toBe(SOURCE_TYPE.Text);
+      expect(result.metadata.source).toBe(SourceType.Text);
       expect(result.metadata.originalSize).toBe(text.length);
     });
   });

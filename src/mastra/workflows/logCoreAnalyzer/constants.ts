@@ -1,7 +1,7 @@
 /**
  * Input source types
  */
-export enum SOURCE_TYPE {
+export enum SourceType {
   File = 'file',
   URL = 'url',
   Text = 'text',

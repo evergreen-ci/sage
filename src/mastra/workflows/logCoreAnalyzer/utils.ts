@@ -1,6 +1,6 @@
 import { encode } from 'gpt-tokenizer';
 import { logAnalyzerConfig } from './config';
-import { SOURCE_TYPE, MB_TO_BYTES } from './constants';
+import { SourceType, MB_TO_BYTES } from './constants';
 
 // Constants for size and token estimation
 const SMALL_TEXT_THRESHOLD = 8_192; // chars
@@ -29,14 +29,14 @@ export const normalizeLineEndings = (text: string): string =>
 const createSizeLimitError = (
   size: number,
   maxSize: number,
-  source: SOURCE_TYPE
+  source: SourceType
 ): Error => {
   const sizeLabel =
-    source === SOURCE_TYPE.Text
+    source === SourceType.Text
       ? `${size} characters`
       : `${(size / MB_TO_BYTES).toFixed(2)}MB`;
   const maxSizeLabel =
-    source === SOURCE_TYPE.Text
+    source === SourceType.Text
       ? `${maxSize} characters`
       : `${(maxSize / MB_TO_BYTES).toFixed(2)}MB`;
 
@@ -45,16 +45,16 @@ const createSizeLimitError = (
   );
 };
 
-export const validateSize = (size: number, source: SOURCE_TYPE): void => {
+export const validateSize = (size: number, source: SourceType): void => {
   const { limits } = logAnalyzerConfig;
 
   let maxSize: number;
   switch (source) {
-    case SOURCE_TYPE.File:
-    case SOURCE_TYPE.URL:
+    case SourceType.File:
+    case SourceType.URL:
       maxSize = limits.maxSizeMB * MB_TO_BYTES;
       break;
-    case SOURCE_TYPE.Text:
+    case SourceType.Text:
       maxSize = limits.maxTextLength;
       break;
     default:

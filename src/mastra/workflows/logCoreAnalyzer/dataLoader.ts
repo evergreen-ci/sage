@@ -3,13 +3,13 @@ import path from 'path';
 import { authenticatedEvergreenFetch } from '../../../utils/fetch';
 import { logger } from '../../../utils/logger';
 import { logAnalyzerConfig } from './config';
-import { SOURCE_TYPE, MB_TO_BYTES } from './constants';
+import { SourceType, MB_TO_BYTES } from './constants';
 import { validateSize, validateTokenLimit } from './utils';
 
 export interface LoadResult {
   text: string;
   metadata: {
-    source: SOURCE_TYPE;
+    source: SourceType;
     originalSize: number;
     estimatedTokens: number;
     truncated?: boolean;
@@ -26,7 +26,7 @@ export const loadFromFile = async (filePath: string): Promise<LoadResult> => {
 
   // Check file size first
   const stats = await fs.stat(resolvedPath);
-  validateSize(stats.size, SOURCE_TYPE.File);
+  validateSize(stats.size, SourceType.File);
 
   // Read file
   const buffer = await fs.readFile(resolvedPath);
@@ -44,7 +44,7 @@ export const loadFromFile = async (filePath: string): Promise<LoadResult> => {
   return {
     text,
     metadata: {
-      source: SOURCE_TYPE.File,
+      source: SourceType.File,
       originalSize: stats.size,
       estimatedTokens,
     },
@@ -125,7 +125,7 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
     return {
       text,
       metadata: {
-        source: SOURCE_TYPE.URL,
+        source: SourceType.URL,
         originalSize: totalSize,
         estimatedTokens,
         truncated,
@@ -158,7 +158,7 @@ export const loadFromText = (text: string | null | undefined): LoadResult => {
   }
 
   const size = text.length;
-  validateSize(size, SOURCE_TYPE.Text);
+  validateSize(size, SourceType.Text);
 
   // Check token limit
   const estimatedTokens = validateTokenLimit(text);
@@ -171,7 +171,7 @@ export const loadFromText = (text: string | null | undefined): LoadResult => {
   return {
     text,
     metadata: {
-      source: SOURCE_TYPE.Text,
+      source: SourceType.Text,
       originalSize: size,
       estimatedTokens,
     },
