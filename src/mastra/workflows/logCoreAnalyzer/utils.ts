@@ -118,20 +118,6 @@ export const estimateTokens = (text: string): number => {
 export const countTokens = (text: string): number => encode(text).length;
 
 /**
- * Create a token limit error message
- * @param estimatedTokens Actual number of tokens
- * @param maxTokens Maximum allowed tokens
- * @returns Formatted error message
- */
-const createTokenLimitError = (
-  estimatedTokens: number,
-  maxTokens: number
-): Error =>
-  new Error(
-    `Token limit constraint violated: Estimated ~${estimatedTokens} tokens, which exceeds the configured maximum of ${maxTokens} tokens`
-  );
-
-/**
  * Validate token count against configured limits
  * @param text - Text to validate token count for
  * @returns Estimated number of tokens
@@ -142,7 +128,9 @@ export const validateTokenLimit = (text: string): number => {
   const { maxTokens } = logAnalyzerConfig.limits;
 
   if (estimatedTokens > maxTokens) {
-    throw createTokenLimitError(estimatedTokens, maxTokens);
+    throw new Error(
+      `Token limit constraint violated: Estimated ~${estimatedTokens} tokens, which exceeds the configured maximum of ${maxTokens} tokens`
+    );
   }
 
   return estimatedTokens;
