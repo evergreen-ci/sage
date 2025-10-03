@@ -1,9 +1,9 @@
 import { Agent } from '@mastra/core/agent';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Memory } from '@mastra/memory';
+import { wrapMastraAgent } from 'braintrust';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { memoryStore } from '../../utils/memory';
-import { wrapAgentWithTracing } from '../../utils/tracing/wrapWithTracing';
 import { resolveLogFileUrlTool } from '../../workflows/evergreen/getLogFileUrlWorkflow';
 import { logCoreAnalyzerTool } from '../../workflows/logCoreAnalyzerWorkflow';
 import { askEvergreenAgentTool } from '../evergreenAgent';
@@ -19,7 +19,7 @@ const sageThinkingAgentMemory = new Memory({
   },
 });
 
-export const sageThinkingAgent: Agent = wrapAgentWithTracing(
+export const sageThinkingAgent: Agent = wrapMastraAgent(
   new Agent({
     name: 'Sage Thinking Agent',
     description:

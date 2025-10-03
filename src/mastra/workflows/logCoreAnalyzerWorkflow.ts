@@ -2,9 +2,9 @@ import { createTool } from '@mastra/core';
 import { Agent } from '@mastra/core/agent';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
+import { wrapMastraAgent } from 'braintrust';
 import { z } from 'zod';
 import { WinstonMastraLogger } from '../../utils/logger/winstonMastraLogger';
-import { wrapAgentWithTracing } from '../utils/tracing/wrapWithTracing';
 import { logAnalyzerConfig } from './logCoreAnalyzer/config';
 import {
   loadFromFile,
@@ -157,7 +157,7 @@ const LoopStateSchema = z.object({
 // Define the log analyzer agent for chunked processing
 // Initial analyzer - We use a bigger model for the first chunk, for better understanding of the structure and context
 
-const initialAnalyzerAgent = wrapAgentWithTracing(
+const initialAnalyzerAgent = wrapMastraAgent(
   new Agent({
     name: 'initial-analyzer-agent',
     description:
@@ -215,7 +215,7 @@ const RefinementAgentOutputSchema = z.object({
   summary: z.string(),
 });
 
-const refinementAgent = wrapAgentWithTracing(
+const refinementAgent = wrapMastraAgent(
   new Agent({
     name: 'refinement-agent',
     description:
@@ -290,7 +290,7 @@ const refineStep = createStep({
 });
 
 // Define the report formatter agent for final output
-const reportFormatterAgent = wrapAgentWithTracing(
+const reportFormatterAgent = wrapMastraAgent(
   new Agent({
     name: 'report-formatter-agent',
     description: 'Formats technical summaries into various output formats',
