@@ -1,6 +1,6 @@
+import path from 'path';
 import { Reporter, reportFailures } from 'braintrust';
 import junit, { TestSuite as JUnitTestSuite } from 'junit-report-builder';
-import path from 'path';
 import {
   BaseTestCase,
   ReporterEvalResult,

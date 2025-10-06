@@ -185,7 +185,10 @@ const importConfig = {
   name: 'import/rules',
   settings: {
     'import/resolver': {
-      typescript: true,
+      typescript: {
+        alwaysTryTypes: true,
+        project: './tsconfig.json',
+      },
       node: true,
     },
     'import/ignore': ['node_modules'],
@@ -198,8 +201,9 @@ const importConfig = {
     'import/no-dynamic-require': ERROR,
     'import/no-duplicates': [ERROR, { 'prefer-inline': true }],
     'import/no-extraneous-dependencies': OFF,
+    'import/no-relative-packages': ERROR,
     'import/no-unresolved': OFF,
-    'import/no-useless-path-segments': ERROR,
+    'import/no-useless-path-segments': [ERROR, { noUselessIndex: true }],
     'import/order': [
       ERROR,
       {
@@ -208,8 +212,8 @@ const importConfig = {
           order: 'asc',
         },
         groups: [
-          'external',
           'builtin',
+          'external',
           'internal',
           'parent',
           'sibling',
@@ -217,15 +221,13 @@ const importConfig = {
         ],
         pathGroups: [
           {
-            group: 'external',
-            pattern: '@**',
-          },
-          {
             group: 'internal',
-            pattern: '(agent|config|server|utils)/**',
+            pattern: '@/**',
+            position: 'before',
           },
         ],
-        pathGroupsExcludedImportTypes: ['react'],
+        pathGroupsExcludedImportTypes: ['builtin'],
+        'newlines-between': 'never',
       },
     ],
     'import/prefer-default-export': OFF,

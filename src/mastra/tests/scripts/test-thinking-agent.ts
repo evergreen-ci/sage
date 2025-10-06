@@ -1,7 +1,7 @@
 #!/usr/bin/env vite-node --script
 
 import readline from 'readline';
-import { createParsleyRuntimeContext } from 'mastra/memory/parsley/runtimeContext';
+import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
 import { mastra } from '../..';
 import { USER_ID } from '../../agents/constants';
 

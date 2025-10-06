@@ -2,8 +2,8 @@ import * as Sentry from '@sentry/node';
 import cors from 'cors';
 import express, { Application } from 'express';
 import expressListEndpoints from 'express-list-endpoints';
-import { config } from 'config';
-import { logger } from 'utils/logger';
+import { config } from '@/config';
+import { logger } from '@/utils/logger';
 import { db } from '../db/connection';
 import { userIdMiddleware } from './middlewares/authentication';
 import {

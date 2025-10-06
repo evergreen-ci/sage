@@ -1,7 +1,7 @@
 import { TABLE_THREADS, TABLE_MESSAGES } from '@mastra/core/storage';
 import request from 'supertest';
-import { LogTypes } from 'types/parsley';
-import { TaskLogOrigin } from 'types/task';
+import { LogTypes } from '@/types/parsley';
+import { TaskLogOrigin } from '@/types/task';
 import { memoryStore } from '../../../mastra/utils/memory';
 import setupTestAppServer from '../../setup';
 import { getMessageContent } from '../../utils';

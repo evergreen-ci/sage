@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { config, validateConfig } from 'config';
-import { mastra } from 'mastra';
+import { config, validateConfig } from '@/config';
+import { mastra } from '@/mastra';
 import { db } from '../../db/connection';
 
 const healthRoute = async (req: Request, res: Response) => {

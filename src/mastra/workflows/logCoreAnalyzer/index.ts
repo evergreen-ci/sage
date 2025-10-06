@@ -4,7 +4,7 @@ import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
 import { wrapMastraAgent } from 'braintrust';
 import { z } from 'zod';
-import logger from '../../../utils/logger';
+import logger from '@/utils/logger';
 import { logAnalyzerConfig } from './config';
 import { MB_TO_BYTES } from './constants';
 import {

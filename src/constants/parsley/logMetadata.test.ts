@@ -1,4 +1,4 @@
-import { LogTypes } from 'types/parsley';
+import { LogTypes } from '@/types/parsley';
 import { logMetadataSchema } from './logMetadata';
 
 describe('logMetadataSchema (discriminated union)', () => {

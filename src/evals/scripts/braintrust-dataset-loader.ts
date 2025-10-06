@@ -68,10 +68,10 @@
  * - Use --dry-run to preview dataset insertion without making actual changes.
  */
 
-import { Attachment, initDataset } from 'braintrust';
-import { parse } from 'csv-parse';
 import fs from 'fs';
 import path from 'path';
+import { Attachment, initDataset } from 'braintrust';
+import { parse } from 'csv-parse';
 
 const FILE_NAME_COLUMN = 'file_name';
 const MAX_ERROR_DISPLAY = 10;
