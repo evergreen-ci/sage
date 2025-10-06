@@ -16,16 +16,14 @@
       "@/*": ["./*"],
       "@/api-server/*": ["api-server/*"],
       "@/clients/*": ["clients/*"],
-      "@/config": ["config/index.ts"],
+      "@/config/*": ["config/*"],
       "@/constants/*": ["constants/*"],
       "@/db/*": ["db/*"],
       "@/gql/*": ["gql/*"],
       "@/mastra": ["mastra/index.ts"],
       "@/mastra/*": ["mastra/*"],
       "@/test-utils/*": ["test-utils/*"],
-      "@/types": ["types/index.ts"],
       "@/types/*": ["types/*"],
-      "@/utils": ["utils/index.ts"],
       "@/utils/*": ["utils/*"]
     },
 
