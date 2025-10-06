@@ -1,10 +1,10 @@
 import { gql } from 'graphql-tag';
 import { z } from 'zod';
+import { createGraphQLTool } from '@/mastra/utils/graphql/createGraphQLTool';
 import {
   GetTaskQuery,
   GetTaskQueryVariables,
 } from '../../../gql/generated/types';
-import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
 import evergreenClient from './graphql/evergreenClient';
 
 const GET_TASK = gql`

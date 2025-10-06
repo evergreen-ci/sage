@@ -7,13 +7,13 @@ import {
   getTaskTool,
   getTaskFilesTool,
   getTaskTestsTool,
-} from '../tools/evergreen';
-import { createToolFromAgent } from '../tools/utils';
-import { memoryStore } from '../utils/memory';
+} from '@/mastra/tools/evergreen';
+import { createToolFromAgent } from '@/mastra/tools/utils';
+import { memoryStore } from '@/mastra/utils/memory';
 import {
   getTaskHistoryWorkflow,
   getVersionWorkflow,
-} from '../workflows/evergreen';
+} from '@/mastra/workflows/evergreen';
 
 const evergreenAgentMemory = new Memory({
   storage: memoryStore,

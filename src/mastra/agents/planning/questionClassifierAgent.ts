@@ -1,8 +1,8 @@
 import { Agent } from '@mastra/core';
 import { wrapMastraAgent } from 'braintrust';
 import { z } from 'zod';
-import { gpt41 } from '../../models/openAI/gpt41';
-import { createToolFromAgent } from '../../tools/utils';
+import { gpt41 } from '@/mastra/models/openAI/gpt41';
+import { createToolFromAgent } from '@/mastra/tools/utils';
 
 /** Shared enums so prose, schema, and logic stay in sync */
 const QUESTION_CLASS = [

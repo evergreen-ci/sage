@@ -2,7 +2,7 @@ import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
 import { USER_ID } from '@/mastra/agents/constants';
 import { expectSuccess } from '@/test-utils/workflow-helpers';
-import { LogTypes } from '../../../../types/parsley';
+import { LogTypes } from '@/types/parsley';
 import getLogFileUrlWorkflow from '.';
 
 const mockGetTasksTool = vi.fn();

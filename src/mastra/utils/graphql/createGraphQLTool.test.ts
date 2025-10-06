@@ -1,7 +1,7 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
-import { GraphQLClientError } from '../../../utils/graphql/client';
-import logger from '../../../utils/logger';
+import { GraphQLClientError } from '@/utils/graphql/client';
+import logger from '@/utils/logger';
 import { createGraphQLTool } from './createGraphQLTool';
 
 const mockExecuteQuery = vi.fn();
@@ -37,7 +37,7 @@ const makeRuntimeContext = (userID?: string) => {
 
 const tracingContext = {};
 
-vi.mock('../../../utils/logger', () => ({
+vi.mock('../@/utils/logger', () => ({
   default: {
     warn: vi.fn(),
     error: vi.fn(),

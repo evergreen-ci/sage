@@ -1,4 +1,4 @@
-import sageServer from '../api-server';
+import sageServer from '@/api-server';
 
 const setupTestAppServer = () => {
   const app = sageServer.getApp();

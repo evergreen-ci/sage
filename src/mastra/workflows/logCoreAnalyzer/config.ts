@@ -1,4 +1,4 @@
-import { gpt41, gpt41Nano } from '../../models/openAI/gpt41';
+import { gpt41, gpt41Nano } from '@/mastra/models/openAI/gpt41';
 
 /**
  * Configuration for the Log Core Analyzer workflow. Some of these parameters may be moved to

@@ -1,12 +1,12 @@
 import { gql } from 'graphql-tag';
 import { z } from 'zod';
+import { createGraphQLTool } from '@/mastra/utils/graphql/createGraphQLTool';
 import {
   TaskTestsQuery,
   TaskTestsQueryVariables,
   SortDirection,
   TestSortCategory,
 } from '../../../gql/generated/types';
-import { createGraphQLTool } from '../../utils/graphql/createGraphQLTool';
 import evergreenClient from './graphql/evergreenClient';
 
 const GET_TASK_TESTS = gql`

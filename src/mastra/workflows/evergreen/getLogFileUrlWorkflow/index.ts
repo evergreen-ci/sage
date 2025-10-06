@@ -5,8 +5,8 @@ import {
   constructEvergreenTaskLogURL,
   getEvergreenTaskFileURL,
 } from '@/constants/parsley/logURLTemplates';
+import { getTaskTestsTool } from '@/mastra/tools/evergreen';
 import { LogTypes } from '@/types/parsley';
-import { getTaskTestsTool } from '../../../tools/evergreen';
 
 /** Log types that can be turned into URLs directly from metadata */
 const DIRECT_LOG_TYPES = [
