@@ -14,7 +14,7 @@ export const braintrustLogger = initLogger({
   apiKey: config.braintrust.apiKey,
 });
 
-export const mastra: Mastra = new Mastra({
+const mastra: Mastra = new Mastra({
   workflows: {
     ...evergreenWorkflows,
     logCoreAnalyzerWorkflow,
@@ -26,3 +26,5 @@ export const mastra: Mastra = new Mastra({
     level: 'info',
   }),
 });
+
+export default mastra;
