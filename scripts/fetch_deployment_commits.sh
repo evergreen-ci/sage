@@ -9,10 +9,6 @@ fi
 
 DEPLOYED_COMMIT_INPUT="$1"
 COMMITS_FILE="/tmp/deployment_commits.txt"
-# Generate email subject with date and first 7 characters of current commit hash
-EMAIL_SUBJECT="$(date '+%Y-%m-%d') Sage deploy to $(git rev-parse HEAD | cut -c1-7)"
-EMAIL_RECIPIENT="evergreen-deploys@mongodb.com"
-
 CURRENT_COMMIT=$(git rev-parse HEAD)
 
 # Expand short SHA to full SHA if needed
@@ -32,7 +28,11 @@ fi
 # Fetch commits between deployed and current commit
 git log --pretty=format:"%H %s" "$DEPLOYED_COMMIT".."$CURRENT_COMMIT" > "$COMMITS_FILE"
 
-# Optional: Print number of commits
+# Generate email subject with date and first 7 characters of current commit hash
+EMAIL_SUBJECT="$(date '+%Y-%m-%d') Sage deploy to $(echo "$CURRENT_COMMIT" | cut -c1-7)"
+EMAIL_RECIPIENT="evergreen-deploys@mongodb.com"
+
+# Print number of commits
 COMMIT_COUNT=$(wc -l < "$COMMITS_FILE")
 echo "Found $COMMIT_COUNT commits between deployed and current version"
 
@@ -78,13 +78,27 @@ HTML_EMAIL_BODY+="</ul>
 </body>
 </html>"
 
-# Send HTML email
-echo -e "$HTML_EMAIL_BODY" | mail -a "Content-Type: text/html" -s "$EMAIL_SUBJECT" "$EMAIL_RECIPIENT"
+# Print email template (not sending)
+echo ""
+echo "========================================="
+echo "Email Template (Not Sent)"
+echo "========================================="
+echo "To: $EMAIL_RECIPIENT"
+echo "Subject: $EMAIL_SUBJECT"
+echo ""
+echo -e "$EMAIL_BODY"
+echo ""
 
-# Print commits (optional)
+# Output HTML to file for reference
+HTML_FILE="/tmp/deployment_email.html"
+echo "$HTML_EMAIL_BODY" > "$HTML_FILE"
+echo "HTML email template saved to $HTML_FILE"
+
+# Print commits
+echo ""
 echo "Commits:"
 cat "$COMMITS_FILE"
 
 # Output file path for reference
+echo ""
 echo "Commits saved to $COMMITS_FILE"
-echo "Deployment commit email sent to $EMAIL_RECIPIENT"

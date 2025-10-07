@@ -99,7 +99,7 @@ steps:
       target:
         - production
 
-  - name: send-deployment-email
+  - name: log-deployment-commits
     image: alpine/git
     depends_on:
       - deploy-staging
@@ -107,9 +107,11 @@ steps:
       - name: cache
         path: /cache
     commands:
-      - apk add --no-cache bash curl mailx git
-      - chmod +x scripts/fetch_deployment_commits.sh
+      - apk add --no-cache bash git
       - PREVIOUS_VERSION=$(cat /cache/previous_version.txt)
+      - echo "Previous deployed version - $PREVIOUS_VERSION"
+      - echo "Current version - ${DRONE_COMMIT_SHA:0:7}"
+      - chmod +x scripts/fetch_deployment_commits.sh
       - ./scripts/fetch_deployment_commits.sh "$PREVIOUS_VERSION"
     when:
       event:
