@@ -11,6 +11,14 @@ DEPLOYED_COMMIT_INPUT="$1"
 COMMITS_FILE="/tmp/deployment_commits.txt"
 CURRENT_COMMIT=$(git rev-parse HEAD)
 
+# Check if this is the first deployment
+if [[ "$DEPLOYED_COMMIT_INPUT" == "none" ]]; then
+    echo "This is the first deployment - no previous version to compare"
+    echo "Current Commit: https://github.com/evergreen-ci/sage/commit/$CURRENT_COMMIT"
+    echo "Skipping commit comparison"
+    exit 0
+fi
+
 # Expand short SHA to full SHA if needed
 if [[ ${#DEPLOYED_COMMIT_INPUT} -eq 7 ]]; then
     echo "Expanding short SHA: $DEPLOYED_COMMIT_INPUT"

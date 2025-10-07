@@ -41,15 +41,21 @@ steps:
       KUBERNETES_TOKEN:
         from_secret: staging_kubernetes_token
     commands:
-      - kubectl config set-cluster default --server=https://api.staging.corp.mongodb.com --insecure-skip-tls-verify=true
-      - kubectl config set-credentials default --token="$KUBERNETES_TOKEN"
-      - kubectl config set-context default --cluster=default --user=default --namespace=devprod-evergreen
-      - kubectl config use-context default
-      - CURRENT_IMAGE=$(kubectl get deployment sage -n devprod-evergreen -o jsonpath='{.spec.template.spec.containers[0].image}')
-      - echo "Current deployed image - $CURRENT_IMAGE"
-      - SHORT_SHA=$(echo "$CURRENT_IMAGE" | sed -n 's/.*git-\([a-f0-9]\{7\}\).*/\1/p')
-      - echo "Extracted short SHA - $SHORT_SHA"
-      - echo "$SHORT_SHA" > /cache/previous_version.txt
+      - kubectl config set-cluster staging --server=https://api.staging.corp.mongodb.com --insecure-skip-tls-verify=true
+      - kubectl config set-credentials staging --token="$KUBERNETES_TOKEN"
+      - kubectl config set-context api.staging.corp.mongodb.com --cluster=staging --user=staging --namespace=devprod-evergreen
+      - kubectl config use-context api.staging.corp.mongodb.com
+      - |
+        if kubectl get deployment sage -n devprod-evergreen >/dev/null 2>&1; then
+          CURRENT_IMAGE=$(kubectl get deployment sage -n devprod-evergreen -o jsonpath='{.spec.template.spec.containers[0].image}')
+          echo "Current deployed image - $CURRENT_IMAGE"
+          SHORT_SHA=$(echo "$CURRENT_IMAGE" | sed -n 's/.*git-\([a-f0-9]\{7\}\).*/\1/p')
+          echo "Extracted short SHA - $SHORT_SHA"
+          echo "$SHORT_SHA" > /cache/previous_version.txt
+        else
+          echo "No existing deployment found - this is the first deployment"
+          echo "none" > /cache/previous_version.txt
+        fi
       - cat /cache/previous_version.txt
     when:
       event:
