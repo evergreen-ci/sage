@@ -63,6 +63,8 @@ steps:
 
   - name: deploy-staging
     image: public.ecr.aws/kanopy/drone-helm:v3
+    depends_on:
+      - publish
     settings:
       chart: mongodb/web-app
       chart_version: 4.31.0
@@ -83,6 +85,8 @@ steps:
 
   - name: deploy-prod
     image: public.ecr.aws/kanopy/drone-helm:v3
+    depends_on:
+      - publish
     settings:
       chart: mongodb/web-app
       chart_version: 4.31.0
