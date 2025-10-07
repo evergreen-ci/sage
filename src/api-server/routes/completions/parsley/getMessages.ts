@@ -3,7 +3,7 @@ import { RuntimeContext } from '@mastra/core/runtime-context';
 import { UIMessage } from 'ai';
 import { Request, Response } from 'express';
 import z from 'zod';
-import mastra from '@/mastra';
+import { mastra } from '@/mastra';
 import { ORCHESTRATOR_NAME } from '@/mastra/networks/constants';
 import { logger } from '@/utils/logger';
 

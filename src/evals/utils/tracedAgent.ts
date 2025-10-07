@@ -3,7 +3,7 @@ import { ToolResultPart } from 'ai';
 import { z } from 'zod';
 import { callModelWithTrace } from '@/evals/tracer';
 import { ModelOutput } from '@/evals/types';
-import mastra from '@/mastra';
+import { mastra } from '@/mastra';
 
 export interface TracedAgentOptions<Input, Output> {
   /**
