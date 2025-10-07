@@ -1,25 +1,39 @@
-import { SOURCE_TYPE } from './constants';
+import { simulateReadableStream } from 'ai';
+import { logAnalyzerConfig } from './config';
+import { SourceType } from './constants';
 import { loadFromFile, loadFromUrl, loadFromText } from './dataLoader';
 
-// Mock fs/promises
-vi.mock('fs/promises', () => ({
-  default: {
-    stat: vi.fn(),
-    readFile: vi.fn(),
-  },
+const fsMock = vi.hoisted(() => ({
+  stat: vi.fn(),
+  readFile: vi.fn(),
 }));
 
-// Mock global fetch
-global.fetch = vi.fn();
+vi.mock('fs/promises', () => ({ default: fsMock, ...fsMock }));
 
-// Mock gpt-tokenizer
 vi.mock('gpt-tokenizer', () => ({
-  encode: vi.fn(
-    (text: string) =>
-      // Simple mock: ~0.25 tokens per character
-      new Array(Math.ceil(text.length * 0.25))
-  ),
+  encode: vi.fn((text: string) => new Array(Math.ceil(text.length * 0.25))),
 }));
+
+const createFileSizeMock = (sizeInBytes: number) =>
+  ({ size: sizeInBytes }) as unknown as import('fs').Stats;
+
+// Constants for test scenarios
+const TEST_CONSTANTS = {
+  OVERSIZE_MULTIPLIER: 1.1,
+  TOKEN_MULTIPLIER: 5,
+  TEST_URLS: {
+    INVALID: 'https://example.com/non-evergreen.log',
+    VALID: 'http://localhost:9090/valid.log',
+    MISSING: 'http://localhost:9090/missing.log',
+    TIMEOUT: 'https://example.com/timeout.log',
+  },
+  ERROR_MESSAGES: {
+    SIZE_LIMIT: 'Content size constraint exceeded',
+    TOKEN_LIMIT: 'Token limit constraint violated',
+    URL_INVALID: 'Invalid URL: Must start with the Evergreen API endpoint',
+    FETCH_FAILURE: 'URL fetch operation failed',
+  },
+};
 
 describe('dataLoader', () => {
   beforeEach(() => {
@@ -29,62 +43,96 @@ describe('dataLoader', () => {
   describe('loadFromFile', () => {
     it('should reject files over size limit', async () => {
       const fs = (await import('fs/promises')).default;
+      const oversizeBytes = Math.floor(
+        logAnalyzerConfig.limits.maxSizeMB *
+          TEST_CONSTANTS.OVERSIZE_MULTIPLIER *
+          1024 *
+          1024
+      );
 
-      // Mock a 200MB file (exceeds 100MB limit)
-      vi.mocked(fs.stat).mockResolvedValue({
-        size: 200 * 1024 * 1024,
-      } as any);
+      vi.mocked(fs.stat).mockResolvedValue(createFileSizeMock(oversizeBytes));
 
-      await expect(loadFromFile('large.log')).rejects.toThrow('exceeds limit');
+      await expect(loadFromFile('large.log')).rejects.toThrow(
+        /Content size constraint exceeded/
+      );
     });
 
-    it('should load valid files', async () => {
+    it('should reject invalid or null file paths', async () => {
+      await expect(loadFromFile('')).rejects.toThrow();
+      await expect(loadFromFile(null as unknown as string)).rejects.toThrow();
+    });
+
+    it('should load valid files within size and token limits', async () => {
       const fs = (await import('fs/promises')).default;
+      const validSizeBytes = Math.floor(
+        logAnalyzerConfig.limits.maxSizeMB * 0.5 * 1024 * 1024
+      );
 
-      // Mock a 1MB file
-      vi.mocked(fs.stat).mockResolvedValue({
-        size: 1024 * 1024,
-      } as any);
-
+      vi.mocked(fs.stat).mockResolvedValue(createFileSizeMock(validSizeBytes));
       vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('log content'));
 
       const result = await loadFromFile('valid.log');
       expect(result.text).toBe('log content');
-      expect(result.metadata.source).toBe(SOURCE_TYPE.FILE);
-      expect(result.metadata.originalSize).toBe(1024 * 1024);
+      expect(result.metadata.source).toBe(SourceType.File);
+      expect(result.metadata.originalSize).toBe(validSizeBytes);
     });
 
     it('should reject files with too many tokens', async () => {
       const fs = (await import('fs/promises')).default;
+      const fileSizeBytes = Math.floor(
+        logAnalyzerConfig.limits.maxSizeMB * 0.9 * 1024 * 1024
+      );
+      const textLength =
+        logAnalyzerConfig.limits.maxChars * TEST_CONSTANTS.TOKEN_MULTIPLIER;
+      const hugeText = 'x'.repeat(textLength);
 
-      // Mock a file that's under size limit but over token limit
-      const hugeText = 'x'.repeat(60_000_000); // ~15M tokens
-
-      vi.mocked(fs.stat).mockResolvedValue({
-        size: hugeText.length,
-      } as any);
-
+      vi.mocked(fs.stat).mockResolvedValue(createFileSizeMock(fileSizeBytes));
       vi.mocked(fs.readFile).mockResolvedValue(Buffer.from(hugeText));
 
-      await expect(loadFromFile('huge-tokens.log')).rejects.toThrow(
-        'tokens, exceeds limit'
-      );
+      try {
+        await loadFromFile('huge-tokens.log');
+        // Backstop for the test
+        throw new Error('Should have thrown an error');
+      } catch (error) {
+        expect((error as Error).message).toMatch(
+          /Token limit constraint violated/
+        );
+      }
     });
   });
 
   describe('loadFromUrl', () => {
-    it('should reject URLs over size limit', async () => {
+    it('should truncate downloaded content over size limit', async () => {
+      const oversizeBytes = Math.floor(
+        logAnalyzerConfig.limits.maxSizeMB *
+          TEST_CONSTANTS.OVERSIZE_MULTIPLIER *
+          1024 *
+          1024
+      );
+      const oversizeContent = 'x'.repeat(oversizeBytes);
+      const CHUNK_SIZE = 4096 * 1000; // 4MB
+      const oversizeContentChunks = [];
+      for (let i = 0; i < oversizeContent.length; i += CHUNK_SIZE) {
+        oversizeContentChunks.push(
+          Buffer.from(oversizeContent.slice(i, i + CHUNK_SIZE))
+        );
+      }
+
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        headers: new Headers({
-          'content-length': String(200 * 1024 * 1024), // 200MB
+        headers: new Headers(),
+        body: simulateReadableStream({
+          chunks: oversizeContentChunks,
         }),
-        text: async () => 'x'.repeat(200 * 1024 * 1024),
       });
 
-      await expect(
-        loadFromUrl('https://example.com/large.log')
-      ).rejects.toThrow('exceeds limit');
+      const result = await loadFromUrl(TEST_CONSTANTS.TEST_URLS.VALID);
+      expect(result.metadata.truncated).toBe(true);
+      // Size can be slightly over due to chunk boundaries
+      expect(result.metadata.originalSize).toBeGreaterThan(
+        logAnalyzerConfig.limits.maxSizeMB * 1024 * 1024
+      );
+      expect(result.text.length).toBeLessThanOrEqual(oversizeBytes);
     });
 
     it('should load valid URLs', async () => {
@@ -95,15 +143,16 @@ describe('dataLoader', () => {
         headers: new Headers({
           'content-length': String(content.length),
         }),
-        text: async () => content,
+        body: simulateReadableStream({ chunks: [Buffer.from(content)] }),
       });
 
-      const result = await loadFromUrl('https://example.com/valid.log');
+      const result = await loadFromUrl(TEST_CONSTANTS.TEST_URLS.VALID);
       expect(result.text).toBe(content);
-      expect(result.metadata.source).toBe(SOURCE_TYPE.URL);
+      expect(result.metadata.source).toBe(SourceType.URL);
+      expect(result.metadata.truncated).toBe(false);
     });
 
-    it('should handle fetch failures', async () => {
+    it('should handle fetch failures with detailed error message', async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 404,
@@ -111,11 +160,11 @@ describe('dataLoader', () => {
       });
 
       await expect(
-        loadFromUrl('https://example.com/missing.log')
-      ).rejects.toThrow('Failed to fetch URL: 404 Not Found');
+        loadFromUrl(TEST_CONSTANTS.TEST_URLS.MISSING)
+      ).rejects.toThrow(/URL fetch operation failed: 404 Not Found/);
     });
 
-    it('should handle timeout', async () => {
+    it('should handle network timeout', async () => {
       global.fetch = vi.fn().mockImplementation(
         () =>
           new Promise((_, reject) => {
@@ -124,30 +173,64 @@ describe('dataLoader', () => {
       );
 
       await expect(
-        loadFromUrl('https://example.com/timeout.log')
+        loadFromUrl(TEST_CONSTANTS.TEST_URLS.TIMEOUT)
       ).rejects.toThrow();
     });
   });
 
   describe('loadFromText', () => {
-    it('should reject text over character limit', async () => {
-      const hugeText = 'x'.repeat(100_000_000); // 100M characters
+    it('should reject extremely long text', async () => {
+      const hugeText = 'x'.repeat(
+        logAnalyzerConfig.limits.maxTextLength + 1000
+      );
 
-      await expect(loadFromText(hugeText)).rejects.toThrow('exceeds limit');
+      try {
+        loadFromText(hugeText);
+        throw new Error('Should have thrown an error');
+      } catch (error) {
+        expect((error as Error).message).toMatch(
+          /Content size constraint exceeded/
+        );
+      }
     });
 
-    it('should reject text over token limit', async () => {
-      // Text that's under character limit but over token limit
-      const text = 'x'.repeat(60_000_000); // ~15M tokens
-      await expect(loadFromText(text)).rejects.toThrow('tokens, exceeds limit');
+    it('should accept large text within limits', () => {
+      // Test with text that's large but within both size and token limits
+      const charCount = Math.floor(
+        logAnalyzerConfig.limits.maxTextLength * 0.9
+      );
+      const text = 'x'.repeat(charCount);
+
+      const result = loadFromText(text);
+      expect(result.text).toBe(text);
+      expect(result.metadata.source).toBe(SourceType.Text);
+      expect(result.metadata.originalSize).toBe(charCount);
     });
 
-    it('should accept valid text', async () => {
+    it('should reject empty or null text', () => {
+      try {
+        loadFromText('');
+        throw new Error('Should have thrown an error');
+      } catch (error) {
+        expect((error as Error).message).toMatch(/Text cannot be empty/);
+      }
+
+      try {
+        loadFromText(null as unknown as string);
+        throw new Error('Should have thrown an error');
+      } catch (error) {
+        expect((error as Error).message).toMatch(
+          /Text cannot be null or undefined/
+        );
+      }
+    });
+
+    it('should accept valid text', () => {
       const text = 'Valid log content';
 
-      const result = await loadFromText(text);
+      const result = loadFromText(text);
       expect(result.text).toBe(text);
-      expect(result.metadata.source).toBe(SOURCE_TYPE.TEXT);
+      expect(result.metadata.source).toBe(SourceType.Text);
       expect(result.metadata.originalSize).toBe(text.length);
     });
   });

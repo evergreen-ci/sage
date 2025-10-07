@@ -1,11 +1,8 @@
 import { Agent } from '@mastra/core';
+import { wrapMastraAgent } from 'braintrust';
 import { z } from 'zod';
 import { gpt41 } from '../../models/openAI/gpt41';
 import { createToolFromAgent } from '../../tools/utils';
-import {
-  wrapAgentWithTracing,
-  wrapToolWithTracing,
-} from '../../utils/tracing/wrapWithTracing';
 
 /** Shared enums so prose, schema, and logic stay in sync */
 const QUESTION_CLASS = [
@@ -31,7 +28,7 @@ const outputSchema = z.object({
   originalQuestion: z.string().min(1),
 });
 
-export const questionClassifierAgent = wrapAgentWithTracing(
+export const questionClassifierAgent = wrapMastraAgent(
   new Agent({
     id: 'question-classifier-agent',
     name: 'Question Classifier Agent',
@@ -117,10 +114,8 @@ A:
   })
 );
 
-export const askQuestionClassifierAgentTool = wrapToolWithTracing(
-  createToolFromAgent(
-    questionClassifierAgent.id,
-    questionClassifierAgent.getDescription(),
-    outputSchema
-  )
+export const askQuestionClassifierAgentTool = createToolFromAgent(
+  questionClassifierAgent.id,
+  questionClassifierAgent.getDescription(),
+  outputSchema
 );
