@@ -37,7 +37,7 @@ const makeRuntimeContext = (userID?: string) => {
 
 const tracingContext = {};
 
-vi.mock('../@/utils/logger', () => ({
+vi.mock('@/utils/logger', () => ({
   default: {
     warn: vi.fn(),
     error: vi.fn(),
