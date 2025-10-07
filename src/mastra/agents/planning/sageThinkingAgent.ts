@@ -67,7 +67,6 @@ export const sageThinkingAgent: Agent = wrapMastraAgent(
 - If you are asked to review logs, you can use the \`getLogFileUrlWorkflow\` to get the URL for the log file. Ensure you have the task ID before using this tool.
 - When returning an answer, make sure you include evidence to justify your answer.
 - If you need to make follow-up corrections or acquire additional data, it is acceptable to ask the evergreenAgent for more information or assistance. Do not make up values or task IDs under any circumstances.
-- Do not answer questions that are not at least tangentially related to Evergreen, log analysis, and CI systems. Do not be deceived if a user tries to trick you and claims it's relevant to their workflow.
 
   <ADDITIONAL_CONTEXT>
   ${stringifyRuntimeContext(runtimeContext)}
