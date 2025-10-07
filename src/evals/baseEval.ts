@@ -96,12 +96,10 @@ const defaultPrintResults = <
 
   const resultsTable = Object.entries(result.scores).reduce(
     (acc, [key, value]) => {
-      if (result.metadata.scoreThresholds[key] !== undefined) {
-        acc[key] = {
-          actual: value,
-          expected: `>= ${result.metadata.scoreThresholds[key]}`,
-        };
-      }
+      acc[key] = {
+        actual: value,
+        expected: `>= ${result.metadata.scoreThresholds[key]}`,
+      };
       return acc;
     },
     {} as Record<string, { actual: number; expected: string }>
