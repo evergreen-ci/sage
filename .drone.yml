@@ -46,11 +46,9 @@ steps:
       - kubectl config set-context api.staging.corp.mongodb.com --cluster=staging --user=staging --namespace=devprod-evergreen
       - kubectl config use-context api.staging.corp.mongodb.com
       - |
-        if kubectl get deployment sage -n devprod-evergreen >/dev/null 2>&1; then
-          CURRENT_IMAGE=$(kubectl get deployment sage -n devprod-evergreen -o jsonpath='{.spec.template.spec.containers[0].image}')
-          echo "Current deployed image - $CURRENT_IMAGE"
-          SHORT_SHA=$(echo "$CURRENT_IMAGE" | sed -n 's/.*git-\([a-f0-9]\{7\}\).*/\1/p')
-          echo "Extracted short SHA - $SHORT_SHA"
+        SHORT_SHA=$(kubectl get pods --selector=release=sage -n devprod-evergreen -o jsonpath='{.items[*].metadata.labels}' 2>/dev/null | cut -d'}' -f1 | grep -oE 'git-[0-9a-fA-F]+' | cut -d- -f2 | head -n1)
+        if [ -n "$SHORT_SHA" ]; then
+          echo "Found deployed version - $SHORT_SHA"
           echo "$SHORT_SHA" > /cache/previous_version.txt
         else
           echo "No existing deployment found - this is the first deployment"
