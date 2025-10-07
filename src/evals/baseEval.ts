@@ -94,11 +94,14 @@ const defaultPrintResults = <
 ) => {
   console.log(`Eval for '${result.metadata.testName}':`);
 
-  const resultsTable = Object.entries(result.scores).reduce(
-    (acc, [key, value]) => {
+  const resultsTable = Object.keys(result.metadata.scoreThresholds).reduce(
+    (acc, key) => {
+      const isScoreDefined = result.metadata.scoreThresholds[key] !== null;
       acc[key] = {
-        actual: value,
-        expected: `>= ${result.metadata.scoreThresholds[key]}`,
+        actual: result.scores[key],
+        expected: isScoreDefined
+          ? `>= ${result.metadata.scoreThresholds[key]}`
+          : 'N/A',
       };
       return acc;
     },
