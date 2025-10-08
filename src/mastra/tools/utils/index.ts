@@ -40,7 +40,7 @@ export const createToolFromAgent = <
         throw new Error(`Agent ${agentId} not found`);
       }
       const constructedMessage = constructAgentMessage(context);
-      const result = await callableAgent.generateVNext(constructedMessage, {
+      const result = await callableAgent.generate(constructedMessage, {
         runtimeContext,
       });
       return result.text;

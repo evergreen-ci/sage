@@ -52,7 +52,7 @@ const createTracedAgent =
     const agent = mastra.getAgent(options.agentName);
 
     // Generate response with default or provided options
-    const response = await agent.generateVNext(
+    const response = await agent.generate(
       typeof input === 'string'
         ? input
         : (((input as Record<string, unknown>).content ?? input) as string),
