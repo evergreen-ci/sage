@@ -1,7 +1,7 @@
 import { createAzure } from '@ai-sdk/azure';
 import { LanguageModelV2 } from '@ai-sdk/provider';
-import { config } from '../../../config';
-import { logger } from '../../../utils/logger';
+import { config } from '@/config';
+import { logger } from '@/utils/logger';
 
 /**
  * BaseModel is a class that creates a language model from an Azure OpenAI deployment.

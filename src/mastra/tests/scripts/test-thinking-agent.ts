@@ -1,9 +1,9 @@
 #!/usr/bin/env vite-node --script
 
 import readline from 'readline';
-import { createParsleyRuntimeContext } from 'mastra/memory/parsley/runtimeContext';
-import { mastra } from '../..';
-import { USER_ID } from '../../agents/constants';
+import { mastra } from '@/mastra';
+import { USER_ID } from '@/mastra/agents/constants';
+import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
 
 /**
  * Test script for the sageThinkingAgent - THIS MATCHES STAGING BEHAVIOR

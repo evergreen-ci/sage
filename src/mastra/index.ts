@@ -1,7 +1,7 @@
 import { Mastra } from '@mastra/core/mastra';
 import { initLogger } from 'braintrust';
-import { config } from '../config';
-import { WinstonMastraLogger } from '../utils/logger/winstonMastraLogger';
+import { config } from '@/config';
+import { WinstonMastraLogger } from '@/utils/logger/winstonMastraLogger';
 import { evergreenAgent } from './agents/evergreenAgent';
 import { questionClassifierAgent } from './agents/planning/questionClassifierAgent';
 import { sageThinkingAgent } from './agents/planning/sageThinkingAgent';

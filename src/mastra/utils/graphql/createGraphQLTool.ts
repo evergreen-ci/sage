@@ -1,12 +1,9 @@
 import { createTool, Tool, ToolExecutionContext } from '@mastra/core';
 import { DocumentNode } from 'graphql';
-import { z, ZodType } from 'zod';
-import {
-  GraphQLClient,
-  GraphQLClientError,
-} from '../../../utils/graphql/client';
-import logger from '../../../utils/logger';
-import { USER_ID } from '../../agents/constants';
+import { z } from 'zod';
+import { USER_ID } from '@/mastra/agents/constants';
+import { GraphQLClient, GraphQLClientError } from '@/utils/graphql/client';
+import logger from '@/utils/logger';
 
 interface GraphQLToolInputParams<
   GraphQLQuery extends object,
@@ -34,8 +31,8 @@ interface GraphQLToolInputParams<
 export const createGraphQLTool = <
   GraphQLQuery extends object,
   GraphQLQueryVariables extends object,
-  TSuspendSchema extends ZodType = ZodType<unknown>,
-  TResumeSchema extends ZodType = ZodType<unknown>,
+  TSuspendSchema extends z.ZodType = z.ZodType<unknown>,
+  TResumeSchema extends z.ZodType = z.ZodType<unknown>,
 >({
   client,
   description,

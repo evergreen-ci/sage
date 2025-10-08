@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { sentryService } from '../../utils/sentry';
+import { sentryService } from '@/utils/sentry';
 
 /**
  * Middleware to enrich Sentry scope with request context

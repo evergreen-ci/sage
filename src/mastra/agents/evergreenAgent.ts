@@ -2,18 +2,18 @@ import { Workflow } from '@mastra/core';
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { wrapMastraAgent } from 'braintrust';
-import { gpt41 } from '../models/openAI/gpt41';
+import { gpt41 } from '@/mastra/models/openAI/gpt41';
 import {
   getTaskTool,
   getTaskFilesTool,
   getTaskTestsTool,
-} from '../tools/evergreen';
-import { createToolFromAgent } from '../tools/utils';
-import { memoryStore } from '../utils/memory';
+} from '@/mastra/tools/evergreen';
+import { createToolFromAgent } from '@/mastra/tools/utils';
+import { memoryStore } from '@/mastra/utils/memory';
 import {
   getTaskHistoryWorkflow,
   getVersionWorkflow,
-} from '../workflows/evergreen';
+} from '@/mastra/workflows/evergreen';
 
 const evergreenAgentMemory = new Memory({
   storage: memoryStore,

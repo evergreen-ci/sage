@@ -2,9 +2,9 @@ import { convertMessages } from '@mastra/core/agent';
 import { UIMessage } from 'ai';
 import { Request, Response } from 'express';
 import z from 'zod';
-import { mastra } from 'mastra';
-import { createParsleyRuntimeContext } from 'mastra/memory/parsley/runtimeContext';
-import { logger } from 'utils/logger';
+import { mastra } from '@/mastra';
+import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
+import { logger } from '@/utils/logger';
 
 const getMessagesParamsSchema = z.object({
   conversationId: z.string().min(1),

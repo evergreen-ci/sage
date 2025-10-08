@@ -1,7 +1,7 @@
 import { context, trace } from '@opentelemetry/api';
 import express from 'express';
-import { KANOPY_AUTH_HEADER } from '../../constants/headers';
-import { logger } from '../../utils/logger';
+import { KANOPY_AUTH_HEADER } from '@/constants/headers';
+import { logger } from '@/utils/logger';
 
 interface KanopyJWTClaims {
   sub: string;

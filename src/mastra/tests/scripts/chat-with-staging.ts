@@ -10,10 +10,10 @@
  * yarn chat-with-staging
  */
 
-import { UIMessageChunk } from 'ai';
 import { execSync } from 'child_process';
 import https from 'https';
 import readline from 'readline';
+import { UIMessageChunk } from 'ai';
 
 const STAGING_URL = 'https://sage.devprod-evergreen.staging.corp.mongodb.com';
 const CHAT_ENDPOINT = '/completions/parsley/conversations/chat';

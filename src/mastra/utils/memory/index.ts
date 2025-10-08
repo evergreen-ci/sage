@@ -1,5 +1,5 @@
 import { MongoDBStore } from '@mastra/mongodb';
-import { config } from '../../../config';
+import { config } from '@/config';
 
 export const memoryStore = new MongoDBStore({
   dbName: config.db.dbName,

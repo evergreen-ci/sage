@@ -2,19 +2,19 @@ import * as Sentry from '@sentry/node';
 import cors from 'cors';
 import express, { Application } from 'express';
 import expressListEndpoints from 'express-list-endpoints';
-import { config } from 'config';
-import { logger } from 'utils/logger';
-import { db } from '../db/connection';
-import { userIdMiddleware } from './middlewares/authentication';
+import { userIdMiddleware } from '@/api-server/middlewares/authentication';
+import { sentryContextMiddleware } from '@/api-server/middlewares/sentry';
+import { completionsRoute, loginRoute } from '@/api-server/routes';
+import healthRoute from '@/api-server/routes/health';
+import rootRoute from '@/api-server/routes/root';
+import { config } from '@/config';
+import { db } from '@/db/connection';
+import { logger } from '@/utils/logger';
 import {
   requestIdMiddleware,
   httpLoggingMiddleware,
   errorLoggingMiddleware,
 } from './middlewares/logging';
-import { sentryContextMiddleware } from './middlewares/sentry';
-import { completionsRoute, loginRoute } from './routes';
-import healthRoute from './routes/health';
-import rootRoute from './routes/root';
 
 /**
  * `startServer` is a function that starts the server.

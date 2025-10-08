@@ -1,4 +1,4 @@
-import { TestUser } from 'evals/constants';
+import { TestUser } from '@/evals/constants';
 import { TestCase } from './types';
 
 const restrictedTaskId =

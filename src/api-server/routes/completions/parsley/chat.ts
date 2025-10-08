@@ -7,12 +7,12 @@ import {
 import { currentSpan } from 'braintrust';
 import { Request, Response } from 'express';
 import z from 'zod';
-import { logMetadataSchema } from 'constants/parsley/logMetadata';
-import { mastra } from 'mastra';
-import { createParsleyRuntimeContext } from 'mastra/memory/parsley/runtimeContext';
-import { logger } from 'utils/logger';
-import { USER_ID } from '../../../../mastra/agents/constants';
-import { runWithRequestContext } from '../../../../mastra/utils/requestContext';
+import { logMetadataSchema } from '@/constants/parsley/logMetadata';
+import { mastra } from '@/mastra';
+import { USER_ID } from '@/mastra/agents/constants';
+import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
+import { runWithRequestContext } from '@/mastra/utils/requestContext';
+import { logger } from '@/utils/logger';
 import { uiMessageSchema } from './validators';
 
 const addMessageInputSchema = z.object({

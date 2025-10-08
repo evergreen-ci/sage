@@ -1,10 +1,10 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Factuality } from 'autoevals';
 import { Eval } from 'braintrust';
-import { ReporterName, PROJECT_NAME } from 'evals/constants';
-import { toolUsage } from 'evals/scorers';
-import { USER_ID, EVERGREEN_AGENT_NAME } from 'mastra/agents/constants';
-import { tracedAgentEval } from '../utils/tracedAgent';
+import { ReporterName, PROJECT_NAME } from '@/evals/constants';
+import { toolUsage } from '@/evals/scorers';
+import { tracedAgentEval } from '@/evals/utils/tracedAgent';
+import { USER_ID, EVERGREEN_AGENT_NAME } from '@/mastra/agents/constants';
 import { testCases } from './testCases';
 import { TestInput, TestResult } from './types';
 

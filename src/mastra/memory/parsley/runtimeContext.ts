@@ -1,5 +1,5 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
-import { USER_ID } from '../../agents/constants';
+import { USER_ID } from '@/mastra/agents/constants';
 
 type ParsleyRuntimeContext = {
   [USER_ID]?: string;

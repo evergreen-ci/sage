@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { config, validateConfig } from 'config';
-import { mastra } from 'mastra';
-import { db } from '../../db/connection';
+import { config, validateConfig } from '@/config';
+import { db } from '@/db/connection';
+import { mastra } from '@/mastra';
 
 const healthRoute = async (req: Request, res: Response) => {
   const configErrors = validateConfig();

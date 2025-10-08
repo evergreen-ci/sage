@@ -1,6 +1,6 @@
 import { MastraError } from '@mastra/core/error';
 import { MastraLogger, LogLevel } from '@mastra/core/logger';
-import { logger as customLogger } from '.';
+import loggerInstance from './setup';
 
 /**
  * WinstonMastraLogger is a wrapper around the Winston logger that implements the MastraLogger interface.
@@ -11,24 +11,28 @@ export class WinstonMastraLogger extends MastraLogger {
     super(options);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   debug(message: string, ...args: any[]): void {
-    customLogger.debug(message, ...args);
+    loggerInstance.debug(message, ...args);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   info(message: string, ...args: any[]): void {
-    customLogger.info(message, ...args);
+    loggerInstance.info(message, ...args);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   warn(message: string, ...args: any[]): void {
-    customLogger.warn(message, ...args);
+    loggerInstance.warn(message, ...args);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   error(message: string, ...args: any[]): void {
-    customLogger.error(message, ...args);
+    loggerInstance.error(message, ...args);
   }
 
   override trackException(error: MastraError): void {
-    customLogger.error('Exception tracked', {
+    loggerInstance.error('Exception tracked', {
       name: error.name,
       message: error.message,
       stack: error.stack,

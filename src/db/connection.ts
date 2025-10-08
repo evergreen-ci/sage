@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
-import { config } from '../config';
-import logger from '../utils/logger';
+import { config } from '@/config';
+import logger from '@/utils/logger';
 
 type DBStats = {
   ok: number;
