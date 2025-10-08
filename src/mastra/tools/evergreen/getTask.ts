@@ -17,6 +17,10 @@ const GET_TASK = gql`
       patchNumber
       buildVariant
       projectIdentifier
+      requester
+      baseTask {
+        id
+      }
       versionMetadata {
         id
         isPatch
@@ -50,6 +54,13 @@ const getTaskOutputSchema = z.object({
     patchNumber: z.number().optional().nullable(),
     buildVariant: z.string(),
     projectIdentifier: z.string().optional().nullable(),
+    requester: z.string(),
+    baseTask: z
+      .object({
+        id: z.string(),
+      })
+      .optional()
+      .nullable(),
     versionMetadata: z.object({
       id: z.string(),
       isPatch: z.boolean(),

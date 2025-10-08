@@ -43,7 +43,7 @@ const GET_TASK_TESTS = gql`
             urlRaw
           }
           status
-          testFile
+          testName: testFile
         }
         totalTestCount
       }
@@ -82,7 +82,7 @@ const getTaskTestsOutputSchema = z.object({
           baseStatus: z.string().optional(),
           duration: z.number().optional(),
           status: z.string(),
-          testFile: z.string(),
+          testName: z.string(),
           logs: z.object({
             urlParsley: z.string().optional(),
             urlRaw: z.string().optional(),
