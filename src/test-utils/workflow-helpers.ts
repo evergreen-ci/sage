@@ -1,9 +1,4 @@
-import {
-  WorkflowResult,
-  Step,
-  DefaultEngineType,
-  StepResult,
-} from '@mastra/core';
+import { WorkflowResult, Step, StepResult, StepsRecord } from '@mastra/core';
 import { z } from 'zod';
 
 /**
@@ -13,32 +8,27 @@ import { z } from 'zod';
 export function expectSuccess<
   TInput extends z.ZodTypeAny,
   TOutput extends z.ZodTypeAny,
+  TSteps extends Step<string, any, any>[] = Step<string, any, any>[],
 >(
-  wr: WorkflowResult<
-    TInput,
-    TOutput,
-    Step<
-      string,
-      z.ZodTypeAny,
-      z.ZodTypeAny,
-      z.ZodTypeAny,
-      z.ZodTypeAny,
-      DefaultEngineType
-    >[]
-  >
+  wr: WorkflowResult<z.ZodObject<any>, TInput, TOutput, TSteps>
 ): asserts wr is {
   status: 'success';
-  result: TOutput;
-  input: TInput;
+  result: z.infer<TOutput>;
+  input: z.infer<TInput>;
   steps: {
-    [x: string]:
-      | StepResult<unknown, unknown, unknown, unknown>
-      | StepResult<unknown, unknown, unknown, unknown>;
+    [K in keyof StepsRecord<TSteps>]: StepsRecord<TSteps>[K]['outputSchema'] extends undefined
+      ? StepResult<unknown, unknown, unknown, unknown>
+      : StepResult<
+          z.infer<NonNullable<StepsRecord<TSteps>[K]['inputSchema']>>,
+          z.infer<NonNullable<StepsRecord<TSteps>[K]['resumeSchema']>>,
+          z.infer<NonNullable<StepsRecord<TSteps>[K]['suspendSchema']>>,
+          z.infer<NonNullable<StepsRecord<TSteps>[K]['outputSchema']>>
+        >;
   };
 } {
   expect(wr.status).toBe('success');
   if (wr.status === 'success') {
-    expect(wr.result.length).toBeGreaterThan(0);
+    expect(wr.result).toBeDefined();
   } else {
     throw new Error('Workflow result is not successful');
   }
