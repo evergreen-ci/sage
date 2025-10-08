@@ -16,24 +16,37 @@ OUTPUT_FILE="temp/deploy_email.html"
 # Create temp directory if it doesn't exist
 mkdir -p temp
 
-# Get the repository URL from git config
-REPO_URL=$(git config --get remote.origin.url | sed 's/\.git$//' | sed 's/git@github.com:/https:\/\/github.com\//')
+# Get the repository URL, converting SSH (git@host:user/repo) to HTTPS 
+# and stripping the .git extension for a clean web link.
+# This is more general than the original.
+REPO_URL=$(git config --get remote.origin.url | sed -e 's/\.git$//' -e 's/^git@\([^:]*\):/https:\/\/\1\//')
 
-# Generate HTML
-HTML_CONTENT="<list>
-"
+# Store the list items in a temporary variable first
+LIST_ITEMS=""
 
-# Get commits between previous and current, formatted
+# Get commits between previous and current (exclusive of PREV_COMMIT)
 while read -r hash message; do
-  # Get 7-digit hash
-  short_hash=$(echo "$hash" | cut -c1-7)
-  HTML_CONTENT+="<a href=\"${REPO_URL}/commit/${hash}\">${short_hash} ${message}</a>
-"
-done < <(git log --pretty=format:"%H %s" ${PREV_COMMIT}..${CURRENT_COMMIT} --reverse)
+  short_hash=${hash:0:7}
+  # Use a Here-Document to build the safe, unstyled list item
+  LIST_ITEMS+=$(cat <<EOF
+<li><a href="${REPO_URL}/commit/${hash}">${short_hash}</a> ${message}</li>
+EOF
+)
+done < <(git log --pretty=format:"%H %s" ${PREV_COMMIT}^..${CURRENT_COMMIT})
 
-HTML_CONTENT+="</list>
+# Generate final HTML content using a Here-Document for clean output
+HTML_CONTENT=$(cat <<EOF
+<p>The following changes were deployed:</p>
+<ul>
+${LIST_ITEMS}
+</ul>
 
-To revert, rerun drone release for ${PREV_COMMIT}"
+<p>
+    <strong>Deploying commit:</strong> ${CURRENT_COMMIT:0:7}<br>
+    To revert, rerun release for commit: ${PREV_COMMIT:0:7}
+</p>
+EOF
+)
 
 # Print to stdout
 echo "$HTML_CONTENT"
