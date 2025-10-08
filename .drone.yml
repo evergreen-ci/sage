@@ -42,8 +42,16 @@ steps:
       - kubectl config set-credentials staging --token="$KUBE_TOKEN"
       - kubectl config set-context staging --cluster=staging --user=staging --namespace=devprod-evergreen
       - kubectl config use-context staging
-        - PREV_COMMIT=$(kubectl get pods --selector=release=sage -n devprod-evergreen -o jsonpath='{.items[*].metadata.labels}' 2>/dev/null | cut -d'}' -f1 | grep -oE 'git-[0-9a-fA-F]+' | cut -d- -f2 | head -n1)
-        - if [ -n "$PREV_COMMIT" ]; then ./scripts/generate_deploy_email.sh $PREV_COMMIT; cp temp/deploy_email.html /shared/deploy_email.html; else echo "No previous commit found"; fi
+      - |
+        PREV_COMMIT=$(kubectl get pods --selector=release=sage -n devprod-evergreen \
+          -o jsonpath='{.items[*].metadata.labels}' 2>/dev/null | cut -d'}' -f1 | \
+          grep -oE 'git-[0-9a-fA-F]+' | cut -d- -f2 | head -n1)
+        if [ -n "$PREV_COMMIT" ]; then
+          ./scripts/generate_deploy_email.sh "$PREV_COMMIT"
+          cp temp/deploy_email.html /shared/deploy_email.html
+        else
+          echo "No previous commit found"
+        fi
     environment:
       KUBE_API_SERVER: https://api.staging.corp.mongodb.com
       KUBE_TOKEN:
