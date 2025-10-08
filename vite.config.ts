@@ -4,6 +4,9 @@ import { defineConfig as defineTestConfig } from 'vitest/config';
 
 const viteConfig = defineConfig({
   plugins: [tsconfigPaths()],
+  define: {
+    'process.env.GIT_HASH': JSON.stringify(process.env.GIT_HASH || ''),
+  },
   build: {
     ssr: true,
     outDir: 'dist',
