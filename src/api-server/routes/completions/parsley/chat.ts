@@ -9,7 +9,7 @@ import { Request, Response } from 'express';
 import z from 'zod';
 import { logMetadataSchema } from '@/constants/parsley/logMetadata';
 import { mastra } from '@/mastra';
-import { USER_ID } from '@/mastra/agents/constants';
+import { SAGE_THINKING_AGENT_NAME, USER_ID } from '@/mastra/agents/constants';
 import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
 import { runWithRequestContext } from '@/mastra/utils/requestContext';
 import { logger } from '@/utils/logger';
@@ -111,7 +111,7 @@ const chatRoute = async (
   }
 
   try {
-    const agent = mastra.getAgent('sageThinkingAgent');
+    const agent = mastra.getAgent(SAGE_THINKING_AGENT_NAME);
 
     const memory = await agent.getMemory({
       runtimeContext,

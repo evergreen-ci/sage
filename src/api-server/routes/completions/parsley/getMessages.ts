@@ -3,6 +3,7 @@ import { UIMessage } from 'ai';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from '@/mastra';
+import { SAGE_THINKING_AGENT_NAME } from '@/mastra/agents/constants';
 import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
 import { logger } from '@/utils/logger';
 
@@ -38,11 +39,11 @@ const getMessagesRoute = async (
   const runtimeContext = createParsleyRuntimeContext();
 
   try {
-    const agent = mastra.getAgent('sageThinkingAgent');
+    const agent = mastra.getAgent(SAGE_THINKING_AGENT_NAME);
     if (!agent) {
       logger.error('Agent not found', {
         requestId: res.locals.requestId,
-        agentName: 'sageThinkingAgent',
+        agentName: SAGE_THINKING_AGENT_NAME,
       });
       res.status(500).json({ message: 'Agent not found' });
       return;
