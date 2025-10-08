@@ -13,7 +13,7 @@ OUTPUT_FILE="temp/deploy_email.html"
 mkdir -p temp
 
 # Calculate the repository URL
-REPO_URL=$(git config --get remote.origin.url | sed -e 's/\.git$//' -e 's/^git@\([^:]*\):/https:\/\/\1\//')
+REPO_URL=$(git -c safe.directory=/drone/src config --get remote.origin.url | sed -e 's/\.git$//' -e 's/^git@\([^:]*\):/https:\/\/\1\//')
 
 LIST_ITEMS=""
 
@@ -23,7 +23,7 @@ while read -r hash message; do
 <li><a href="${REPO_URL}/commit/${hash}">${short_hash}</a> ${message}</li>
 EOF
 )
-done < <(git log --pretty=format:"%H %s" ${PREV_COMMIT}^..${CURRENT_COMMIT})
+done < <(git -c safe.directory=/drone/src log --pretty=format:"%H %s" ${PREV_COMMIT}^..${CURRENT_COMMIT})
 
 HTML_CONTENT=$(cat <<EOF
 <p>The following changes were deployed:</p>
