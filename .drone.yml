@@ -9,6 +9,10 @@ trigger:
   branch:
     - main
 
+volumes:
+  - name: shared
+    temp: {}
+
 steps:
   - name: publish
     image: plugins/kaniko-ecr
@@ -28,6 +32,29 @@ steps:
         - promote
         - push
 
+  - name: generate-email-staging
+    image: public.ecr.aws/kanopy/drone-helm:v3
+    commands:
+      - kubectl config set-cluster staging --server="$KUBE_API_SERVER" --insecure-skip-tls-verify=true
+      - kubectl config set-credentials staging --token="$KUBE_TOKEN"
+      - kubectl config set-context staging --cluster=staging --user=staging --namespace=devprod-evergreen
+      - kubectl config use-context staging
+      - apk add --no-cache git
+      - PREV_COMMIT=$(kubectl get pods --selector=release=sage -n devprod-evergreen -o jsonpath='{.items[*].metadata.labels}' 2>/dev/null | cut -d'}' -f1 | grep -oE 'git-[0-9a-fA-F]+' | cut -d- -f2 | head -n1)
+      - if [ -n "$PREV_COMMIT" ]; then ./scripts/generate_deploy_email.sh $PREV_COMMIT; cp temp/deploy_email.html /shared/deploy_email.html; else echo "No previous commit found"; fi
+    environment:
+      KUBE_API_SERVER: https://api.staging.corp.mongodb.com
+      KUBE_TOKEN:
+        from_secret: staging_kubernetes_token
+    volumes:
+      - name: shared
+        path: /shared
+    when:
+      event:
+        - promote
+      target:
+        - staging
+
   - name: deploy-staging
     image: public.ecr.aws/kanopy/drone-helm:v3
     settings:
@@ -42,11 +69,39 @@ steps:
       kubernetes_token:
         from_secret: staging_kubernetes_token
       wait_for_upgrade: true
+    volumes:
+      - name: shared
+        path: /shared
     when:
       event:
         - promote
       target:
         - staging
+
+  - name: generate-email-prod
+    image: public.ecr.aws/kanopy/drone-helm:v3
+    commands:
+      - kubectl config set-cluster prod --server="$KUBE_API_SERVER" --insecure-skip-tls-verify=true
+      - kubectl config set-credentials prod --token="$KUBE_TOKEN"
+      - kubectl config set-context prod --cluster=prod --user=prod --namespace=devprod-evergreen
+      - kubectl config use-context prod
+      - apk add --no-cache git
+      - PREV_COMMIT=$(kubectl get pods --selector=release=sage -n devprod-evergreen -o jsonpath='{.items[*].metadata.labels}' 2>/dev/null | cut -d'}' -f1 | grep -oE 'git-[0-9a-fA-F]+' | cut -d- -f2 | head -n1)
+      - if [ -n "$PREV_COMMIT" ]; then ./scripts/generate_deploy_email.sh $PREV_COMMIT; cp temp/deploy_email.html /shared/deploy_email.html; else echo "No previous commit found"; fi
+    environment:
+      KUBE_API_SERVER: https://api.prod.corp.mongodb.com
+      KUBE_TOKEN:
+        from_secret: prod_kubernetes_token
+    volumes:
+      - name: shared
+        path: /shared
+    when:
+      branch:
+        - main
+      event:
+        - promote
+      target:
+        - production
 
   - name: deploy-prod
     image: public.ecr.aws/kanopy/drone-helm:v3
@@ -62,6 +117,9 @@ steps:
       kubernetes_token:
         from_secret: prod_kubernetes_token
       wait_for_upgrade: true
+    volumes:
+      - name: shared
+        path: /shared
     when:
       branch:
         - main
