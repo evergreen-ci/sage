@@ -38,7 +38,7 @@ steps:
       - apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
       - git --version
       # Drone is running in a container, so we need to add the source directory to the safe.directory list
-      - git config --global --add safe.directory /drone/src
+      - git config --system --add safe.directory /drone/src
       - kubectl version --client
       - kubectl config set-cluster staging --server="$KUBE_API_SERVER" --insecure-skip-tls-verify=true
       - kubectl config set-credentials staging --token="$KUBE_TOKEN"
