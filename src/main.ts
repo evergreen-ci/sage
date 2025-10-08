@@ -1,7 +1,7 @@
 import './instrumentation';
-import server from 'api-server';
-import { validateConfig } from 'config';
-import { sentryService } from './utils/sentry';
+import server from '@/api-server';
+import { validateConfig } from '@/config';
+import { sentryService } from '@/utils/sentry';
 
 // Validate configuration on startup
 validateConfig();

@@ -1,5 +1,5 @@
 import request from 'supertest';
-import setupTestAppServer from '../setup';
+import setupTestAppServer from '@/e2e/setup';
 
 const app = setupTestAppServer();
 

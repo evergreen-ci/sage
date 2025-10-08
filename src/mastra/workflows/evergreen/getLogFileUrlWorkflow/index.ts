@@ -1,12 +1,12 @@
 import { createWorkflow, createStep, createTool } from '@mastra/core';
 import { z } from 'zod';
-import { logMetadataSchema } from '../../../../constants/parsley/logMetadata';
+import { logMetadataSchema } from '@/constants/parsley/logMetadata';
 import {
   constructEvergreenTaskLogURL,
   getEvergreenTaskFileURL,
-} from '../../../../constants/parsley/logURLTemplates';
-import { LogTypes } from '../../../../types/parsley';
-import { getTaskTestsTool } from '../../../tools/evergreen';
+} from '@/constants/parsley/logURLTemplates';
+import { getTaskTestsTool } from '@/mastra/tools/evergreen';
+import { LogTypes } from '@/types/parsley';
 
 /** Log types that can be turned into URLs directly from metadata */
 const DIRECT_LOG_TYPES = [

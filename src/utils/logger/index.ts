@@ -1,4 +1,4 @@
-import { sentryService } from '../sentry';
+import { sentryService } from '@/utils/sentry';
 import loggerInstance from './setup';
 /**
  * Logs an error message at the error level, with optional error and metadata.

@@ -1,6 +1,6 @@
 import { DocumentNode } from 'graphql';
-import { EVERGREEN_USER_HEADER } from '../../constants/headers';
-import logger from '../logger';
+import { EVERGREEN_USER_HEADER } from '@/constants/headers';
+import logger from '@/utils/logger';
 
 /** Minimal GraphQL response shape */
 interface GraphQLResponse<T = unknown> {
