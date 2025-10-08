@@ -5,7 +5,6 @@ import { WinstonMastraLogger } from '../utils/logger/winstonMastraLogger';
 import { evergreenAgent } from './agents/evergreenAgent';
 import { questionClassifierAgent } from './agents/planning/questionClassifierAgent';
 import { sageThinkingAgent } from './agents/planning/sageThinkingAgent';
-import { parsleyOrchestrator } from './networks';
 import * as evergreenWorkflows from './workflows/evergreen';
 import { logCoreAnalyzerWorkflow } from './workflows/logCoreAnalyzer';
 
@@ -20,7 +19,6 @@ export const mastra: Mastra = new Mastra({
     logCoreAnalyzerWorkflow,
   },
   agents: { sageThinkingAgent, evergreenAgent, questionClassifierAgent },
-  vnext_networks: { parsleyOrchestrator },
   logger: new WinstonMastraLogger({
     name: 'Mastra',
     level: 'info',
