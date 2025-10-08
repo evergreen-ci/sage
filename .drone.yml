@@ -33,7 +33,7 @@ steps:
         - push
 
   - name: generate-email-staging
-    image: public.ecr.aws/kanopy/drone-helm:v3
+    image: bitnami/kubectl:latest
     commands:
       - kubectl config set-cluster staging --server="$KUBE_API_SERVER" --insecure-skip-tls-verify=true
       - kubectl config set-credentials staging --token="$KUBE_TOKEN"
@@ -79,7 +79,7 @@ steps:
         - staging
 
   - name: generate-email-prod
-    image: public.ecr.aws/kanopy/drone-helm:v3
+    image: bitnami/kubectl:latest
     commands:
       - kubectl config set-cluster prod --server="$KUBE_API_SERVER" --insecure-skip-tls-verify=true
       - kubectl config set-credentials prod --token="$KUBE_TOKEN"
