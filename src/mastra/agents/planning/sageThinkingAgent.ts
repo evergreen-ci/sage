@@ -2,11 +2,11 @@ import { Agent } from '@mastra/core/agent';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Memory } from '@mastra/memory';
 import { wrapMastraAgent } from 'braintrust';
-import { gpt41 } from '../../models/openAI/gpt41';
-import { memoryStore } from '../../utils/memory';
-import { resolveLogFileUrlTool } from '../../workflows/evergreen/getLogFileUrlWorkflow';
-import { logCoreAnalyzerTool } from '../../workflows/logCoreAnalyzer';
-import { askEvergreenAgentTool } from '../evergreenAgent';
+import { askEvergreenAgentTool } from '@/mastra/agents/evergreenAgent';
+import { gpt41 } from '@/mastra/models/openAI/gpt41';
+import { memoryStore } from '@/mastra/utils/memory';
+import { resolveLogFileUrlTool } from '@/mastra/workflows/evergreen/getLogFileUrlWorkflow';
+import { logCoreAnalyzerTool } from '@/mastra/workflows/logCoreAnalyzer';
 import { askQuestionClassifierAgentTool } from './questionClassifierAgent';
 
 const sageThinkingAgentMemory = new Memory({

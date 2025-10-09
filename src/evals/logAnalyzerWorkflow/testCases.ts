@@ -1,5 +1,5 @@
 import { Attachment, initDataset } from 'braintrust';
-import { PROJECT_NAME } from 'evals/constants';
+import { PROJECT_NAME } from '@/evals/constants';
 import { TestCase } from './types';
 
 export const getTestCases = async () => {

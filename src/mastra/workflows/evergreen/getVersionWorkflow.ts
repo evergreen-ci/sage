@@ -1,5 +1,5 @@
 import { createWorkflow, createStep } from '@mastra/core';
-import { getTaskTool, getVersionTool } from '../../tools/evergreen';
+import { getTaskTool, getVersionTool } from '@/mastra/tools/evergreen';
 
 const getTaskStep = createStep(getTaskTool);
 

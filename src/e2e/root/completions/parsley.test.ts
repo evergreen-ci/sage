@@ -1,10 +1,10 @@
 import { TABLE_THREADS, TABLE_MESSAGES } from '@mastra/core/storage';
 import request from 'supertest';
-import { LogTypes } from 'types/parsley';
-import { TaskLogOrigin } from 'types/task';
-import { memoryStore } from '../../../mastra/utils/memory';
-import setupTestAppServer from '../../setup';
-import { getMessageContent } from '../../utils';
+import setupTestAppServer from '@/e2e/setup';
+import { getMessageContent } from '@/e2e/utils';
+import { memoryStore } from '@/mastra/utils/memory';
+import { LogTypes } from '@/types/parsley';
+import { TaskLogOrigin } from '@/types/task';
 
 const app = setupTestAppServer();
 

@@ -1,4 +1,4 @@
-import { BaseTestCase, BaseScores } from 'evals/types';
+import { BaseTestCase, BaseScores } from '@/evals/types';
 
 export type TestInput = string;
 

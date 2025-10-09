@@ -1,5 +1,5 @@
 import { Attachment } from 'braintrust';
-import { BaseTestCase, BaseScores } from 'evals/types';
+import { BaseTestCase, BaseScores } from '@/evals/types';
 
 export type TestInput = {
   file: Attachment;

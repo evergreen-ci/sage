@@ -1,8 +1,8 @@
 import { ExactMatch } from 'autoevals';
 import { Eval } from 'braintrust';
-import { ReporterName, PROJECT_NAME } from 'evals/constants';
-import { loadTestCases } from 'evals/loadTestCases';
-import { QUESTION_CLASSIFIER_AGENT_NAME } from 'mastra/agents/constants';
+import { ReporterName, PROJECT_NAME } from '@/evals/constants';
+import { loadTestCases } from '@/evals/loadTestCases';
+import { QUESTION_CLASSIFIER_AGENT_NAME } from '@/mastra/agents/constants';
 import { tracedAgentEval } from '../utils/tracedAgent';
 import { TestCase, TestInput, TestResult } from './types';
 

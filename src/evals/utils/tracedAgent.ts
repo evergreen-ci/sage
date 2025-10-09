@@ -1,8 +1,8 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
-import { callModelWithTrace } from 'evals/tracer';
-import { ModelOutput, MastraAgentOutput } from 'evals/types';
-import { mastra } from 'mastra';
+import { callModelWithTrace } from '@/evals/tracer';
+import { ModelOutput, MastraAgentOutput } from '@/evals/types';
+import { mastra } from '@/mastra';
 
 export interface TracedAgentOptions<TInput, TOutput> {
   /**

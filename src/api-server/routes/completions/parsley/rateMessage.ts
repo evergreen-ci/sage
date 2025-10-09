@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import z from 'zod';
-import { braintrustLogger } from 'mastra';
-import { logger } from 'utils/logger';
+import { braintrustLogger } from '@/mastra';
+import { logger } from '@/utils/logger';
 
 export const addRatingInputSchema = z.object({
   spanId: z.string(),

@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { authenticatedEvergreenFetch } from '../../../utils/fetch';
-import { logger } from '../../../utils/logger';
+import { authenticatedEvergreenFetch } from '@/utils/fetch';
+import { logger } from '@/utils/logger';
 import { logAnalyzerConfig } from './config';
 import { SourceType, MB_TO_BYTES } from './constants';
 import { validateSize, validateTokenLimit } from './utils';

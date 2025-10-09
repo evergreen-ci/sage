@@ -1,7 +1,8 @@
 import { createWorkflow, createStep } from '@mastra/core';
 import { z } from 'zod';
-import { TaskHistoryDirection } from '../../../gql/generated/types';
-import { getTaskTool, getTaskHistoryTool } from '../../tools/evergreen';
+import { TaskHistoryDirection } from '@/gql/generated/types';
+import { getTaskTool, getTaskHistoryTool } from '@/mastra/tools/evergreen';
+import { isMainlineRequester, Requester } from './utils';
 
 const getTaskStep = createStep(getTaskTool);
 
@@ -19,18 +20,35 @@ const getTaskHistoryStep = createStep({
     }
 
     const taskId = task.id;
-    const { displayName } = task;
-    const { buildVariant } = task;
-    const { projectIdentifier } = task;
+    const {
+      baseTask,
+      buildVariant,
+      displayName,
+      projectIdentifier,
+      requester,
+    } = task;
 
-    if (!taskId || !displayName || !buildVariant || !projectIdentifier) {
+    if (
+      !taskId ||
+      !displayName ||
+      !buildVariant ||
+      !projectIdentifier ||
+      !requester
+    ) {
       throw new Error(
-        `Cannot fetch history: missing required fields (id: ${taskId}, displayName: ${displayName}, buildVariant: ${buildVariant}, projectIdentifier: ${projectIdentifier})`
+        `Cannot fetch history: missing required fields (id: ${taskId}, displayName: ${displayName}, buildVariant: ${buildVariant}, projectIdentifier: ${projectIdentifier}, requester: ${requester})`
       );
     }
 
+    let cursorId = taskId;
+    if (!isMainlineRequester(requester as Requester)) {
+      if (!baseTask) {
+        throw new Error('Base task not found for non-mainline requester');
+      }
+      cursorId = baseTask.id;
+    }
     const cursorParams = {
-      cursorId: taskId,
+      cursorId,
       direction: TaskHistoryDirection.Before,
       includeCursor: true,
     };
