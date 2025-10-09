@@ -2,11 +2,11 @@ import { RuntimeContext } from '@mastra/core/runtime-context';
 import { ToolResultPart } from 'ai';
 import { Factuality } from 'autoevals';
 import { Eval } from 'braintrust';
+import { ReporterName, PROJECT_NAME } from '@/evals/constants';
+import { loadTestCases } from '@/evals/loadTestCases';
+import { ToolUsage, TechnicalAccuracy, ToolUsageMode } from '@/evals/scorers';
 import { tracedAgentEval } from '@/evals/utils/tracedAgent';
-import { ReporterName, PROJECT_NAME } from 'evals/constants';
-import { loadTestCases } from 'evals/loadTestCases';
-import { ToolUsage, TechnicalAccuracy, ToolUsageMode } from 'evals/scorers';
-import { USER_ID, SAGE_THINKING_AGENT_NAME } from 'mastra/agents/constants';
+import { USER_ID, SAGE_THINKING_AGENT_NAME } from '@/mastra/agents/constants';
 import { TestCase, TestInput, TestResult } from './types';
 
 Eval(
