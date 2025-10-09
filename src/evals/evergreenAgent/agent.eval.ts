@@ -5,8 +5,8 @@ import { Eval } from 'braintrust';
 import { ReporterName, PROJECT_NAME } from '@/evals/constants';
 import { loadTestCases } from '@/evals/loadTestCases';
 import { ToolUsage, ToolUsageMode } from '@/evals/scorers';
+import { tracedAgentEval } from '@/evals/utils/tracedAgent';
 import { USER_ID, EVERGREEN_AGENT_NAME } from '@/mastra/agents/constants';
-import { tracedAgentEval } from '../utils/tracedAgent';
 import { TestCase, TestInput, TestResult } from './types';
 
 Eval(
