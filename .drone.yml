@@ -89,18 +89,26 @@ steps:
   #     target:
   #       - staging
 
-  - name: send-email-staging
-    image: plugins/email
-    settings:
-      host: email-smtp.us-east-1.amazonaws.com
-      username:
-        from_secret: smtp_username
-      password:
-        from_secret: smtp_password
-      from: sage-deploys@mongodb.com
-      to: mohamed.khelif@mongodb.com
-      subject: "Staging Deployment Notification"
-      body: file:///shared/deploy_email.html
+  - name: send-email-staging-api # New step for API call
+    image: alpine/curl:latest # Lightweight image with cURL
+    commands:
+      # Read the HTML content, escape it for JSON, and store in a shell variable.
+      - EMAIL_BODY=$(cat /shared/deploy_email.html | tr -d '\n' | sed 's/"/\\"/g')
+      # Construct the full JSON payload with the escaped body.
+      - JSON_PAYLOAD="{\"recipients\": [\"mohamed.khelif@mongodb.com\"], \"subject\": \"Staging Deployment Notification\", \"body\": \"$EMAIL_BODY\", \"is_plain_text\": false}"
+      # Send the POST request to the notification API.
+      - |
+        curl -X POST \
+          'https://evergreen.mongodb.com/rest/v2/notifications/email' \
+          -H "Api-User: $API_USER" \
+          -H "Api-Key: $API_KEY" \
+          -H 'Content-Type: application/json' \
+          --data "$JSON_PAYLOAD"
+    environment:
+      API_USER:
+        from_secret: evergreen_api_user # Assuming this secret exists
+      API_KEY:
+        from_secret: evergreen_api_key # Assuming this secret exists
     volumes:
       - name: shared
         path: /shared
