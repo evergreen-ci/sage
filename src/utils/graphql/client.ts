@@ -232,7 +232,7 @@ const safeReadBody = async (
 /**
  * Forces parsing of a Response body as JSON, throwing if parsing fails.
  * @param res - The fetch Response object.
- * @throws GraphQLClientError if the body cannot be parsed as JSON.
+ * @throws {GraphQLClientError} if the body cannot be parsed as JSON.
  * @returns The parsed GraphQLResponse.
  */
 const forceJson = async <T>(res: Response): Promise<GraphQLResponse<T>> => {

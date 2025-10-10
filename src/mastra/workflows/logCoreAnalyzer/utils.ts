@@ -121,7 +121,7 @@ export const countTokens = (text: string): number => encode(text).length;
  * Validate token count against configured limits
  * @param text - Text to validate token count for
  * @returns Estimated number of tokens
- * @throws Error if token count exceeds limit
+ * @throws {Error} if token count exceeds limit
  */
 export const validateTokenLimit = (text: string): number => {
   const estimatedTokens = estimateTokens(text);
