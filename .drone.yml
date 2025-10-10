@@ -3,7 +3,7 @@ kind: pipeline
 name: default
 
 platform:
-  arch: "amd64"
+  arch: amd64
 
 trigger:
   branch:
@@ -37,7 +37,7 @@ steps:
     commands:
       - apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
       - git --version
-      # Drone is running in a container, so we need to add the source directory to the safe.directory list
+      # Drone runs in a container, so mark the source directory as safe
       - kubectl version --client
       - kubectl config set-cluster staging --server="$KUBE_API_SERVER" --insecure-skip-tls-verify=true
       - kubectl config set-credentials staging --token="$KUBE_TOKEN"
@@ -75,7 +75,7 @@ steps:
   #     namespace: devprod-evergreen
   #     release: sage
   #     values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=sage.devprod-evergreen.staging.corp.mongodb.com
-  #     values_files: [ "environments/staging.yaml" ]
+  #     values_files: ["environments/staging.yaml"]
   #     api_server: https://api.staging.corp.mongodb.com
   #     kubernetes_token:
   #       from_secret: staging_kubernetes_token
@@ -89,26 +89,23 @@ steps:
   #     target:
   #       - staging
 
-  - name: send-email-staging-api # New step for API call
-    image: alpine/curl:latest # Lightweight image with cURL
+  - name: send-email-staging-api
+    image: alpine/curl:latest
     commands:
-      # Read the HTML content, escape it for JSON, and store in a shell variable.
-      - EMAIL_BODY=$(cat /shared/deploy_email.html | tr -d '\n' | sed 's/"/\\"/g')
-      # Construct the full JSON payload with the escaped body.
-      - JSON_PAYLOAD="{\"recipients\": [\"mohamed.khelif@mongodb.com\"], \"subject\": \"Staging Deployment Notification\", \"body\": \"$EMAIL_BODY\", \"is_plain_text\": false}"
-      # Send the POST request to the notification API.
       - |
+        EMAIL_BODY=$(cat /shared/deploy_email.html | tr -d '\n' | sed 's/"/\\"/g')
+        JSON_PAYLOAD="{\"recipients\": [\"mohamed.khelif@mongodb.com\"], \"subject\": \"Staging Deployment Notification\", \"body\": \"$EMAIL_BODY\", \"is_plain_text\": false}"
         curl -X POST \
           'https://evergreen.mongodb.com/rest/v2/notifications/email' \
           -H "Api-User: $API_USER" \
           -H "Api-Key: $API_KEY" \
-          -H 'Content-Type: application/json' \
+          -H "Content-Type: application/json" \
           --data "$JSON_PAYLOAD"
     environment:
       API_USER:
-        from_secret: evergreen_api_user # Assuming this secret exists
+        from_secret: evergreen_api_user
       API_KEY:
-        from_secret: evergreen_api_key # Assuming this secret exists
+        from_secret: evergreen_api_key
     volumes:
       - name: shared
         path: /shared
@@ -118,8 +115,6 @@ steps:
       target:
         - staging
 
-
-
   - name: generate-email-prod
     image: bitnami/kubectl:latest
     commands:
@@ -128,8 +123,16 @@ steps:
       - kubectl config set-context prod --cluster=prod --user=prod --namespace=devprod-evergreen
       - kubectl config use-context prod
       - apk add --no-cache git
-      - PREV_COMMIT=$(kubectl get pods --selector=release=sage -n devprod-evergreen -o jsonpath='{.items[*].metadata.labels}' 2>/dev/null | cut -d'}' -f1 | grep -oE 'git-[0-9a-fA-F]+' | cut -d- -f2 | head -n1)
-      - if [ -n "$PREV_COMMIT" ]; then ./scripts/generate_deploy_email.sh $PREV_COMMIT; cp temp/deploy_email.html /shared/deploy_email.html; else echo "No previous commit found"; fi
+      - |
+        PREV_COMMIT=$(kubectl get pods --selector=release=sage -n devprod-evergreen \
+          -o jsonpath='{.items[*].metadata.labels}' 2>/dev/null | cut -d'}' -f1 | \
+          grep -oE 'git-[0-9a-fA-F]+' | cut -d- -f2 | head -n1)
+        if [ -n "$PREV_COMMIT" ]; then
+          ./scripts/generate_deploy_email.sh "$PREV_COMMIT"
+          cp temp/deploy_email.html /shared/deploy_email.html
+        else
+          echo "No previous commit found"
+        fi
     environment:
       KUBE_API_SERVER: https://api.prod.corp.mongodb.com
       KUBE_TOKEN:
@@ -154,7 +157,7 @@ steps:
       namespace: devprod-evergreen
       release: sage
       values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=sage.devprod-evergreen.prod.corp.mongodb.com
-      values_files: [ "environments/prod.yaml" ]
+      values_files: ["environments/prod.yaml"]
       api_server: https://api.prod.corp.mongodb.com
       kubernetes_token:
         from_secret: prod_kubernetes_token
