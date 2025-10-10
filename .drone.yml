@@ -66,20 +66,41 @@ steps:
       target:
         - staging
 
-  - name: deploy-staging
-    image: public.ecr.aws/kanopy/drone-helm:v3
+  # - name: deploy-staging
+  #   image: public.ecr.aws/kanopy/drone-helm:v3
+  #   settings:
+  #     chart: mongodb/web-app
+  #     chart_version: 4.31.0
+  #     add_repos: [mongodb=https://10gen.github.io/helm-charts]
+  #     namespace: devprod-evergreen
+  #     release: sage
+  #     values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=sage.devprod-evergreen.staging.corp.mongodb.com
+  #     values_files: [ "environments/staging.yaml" ]
+  #     api_server: https://api.staging.corp.mongodb.com
+  #     kubernetes_token:
+  #       from_secret: staging_kubernetes_token
+  #     wait_for_upgrade: true
+  #   volumes:
+  #     - name: shared
+  #       path: /shared
+  #   when:
+  #     event:
+  #       - promote
+  #     target:
+  #       - staging
+
+  - name: send-email-staging
+    image: plugins/email
     settings:
-      chart: mongodb/web-app
-      chart_version: 4.31.0
-      add_repos: [mongodb=https://10gen.github.io/helm-charts]
-      namespace: devprod-evergreen
-      release: sage
-      values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=sage.devprod-evergreen.staging.corp.mongodb.com
-      values_files: [ "environments/staging.yaml" ]
-      api_server: https://api.staging.corp.mongodb.com
-      kubernetes_token:
-        from_secret: staging_kubernetes_token
-      wait_for_upgrade: true
+      host: email-smtp.us-east-1.amazonaws.com
+      username:
+        from_secret: smtp_username
+      password:
+        from_secret: smtp_password
+      from: sage-deploys@mongodb.com
+      to: mohamed.khelif@mongodb.com
+      subject: "Staging Deployment Notification"
+      body: file:///shared/deploy_email.html
     volumes:
       - name: shared
         path: /shared
@@ -88,6 +109,8 @@ steps:
         - promote
       target:
         - staging
+
+
 
   - name: generate-email-prod
     image: bitnami/kubectl:latest
