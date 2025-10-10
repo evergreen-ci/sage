@@ -1,8 +1,8 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import z from 'zod';
-import { callWorkflowWithTrace } from 'evals/tracer';
-import { WorkflowOutput } from 'evals/types';
-import { mastra } from 'mastra';
+import { callWorkflowWithTrace } from '@/evals/tracer';
+import { WorkflowOutput } from '@/evals/types';
+import { mastra } from '@/mastra';
 
 interface TracedWorkflowOptions<Input, Output, WorkflowInput> {
   workflowName: string;

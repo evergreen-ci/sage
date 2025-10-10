@@ -1,4 +1,4 @@
-import { config } from '../../config';
+import { config } from '@/config';
 
 /**
  * `AuthenticatedEvergreenFetch` is a function that fetches a URL with the Evergreen API user and key.

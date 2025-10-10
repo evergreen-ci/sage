@@ -1,8 +1,8 @@
 import { NewAgentNetwork } from '@mastra/core/network/vNext';
 import { Memory } from '@mastra/memory';
-import { evergreenAgent } from '../agents/evergreenAgent';
-import { gpt41 } from '../models/openAI/gpt41';
-import { memoryStore } from '../utils/memory';
+import { evergreenAgent } from '@/mastra/agents/evergreenAgent';
+import { gpt41 } from '@/mastra/models/openAI/gpt41';
+import { memoryStore } from '@/mastra/utils/memory';
 
 const orchestratorMemory = new Memory({
   storage: memoryStore,

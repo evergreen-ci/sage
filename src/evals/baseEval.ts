@@ -1,6 +1,6 @@
+import path from 'path';
 import { Reporter, reportFailures } from 'braintrust';
 import junit, { TestSuite as JUnitTestSuite } from 'junit-report-builder';
-import path from 'path';
 import {
   BaseTestCase,
   ReporterEvalResult,
@@ -92,13 +92,16 @@ const defaultPrintResults = <
 >(
   result: ReporterEvalResult<TestCase>
 ) => {
-  console.log(`Eval for ${result.metadata.testName}:`);
+  console.log(`Eval for '${result.metadata.testName}':`);
 
-  const resultsTable = Object.entries(result.scores).reduce(
-    (acc, [key, value]) => {
+  const resultsTable = Object.keys(result.metadata.scoreThresholds).reduce(
+    (acc, key) => {
+      const isScoreDefined = result.metadata.scoreThresholds[key] !== null;
       acc[key] = {
-        actual: value,
-        expected: `>= ${result.metadata.scoreThresholds[key]}`,
+        actual: result.scores[key],
+        expected: isScoreDefined
+          ? `>= ${result.metadata.scoreThresholds[key]}`
+          : 'N/A',
       };
       return acc;
     },

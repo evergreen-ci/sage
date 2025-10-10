@@ -1,9 +1,9 @@
 import queryString from 'query-string';
 import { z } from 'zod';
-import { config } from '../../config';
-import { Task as TaskType } from '../../gql/generated/types';
-import { LogTypes } from '../../types/parsley';
-import { stringifyQuery } from '../../utils/query-string';
+import { config } from '@/config';
+import { Task as TaskType } from '@/gql/generated/types';
+import { LogTypes } from '@/types/parsley';
+import { stringifyQuery } from '@/utils/query-string';
 import { logMetadataSchema } from './logMetadata';
 
 const { evergreenURL } = config.evergreen;
