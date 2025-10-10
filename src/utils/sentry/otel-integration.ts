@@ -1,7 +1,7 @@
 import { Span } from '@opentelemetry/api';
 import { SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import * as Sentry from '@sentry/node';
-import { config } from '../../config';
+import { config } from '@/config';
 
 export class SentrySpanProcessor implements SpanProcessor {
   private readonly enabled: boolean;

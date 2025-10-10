@@ -4,7 +4,7 @@ import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
 import { wrapMastraAgent } from 'braintrust';
 import { z } from 'zod';
-import logger from '../../../utils/logger';
+import logger from '@/utils/logger';
 import { logAnalyzerConfig } from './config';
 import { MB_TO_BYTES } from './constants';
 import {
@@ -267,8 +267,7 @@ const refineStep = createStep({
       };
     }
 
-    logCoreAnalyzerLogger.debug('Refine step for chunk #:', {
-      current: idx + 1,
+    logCoreAnalyzerLogger.debug(`Refine step for chunk #${idx + 1}:`, {
       total: chunks.length,
     });
     const result = await refinementAgent.generateVNext(

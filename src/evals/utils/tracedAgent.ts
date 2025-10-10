@@ -1,11 +1,10 @@
 import { RuntimeContext } from '@mastra/core/runtime-context';
-import { ToolResultPart } from 'ai';
 import { z } from 'zod';
-import { callModelWithTrace } from 'evals/tracer';
-import { ModelOutput } from 'evals/types';
-import { mastra } from 'mastra';
+import { callModelWithTrace } from '@/evals/tracer';
+import { ModelOutput, MastraAgentOutput } from '@/evals/types';
+import { mastra } from '@/mastra';
 
-export interface TracedAgentOptions<Input, Output> {
+export interface TracedAgentOptions<TInput, TOutput> {
   /**
    * The name of the agent to retrieve from Mastra
    */
@@ -14,18 +13,12 @@ export interface TracedAgentOptions<Input, Output> {
   /**
    * Optional function to customize runtime context
    */
-  setupRuntimeContext?: (input: Input) => RuntimeContext;
+  setupRuntimeContext?: (input: TInput) => RuntimeContext;
 
   /**
-   * Optional function to transform the agent response
+   * Function to transform the agent response
    */
-  transformResponse?: (
-    response: {
-      text: string;
-      toolResults: ToolResultPart[];
-    },
-    input: Input
-  ) => Output;
+  transformResponse: (response: MastraAgentOutput, input: TInput) => TOutput;
 
   /**
    * Optional generation options for the agent
@@ -35,14 +28,14 @@ export interface TracedAgentOptions<Input, Output> {
   /**
    * Optional Zod schema to validate the response
    */
-  responseSchema?: z.ZodType<Output>;
+  responseSchema?: z.ZodType<TOutput>;
 }
 
 const createTracedAgent =
-  <Input, Output>(
-    options: TracedAgentOptions<Input, Output>
-  ): ((input: Input) => Promise<ModelOutput<Input, Output>>) =>
-  async (input: Input): Promise<ModelOutput<Input, Output>> => {
+  <TInput, TOutput>(
+    options: TracedAgentOptions<TInput, TOutput>
+  ): ((input: TInput) => Promise<ModelOutput<TInput, TOutput>>) =>
+  async (input: TInput): Promise<ModelOutput<TInput, TOutput>> => {
     // Create runtime context
     const runtimeContext = options.setupRuntimeContext
       ? options.setupRuntimeContext(input)
@@ -63,22 +56,7 @@ const createTracedAgent =
       }
     );
 
-    // Extract tool results
-    const toolResults = response.toolResults as ToolResultPart[];
-    const toolsUsed = toolResults.map(t => t.toolName);
-
-    // Transform response
-    const baseResponse = {
-      text: response.text,
-      toolResults,
-    };
-
-    const output = options.transformResponse
-      ? options.transformResponse(baseResponse, input)
-      : ({
-          text: response.text,
-          toolsUsed,
-        } as Output);
+    const output = options.transformResponse(response, input);
 
     // Validate output if schema is provided
     if (options.responseSchema) {
@@ -104,8 +82,8 @@ const createTracedAgent =
  * @returns A function that can be used directly in evals
  */
 export const tracedAgentEval =
-  <Input, Output>(options: TracedAgentOptions<Input, Output>) =>
-  async (input: Input) =>
-    await callModelWithTrace<Input, Output>(
+  <TInput, TOutput>(options: TracedAgentOptions<TInput, TOutput>) =>
+  async (input: TInput) =>
+    await callModelWithTrace<TInput, TOutput>(
       async () => await createTracedAgent(options)(input)
     );

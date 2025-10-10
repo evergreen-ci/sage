@@ -1,6 +1,6 @@
-import { BaseEvalConfig, createBaseEvalReporter } from '../baseEval';
-import { ReporterName } from '../constants';
-import { createScoreChecker } from '../scorers';
+import { BaseEvalConfig, createBaseEvalReporter } from '@/evals/baseEval';
+import { ReporterName } from '@/evals/constants';
+import { createScoreChecker } from '@/evals/scorers';
 import { TestCase } from './types';
 
 const createEvalConfig = (): BaseEvalConfig<TestCase> => ({

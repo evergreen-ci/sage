@@ -2,11 +2,11 @@ import { Agent } from '@mastra/core/agent';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Memory } from '@mastra/memory';
 import { wrapMastraAgent } from 'braintrust';
-import { gpt41 } from '../../models/openAI/gpt41';
-import { memoryStore } from '../../utils/memory';
-import { resolveLogFileUrlTool } from '../../workflows/evergreen/getLogFileUrlWorkflow';
-import { logCoreAnalyzerTool } from '../../workflows/logCoreAnalyzer';
-import { askEvergreenAgentTool } from '../evergreenAgent';
+import { askEvergreenAgentTool } from '@/mastra/agents/evergreenAgent';
+import { gpt41 } from '@/mastra/models/openAI/gpt41';
+import { memoryStore } from '@/mastra/utils/memory';
+import { resolveLogFileUrlTool } from '@/mastra/workflows/evergreen/getLogFileUrlWorkflow';
+import { logCoreAnalyzerTool } from '@/mastra/workflows/logCoreAnalyzer';
 import { askQuestionClassifierAgentTool } from './questionClassifierAgent';
 
 const sageThinkingAgentMemory = new Memory({
@@ -51,7 +51,7 @@ export const sageThinkingAgent: Agent = wrapMastraAgent(
 4. **resolveLogFileUrlTool**
    - Retrieves the URL for a log file or task logs.
    - Use for: Getting the URL for a log file or task logs.
-   - Accepts: LogMetadata object (containing task ID and execution number).
+   - Accepts: LogMetadata object (containing task ID, execution number, and log type). Log type can be one of EVERGREEN_TASK_FILE, EVERGREEN_TASK_LOGS, EVERGREEN_TEST_LOGS.
    - Does NOT fetch directly from Evergreen—use \`evergreenAgent\` to retrieve logs before analyzing.
    - When providing a URL, ensure it is a direct link to the log content. Do not modify the URL.
 
@@ -67,7 +67,6 @@ export const sageThinkingAgent: Agent = wrapMastraAgent(
 - If you are asked to review logs, you can use the \`getLogFileUrlWorkflow\` to get the URL for the log file. Ensure you have the task ID before using this tool.
 - When returning an answer, make sure you include evidence to justify your answer.
 - If you need to make follow-up corrections or acquire additional data, it is acceptable to ask the evergreenAgent for more information or assistance. Do not make up values or task IDs under any circumstances.
-
 
   <ADDITIONAL_CONTEXT>
   ${stringifyRuntimeContext(runtimeContext)}
