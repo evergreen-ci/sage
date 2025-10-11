@@ -35,6 +35,8 @@ steps:
   - name: generate-email-staging
     image: bitnami/kubectl
     commands:
+
+      - cd /drone/src
       # git is already present in this image; keep this if you ever need to install extras:
       # - apk add --no-cache git
       - git --version
