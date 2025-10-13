@@ -10,7 +10,7 @@ metadata:
       title: evergreen-ci/sage
       icon: github
 spec:
-  type: website
+  type: service
   owner: group:default/oktagroup_63a4baf4355dd783744f0b8d  # 10gen-evergreen-ui okta group
   lifecycle: production
   system: evergreen
