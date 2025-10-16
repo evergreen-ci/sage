@@ -267,8 +267,7 @@ const refineStep = createStep({
       };
     }
 
-    logCoreAnalyzerLogger.debug('Refine step for chunk #:', {
-      current: idx + 1,
+    logCoreAnalyzerLogger.debug(`Refine step for chunk #${idx + 1}:`, {
       total: chunks.length,
     });
     const result = await refinementAgent.generate(
