@@ -41,6 +41,7 @@
     "@ai-sdk/azure": "^2.0.53",
     "@ai-sdk/openai": "^2.0.26",
     "@ai-sdk/provider": "^2.0.0",
+    "@mastra/braintrust": "^0.1.7",
     "@mastra/core": "^0.21.1",
     "@mastra/libsql": "^0.15.2",
     "@mastra/loggers": "^0.10.16",

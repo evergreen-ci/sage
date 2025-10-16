@@ -1,3 +1,4 @@
+import { BraintrustExporter } from '@mastra/braintrust';
 import { Mastra } from '@mastra/core/mastra';
 import { initLogger } from 'braintrust';
 import { config } from '@/config';
@@ -17,6 +18,19 @@ export const mastra: Mastra = new Mastra({
   workflows: {
     ...evergreenWorkflows,
     logCoreAnalyzerWorkflow,
+  },
+  observability: {
+    configs: {
+      braintrust: {
+        serviceName: 'sage',
+        exporters: [
+          new BraintrustExporter({
+            apiKey: config.braintrust.apiKey,
+            projectName: config.braintrust.projectName,
+          }),
+        ],
+      },
+    },
   },
   agents: { sageThinkingAgent, evergreenAgent, questionClassifierAgent },
   logger: new WinstonMastraLogger({

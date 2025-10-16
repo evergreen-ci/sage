@@ -1647,6 +1647,13 @@
   resolved "https://registry.yarnpkg.com/@libsql/win32-x64-msvc/-/win32-x64-msvc-0.5.22.tgz#3d8eb9d092ebe18005dea97953575d981f669621"
   integrity sha512-Fj0j8RnBpo43tVZUVoNK6BV/9AtDUM5S7DF3LB4qTYg1LMSZqi3yeCneUTLJD6XomQJlZzbI4mst89yspVSAnA==
 
+"@mastra/braintrust@^0.1.7":
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/@mastra/braintrust/-/braintrust-0.1.7.tgz#0682b86e311e068eb974562620d885b2ea5083f7"
+  integrity sha512-bPiD8FvLJSlx6YT7GF/eYvKcokwJJBq3pMlrf9x4jvHvxWL1GBdgCb3tEdjEX90DXenOPBkKTHZeAHXhju6zMA==
+  dependencies:
+    braintrust "^0.4.3"
+
 "@mastra/core@^0.21.1":
   version "0.21.1"
   resolved "https://registry.yarnpkg.com/@mastra/core/-/core-0.21.1.tgz#20b1deb74ae08377062ddb63d83c7771b3f22139"
@@ -5014,7 +5021,7 @@ braces@^3.0.3, braces@~3.0.2:
   dependencies:
     fill-range "^7.1.1"
 
-braintrust@^0.4.4:
+braintrust@^0.4.3, braintrust@^0.4.4:
   version "0.4.4"
   resolved "https://registry.yarnpkg.com/braintrust/-/braintrust-0.4.4.tgz#41cee9f10dbfe027396567c42bd5e7cd5324d7ba"
   integrity sha512-ca7YA54z9s3eNRrrReUCsOTiXgfKPvn/GLBe3TNZXv11T6ftH+fFd7r3hydGw1u6ZdCo8xCMg42VOtxpe5KY7Q==
