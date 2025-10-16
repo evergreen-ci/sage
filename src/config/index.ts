@@ -66,6 +66,8 @@ export interface Config {
     /** BRAINTRUST_PARENT */
     parent: string;
     projectName: string;
+    /** BRAINTRUST_PROJECT_ID */
+    projectId: string;
   };
   sentry: {
     /** SENTRY_DSN */
@@ -159,6 +161,7 @@ export const config: Config = {
     apiKey: getEnvVar('BRAINTRUST_API_KEY', ''),
     parent: getEnvVar('BRAINTRUST_PARENT', 'project_name:sage-staging'),
     projectName: getEnvVar('BRAINTRUST_PROJECT_NAME', 'sage-staging'),
+    projectId: getEnvVar('BRAINTRUST_PROJECT_ID', ''),
   },
   sentry: {
     dsn: getEnvVar('SENTRY_DSN', ''),
