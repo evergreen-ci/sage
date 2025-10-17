@@ -2,7 +2,6 @@ import { createTool } from '@mastra/core';
 import { Agent } from '@mastra/core/agent';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
-import { wrapMastraAgent } from 'braintrust';
 import { z } from 'zod';
 import logger from '@/utils/logger';
 import { logAnalyzerConfig } from './config';
@@ -172,15 +171,13 @@ const LoopStateSchema = z.object({
 // Define the log analyzer agent for chunked processing
 // Initial analyzer - We use a bigger model for the first chunk, for better understanding of the structure and context
 
-const initialAnalyzerAgent = wrapMastraAgent(
-  new Agent({
-    name: 'initial-analyzer-agent',
-    description:
-      'Performs initial analysis of technical documents to understand structure and key patterns',
-    instructions: INITIAL_ANALYZER_INSTRUCTIONS,
-    model: logAnalyzerConfig.models.initial,
-  })
-);
+const initialAnalyzerAgent = new Agent({
+  name: 'initial-analyzer-agent',
+  description:
+    'Performs initial analysis of technical documents to understand structure and key patterns',
+  instructions: INITIAL_ANALYZER_INSTRUCTIONS,
+  model: logAnalyzerConfig.models.initial,
+});
 
 const initialStep = createStep({
   id: 'initial-summary',
@@ -232,15 +229,13 @@ const RefinementAgentOutputSchema = z.object({
  * Refinement agent - cheaper model for iterative processing
  * This model is used when we have larger files and we need to iterate through the whole document to get a better summary
  */
-const refinementAgent = wrapMastraAgent(
-  new Agent({
-    name: 'refinement-agent',
-    description:
-      'Iteratively refines and updates technical summaries with new chunks',
-    instructions: REFINEMENT_AGENT_INSTRUCTIONS,
-    model: logAnalyzerConfig.models.refinement,
-  })
-);
+const refinementAgent = new Agent({
+  name: 'refinement-agent',
+  description:
+    'Iteratively refines and updates technical summaries with new chunks',
+  instructions: REFINEMENT_AGENT_INSTRUCTIONS,
+  model: logAnalyzerConfig.models.refinement,
+});
 
 const refineStep = createStep({
   id: 'refine-summary',
@@ -301,14 +296,12 @@ const refineStep = createStep({
 });
 
 // Define the report formatter agent for final output
-const reportFormatterAgent = wrapMastraAgent(
-  new Agent({
-    name: 'report-formatter-agent',
-    description: 'Formats technical summaries into various output formats',
-    instructions: REPORT_FORMATTER_INSTRUCTIONS,
-    model: logAnalyzerConfig.models.formatter,
-  })
-);
+const reportFormatterAgent = new Agent({
+  name: 'report-formatter-agent',
+  description: 'Formats technical summaries into various output formats',
+  instructions: REPORT_FORMATTER_INSTRUCTIONS,
+  model: logAnalyzerConfig.models.formatter,
+});
 
 // Single-pass step for files that fit in one chunk - generates both markdown and summary in one call
 const singlePassStep = createStep({

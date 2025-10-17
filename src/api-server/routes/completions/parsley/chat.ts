@@ -4,7 +4,6 @@ import {
   UIMessage,
   validateUIMessages,
 } from 'ai';
-import { currentSpan } from 'braintrust';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { logMetadataSchema } from '@/constants/parsley/logMetadata';
@@ -157,23 +156,18 @@ const chatRoute = async (
       };
     }
 
-    let spanId: string;
     const stream = await runWithRequestContext(
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
-        await agent.stream(validatedMessage, {
+        await agent.stream<undefined, 'aisdk'>(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
           format: 'aisdk',
-          onFinish: () => {
-            const span = currentSpan();
-            span?.log({
-              metadata: {
-                userID: res.locals.userId,
-                requestID: res.locals.requestId,
-              },
-            });
-            spanId = span?.id;
+          tracingOptions: {
+            metadata: {
+              userId: res.locals.userId,
+              requestID: res.locals.requestId,
+            },
           },
         })
     );
@@ -183,7 +177,7 @@ const chatRoute = async (
       response: res,
       stream: stream.toUIMessageStream({
         messageMetadata: () => ({
-          spanId,
+          spanId: stream.traceId,
         }),
       }),
     });
