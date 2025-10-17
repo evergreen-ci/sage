@@ -46,7 +46,7 @@ steps:
       - ls -la
 
       # fix "dubious ownership"
-      - git config --local --add safe.directory /drone/src
+      # - git config --local --add safe.directory /drone/src
 
       - kubectl version --client
       - kubectl config set-cluster staging --server="$KUBE_API_SERVER" --insecure-skip-tls-verify=true
