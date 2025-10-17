@@ -17,23 +17,23 @@ volumes:
     temp: {}
 
 steps:
-  # - name: publish
-  #   image: plugins/kaniko-ecr
-  #   settings:
-  #     create_repository: true
-  #     registry: 795250896452.dkr.ecr.us-east-1.amazonaws.com
-  #     repo: devprod-evergreen/${DRONE_REPO_NAME}
-  #     tags:
-  #       - git-${DRONE_COMMIT_SHA:0:7}
-  #       - latest
-  #     access_key:
-  #       from_secret: ecr_access_key
-  #     secret_key:
-  #       from_secret: ecr_secret_key
-  #   when:
-  #     event:
-  #       - promote
-  #       - push
+  - name: publish
+    image: plugins/kaniko-ecr
+    settings:
+      create_repository: true
+      registry: 795250896452.dkr.ecr.us-east-1.amazonaws.com
+      repo: devprod-evergreen/${DRONE_REPO_NAME}
+      tags:
+        - git-${DRONE_COMMIT_SHA:0:7}
+        - latest
+      access_key:
+        from_secret: ecr_access_key
+      secret_key:
+        from_secret: ecr_secret_key
+    when:
+      event:
+        - promote
+        - push
 
   - name: generate-email-staging
     image: bitnami/kubectl
