@@ -43,6 +43,7 @@ steps:
       # git is already present in this image; keep this if you ever need to install extras:
       # - apk add --no-cache git
       - git --version
+      - ls -la
 
       # fix "dubious ownership"
       - git config --local --add safe.directory /drone/src
