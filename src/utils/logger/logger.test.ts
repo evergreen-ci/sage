@@ -1,5 +1,5 @@
 import loggerInstance from './setup';
-import { logger, loggerStream } from './index';
+import { logger, loggerStream } from '.';
 
 // Mock the winston logger instance
 vi.mock('./setup', () => ({

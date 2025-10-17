@@ -1,12 +1,9 @@
 import { createTool, Tool, ToolExecutionContext } from '@mastra/core';
 import { DocumentNode } from 'graphql';
 import { z } from 'zod';
-import {
-  GraphQLClient,
-  GraphQLClientError,
-} from '../../../utils/graphql/client';
-import logger from '../../../utils/logger';
-import { USER_ID } from '../../agents/constants';
+import { USER_ID } from '@/mastra/agents/constants';
+import { GraphQLClient, GraphQLClientError } from '@/utils/graphql/client';
+import logger from '@/utils/logger';
 
 interface GraphQLToolInputParams<
   GraphQLQuery extends object,

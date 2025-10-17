@@ -2,7 +2,7 @@ import { context, trace } from '@opentelemetry/api';
 import { Request, Response, NextFunction } from 'express';
 import expressWinston from 'express-winston';
 import { v4 as uuidv4 } from 'uuid';
-import loggerInstance, { logger } from 'utils/logger';
+import loggerInstance, { logger } from '@/utils/logger';
 
 /**
  * Middleware to add request ID to all requests

@@ -1,5 +1,5 @@
 import winston from 'winston';
-import { config } from '../../config';
+import { config } from '@/config';
 
 // Define log format for production (JSON)
 const productionFormat = winston.format.combine(

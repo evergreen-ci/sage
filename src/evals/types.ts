@@ -47,7 +47,7 @@ export interface ReporterEvalResult<
 }
 
 // Output types
-type MastraAgentOutput = Awaited<
+export type MastraAgentOutput = Awaited<
   ReturnType<AISDKV5OutputStream<OutputSchema>['getFullOutput']>
 >;
 

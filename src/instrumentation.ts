@@ -8,8 +8,8 @@ import {
   SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
-import { config } from 'config';
-import { SentrySpanProcessor } from './utils/sentry/otel-integration';
+import { config } from '@/config';
+import { SentrySpanProcessor } from '@/utils/sentry/otel-integration';
 
 const otlpExporter = config.honeycomb.otelCollectorURL
   ? new OTLPTraceExporter({
