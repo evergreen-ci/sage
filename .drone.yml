@@ -114,16 +114,21 @@ steps:
   - name: send-email-staging-api
     image: alpine/curl:latest
     commands:
+      - apk add --no-cache jq
       - |
-        EMAIL_BODY=$(cat /shared/deploy_email.html | tr -d '\n' | sed 's/"/\\"/g')
+        EMAIL_BODY=$(cat /shared/deploy_email.html | tr -d '\n')
         SUBJECT="$(date +'%Y-%m-%d') Sage deploy to ${DRONE_COMMIT_SHA:0:7}"
-        JSON_PAYLOAD="{\"recipients\": [\"mohamed.khelif@mongodb.com\"], \"subject\": \"$SUBJECT\", \"body\": \"$EMAIL_BODY\", \"is_plain_text\": false}"
+        jq -n \
+          --arg recipients "mohamed.khelif@mongodb.com" \
+          --arg subject "$SUBJECT" \
+          --arg body "$EMAIL_BODY" \
+          '{recipients: [$recipients], subject: $subject, body: $body, is_plain_text: false}' | \
         curl -X POST \
           'https://evergreen.mongodb.com/rest/v2/notifications/email' \
           -H "Api-User: $API_USER" \
           -H "Api-Key: $API_KEY" \
           -H "Content-Type: application/json" \
-          --data "$JSON_PAYLOAD"
+          --data @-
     environment:
       API_USER:
         from_secret: evergreen_api_user
