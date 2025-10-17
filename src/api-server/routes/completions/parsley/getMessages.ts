@@ -1,10 +1,10 @@
 import { convertMessages } from '@mastra/core/agent';
-import { RuntimeContext } from '@mastra/core/runtime-context';
 import { UIMessage } from 'ai';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from '@/mastra';
-import { ORCHESTRATOR_NAME } from '@/mastra/networks/constants';
+import { SAGE_THINKING_AGENT_NAME } from '@/mastra/agents/constants';
+import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
 import { logger } from '@/utils/logger';
 
 const getMessagesParamsSchema = z.object({
@@ -36,19 +36,19 @@ const getMessagesRoute = async (
 
   const { conversationId } = paramsData;
 
-  const runtimeContext = new RuntimeContext();
+  const runtimeContext = createParsleyRuntimeContext();
 
   try {
-    const network = mastra.vnext_getNetwork(ORCHESTRATOR_NAME);
-    if (!network) {
-      logger.error('Network not found', {
+    const agent = mastra.getAgent(SAGE_THINKING_AGENT_NAME);
+    if (!agent) {
+      logger.error('Agent not found', {
         requestId: res.locals.requestId,
-        networkName: ORCHESTRATOR_NAME,
+        agentName: SAGE_THINKING_AGENT_NAME,
       });
-      res.status(500).json({ message: 'Network not found' });
+      res.status(500).json({ message: 'Agent not found' });
       return;
     }
-    const memory = await network.getMemory({ runtimeContext });
+    const memory = await agent.getMemory({ runtimeContext });
     if (!memory) {
       logger.error('Memory not found', {
         requestId: res.locals.requestId,

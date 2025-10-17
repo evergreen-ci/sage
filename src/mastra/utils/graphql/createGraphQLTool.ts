@@ -31,6 +31,8 @@ interface GraphQLToolInputParams<
 export const createGraphQLTool = <
   GraphQLQuery extends object,
   GraphQLQueryVariables extends object,
+  TSuspendSchema extends z.ZodType = z.ZodType<unknown>,
+  TResumeSchema extends z.ZodType = z.ZodType<unknown>,
 >({
   client,
   description,
@@ -41,6 +43,8 @@ export const createGraphQLTool = <
 }: GraphQLToolInputParams<GraphQLQuery, GraphQLQueryVariables>): Tool<
   z.ZodType<GraphQLQueryVariables>,
   z.ZodType<GraphQLQuery>,
+  TSuspendSchema,
+  TResumeSchema,
   ToolExecutionContext<z.ZodType<GraphQLQueryVariables>>
 > & {
   inputSchema: z.ZodType<GraphQLQueryVariables>;

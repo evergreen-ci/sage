@@ -88,7 +88,7 @@ const testThinkingAgent = async () => {
         };
       }
 
-      const result = await agent.generateVNext(message, streamOptions);
+      const result = await agent.generate(message, streamOptions);
       const fullResponse = result.text || '';
       console.log(fullResponse);
 

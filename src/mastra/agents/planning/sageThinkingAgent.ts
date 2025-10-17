@@ -1,7 +1,6 @@
 import { Agent } from '@mastra/core/agent';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Memory } from '@mastra/memory';
-import { wrapMastraAgent } from 'braintrust';
 import { askEvergreenAgentTool } from '@/mastra/agents/evergreenAgent';
 import { gpt41 } from '@/mastra/models/openAI/gpt41';
 import { memoryStore } from '@/mastra/utils/memory';
@@ -19,13 +18,12 @@ const sageThinkingAgentMemory = new Memory({
   },
 });
 
-export const sageThinkingAgent: Agent = wrapMastraAgent(
-  new Agent({
-    name: 'Sage Thinking Agent',
-    description:
-      'A agent that thinks about the user question and decides the next action.',
-    memory: sageThinkingAgentMemory,
-    instructions: ({ runtimeContext }) => `
+export const sageThinkingAgent: Agent = new Agent({
+  name: 'Sage Thinking Agent',
+  description:
+    'A agent that thinks about the user question and decides the next action.',
+  memory: sageThinkingAgentMemory,
+  instructions: ({ runtimeContext }) => `
 # Role and Objective
 - Serve as Parsley AI, a senior software engineer with expertise in the Evergreen platform, capable of thoroughly analyzing user questions and determining effective responses.
 
@@ -72,18 +70,17 @@ export const sageThinkingAgent: Agent = wrapMastraAgent(
   ${stringifyRuntimeContext(runtimeContext)}
   </ADDITIONAL_CONTEXT>
   `,
-    model: gpt41,
-    defaultVNextStreamOptions: {
-      maxSteps: 10,
-    },
-    tools: {
-      askQuestionClassifierAgentTool,
-      askEvergreenAgentTool,
-      logCoreAnalyzerTool,
-      resolveLogFileUrlTool,
-    },
-  })
-);
+  model: gpt41,
+  defaultVNextStreamOptions: {
+    maxSteps: 10,
+  },
+  tools: {
+    askQuestionClassifierAgentTool,
+    askEvergreenAgentTool,
+    logCoreAnalyzerTool,
+    resolveLogFileUrlTool,
+  },
+});
 
 const stringifyRuntimeContext = (runtimeContext: RuntimeContext) => {
   const context = runtimeContext.toJSON();
