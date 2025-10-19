@@ -28,7 +28,7 @@
     "typecheck": "yarn tsc",
     "test-thinking-agent": "vite-node src/mastra/tests/scripts/test-thinking-agent.ts",
     "chat-with-staging": "vite-node src/mastra/tests/scripts/chat-with-staging.ts",
-    "mastra:dev": "mastra dev -p 4111",
+    "mastra:dev": "mastra dev",
     "mastra:build": "mastra build",
     "mastra:start": "node --import=./.mastra/output/instrumentation.mjs .mastra/output/index.mjs",
     "mastra:full": "yarn mastra:build && yarn mastra:start",
