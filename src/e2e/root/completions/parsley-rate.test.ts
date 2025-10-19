@@ -6,6 +6,10 @@ const app = setupTestAppServer();
 
 const rateEndpoint = '/completions/parsley/conversations/rate';
 
+vi.mock('@/utils/braintrust', () => ({
+  resolveRowIdByTraceId: vi.fn().mockResolvedValue('mock-row-id'),
+}));
+
 vi.mock('braintrust', async importOriginal => {
   const actual = await importOriginal<typeof Braintrust>();
   return {
