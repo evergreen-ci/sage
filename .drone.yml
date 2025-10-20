@@ -102,7 +102,7 @@ steps:
     commands:
       - apk add --no-cache jq
       - |
-        EMAIL_BODY=$(cat /shared/deploy_email.html | tr -d '\n')
+        EMAIL_BODY=$(cat /shared/deploy_email.html | tr '\n' ' ')
         SUBJECT="$(date +'%Y-%m-%d') Sage deploy to ${DRONE_COMMIT_SHA:0:7}"
         jq -n \
           --arg recipients "evergreen-deploys@10gen.com" \
