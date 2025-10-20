@@ -77,7 +77,7 @@ steps:
       event:
         - promote
       target:
-        - staging
+        - production
   
   - name: deploy-staging
     image: public.ecr.aws/kanopy/drone-helm:v3
@@ -153,4 +153,4 @@ steps:
       event:
         - promote
       target:
-        - staging
+        - production
