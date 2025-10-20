@@ -40,7 +40,7 @@ steps:
     commands:
       - cd /drone/src
       - git --version
-      - git config --global --add safe.directory /drone/src
+
       - kubectl version --client
       - kubectl config set-cluster prod --server="$KUBE_API_SERVER" --insecure-skip-tls-verify=true
       - kubectl config set-credentials prod --token="$KUBE_TOKEN"
