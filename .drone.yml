@@ -67,9 +67,11 @@ steps:
       - kubectl config set-context prod --cluster=prod --user=prod --namespace=devprod-evergreen
       - kubectl config use-context prod
       - |
-        PREV_COMMIT=$(kubectl get pods --selector=release=sage -n devprod-evergreen \
-          -o jsonpath='{.items[*].metadata.labels}' 2>/dev/null | cut -d'}' -f1 | \
-          grep -oE 'git-[0-9a-fA-F]+' | cut -d- -f2 | head -n1)
+        PREV_COMMIT=$(kubectl get pods \
+          --selector=release=sage \
+          -n devprod-evergreen \
+          -o jsonpath='{.items[*].metadata.labels.app\.kubernetes\.io/version}' \
+        2>/dev/null | grep -oE 'git-[0-9a-fA-F]+' | cut -d- -f2)
         if [ -n "$PREV_COMMIT" ]; then
           git fetch --no-tags --depth=1 origin "$PREV_COMMIT" || true
           ./scripts/generate_deploy_email.sh "$PREV_COMMIT"
