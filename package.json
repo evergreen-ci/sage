@@ -12,6 +12,8 @@
     "dev:staging": "NODE_ENV=staging dotenv-flow yarn dev-run",
     "dev:prod": "NODE_ENV=production dotenv-flow yarn dev-run",
     "deploy:staging": "NODE_ENV=staging dotenv-flow -- sh scripts/deploy.sh",
+    "pending-commits": "bash scripts/check-pending-commits.sh",
+    "pending-commits:json": "bash scripts/check-pending-commits.sh --json",
     "clean": "rm -rf dist bin node_modules",
     "codegen": "graphql-codegen-esm --config graphql.config.ts",
     "e2e": "vitest --project e2e",
