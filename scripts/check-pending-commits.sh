@@ -6,7 +6,7 @@
 #   - Run 'kcp' to switch to production context, or 'kcs' to switch to staging context
 #   - Ensure you have kubectl access to the target environment
 #
-# Usage: ./scripts/get_undeployed_commits.sh [--json]
+# Usage: ./scripts/check-pending-commits.sh [--json]
 #   --json: Output in JSON format
 
 set -e
