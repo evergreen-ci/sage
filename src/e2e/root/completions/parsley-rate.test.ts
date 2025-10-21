@@ -27,54 +27,48 @@ describe('POST /completions/parsley/conversations/rate', () => {
     vi.restoreAllMocks();
   });
 
-  it('sends a 0 rating to Braintrust', async () => {
-    const logMetadata = {
-      task_id: '123',
-      execution: 1,
-      log_type: LogTypes.EVERGREEN_TASK_LOGS,
-      origin: TaskLogOrigin.Task,
-    };
-    const id = 'rate-test-0';
-    const chatResponse = await request(app).post(chatEndpoint).send({
-      id,
-      message: 'Hello, world!',
-      logMetadata,
+  // Sequential because we want to ensure the rating is applied one after the other to the same spanId.
+  describe.sequential('sends a rating to Braintrust', () => {
+    let spanId: string;
+    beforeAll(async () => {
+      const logMetadata = {
+        task_id: '123',
+        execution: 1,
+        log_type: LogTypes.EVERGREEN_TASK_LOGS,
+        origin: TaskLogOrigin.Task,
+      };
+      const id = `rate-test-${Math.random().toString(36).substring(7)}`;
+      const chatResponse = await request(app).post(chatEndpoint).send({
+        id,
+        message: 'Hello, world!',
+        logMetadata,
+      });
+      expect(chatResponse.status).toBe(200);
+      spanId = extractSpanIdFromStream(chatResponse.text, true) as string;
+      expect(spanId).toBeTruthy();
     });
-    expect(chatResponse.status).toBe(200);
-    const spanId = extractSpanIdFromStream(chatResponse.text);
-    expect(spanId).toBeTruthy();
-    const response = await request(app)
-      .post(rateEndpoint)
-      .send({ spanId, rating: 0 });
-    expect(response.status).toBe(204);
-  });
-
-  it('sends a 1 rating to Braintrust', async () => {
-    const logMetadata = {
-      task_id: '456',
-      execution: 1,
-      log_type: LogTypes.EVERGREEN_TASK_LOGS,
-      origin: TaskLogOrigin.Task,
-    };
-    const id = 'rate-test-1';
-    const chatResponse = await request(app).post(chatEndpoint).send({
-      id,
-      message: 'Test message',
-      logMetadata,
+    it('sends a 0 rating to Braintrust', async () => {
+      expect(spanId).toBeDefined();
+      const response = await request(app)
+        .post(rateEndpoint)
+        .send({ spanId, rating: 0 });
+      expect(response.status).toBe(204);
     });
-    expect(chatResponse.status).toBe(200);
-    const spanId = extractSpanIdFromStream(chatResponse.text);
-    expect(spanId).toBeTruthy();
-    const response = await request(app)
-      .post(rateEndpoint)
-      .send({ spanId, rating: 1 });
-    expect(response.status).toBe(204);
-  });
 
-  it('catches an input error', async () => {
-    const response = await request(app)
-      .post(rateEndpoint)
-      .send({ spanId: '123', rating: -1 });
-    expect(response.status).toBe(400);
+    it('sends a 1 rating to Braintrust', async () => {
+      expect(spanId).toBeDefined();
+      const response = await request(app)
+        .post(rateEndpoint)
+        .send({ spanId, rating: 1 });
+      expect(response.status).toBe(204);
+    });
+
+    it('catches an input error', async () => {
+      expect(spanId).toBeDefined();
+      const response = await request(app)
+        .post(rateEndpoint)
+        .send({ spanId: spanId, rating: -1 });
+      expect(response.status).toBe(400);
+    });
   });
 });
