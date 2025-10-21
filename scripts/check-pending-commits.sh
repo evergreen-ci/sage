@@ -109,17 +109,16 @@ if [[ "$OUTPUT_JSON" == true ]]; then
 
   FIRST=true
   while IFS= read -r line; do
-    hash=$(echo "$line" | cut -d' ' -f1)
-    author=$(echo "$line" | cut -d' ' -f2-)
-    message=$(git log --format=%s -n 1 "$hash")
+    hash=$(echo "$line" | awk '{print $1}')
+    message=$(echo "$line" | cut -d' ' -f2-)
 
     if [[ "$FIRST" == false ]]; then
       echo ","
     fi
     FIRST=false
 
-    echo -n "    {\"hash\": \"$hash\", \"short_hash\": \"${hash:0:7}\", \"author\": \"$author\", \"message\": \"$message\", \"url\": \"$REPO_URL/commit/$hash\"}"
-  done < <(git log --pretty=format:"%H %an" ${DEPLOYED_COMMIT}^..${CURRENT_COMMIT})
+    echo -n "    {\"hash\": \"$hash\", \"short_hash\": \"${hash:0:7}\", \"message\": \"$message\", \"url\": \"$REPO_URL/commit/$hash\"}"
+  done < <(git log --pretty=format:"%H %s" ${DEPLOYED_COMMIT}^..${CURRENT_COMMIT})
 
   echo ""
   echo "  ]"
