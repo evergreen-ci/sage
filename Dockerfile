@@ -1,5 +1,5 @@
 # Stage 1: Build (default platform)
-FROM node:22-alpine AS builder
+FROM node:25-alpine AS builder
 WORKDIR /app
 
 COPY package.json yarn.lock ./
@@ -10,7 +10,7 @@ RUN yarn build
 
 
 # Stage 2: Runtime (amd64 only)
-FROM --platform=linux/amd64 node:22-alpine AS runner
+FROM --platform=linux/amd64 node:25-alpine AS runner
 WORKDIR /app
 
 # Copy only built artifacts and node_modules from builder
