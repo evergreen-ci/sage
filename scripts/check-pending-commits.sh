@@ -142,4 +142,5 @@ else
 
   echo ""
   echo "To deploy these commits to $ENVIRONMENT, promote the latest commit."
+  echo "https://drone.corp.mongodb.com/evergreen-ci/sage"
 fi
