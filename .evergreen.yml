@@ -322,6 +322,8 @@ functions:
       env:
         AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
         AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
+        BRAINTRUST_PROJECT_ID: ${BRAINTRUST_PROJECT_ID_STAGING}
+        BRAINTRUST_API_KEY: ${BRAINTRUST_API_KEY}
       working_dir: sage
       shell: bash
       script: |
