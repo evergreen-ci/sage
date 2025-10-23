@@ -228,7 +228,7 @@ const singlePassStep = createStep({
   description: 'Direct analysis and report generation for single-chunk files',
   inputSchema: ChunkedSchemaOutput,
   outputSchema: WorkflowOutputSchema,
-  execute: async ({ inputData, tracingContext }) => {
+  execute: async ({ abortSignal, inputData, tracingContext }) => {
     const { analysisContext, chunks } = inputData;
 
     // Validate we have exactly one chunk
@@ -256,6 +256,7 @@ const singlePassStep = createStep({
           schema: WorkflowOutputSchema,
           model: logAnalyzerConfig.models.schemaFormatter,
         },
+        abortSignal,
         tracingContext,
       }
     );
@@ -282,7 +283,7 @@ const initialStep = createStep({
   description: 'Summarize first chunk using log analyzer agent',
   inputSchema: ChunkedSchemaOutput,
   outputSchema: LoopStateSchema,
-  execute: async ({ inputData, tracingContext }) => {
+  execute: async ({ abortSignal, inputData, tracingContext }) => {
     const { analysisContext, chunks } = inputData;
     const first = chunks[0]?.text ?? '';
     logCoreAnalyzerLogger.debug('Initial chunk for analysis', {
@@ -305,6 +306,7 @@ const initialStep = createStep({
           model: logAnalyzerConfig.models.schemaFormatter,
         },
         tracingContext,
+        abortSignal,
       }
     );
 
@@ -324,7 +326,7 @@ const refineStep = createStep({
     'Iteratively refine the summary with context from previous chunks',
   inputSchema: LoopStateSchema,
   outputSchema: LoopStateSchema,
-  execute: async ({ inputData, tracingContext }) => {
+  execute: async ({ abortSignal, inputData, tracingContext }) => {
     const {
       analysisContext,
       chunks,
@@ -354,6 +356,7 @@ const refineStep = createStep({
           model: logAnalyzerConfig.models.schemaFormatter,
         },
         tracingContext,
+        abortSignal,
       }
     );
 
@@ -381,7 +384,7 @@ const finalizeStep = createStep({
   description: 'Generate final markdown report and concise summary',
   inputSchema: LoopStateSchema,
   outputSchema: WorkflowOutputSchema,
-  execute: async ({ inputData, tracingContext }) => {
+  execute: async ({ abortSignal, inputData, tracingContext }) => {
     const { analysisContext, summary } = inputData;
     logCoreAnalyzerLogger.debug('Generating final markdown report', {
       summary: summary.slice(0, 100),
@@ -393,6 +396,7 @@ const finalizeStep = createStep({
       USER_MARKDOWN_PROMPT(summary, analysisContext),
       {
         tracingContext,
+        abortSignal,
       }
     );
     logCoreAnalyzerLogger.debug('Final markdown report generated', {
@@ -405,6 +409,7 @@ const finalizeStep = createStep({
       USER_CONCISE_SUMMARY_PROMPT(markdownRes.text, analysisContext),
       {
         tracingContext,
+        abortSignal,
       }
     );
 
@@ -492,9 +497,7 @@ export const logCoreAnalyzerTool: ReturnType<
       return runResult.result;
     }
     if (runResult.status === 'failed') {
-      throw new Error(
-        `Log analyzer workflow failed: ${runResult.error.message}`
-      );
+      throw new Error(`Log analyzer workflow failed: ${runResult.error}`);
     }
     throw new Error(
       `Unexpected workflow execution status: ${runResult.status}. Expected 'success' or 'failed'.`
