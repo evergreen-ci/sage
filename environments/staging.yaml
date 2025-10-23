@@ -52,3 +52,10 @@ envSecrets:
 
 serviceAccount:
   enabled: true
+
+security:  # No sensitive info; dummy data only.
+  dataClassification: "Public"
+  dataDesignation: ["MI"]
+
+ownership:
+  driEmail: evergreen-team@mongodb.com

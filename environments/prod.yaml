@@ -62,3 +62,10 @@ autoscaling:
         target:
           type: Utilization
           averageUtilization: 80
+
+security:  # Most sensitive info is logs and task metadata.
+  dataClassification: "Internal"
+  dataDesignation: ["MI"]
+
+ownership:
+  driEmail: evergreen-team@mongodb.com
