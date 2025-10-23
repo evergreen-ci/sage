@@ -249,7 +249,7 @@ const singlePassStep = createStep({
     });
 
     // Use structured output to get both markdown and summary
-    const result = await reportFormatterAgent.generateVNext(
+    const result = await reportFormatterAgent.generate(
       SINGLE_PASS_PROMPT(text, analysisContext),
       {
         structuredOutput: {
@@ -292,7 +292,7 @@ const initialStep = createStep({
     logCoreAnalyzerLogger.debug('Chunk length', { length: first.length });
     logCoreAnalyzerLogger.debug('Calling LLM for initial summary');
 
-    const result = await initialAnalyzerAgent.generateVNext(
+    const result = await initialAnalyzerAgent.generate(
       [
         {
           role: 'user',
@@ -346,7 +346,7 @@ const refineStep = createStep({
     logCoreAnalyzerLogger.debug(`Refine step for chunk #${idx + 1}:`, {
       total: chunks.length,
     });
-    const result = await refinementAgent.generateVNext(
+    const result = await refinementAgent.generate(
       USER_REFINE(existingSummary, chunk, analysisContext),
       {
         structuredOutput: {
@@ -389,7 +389,7 @@ const finalizeStep = createStep({
     });
 
     // Generate markdown report
-    const markdownRes = await reportFormatterAgent.generateVNext(
+    const markdownRes = await reportFormatterAgent.generate(
       USER_MARKDOWN_PROMPT(summary, analysisContext),
       {
         tracingContext,
@@ -401,7 +401,7 @@ const finalizeStep = createStep({
 
     // Generate concise summary from the markdown report
     logCoreAnalyzerLogger.debug('Generating concise summary');
-    const conciseSummaryRes = await reportFormatterAgent.generateVNext(
+    const conciseSummaryRes = await reportFormatterAgent.generate(
       USER_CONCISE_SUMMARY_PROMPT(markdownRes.text, analysisContext),
       {
         tracingContext,
