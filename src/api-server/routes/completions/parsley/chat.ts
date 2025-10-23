@@ -4,12 +4,11 @@ import {
   UIMessage,
   validateUIMessages,
 } from 'ai';
-import { currentSpan } from 'braintrust';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { logMetadataSchema } from '@/constants/parsley/logMetadata';
 import { mastra } from '@/mastra';
-import { USER_ID } from '@/mastra/agents/constants';
+import { SAGE_THINKING_AGENT_NAME, USER_ID } from '@/mastra/agents/constants';
 import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
 import { runWithRequestContext } from '@/mastra/utils/requestContext';
 import { logger } from '@/utils/logger';
@@ -111,7 +110,7 @@ const chatRoute = async (
   }
 
   try {
-    const agent = mastra.getAgent('sageThinkingAgent');
+    const agent = mastra.getAgent(SAGE_THINKING_AGENT_NAME);
 
     const memory = await agent.getMemory({
       runtimeContext,
@@ -157,23 +156,18 @@ const chatRoute = async (
       };
     }
 
-    let spanId: string;
     const stream = await runWithRequestContext(
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
-        await agent.streamVNext(validatedMessage, {
+        await agent.stream(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
           format: 'aisdk',
-          onFinish: () => {
-            const span = currentSpan();
-            span?.log({
-              metadata: {
-                userID: res.locals.userId,
-                requestID: res.locals.requestId,
-              },
-            });
-            spanId = span?.id;
+          tracingOptions: {
+            metadata: {
+              userId: res.locals.userId,
+              requestID: res.locals.requestId,
+            },
           },
         })
     );
@@ -183,7 +177,7 @@ const chatRoute = async (
       response: res,
       stream: stream.toUIMessageStream({
         messageMetadata: () => ({
-          spanId,
+          spanId: stream.traceId,
         }),
       }),
     });

@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import z from 'zod';
+import { config } from '@/config';
 import { braintrustLogger } from '@/mastra';
+import { resolveRowIdByTraceId } from '@/utils/braintrust';
 import { logger } from '@/utils/logger';
 
 export const addRatingInputSchema = z.object({
@@ -29,9 +31,31 @@ const rateMessageRoute = async (
   }
 
   const { feedback, rating, spanId } = ratingData;
+  let logRowId: string | undefined;
+  try {
+    logRowId = await resolveRowIdByTraceId(
+      spanId,
+      config.braintrust.projectId,
+      config.braintrust.apiKey
+    );
+  } catch (error) {
+    logger.error('Failed to resolve row ID for trace ID', {
+      spanId,
+      error,
+    });
+    return res.status(404).json({ error: 'Trace ID not found in Braintrust' });
+  }
+
+  if (!logRowId) {
+    logger.error('Failed to resolve row ID for trace ID', {
+      spanId,
+    });
+    return res.status(404).json({ error: 'Trace ID not found in Braintrust' });
+  }
+
   try {
     braintrustLogger.logFeedback({
-      id: spanId,
+      id: logRowId,
       comment: feedback,
       scores: {
         correctness: rating,
