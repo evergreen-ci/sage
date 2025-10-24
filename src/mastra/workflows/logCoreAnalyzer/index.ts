@@ -434,6 +434,11 @@ const iterativeRefinementWorkflow = createWorkflow({
     and a lightweight refinement loop going through the whole document`,
   inputSchema: ChunkedSchemaOutput,
   outputSchema: WorkflowOutputSchema,
+  // Occasionally, the workflow fails at a step, so we retry it a few times
+  retryConfig: {
+    attempts: 3,
+    delay: 1000,
+  },
 })
   .then(initialStep)
   .dowhile(
