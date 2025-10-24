@@ -196,7 +196,27 @@ For detailed information about running evals, managing datasets, scoring, and re
 
 ## Deployment
 
-## Deploys
+### Checking Pending Commits
+
+Before deploying, you can check which commits are pending deployment to an environment:
+
+1. Switch to the appropriate kubectl context:
+   - **Production**: Run `kcp` (switches to production context)
+   - **Staging**: Run `kcs` (switches to staging context)
+
+2. Check pending commits:
+
+   ```bash
+   yarn pending-commits
+   ```
+
+   For JSON output:
+
+   ```bash
+   yarn pending-commits:json
+   ```
+
+This will show all commits between what is currently deployed and your local HEAD, including commit hashes, messages, and GitHub URLs.
 
 ### Staging
 
@@ -207,9 +227,11 @@ Before pushing to staging, drop a note in 🔒evergreen-ai-devs to make sure no 
 Drone can [promote](https://docs.drone.io/promote/) builds opened on PRs to staging. Before starting, [install and configure the Drone CLI](https://kanopy.corp.mongodb.com/docs/cicd/advanced_drone/#drone-cli).
 
 1. Open a PR with your changes (a draft is okay). This will kick off the `publish` step.
-2. Once completed, either:
-   - Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> staging` from your machine.
-   - Click `…` > `Promote` on your build's page on Drone. Enter "staging" in the "Target" field and submit.
+2. Check pending commits using `kcs && yarn pending-commits` to see what will be deployed.
+3. Once the build completes, find the build number on [Drone](https://drone.corp.mongodb.com/evergreen-ci/sage).
+4. Promote the build to staging:
+   - **CLI**: Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> staging`
+   - **Web UI**: Click `…` > `Promote` on your build's page. Enter "staging" in the "Target" field and submit.
 
 #### Local
 
@@ -219,4 +241,12 @@ Note that Drone's [deployments page](https://drone.corp.mongodb.com/evergreen-ci
 
 ### Production
 
-To deploy to production, follow the Drone steps above, using `production` as the target instead of `staging`. Note that you must be promoting a Drone build that pushed a commit to `main`.
+To deploy to production:
+
+1. Check pending commits: `kcp && yarn pending-commits`
+2. Find the build on [Drone](https://drone.corp.mongodb.com/evergreen-ci/sage) for the commit you want to deploy (must be on `main` branch).
+3. Promote the build to production:
+   - **CLI**: Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> production`
+   - **Web UI**: Click `…` > `Promote` on your build's page. Enter "production" in the "Target" field and submit.
+
+**Note**: You must be promoting a Drone build that pushed a commit to `main`.
