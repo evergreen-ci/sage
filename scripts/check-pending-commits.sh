@@ -38,8 +38,8 @@ if [[ "$CURRENT_CONTEXT" == *"prod"* ]]; then
 elif [[ "$CURRENT_CONTEXT" == *"staging"* ]]; then
   ENVIRONMENT="staging"
 else
-  echo "Warning: Could not determine environment from context '$CURRENT_CONTEXT'. Assuming production." >&2
-  ENVIRONMENT="production"
+  echo "Error: Could not determine environment from context '$CURRENT_CONTEXT'. Assuming production." >&2
+  exit 1
 fi
 
 # Get the deployed commit hash
