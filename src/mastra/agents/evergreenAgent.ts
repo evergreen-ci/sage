@@ -42,6 +42,9 @@ const evergreenAgentMemory = new Memory({
 - Potential Issues:
 `,
     },
+    threads: {
+      generateTitle: false,
+    },
   },
 });
 
