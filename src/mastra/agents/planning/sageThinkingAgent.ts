@@ -15,6 +15,9 @@ const sageThinkingAgentMemory = new Memory({
       enabled: true,
       scope: 'thread',
     },
+    threads: {
+      generateTitle: false,
+    },
   },
 });
 
