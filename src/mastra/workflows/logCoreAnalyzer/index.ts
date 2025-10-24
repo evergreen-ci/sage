@@ -495,7 +495,11 @@ export const logCoreAnalyzerTool: ReturnType<
       return runResult.result;
     }
     if (runResult.status === 'failed') {
-      throw new Error(`Log analyzer workflow failed: ${runResult.error}`);
+      const errorMessage =
+        runResult.error instanceof Error
+          ? runResult.error.message
+          : String(runResult.error);
+      throw new Error(`Log analyzer workflow failed: ${errorMessage}`);
     }
     throw new Error(
       `Unexpected workflow execution status: ${runResult.status}. Expected 'success' or 'failed'.`
