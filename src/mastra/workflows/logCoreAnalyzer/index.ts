@@ -77,7 +77,7 @@ const ChunkedSchemaOutput = z.object({
 });
 
 // Schema passed across steps during the refinement loop, keeps track of the current chunk index and summary
-const LoopStateSchema = z.object({
+const RefinementLoopStateSchema = z.object({
   idx: z.number(),
   chunks: z.array(z.object({ text: z.string() })),
   summary: z.string(),
@@ -133,9 +133,17 @@ const loadDataStep = createStep({
     text: z.string(),
     analysisContext: z.string().optional(),
   }),
-  execute: async ({ inputData }) => {
+  execute: async ({ inputData, tracingContext }) => {
     const { analysisContext, path: filePath, text, url } = inputData;
 
+    tracingContext.currentSpan?.update({
+      metadata: {
+        analysisContext: analysisContext ?? 'No analysis context provided',
+        filePath,
+        url,
+        textLength: text?.length ?? 0,
+      },
+    });
     let result: LoadResult;
 
     try {
@@ -195,7 +203,7 @@ const chunkStep = createStep({
     analysisContext: z.string().optional(),
   }),
   outputSchema: ChunkedSchemaOutput,
-  execute: async ({ inputData }) => {
+  execute: async ({ inputData, tracingContext }) => {
     const { analysisContext, text } = inputData;
 
     const doc = MDocument.fromText(text);
@@ -208,6 +216,12 @@ const chunkStep = createStep({
 
     logCoreAnalyzerLogger.debug('Chunking complete', {
       chunkCount: chunks.length,
+    });
+
+    tracingContext.currentSpan?.update({
+      metadata: {
+        chunkCount: chunks.length,
+      },
     });
 
     return { chunks, analysisContext };
@@ -275,7 +289,7 @@ const initialStep = createStep({
   id: 'initial-summary',
   description: 'Summarize first chunk using log analyzer agent',
   inputSchema: ChunkedSchemaOutput,
-  outputSchema: LoopStateSchema,
+  outputSchema: RefinementLoopStateSchema,
   execute: async ({ abortSignal, inputData, tracingContext }) => {
     const { analysisContext, chunks } = inputData;
     const first = chunks[0]?.text ?? '';
@@ -287,12 +301,7 @@ const initialStep = createStep({
     logCoreAnalyzerLogger.debug('Calling LLM for initial summary');
 
     const result = await initialAnalyzerAgent.generate(
-      [
-        {
-          role: 'user',
-          content: USER_INITIAL_PROMPT(first, analysisContext),
-        },
-      ],
+      USER_INITIAL_PROMPT(first, analysisContext),
       {
         structuredOutput: {
           schema: RefinementAgentOutputSchema,
@@ -308,7 +317,6 @@ const initialStep = createStep({
     >;
 
     const { summary } = response;
-
     return { idx: 1, chunks, summary, analysisContext };
   },
 });
@@ -317,8 +325,8 @@ const refineStep = createStep({
   id: 'refine-summary',
   description:
     'Iteratively refine the summary with context from previous chunks',
-  inputSchema: LoopStateSchema,
-  outputSchema: LoopStateSchema,
+  inputSchema: RefinementLoopStateSchema,
+  outputSchema: RefinementLoopStateSchema,
   execute: async ({ abortSignal, inputData, tracingContext }) => {
     const {
       analysisContext,
@@ -353,9 +361,7 @@ const refineStep = createStep({
       }
     );
 
-    const response = result.object as unknown as z.infer<
-      typeof RefinementAgentOutputSchema
-    >;
+    const response = result.object;
 
     const updated = response.updated ?? false;
     let newSummary = existingSummary;
@@ -375,7 +381,7 @@ const refineStep = createStep({
 const finalizeStep = createStep({
   id: 'finalize',
   description: 'Generate final markdown report and concise summary',
-  inputSchema: LoopStateSchema,
+  inputSchema: RefinementLoopStateSchema,
   outputSchema: WorkflowOutputSchema,
   execute: async ({ abortSignal, inputData, tracingContext }) => {
     const { analysisContext, summary } = inputData;
@@ -483,8 +489,17 @@ export const logCoreAnalyzerTool: ReturnType<
     'Analyzes log files and text content',
   inputSchema: logCoreAnalyzerWorkflow.inputSchema,
   outputSchema: logCoreAnalyzerWorkflow.outputSchema,
-  execute: async ({ context, runtimeContext, tracingContext }) => {
-    const run = await logCoreAnalyzerWorkflow.createRunAsync({});
+  execute: async ({
+    context,
+    resourceId,
+    runId,
+    runtimeContext,
+    tracingContext,
+  }) => {
+    const run = await logCoreAnalyzerWorkflow.createRunAsync({
+      resourceId,
+      runId,
+    });
 
     const runResult = await run.start({
       inputData: context,
