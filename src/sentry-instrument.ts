@@ -21,6 +21,9 @@ if (config.sentry.enabled && config.sentry.dsn) {
     attachStacktrace: config.sentry.attachStacktrace,
     sendDefaultPii: true,
 
+    // Enable logs for console logging integration (experimental)
+    enableLogs: config.sentry.captureConsole,
+
     // Integrations - Sentry will auto-detect Express, HTTP, MongoDB, etc.
     // Note: Sentry automatically integrates with OpenTelemetry when both are initialized
     // Performance profiling is enabled automatically via @sentry/profiling-node import
@@ -39,8 +42,15 @@ if (config.sentry.enabled && config.sentry.dsn) {
         mode: 'warn',
       }),
 
-      // Optional: Console integration
-      ...(config.sentry.captureConsole ? [Sentry.consoleIntegration()] : []),
+      // Console logging integration - captures console.log/error/warn as Sentry logs
+      // Requires enableLogs: true above (experimental feature)
+      ...(config.sentry.captureConsole
+        ? [
+            Sentry.consoleLoggingIntegration({
+              levels: ['error', 'warn', 'log'], // Customize which levels to capture
+            }),
+          ]
+        : []),
     ],
 
     // Hooks for debugging
@@ -57,7 +67,6 @@ if (config.sentry.enabled && config.sentry.dsn) {
       }
       return transaction;
     },
-    enableLogs: config.sentry.captureConsole,
   });
 
   console.log('Sentry initialized successfully', {
