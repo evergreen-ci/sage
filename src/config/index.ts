@@ -72,6 +72,8 @@ export interface Config {
   sentry: {
     /** SENTRY_DSN */
     dsn: string;
+    /** SENTRY_ENVIRONMENT */
+    environment: string;
     /** SENTRY_SAMPLE_RATE */
     sampleRate: number;
     /** SENTRY_TRACES_SAMPLE_RATE */
@@ -167,6 +169,7 @@ export const config: Config = {
   },
   sentry: {
     dsn: getEnvVar('SENTRY_DSN', ''),
+    environment: getEnvVar('SENTRY_ENVIRONMENT', 'development'),
     sampleRate: parseFloat(getEnvVar('SENTRY_SAMPLE_RATE', '1.0')),
     tracesSampleRate: parseFloat(getEnvVar('SENTRY_TRACES_SAMPLE_RATE', '0.1')),
     profilesSampleRate: parseFloat(

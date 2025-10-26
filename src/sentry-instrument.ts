@@ -9,7 +9,7 @@ import { config } from '@/config';
 if (config.sentry.enabled && config.sentry.dsn) {
   Sentry.init({
     dsn: config.sentry.dsn,
-    environment: config.nodeEnv,
+    environment: config.sentry.environment,
     debug: config.sentry.debug,
 
     // Performance monitoring
