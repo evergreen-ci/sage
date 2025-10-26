@@ -76,6 +76,8 @@ export interface Config {
     sampleRate: number;
     /** SENTRY_TRACES_SAMPLE_RATE */
     tracesSampleRate: number;
+    /** SENTRY_PROFILES_SAMPLE_RATE */
+    profilesSampleRate: number;
     /** SENTRY_ENABLED */
     enabled: boolean;
     /** SENTRY_DEBUG */
@@ -167,6 +169,9 @@ export const config: Config = {
     dsn: getEnvVar('SENTRY_DSN', ''),
     sampleRate: parseFloat(getEnvVar('SENTRY_SAMPLE_RATE', '1.0')),
     tracesSampleRate: parseFloat(getEnvVar('SENTRY_TRACES_SAMPLE_RATE', '0.1')),
+    profilesSampleRate: parseFloat(
+      getEnvVar('SENTRY_PROFILES_SAMPLE_RATE', '0.1')
+    ),
     enabled: getEnvVar('SENTRY_ENABLED', 'true') === 'true',
     debug: getEnvVar('SENTRY_DEBUG', 'false') === 'true',
     attachStacktrace: getEnvVar('SENTRY_ATTACH_STACKTRACE', 'true') === 'true',
