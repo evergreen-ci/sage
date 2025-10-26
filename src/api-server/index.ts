@@ -3,7 +3,6 @@ import cors from 'cors';
 import express, { Application } from 'express';
 import expressListEndpoints from 'express-list-endpoints';
 import { userIdMiddleware } from '@/api-server/middlewares/authentication';
-import { sentryContextMiddleware } from '@/api-server/middlewares/sentry';
 import { completionsRoute, loginRoute } from '@/api-server/routes';
 import healthRoute from '@/api-server/routes/health';
 import rootRoute from '@/api-server/routes/root';
@@ -35,7 +34,6 @@ class SageServer {
     this.app.use(requestIdMiddleware);
     // Middleware to add the authenticated user id to the request trace
     this.app.use(userIdMiddleware);
-    this.app.use(sentryContextMiddleware);
 
     // HTTP logging middleware
     this.app.use(httpLoggingMiddleware);
@@ -62,6 +60,9 @@ class SageServer {
   private setupErrorHandling() {
     // Error logging middleware (must be after routes)
     this.app.use(errorLoggingMiddleware);
+
+    // Sentry error handler - MUST be after all routes and other error handlers
+    // This is automatically configured by Sentry's Express integration
     Sentry.setupExpressErrorHandler(this.app);
   }
 
