@@ -217,4 +217,6 @@ export const validateConfig = (): string[] | undefined => {
   return errors.length > 0 ? errors : undefined;
 };
 
-export { getEnvVar };
+const logPrefixesToOmit = ['[AI Tracing] Event exported'];
+
+export { getEnvVar, logPrefixesToOmit };

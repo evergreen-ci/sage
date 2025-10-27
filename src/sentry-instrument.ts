@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/node';
 import '@sentry/profiling-node';
-import { config } from '@/config';
+import { config, logPrefixesToOmit } from '@/config';
 
 /**
  * Initialize Sentry BEFORE any other imports
@@ -52,6 +52,12 @@ if (config.sentry.enabled && config.sentry.dsn) {
           ]
         : []),
     ],
+    beforeSendLog(log) {
+      if (logPrefixesToOmit.some(prefix => log.message.startsWith(prefix))) {
+        return null;
+      }
+      return log;
+    },
 
     // Hooks for debugging
     beforeSend: event => {
