@@ -2,8 +2,6 @@ import loggerInstance from './setup';
 
 /**
  * Logs an error message at the error level, with optional error and metadata.
- * Note: Error logs are automatically sent to Sentry via the Winston transport
- * configured in setup.ts
  * @param message - The error message to log.
  * @param error - (Optional) An Error object or unknown error.
  * @param meta - (Optional) Additional metadata to include in the log.
