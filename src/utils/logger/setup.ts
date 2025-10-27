@@ -66,10 +66,10 @@ const consoleTransport = new winston.transports.Console({
 
 // Create Sentry Winston Transport
 // This forwards logs to Sentry as structured log events
-const SentryWinstonTransport = Sentry.createSentryWinstonTransport(Transport, {
-  // Only send error and warn logs to Sentry to reduce noise
-  levels: ['error', 'warn'],
-});
+const SentryWinstonTransport = Sentry.createSentryWinstonTransport(
+  Transport,
+  {}
+);
 
 // Create the logger instance
 const transports: winston.transport[] = [consoleTransport];
