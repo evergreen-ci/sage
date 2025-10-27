@@ -14,6 +14,7 @@ import {
   httpLoggingMiddleware,
   errorLoggingMiddleware,
 } from './middlewares/logging';
+import { sentryUserContextMiddleware } from './middlewares/sentryContext';
 
 /**
  * `startServer` is a function that starts the server.
@@ -34,6 +35,8 @@ class SageServer {
     this.app.use(requestIdMiddleware);
     // Middleware to add the authenticated user id to the request trace
     this.app.use(userIdMiddleware);
+    // Middleware to set Sentry user context from authenticated user
+    this.app.use(sentryUserContextMiddleware);
 
     // HTTP logging middleware
     this.app.use(httpLoggingMiddleware);

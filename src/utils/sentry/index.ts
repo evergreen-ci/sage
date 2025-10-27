@@ -28,7 +28,7 @@ class SentryService {
    * Capture an exception with optional context
    * @param error - The error to capture (Error, string, or unknown)
    * @param context - Optional context information
-   * @param context.user - User information
+   * @param context.user - User information (overrides middleware-set user if provided)
    * @param context.tags - Tags to attach to the event
    * @param context.contexts - Additional contexts
    * @param context.extra - Extra data to include
