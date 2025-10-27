@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import sageServer from '@/api-server';
 import { config, validateConfig } from '@/config';
 import { db } from '@/db/connection';
 import { mastra } from '@/mastra';
@@ -50,10 +51,12 @@ const healthRoute = async (req: Request, res: Response) => {
   }
 
   const dbStats = await db.dbStats();
+  const uptimeSeconds = sageServer.getUptimeSeconds();
 
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
+    uptimeSeconds,
     downstreamEvergreen: config.evergreen.graphqlEndpoint,
     agents: {
       count: agentNames.length,

@@ -22,6 +22,7 @@ import { sentryUserContextMiddleware } from './middlewares/sentryContext';
 class SageServer {
   private app: Application;
   private serverInstance: ReturnType<Application['listen']> | null = null;
+  private startTime: Date | null = null;
 
   constructor() {
     this.app = express();
@@ -83,6 +84,8 @@ class SageServer {
 
     await db.connect();
 
+    this.startTime = new Date();
+
     this.serverInstance = this.app.listen(config.port, () => {
       logger.info(`🚀 Sage server is running on port ${config.port}`);
       const routes = expressListEndpoints(this.app);
@@ -115,10 +118,18 @@ class SageServer {
       });
     });
     this.serverInstance = null;
+    this.startTime = null;
   }
 
   public getApp(): Application {
     return this.app;
+  }
+
+  public getUptimeSeconds(): number | null {
+    if (!this.startTime) {
+      return null;
+    }
+    return Math.floor((Date.now() - this.startTime.getTime()) / 1000);
   }
 }
 
