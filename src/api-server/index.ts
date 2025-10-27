@@ -64,9 +64,9 @@ class SageServer {
     // Error logging middleware (must be after routes)
     this.app.use(errorLoggingMiddleware);
 
-    // Sentry error handler - MUST be after all routes and other error handlers
-    // This is automatically configured by Sentry's Express integration
-    Sentry.setupExpressErrorHandler(this.app);
+    if (config.sentry.enabled) {
+      Sentry.setupExpressErrorHandler(this.app);
+    }
   }
 
   public async start() {
