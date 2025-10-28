@@ -6,6 +6,7 @@ import express from 'express';
  * This ensures all Sentry errors include user information for better debugging
  *
  * Must run after userIdMiddleware which sets res.locals.userId
+ * Uses Sentry's isolation scope for proper request isolation to prevent context leaking
  * @param req - Express request object
  * @param res - Express response object
  * @param next - Express next function
@@ -23,12 +24,6 @@ export const sentryUserContextMiddleware = (
       ip_address: req.ip,
     });
   }
-
-  // Clean up user context after the request completes
-  res.on('finish', () => {
-    // Clear user context for the next request to avoid leaking user data
-    Sentry.setUser(null);
-  });
 
   next();
 };
