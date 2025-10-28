@@ -10,6 +10,7 @@ if (config.sentry.enabled && config.sentry.dsn) {
   Sentry.init({
     dsn: config.sentry.dsn,
     environment: config.sentry.environment,
+    release: config.version,
     debug: config.sentry.debug,
 
     // Performance monitoring
@@ -76,7 +77,8 @@ if (config.sentry.enabled && config.sentry.dsn) {
   });
 
   console.log('Sentry initialized successfully', {
-    environment: config.nodeEnv,
+    environment: config.sentry.environment,
+    release: config.version,
     sampleRate: config.sentry.sampleRate,
     tracesSampleRate: config.sentry.tracesSampleRate,
     profilesSampleRate: config.sentry.profilesSampleRate,
