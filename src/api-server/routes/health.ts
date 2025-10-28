@@ -3,6 +3,7 @@ import sageServer from '@/api-server';
 import { config, validateConfig } from '@/config';
 import { db } from '@/db/connection';
 import { mastra } from '@/mastra';
+import { sentryService } from '@/utils/sentry';
 
 const healthRoute = async (req: Request, res: Response) => {
   const configErrors = validateConfig();
@@ -65,6 +66,9 @@ const healthRoute = async (req: Request, res: Response) => {
     },
     database: {
       status: dbStats.ok === 1 ? 'healthy' : 'unhealthy',
+    },
+    sentry: {
+      enabled: sentryService.isInitialized(),
     },
     otelConfig: {
       logCollectorURL: config.honeycomb.otelLogCollectorURL,
