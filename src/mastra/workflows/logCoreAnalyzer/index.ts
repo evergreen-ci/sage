@@ -267,18 +267,19 @@ const singlePassStep = createStep({
         tracingContext,
       }
     );
-    const response = result.object as unknown as z.infer<
-      typeof WorkflowOutputSchema
-    >;
+    const response = result.object;
 
     logCoreAnalyzerLogger.debug('Single-pass analysis complete', {
       markdownLength: response.markdown?.length ?? 0,
       summaryLength: response.summary?.length ?? 0,
     });
 
+    if (response.markdown === undefined || response.summary === undefined) {
+      throw new Error('Failed to generate markdown and summary');
+    }
     return {
-      markdown: response.markdown || '',
-      summary: response.summary || '',
+      markdown: response.markdown,
+      summary: response.summary,
     };
   },
 });
@@ -293,10 +294,7 @@ const initialStep = createStep({
   execute: async ({ abortSignal, inputData, tracingContext }) => {
     const { analysisContext, chunks } = inputData;
     const first = chunks[0]?.text ?? '';
-    logCoreAnalyzerLogger.debug('Initial chunk for analysis', {
-      first: first.slice(0, 100),
-      analysisContext,
-    });
+
     logCoreAnalyzerLogger.debug('Chunk length', { length: first.length });
     logCoreAnalyzerLogger.debug('Calling LLM for initial summary');
 
@@ -312,11 +310,17 @@ const initialStep = createStep({
       }
     );
 
-    const response = result.object as unknown as z.infer<
-      typeof RefinementAgentOutputSchema
-    >;
-
-    const { summary } = response;
+    const response = result.object;
+    let summary: string;
+    try {
+      summary = response.summary;
+    } catch (error) {
+      logCoreAnalyzerLogger.error('Failed to parse initial summary response', {
+        error,
+        response,
+      });
+      throw error;
+    }
     return { idx: 1, chunks, summary, analysisContext };
   },
 });
@@ -385,10 +389,6 @@ const finalizeStep = createStep({
   outputSchema: WorkflowOutputSchema,
   execute: async ({ abortSignal, inputData, tracingContext }) => {
     const { analysisContext, summary } = inputData;
-    logCoreAnalyzerLogger.debug('Generating final markdown report', {
-      summary: summary.slice(0, 100),
-      analysisContext,
-    });
 
     // Generate markdown report
     const markdownRes = await reportFormatterAgent.generate(
