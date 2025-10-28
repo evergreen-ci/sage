@@ -16,6 +16,8 @@ export interface Config {
   port: number;
   /** NODE_ENV */
   nodeEnv: string;
+  /** VERSION */
+  version: string;
   logging: {
     /** LOG_LEVEL */
     logLevel: string;
@@ -132,6 +134,7 @@ const getEnvNumber = (key: string, defaultValue: number): number => {
 export const config: Config = {
   port: getEnvNumber('PORT', 8080),
   nodeEnv: getEnvVar('NODE_ENV', 'development'),
+  version: getEnvVar('VERSION', 'unknown'),
   db: {
     mongodbUri: getEnvVar('MONGODB_URI', 'mongodb://localhost:27017'),
     dbName: getEnvVar('DB_NAME', ''),

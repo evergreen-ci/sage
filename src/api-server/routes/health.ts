@@ -57,6 +57,7 @@ const healthRoute = async (req: Request, res: Response) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptimeSeconds,
+    version: config.version,
     downstreamEvergreen: config.evergreen.graphqlEndpoint,
     agents: {
       count: agentNames.length,
