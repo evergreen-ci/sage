@@ -1,5 +1,4 @@
 import * as Sentry from '@sentry/node';
-import '@sentry/profiling-node';
 import { config, logPrefixesToOmit } from '@/config';
 
 /**
@@ -15,7 +14,6 @@ if (config.sentry.enabled && config.sentry.dsn) {
 
     // Performance monitoring
     tracesSampleRate: config.sentry.tracesSampleRate,
-    profilesSampleRate: config.sentry.profilesSampleRate,
 
     // Error tracking
     sampleRate: config.sentry.sampleRate,
@@ -27,7 +25,6 @@ if (config.sentry.enabled && config.sentry.dsn) {
 
     // Integrations - Sentry will auto-detect Express, HTTP, MongoDB, etc.
     // Note: Sentry automatically integrates with OpenTelemetry when both are initialized
-    // Performance profiling is enabled automatically via @sentry/profiling-node import
     integrations: [
       // Express integration (auto-instruments all routes)
       Sentry.expressIntegration(),
@@ -81,7 +78,6 @@ if (config.sentry.enabled && config.sentry.dsn) {
     release: config.version,
     sampleRate: config.sentry.sampleRate,
     tracesSampleRate: config.sentry.tracesSampleRate,
-    profilesSampleRate: config.sentry.profilesSampleRate,
   });
 } else {
   console.log('Sentry is disabled or DSN not configured');

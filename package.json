@@ -35,8 +35,8 @@
     "mastra:start": "node --import=./.mastra/output/instrumentation.mjs .mastra/output/index.mjs",
     "mastra:full": "yarn mastra:build && yarn mastra:start",
     "prepare": "husky",
-    "eval": "ENABLE_SENTRY_PROFILING=false npx braintrust eval --no-send-logs",
-    "eval:send_to_braintrust": "ENABLE_SENTRY_PROFILING=false npx braintrust eval --no-progress-bars",
+    "eval": "npx braintrust eval --no-send-logs",
+    "eval:send_to_braintrust": "npx braintrust eval --no-progress-bars",
     "load-dataset-into-braintrust": "vite-node src/evals/scripts/braintrust-dataset-loader.ts"
   },
   "dependencies": {
@@ -57,8 +57,7 @@
     "@opentelemetry/sdk-node": "^0.206.0",
     "@opentelemetry/sdk-trace-base": "^2.1.0",
     "@opentelemetry/winston-transport": "^0.17.0",
-    "@sentry/node": "10.11.0",
-    "@sentry/profiling-node": "10.11.0",
+    "@sentry/node": "10.22.0",
     "ai": "^5.0.76",
     "braintrust": "^0.4.6",
     "cors": "^2.8.5",
