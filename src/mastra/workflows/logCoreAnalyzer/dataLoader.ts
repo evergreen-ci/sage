@@ -83,7 +83,9 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
       text: textWithLineNumbers,
       totalSize,
       truncated,
-    } = await appendLineNumbers(response.body);
+    } = await appendLineNumbers(response.body, {
+      maxSizeBytes: logAnalyzerConfig.limits.maxSizeMB * MB_TO_BYTES,
+    });
 
     const estimatedTokens = validateTokenLimit(textWithLineNumbers);
 

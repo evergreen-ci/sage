@@ -1,6 +1,3 @@
-import { logAnalyzerConfig } from './config';
-import { MB_TO_BYTES } from './constants';
-
 const LINE_FLUSH_LIMIT = 10_000; // 10K lines
 const BYTE_FLUSH_LIMIT = 20 * 1024 * 1024; // 20MB
 
@@ -56,8 +53,7 @@ export const appendLineNumbers = async (
 
   const byteFlushLimit = options?.byteFlushLimit ?? BYTE_FLUSH_LIMIT;
   const lineFlushLimit = options?.lineFlushLimit ?? LINE_FLUSH_LIMIT;
-  const maxSizeBytes =
-    options?.maxSizeBytes ?? logAnalyzerConfig.limits.maxSizeMB * MB_TO_BYTES;
+  const maxSizeBytes = options?.maxSizeBytes ?? Infinity;
 
   let leftover = '';
   let lineNumber = 0;
