@@ -16,72 +16,26 @@ type SentryTag = {
 };
 
 class SentryService {
-  private initialized = false;
-
-  async initialize(): Promise<void> {
-    if (!config.sentry.enabled) {
-      console.log('Sentry is disabled');
-      return;
-    }
-
-    if (!config.sentry.dsn) {
-      console.warn('Sentry DSN not configured, skipping initialization');
-      return;
-    }
-
-    if (this.initialized) {
-      console.warn('Sentry already initialized');
-      return;
-    }
-
-    try {
-      Sentry.init({
-        dsn: config.sentry.dsn,
-        sendDefaultPii: true,
-        environment: config.nodeEnv,
-        debug: config.sentry.debug,
-        sampleRate: config.sentry.sampleRate,
-        tracesSampleRate: config.sentry.tracesSampleRate,
-        attachStacktrace: config.sentry.attachStacktrace,
-        integrations: [
-          Sentry.httpIntegration(),
-          Sentry.expressIntegration(),
-          Sentry.mongoIntegration(),
-          Sentry.onUnhandledRejectionIntegration({
-            mode: 'warn',
-          }),
-          ...(config.sentry.captureConsole
-            ? [Sentry.consoleIntegration()]
-            : []),
-        ],
-        beforeSend: event => {
-          if (config.nodeEnv === 'development') {
-            console.debug('Sentry event:', event);
-          }
-          return event;
-        },
-        beforeSendTransaction: event => {
-          if (config.nodeEnv === 'development') {
-            console.debug('Sentry transaction:', event);
-          }
-          return event;
-        },
-      });
-
-      this.initialized = true;
-      console.log(
-        'Sentry initialized successfully',
-        JSON.stringify({
-          environment: config.nodeEnv,
-          sampleRate: config.sentry.sampleRate,
-          tracesSampleRate: config.sentry.tracesSampleRate,
-        })
-      );
-    } catch (error) {
-      console.error('Failed to initialize Sentry', error);
-    }
+  /**
+   * Check if Sentry is enabled and configured
+   * @returns True if Sentry is initialized and enabled
+   */
+  isInitialized(): boolean {
+    return config.sentry.enabled && !!config.sentry.dsn;
   }
 
+  /**
+   * Capture an exception with optional context
+   * @param error - The error to capture (Error, string, or unknown)
+   * @param context - Optional context information
+   * @param context.user - User information (overrides middleware-set user if provided)
+   * @param context.tags - Tags to attach to the event
+   * @param context.contexts - Additional contexts
+   * @param context.extra - Extra data to include
+   * @param context.level - Severity level
+   * @param context.fingerprint - Custom fingerprint for grouping
+   * @returns Event ID if captured, undefined otherwise
+   */
   captureException(
     error: Error | string | unknown,
     context?: {
@@ -93,83 +47,95 @@ class SentryService {
       fingerprint?: string[];
     }
   ): string | undefined {
-    if (!this.initialized || !config.sentry.enabled) {
+    if (!this.isInitialized()) {
       return undefined;
     }
 
-    const scope = new Sentry.Scope();
+    return Sentry.withScope(scope => {
+      if (context) {
+        if (context.user) {
+          scope.setUser(context.user);
+        }
 
-    if (context) {
-      if (context.user) {
-        scope.setUser(context.user);
+        if (context.tags) {
+          Object.entries(context.tags).forEach(([key, value]) => {
+            scope.setTag(key, value);
+          });
+        }
+
+        if (context.contexts) {
+          Object.entries(context.contexts).forEach(([key, value]) => {
+            scope.setContext(key, value);
+          });
+        }
+
+        if (context.extra) {
+          Object.entries(context.extra).forEach(([key, value]) => {
+            scope.setExtra(key, value);
+          });
+        }
+
+        if (context.level) {
+          scope.setLevel(context.level);
+        }
+
+        if (context.fingerprint) {
+          scope.setFingerprint(context.fingerprint);
+        }
       }
 
-      if (context.tags) {
-        Object.entries(context.tags).forEach(([key, value]) => {
-          scope.setTag(key, value);
-        });
-      }
-
-      if (context.contexts) {
-        Object.entries(context.contexts).forEach(([key, value]) => {
-          scope.setContext(key, value);
-        });
-      }
-
-      if (context.extra) {
-        Object.entries(context.extra).forEach(([key, value]) => {
-          scope.setExtra(key, value);
-        });
-      }
-
-      if (context.level) {
-        scope.setLevel(context.level);
-      }
-
-      if (context.fingerprint) {
-        scope.setFingerprint(context.fingerprint);
-      }
-    }
-
-    const eventId = Sentry.captureException(error, scope);
-    return eventId;
+      return Sentry.captureException(error);
+    });
   }
 
+  /**
+   * Add a breadcrumb for context tracking
+   * @param breadcrumb - The breadcrumb to add
+   */
   addBreadcrumb(breadcrumb: Sentry.Breadcrumb): void {
-    if (!this.initialized || !config.sentry.enabled) {
+    if (!this.isInitialized()) {
       return;
     }
 
     Sentry.addBreadcrumb(breadcrumb);
   }
 
+  /**
+   * Flush all pending events to Sentry
+   * @param timeout - Optional timeout in milliseconds
+   * @returns Promise that resolves to true when flush completes
+   */
   async flush(timeout?: number): Promise<boolean> {
-    if (!this.initialized || !config.sentry.enabled) {
+    if (!this.isInitialized()) {
       return true;
     }
 
     return Sentry.flush(timeout);
   }
 
+  /**
+   * Close the Sentry client and flush all pending events
+   * @returns Promise that resolves to true when close completes
+   */
   async close(): Promise<boolean> {
-    if (!this.initialized || !config.sentry.enabled) {
+    if (!this.isInitialized()) {
       return true;
     }
 
-    const result = await Sentry.close();
-    this.initialized = false;
-    return result;
+    return Sentry.close();
   }
 
+  /**
+   * Configure the current scope with custom data
+   * @param callback - Function to configure the scope
+   * @deprecated Use Sentry.withScope() directly for better isolation
+   */
   configureScope(callback: (scope: Sentry.Scope) => void): void {
-    if (!this.initialized || !config.sentry.enabled) {
+    if (!this.isInitialized()) {
       return;
     }
 
     callback(Sentry.getCurrentScope());
-  }
-  isInitialized(): boolean {
-    return this.initialized && config.sentry.enabled;
   }
 }
 export const sentryService = new SentryService();
