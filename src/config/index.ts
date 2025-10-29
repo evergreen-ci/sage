@@ -16,6 +16,8 @@ export interface Config {
   port: number;
   /** NODE_ENV */
   nodeEnv: string;
+  /** VERSION */
+  version: string;
   logging: {
     /** LOG_LEVEL */
     logLevel: string;
@@ -72,6 +74,8 @@ export interface Config {
   sentry: {
     /** SENTRY_DSN */
     dsn: string;
+    /** SENTRY_ENVIRONMENT */
+    environment: string;
     /** SENTRY_SAMPLE_RATE */
     sampleRate: number;
     /** SENTRY_TRACES_SAMPLE_RATE */
@@ -128,6 +132,7 @@ const getEnvNumber = (key: string, defaultValue: number): number => {
 export const config: Config = {
   port: getEnvNumber('PORT', 8080),
   nodeEnv: getEnvVar('NODE_ENV', 'development'),
+  version: getEnvVar('VERSION', 'unknown'),
   db: {
     mongodbUri: getEnvVar('MONGODB_URI', 'mongodb://localhost:27017'),
     dbName: getEnvVar('DB_NAME', ''),
@@ -165,6 +170,7 @@ export const config: Config = {
   },
   sentry: {
     dsn: getEnvVar('SENTRY_DSN', ''),
+    environment: getEnvVar('SENTRY_ENVIRONMENT', 'development'),
     sampleRate: parseFloat(getEnvVar('SENTRY_SAMPLE_RATE', '1.0')),
     tracesSampleRate: parseFloat(getEnvVar('SENTRY_TRACES_SAMPLE_RATE', '0.1')),
     enabled: getEnvVar('SENTRY_ENABLED', 'true') === 'true',
@@ -209,4 +215,6 @@ export const validateConfig = (): string[] | undefined => {
   return errors.length > 0 ? errors : undefined;
 };
 
-export { getEnvVar };
+const logPrefixesToOmit = ['[AI Tracing] Event exported'];
+
+export { getEnvVar, logPrefixesToOmit };

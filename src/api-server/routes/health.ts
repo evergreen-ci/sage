@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
+import sageServer from '@/api-server';
 import { config, validateConfig } from '@/config';
 import { db } from '@/db/connection';
 import { mastra } from '@/mastra';
+import { sentryService } from '@/utils/sentry';
 
 const healthRoute = async (req: Request, res: Response) => {
   const configErrors = validateConfig();
@@ -50,10 +52,13 @@ const healthRoute = async (req: Request, res: Response) => {
   }
 
   const dbStats = await db.dbStats();
+  const uptimeSeconds = sageServer.getUptimeSeconds();
 
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
+    uptimeSeconds,
+    version: config.version,
     downstreamEvergreen: config.evergreen.graphqlEndpoint,
     agents: {
       count: agentNames.length,
@@ -61,6 +66,9 @@ const healthRoute = async (req: Request, res: Response) => {
     },
     database: {
       status: dbStats.ok === 1 ? 'healthy' : 'unhealthy',
+    },
+    sentry: {
+      enabled: sentryService.isInitialized(),
     },
     otelConfig: {
       logCollectorURL: config.honeycomb.otelLogCollectorURL,
