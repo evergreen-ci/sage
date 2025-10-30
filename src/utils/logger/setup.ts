@@ -1,4 +1,6 @@
+import * as Sentry from '@sentry/node';
 import winston from 'winston';
+import Transport from 'winston-transport';
 import { config } from '@/config';
 
 // Define log format for production (JSON)
@@ -62,8 +64,20 @@ const consoleTransport = new winston.transports.Console({
   format: isProduction ? productionFormat : developmentFormat,
 });
 
+// Create Sentry Winston Transport
+// This forwards logs to Sentry as structured log events
+const SentryWinstonTransport = Sentry.createSentryWinstonTransport(
+  Transport,
+  {}
+);
+
 // Create the logger instance
 const transports: winston.transport[] = [consoleTransport];
+
+// Add Sentry transport if enabled and configured
+if (config.sentry.enabled && config.sentry.dsn) {
+  transports.push(new SentryWinstonTransport());
+}
 
 /**
  * Sage logger instance
@@ -71,14 +85,6 @@ const transports: winston.transport[] = [consoleTransport];
 const loggerInstance = winston.createLogger({
   level: config.logging.logLevel,
   transports,
-  // Handle uncaught exceptions
-  exceptionHandlers: [
-    new winston.transports.File({ filename: 'logs/exceptions.log' }),
-  ],
-  // Handle unhandled promise rejections
-  rejectionHandlers: [
-    new winston.transports.File({ filename: 'logs/rejections.log' }),
-  ],
   // Exit on handled exceptions
   exitOnError: false,
 });

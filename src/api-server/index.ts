@@ -3,7 +3,6 @@ import cors from 'cors';
 import express, { Application } from 'express';
 import expressListEndpoints from 'express-list-endpoints';
 import { userIdMiddleware } from '@/api-server/middlewares/authentication';
-import { sentryContextMiddleware } from '@/api-server/middlewares/sentry';
 import { completionsRoute, loginRoute } from '@/api-server/routes';
 import healthRoute from '@/api-server/routes/health';
 import rootRoute from '@/api-server/routes/root';
@@ -15,6 +14,7 @@ import {
   httpLoggingMiddleware,
   errorLoggingMiddleware,
 } from './middlewares/logging';
+import { sentryUserContextMiddleware } from './middlewares/sentryContext';
 
 /**
  * `startServer` is a function that starts the server.
@@ -22,6 +22,7 @@ import {
 class SageServer {
   private app: Application;
   private serverInstance: ReturnType<Application['listen']> | null = null;
+  private startTime: Date | null = null;
 
   constructor() {
     this.app = express();
@@ -35,7 +36,8 @@ class SageServer {
     this.app.use(requestIdMiddleware);
     // Middleware to add the authenticated user id to the request trace
     this.app.use(userIdMiddleware);
-    this.app.use(sentryContextMiddleware);
+    // Middleware to set Sentry user context from authenticated user
+    this.app.use(sentryUserContextMiddleware);
 
     // HTTP logging middleware
     this.app.use(httpLoggingMiddleware);
@@ -62,7 +64,10 @@ class SageServer {
   private setupErrorHandling() {
     // Error logging middleware (must be after routes)
     this.app.use(errorLoggingMiddleware);
-    Sentry.setupExpressErrorHandler(this.app);
+
+    if (config.sentry.enabled) {
+      Sentry.setupExpressErrorHandler(this.app);
+    }
   }
 
   public async start() {
@@ -78,6 +83,8 @@ class SageServer {
     });
 
     await db.connect();
+
+    this.startTime = new Date();
 
     this.serverInstance = this.app.listen(config.port, () => {
       logger.info(`🚀 Sage server is running on port ${config.port}`);
@@ -111,10 +118,18 @@ class SageServer {
       });
     });
     this.serverInstance = null;
+    this.startTime = null;
   }
 
   public getApp(): Application {
     return this.app;
+  }
+
+  public getUptimeSeconds(): number | null {
+    if (!this.startTime) {
+      return null;
+    }
+    return Math.floor((Date.now() - this.startTime.getTime()) / 1000);
   }
 }
 
