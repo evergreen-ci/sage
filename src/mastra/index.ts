@@ -19,6 +19,9 @@ export const mastra: Mastra = new Mastra({
     ...evergreenWorkflows,
     logCoreAnalyzerWorkflow,
   },
+  telemetry: {
+    enabled: false,
+  },
   observability: {
     configs: {
       braintrust: {
