@@ -32,6 +32,9 @@ export const streamLines = async function* (
   }
 };
 
+const formatLine = (lineNumber: number, line: string): string =>
+  `[L: ${lineNumber.toString().padStart(6, ' ')}] ${line}`;
+
 /**
  * `appendLineNumbers` reads from the input stream and appends line numbers to each line.
  * @param input - ReadableStream, Buffer, or string input
@@ -83,7 +86,7 @@ export const appendLineNumbers = async (
     leftover = parts.pop() || '';
 
     for (const line of parts) {
-      const numberedLine = `[L: ${lineNumber.toString().padStart(6, ' ')}] ${line}`;
+      const numberedLine = formatLine(lineNumber, line);
       lineBuffer.push(numberedLine);
       lineNumber += 1;
 
@@ -104,7 +107,7 @@ export const appendLineNumbers = async (
   // leftover should always contain a single line at the end. It is not possible for it to contain
   // multiple lines because we always split on newline characters and only keep the last fragment.
   if (leftover.length > 0) {
-    const numberedLine = `[L: ${lineNumber.toString().padStart(6, ' ')}] ${leftover}`;
+    const numberedLine = formatLine(lineNumber, leftover);
     lineBuffer.push(numberedLine);
   }
 
