@@ -1,6 +1,7 @@
-// IMPORTANT: Sentry must be imported FIRST to properly instrument the application
+// IMPORTANT: Instrumentation must be imported FIRST to properly instrument the application
+// eslint-disable-next-line import/order
+import { shutdownOtel } from '@/instrumentation';
 import './sentry-instrument';
-import './instrumentation';
 import server from '@/api-server';
 import { validateConfig } from '@/config';
 import { sentryService } from '@/utils/sentry';
@@ -14,11 +15,13 @@ server.start();
 process.on('SIGINT', async () => {
   await server.stop();
   await sentryService.close();
+  await shutdownOtel();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   await server.stop();
   await sentryService.close();
+  await shutdownOtel();
   process.exit(0);
 });

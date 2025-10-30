@@ -1,8 +1,7 @@
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
-import { NodeSDK, logs } from '@opentelemetry/sdk-node';
+import { NodeSDK } from '@opentelemetry/sdk-node';
 import {
   BatchSpanProcessor,
   SpanProcessor,
@@ -19,27 +18,12 @@ const otlpExporter = config.honeycomb.otelCollectorURL
     })
   : undefined;
 
-const otlpLogExporter = config.honeycomb.otelLogCollectorURL
-  ? new OTLPLogExporter({
-      url: config.honeycomb.otelLogCollectorURL,
-      headers: {
-        'x-honeycomb-team': config.honeycomb.apiKey,
-      },
-    })
-  : undefined;
-
 const spanProcessors: SpanProcessor[] = [];
 if (otlpExporter) {
   spanProcessors.push(new BatchSpanProcessor(otlpExporter));
 }
 
-const logRecordProcessors: logs.LogRecordProcessor[] = [];
-if (otlpLogExporter) {
-  logRecordProcessors.push(new logs.SimpleLogRecordProcessor(otlpLogExporter));
-}
-
 const sdk = new NodeSDK({
-  logRecordProcessors,
   instrumentations: [getNodeAutoInstrumentations()],
   spanProcessors,
   resource: resourceFromAttributes({
@@ -47,4 +31,21 @@ const sdk = new NodeSDK({
   }),
 });
 
+console.log('Starting OpenTelemetry SDK');
 sdk.start();
+console.log(config.honeycomb.otelCollectorURL, 'otelCollectorURL');
+console.log(config.honeycomb.apiKey, 'apiKey');
+console.log(config.honeycomb.otelLogCollectorURL, 'otelLogCollectorURL');
+console.log(config.honeycomb.apiKey, 'apiKey');
+
+/**
+ * Gracefully shuts down the OpenTelemetry SDK
+ */
+export const shutdownOtel = async (): Promise<void> => {
+  try {
+    await sdk.shutdown();
+    console.log('OpenTelemetry SDK shut down successfully');
+  } catch (error) {
+    console.error('Error shutting down OpenTelemetry SDK:', error);
+  }
+};
