@@ -1,4 +1,5 @@
 import { AgentMemoryOption } from '@mastra/core/agent';
+import { trace } from '@opentelemetry/api';
 import {
   pipeUIMessageStreamToResponse,
   UIMessage,
@@ -29,6 +30,8 @@ const chatRoute = async (
   req: Request,
   res: Response<ReadableStream | ErrorResponse>
 ) => {
+  const currentSpan = trace.getActiveSpan();
+  const spanContext = currentSpan?.spanContext();
   const runtimeContext = createParsleyRuntimeContext();
   runtimeContext.set(USER_ID, res.locals.userId);
   logger.debug('User context set for request', {
@@ -78,6 +81,12 @@ const chatRoute = async (
       inputData: {
         logMetadata: messageData.logMetadata,
       },
+      ...(spanContext
+        ? {
+            traceId: spanContext?.traceId,
+            parentSpanId: spanContext?.spanId,
+          }
+        : {}),
       runtimeContext,
     });
     if (runResult.status === 'success') {
@@ -168,6 +177,12 @@ const chatRoute = async (
               userId: res.locals.userId,
               requestID: res.locals.requestId,
             },
+            ...(spanContext
+              ? {
+                  traceId: spanContext?.traceId,
+                  parentSpanId: spanContext?.spanId,
+                }
+              : {}),
           },
         })
     );
