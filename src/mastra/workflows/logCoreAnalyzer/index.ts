@@ -3,7 +3,6 @@ import { Agent } from '@mastra/core/agent';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
 import { z } from 'zod';
-import logger from '@/utils/logger';
 import { logAnalyzerConfig } from './config';
 import { MB_TO_BYTES } from './constants';
 import {
@@ -23,15 +22,6 @@ import {
   SINGLE_PASS_PROMPT,
 } from './prompts';
 import { normalizeLineEndings, cropMiddle } from './utils';
-
-// ============================================================================
-// Logger
-// ============================================================================
-
-const logCoreAnalyzerLogger = logger.child({
-  name: logAnalyzerConfig.logging.name,
-  level: logAnalyzerConfig.logging.level,
-});
 
 // ============================================================================
 // Schemas
@@ -133,7 +123,8 @@ const loadDataStep = createStep({
     text: z.string(),
     analysisContext: z.string().optional(),
   }),
-  execute: async ({ inputData, tracingContext }) => {
+  execute: async ({ inputData, mastra, tracingContext }) => {
+    const logger = mastra.getLogger();
     const { analysisContext, path: filePath, text, url } = inputData;
 
     tracingContext.currentSpan?.update({
@@ -159,7 +150,7 @@ const loadDataStep = createStep({
         );
       }
     } catch (error) {
-      logCoreAnalyzerLogger.error('Failed to load data', error);
+      logger.error('Failed to load data', error);
       throw error;
     }
 
@@ -173,7 +164,7 @@ const loadDataStep = createStep({
       0.2
     );
 
-    logCoreAnalyzerLogger.info('Data loaded successfully', {
+    logger.info('Data loaded successfully', {
       source: result.metadata.source,
       sizeMB: (result.metadata.originalSize / MB_TO_BYTES).toFixed(2),
       estimatedTokens: result.metadata.estimatedTokens,
@@ -203,7 +194,8 @@ const chunkStep = createStep({
     analysisContext: z.string().optional(),
   }),
   outputSchema: ChunkedSchemaOutput,
-  execute: async ({ inputData, tracingContext }) => {
+  execute: async ({ inputData, mastra, tracingContext }) => {
+    const logger = mastra.getLogger();
     const { analysisContext, text } = inputData;
 
     const doc = MDocument.fromText(text);
@@ -214,7 +206,7 @@ const chunkStep = createStep({
       overlap: logAnalyzerConfig.chunking.overlapTokens,
     });
 
-    logCoreAnalyzerLogger.debug('Chunking complete', {
+    logger.debug('Chunking complete', {
       chunkCount: chunks.length,
     });
 
@@ -235,22 +227,20 @@ const singlePassStep = createStep({
   description: 'Direct analysis and report generation for single-chunk files',
   inputSchema: ChunkedSchemaOutput,
   outputSchema: WorkflowOutputSchema,
-  execute: async ({ abortSignal, inputData, tracingContext }) => {
+  execute: async ({ abortSignal, inputData, mastra, tracingContext }) => {
+    const logger = mastra.getLogger();
     const { analysisContext, chunks } = inputData;
 
     // Validate we have exactly one chunk
     if (chunks.length !== 1) {
-      logCoreAnalyzerLogger.warn(
-        'Single-pass step called with multiple chunks',
-        {
-          chunkCount: chunks.length,
-        }
-      );
+      logger.warn('Single-pass step called with multiple chunks', {
+        chunkCount: chunks.length,
+      });
     }
 
     const text = chunks[0]?.text ?? '';
 
-    logCoreAnalyzerLogger.debug('Single-pass analysis starting', {
+    logger.debug('Single-pass analysis starting', {
       textLength: text.length,
       analysisContext,
     });
@@ -269,7 +259,7 @@ const singlePassStep = createStep({
     );
     const response = result.object;
 
-    logCoreAnalyzerLogger.debug('Single-pass analysis complete', {
+    logger.debug('Single-pass analysis complete', {
       markdownLength: response.markdown?.length ?? 0,
       summaryLength: response.summary?.length ?? 0,
     });
@@ -291,12 +281,13 @@ const initialStep = createStep({
   description: 'Summarize first chunk using log analyzer agent',
   inputSchema: ChunkedSchemaOutput,
   outputSchema: RefinementLoopStateSchema,
-  execute: async ({ abortSignal, inputData, tracingContext }) => {
+  execute: async ({ abortSignal, inputData, mastra, tracingContext }) => {
+    const logger = mastra.getLogger();
     const { analysisContext, chunks } = inputData;
     const first = chunks[0]?.text ?? '';
 
-    logCoreAnalyzerLogger.debug('Chunk length', { length: first.length });
-    logCoreAnalyzerLogger.debug('Calling LLM for initial summary');
+    logger.debug('Chunk length', { length: first.length });
+    logger.debug('Calling LLM for initial summary');
 
     const result = await initialAnalyzerAgent.generate(
       USER_INITIAL_PROMPT(first, analysisContext),
@@ -315,7 +306,7 @@ const initialStep = createStep({
     try {
       summary = response.summary;
     } catch (error) {
-      logCoreAnalyzerLogger.error('Failed to parse initial summary response', {
+      logger.error('Failed to parse initial summary response', {
         error,
         response,
       });
@@ -331,7 +322,8 @@ const refineStep = createStep({
     'Iteratively refine the summary with context from previous chunks',
   inputSchema: RefinementLoopStateSchema,
   outputSchema: RefinementLoopStateSchema,
-  execute: async ({ abortSignal, inputData, tracingContext }) => {
+  execute: async ({ abortSignal, inputData, mastra, tracingContext }) => {
+    const logger = mastra.getLogger();
     const {
       analysisContext,
       chunks,
@@ -350,7 +342,7 @@ const refineStep = createStep({
       };
     }
 
-    logCoreAnalyzerLogger.debug(`Refine step for chunk #${idx + 1}:`, {
+    logger.debug(`Refine step for chunk #${idx + 1}:`, {
       total: chunks.length,
     });
     const result = await refinementAgent.generate(
@@ -387,7 +379,8 @@ const finalizeStep = createStep({
   description: 'Generate final markdown report and concise summary',
   inputSchema: RefinementLoopStateSchema,
   outputSchema: WorkflowOutputSchema,
-  execute: async ({ abortSignal, inputData, tracingContext }) => {
+  execute: async ({ abortSignal, inputData, mastra, tracingContext }) => {
+    const logger = mastra.getLogger();
     const { analysisContext, summary } = inputData;
 
     // Generate markdown report
@@ -398,12 +391,12 @@ const finalizeStep = createStep({
         abortSignal,
       }
     );
-    logCoreAnalyzerLogger.debug('Final markdown report generated', {
+    logger.debug('Final markdown report generated', {
       length: markdownRes.text.length,
     });
 
     // Generate concise summary from the markdown report
-    logCoreAnalyzerLogger.debug('Generating concise summary');
+    logger.debug('Generating concise summary');
     const conciseSummaryRes = await reportFormatterAgent.generate(
       USER_CONCISE_SUMMARY_PROMPT(markdownRes.text, analysisContext),
       {
@@ -412,7 +405,7 @@ const finalizeStep = createStep({
       }
     );
 
-    logCoreAnalyzerLogger.debug('Concise summary generated', {
+    logger.debug('Concise summary generated', {
       length: conciseSummaryRes.text.length,
     });
 
@@ -442,9 +435,9 @@ const iterativeRefinementWorkflow = createWorkflow({
   .then(initialStep)
   .dowhile(
     refineStep,
-    async params =>
+    async ({ inputData }) =>
       // Access inputData from the full params object
-      params.inputData.idx < params.inputData.chunks.length
+      inputData.idx < inputData.chunks.length
   )
   .then(finalizeStep)
   .commit();
@@ -455,13 +448,16 @@ const decideAndRunStep = createStep({
   inputSchema: ChunkedSchemaOutput,
   outputSchema: WorkflowOutputSchema,
   execute: async params => {
-    const { chunks } = params.inputData;
-    if (chunks.length === 1) {
+    const { inputData, mastra } = params;
+    const logger = mastra.getLogger();
+    if (inputData.chunks.length === 1) {
+      logger.debug('Running single-pass step for single chunk');
       // run the single-pass step directly
-      return singlePassStep.execute(params);
+      return singlePassStep.execute({ ...params, inputData });
     }
+    logger.debug('Running iterative refinement workflow for multiple chunks');
     // run the iterative workflow
-    return iterativeRefinementWorkflow.execute(params);
+    return iterativeRefinementWorkflow.execute({ ...params, inputData });
   },
 });
 
