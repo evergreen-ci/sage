@@ -66,17 +66,16 @@ const ChunkedSchemaOutput = z.object({
   analysisContext: z.string().optional(),
 });
 
-// Schema passed across steps during the refinement loop, keeps track of the current chunk index and summary
-const RefinementLoopStateSchema = z.object({
-  idx: z.number(),
-  chunks: z.array(z.object({ text: z.string() })),
-  summary: z.string(),
-  analysisContext: z.string().optional(),
-});
-
 const RefinementAgentOutputSchema = z.object({
   updated: z.boolean(),
   summary: z.string(),
+});
+
+const WorkflowStateSchema = z.object({
+  text: z.string(),
+  idx: z.number().optional().default(0),
+  chunks: z.array(z.object({ text: z.string() })).optional(),
+  analysisContext: z.string().optional(),
 });
 
 // ============================================================================
@@ -119,11 +118,9 @@ const loadDataStep = createStep({
   id: 'load-data',
   description: 'Load and validate data from any source',
   inputSchema: WorkflowInputSchema,
-  outputSchema: z.object({
-    text: z.string(),
-    analysisContext: z.string().optional(),
-  }),
-  execute: async ({ inputData, mastra, tracingContext }) => {
+  stateSchema: WorkflowStateSchema,
+  outputSchema: z.object({}),
+  execute: async ({ inputData, mastra, setState, state, tracingContext }) => {
     const logger = mastra.getLogger();
     const { analysisContext, path: filePath, text, url } = inputData;
 
@@ -179,25 +176,25 @@ const loadDataStep = createStep({
         : truncationNote.trim();
     }
 
-    return {
+    setState({
+      ...state,
       text: normalizedText,
       analysisContext: enrichedContext,
-    };
+    });
+
+    return {};
   },
 });
 
 const chunkStep = createStep({
   id: 'chunk',
   description: 'Token-aware chunking with overlap',
-  inputSchema: z.object({
-    text: z.string(),
-    analysisContext: z.string().optional(),
-  }),
-  outputSchema: ChunkedSchemaOutput,
-  execute: async ({ inputData, mastra, tracingContext }) => {
+  stateSchema: WorkflowStateSchema,
+  inputSchema: z.object({}),
+  outputSchema: z.object({}),
+  execute: async ({ mastra, setState, state, tracingContext }) => {
     const logger = mastra.getLogger();
-    const { analysisContext, text } = inputData;
-
+    const { analysisContext, text } = state;
     const doc = MDocument.fromText(text);
     const chunks = await doc.chunk({
       strategy: 'token',
@@ -216,7 +213,12 @@ const chunkStep = createStep({
       },
     });
 
-    return { chunks, analysisContext };
+    setState({
+      ...state,
+      chunks,
+      analysisContext,
+    });
+    return {};
   },
 });
 
@@ -225,12 +227,19 @@ const chunkStep = createStep({
 const singlePassStep = createStep({
   id: 'single-pass-analysis',
   description: 'Direct analysis and report generation for single-chunk files',
-  inputSchema: ChunkedSchemaOutput,
-  outputSchema: WorkflowOutputSchema,
-  execute: async ({ abortSignal, inputData, mastra, tracingContext }) => {
+  stateSchema: WorkflowStateSchema,
+  inputSchema: z.object({}),
+  outputSchema: z.object({
+    markdown: z.string(),
+    summary: z.string(),
+  }),
+  execute: async ({ abortSignal, mastra, state, tracingContext }) => {
     const logger = mastra.getLogger();
-    const { analysisContext, chunks } = inputData;
+    const { analysisContext, chunks } = state;
 
+    if (!chunks) {
+      throw new Error('Chunks are not available');
+    }
     // Validate we have exactly one chunk
     if (chunks.length !== 1) {
       logger.warn('Single-pass step called with multiple chunks', {
@@ -279,11 +288,17 @@ const singlePassStep = createStep({
 const initialStep = createStep({
   id: 'initial-summary',
   description: 'Summarize first chunk using log analyzer agent',
-  inputSchema: ChunkedSchemaOutput,
-  outputSchema: RefinementLoopStateSchema,
-  execute: async ({ abortSignal, inputData, mastra, tracingContext }) => {
+  stateSchema: WorkflowStateSchema,
+  inputSchema: z.object({}),
+  outputSchema: z.object({
+    summary: z.string(),
+  }),
+  execute: async ({ abortSignal, mastra, setState, state, tracingContext }) => {
     const logger = mastra.getLogger();
-    const { analysisContext, chunks } = inputData;
+    const { analysisContext, chunks } = state;
+    if (!chunks) {
+      throw new Error('Chunks are not available');
+    }
     const first = chunks[0]?.text ?? '';
 
     logger.debug('Chunk length', { length: first.length });
@@ -312,7 +327,13 @@ const initialStep = createStep({
       });
       throw error;
     }
-    return { idx: 1, chunks, summary, analysisContext };
+    setState({
+      ...state,
+      idx: 1,
+    });
+    return {
+      summary,
+    };
   },
 });
 
@@ -320,17 +341,28 @@ const refineStep = createStep({
   id: 'refine-summary',
   description:
     'Iteratively refine the summary with context from previous chunks',
-  inputSchema: RefinementLoopStateSchema,
-  outputSchema: RefinementLoopStateSchema,
-  execute: async ({ abortSignal, inputData, mastra, tracingContext }) => {
+  stateSchema: WorkflowStateSchema,
+  inputSchema: z.object({
+    summary: z.string(),
+  }),
+  outputSchema: z.object({
+    summary: z.string(),
+  }),
+  execute: async ({
+    abortSignal,
+    inputData,
+    mastra,
+    setState,
+    state,
+    tracingContext,
+  }) => {
     const logger = mastra.getLogger();
-    const {
-      analysisContext,
-      chunks,
-      idx,
-      summary: existingSummary,
-    } = inputData;
-    const chunk = chunks[idx]?.text ?? '';
+    const { analysisContext, chunks, idx } = state;
+    const { summary: existingSummary } = inputData;
+    if (!chunks) {
+      throw new Error('Chunks are not available');
+    }
+    const chunk = chunks[state.idx]?.text ?? '';
 
     // TODO: make sure summary size stays manageable
     if (!chunk) {
@@ -365,11 +397,13 @@ const refineStep = createStep({
       newSummary = response.summary ?? existingSummary;
     }
 
-    return {
+    setState({
+      ...state,
       idx: idx + 1,
-      chunks,
-      summary: newSummary,
       analysisContext,
+    });
+    return {
+      summary: newSummary,
     };
   },
 });
@@ -377,11 +411,21 @@ const refineStep = createStep({
 const finalizeStep = createStep({
   id: 'finalize',
   description: 'Generate final markdown report and concise summary',
-  inputSchema: RefinementLoopStateSchema,
+  inputSchema: z.object({
+    summary: z.string(),
+  }),
+  stateSchema: WorkflowStateSchema,
   outputSchema: WorkflowOutputSchema,
-  execute: async ({ abortSignal, inputData, mastra, tracingContext }) => {
+  execute: async ({
+    abortSignal,
+    inputData,
+    mastra,
+    state,
+    tracingContext,
+  }) => {
     const logger = mastra.getLogger();
-    const { analysisContext, summary } = inputData;
+    const { summary } = inputData;
+    const { analysisContext } = state;
 
     // Generate markdown report
     const markdownRes = await reportFormatterAgent.generate(
@@ -424,8 +468,9 @@ const iterativeRefinementWorkflow = createWorkflow({
   id: 'iterative-refinement',
   description: `Perform a 3 step iterative refinement process: initial and final analysis with an expensive model,
     and a lightweight refinement loop going through the whole document`,
-  inputSchema: ChunkedSchemaOutput,
+  inputSchema: z.object({}),
   outputSchema: WorkflowOutputSchema,
+  stateSchema: WorkflowStateSchema,
   // Occasionally, the workflow fails at a step, so we retry it a few times
   retryConfig: {
     attempts: 3,
@@ -447,17 +492,21 @@ const decideAndRunStep = createStep({
   description: 'Choose single-pass vs iterative workflow and run it',
   inputSchema: ChunkedSchemaOutput,
   outputSchema: WorkflowOutputSchema,
+  stateSchema: WorkflowStateSchema,
   execute: async params => {
-    const { inputData, mastra } = params;
+    const { mastra, state } = params;
     const logger = mastra.getLogger();
-    if (inputData.chunks.length === 1) {
+    if (!state.chunks) {
+      throw new Error('Chunks are not available');
+    }
+    if (state.chunks.length === 1) {
       logger.debug('Running single-pass step for single chunk');
       // run the single-pass step directly
-      return singlePassStep.execute({ ...params, inputData });
+      return singlePassStep.execute(params);
     }
     logger.debug('Running iterative refinement workflow for multiple chunks');
     // run the iterative workflow
-    return iterativeRefinementWorkflow.execute({ ...params, inputData });
+    return iterativeRefinementWorkflow.execute(params);
   },
 });
 
@@ -473,6 +522,7 @@ export const logCoreAnalyzerWorkflow = createWorkflow({
     'NOTE: This tool analyzes raw file content. It does NOT fetch data from Evergreen or other APIs - provide the actual content or a direct URL/path to it.',
   inputSchema: WorkflowInputSchema,
   outputSchema: WorkflowOutputSchema,
+  stateSchema: WorkflowStateSchema,
 })
   .then(loadDataStep) // Use the new unified load step with validation
   .then(chunkStep)
