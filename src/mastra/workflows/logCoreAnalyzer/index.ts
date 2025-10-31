@@ -119,14 +119,6 @@ const loadDataStep = createStep({
     const logger = mastra.getLogger();
     const { analysisContext, path: filePath, text, url } = inputData;
 
-    tracingContext.currentSpan?.update({
-      metadata: {
-        analysisContext: analysisContext ?? 'No analysis context provided',
-        filePath,
-        url,
-        textLength: text?.length ?? 0,
-      },
-    });
     let result: LoadResult;
 
     try {
@@ -171,6 +163,12 @@ const loadDataStep = createStep({
         : truncationNote.trim();
     }
 
+    tracingContext.currentSpan?.update({
+      metadata: {
+        analysisContext: analysisContext ?? 'No analysis context provided',
+        textLength: normalizedText?.length ?? 0,
+      },
+    });
     setState({
       ...state,
       text: normalizedText,
@@ -205,6 +203,7 @@ const chunkStep = createStep({
     tracingContext.currentSpan?.update({
       metadata: {
         chunkCount: chunks.length,
+        chunkSize: logAnalyzerConfig.chunking.maxSize,
       },
     });
 
@@ -300,26 +299,12 @@ const initialStep = createStep({
     const result = await initialAnalyzerAgent.generate(
       USER_INITIAL_PROMPT(first, analysisContext),
       {
-        structuredOutput: {
-          schema: RefinementAgentOutputSchema,
-          model: logAnalyzerConfig.models.schemaFormatter,
-        },
         tracingContext,
         abortSignal,
       }
     );
 
-    const response = result.object;
-    let summary: string;
-    try {
-      summary = response.summary;
-    } catch (error) {
-      logger.error('Failed to parse initial summary response', {
-        error,
-        response,
-      });
-      throw error;
-    }
+    const summary = result.text;
     tracingContext.currentSpan?.update({
       metadata: {
         idx: 1,
@@ -488,9 +473,9 @@ const iterativeRefinementWorkflow = createWorkflow({
   .then(initialStep)
   .dowhile(
     refineStep,
-    async ({ inputData }) =>
+    async ({ state }) =>
       // Access inputData from the full params object
-      inputData.idx < inputData.chunks.length
+      state.idx < (state.chunks?.length ?? 0)
   )
   .then(finalizeStep)
   .commit();
