@@ -87,6 +87,12 @@ const chatRoute = async (
             parentSpanId: spanContext?.spanId,
           }
         : {}),
+      tracingOptions: {
+        metadata: {
+          userId: res.locals.userId,
+          requestId: res.locals.requestId,
+        },
+      },
       runtimeContext,
     });
     if (runResult.status === 'success') {
