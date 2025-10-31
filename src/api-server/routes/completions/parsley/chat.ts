@@ -78,6 +78,12 @@ const chatRoute = async (
       inputData: {
         logMetadata: messageData.logMetadata,
       },
+      tracingOptions: {
+        metadata: {
+          userId: res.locals.userId,
+          requestId: res.locals.requestId,
+        },
+      },
       runtimeContext,
     });
     if (runResult.status === 'success') {
