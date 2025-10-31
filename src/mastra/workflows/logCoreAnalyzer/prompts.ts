@@ -4,7 +4,6 @@ const MAX_FINAL_SUMMARY_TOKENS = 2048;
 
 // Agent Instructions
 export const INITIAL_ANALYZER_INSTRUCTIONS = `You are a senior engineer performing initial analysis of technical text (logs, code, configs, telemetry, build output).
-You always respond as compact JSON matching the provided schema.
 Focus on:
 - Understanding the overall structure and format of the content
 - Identifying key patterns, sections, and data types
@@ -69,8 +68,8 @@ ${analysisContext ? `\nAnalysis Context:\n${analysisContext}\nUse this context t
 Chunk:
 """${chunk}"""
 
-Return JSON:
-{ "updated": true, "summary": "<concise but comprehensive summary>" }`;
+Return:
+"<concise but comprehensive summary>"`;
 
 export const USER_REFINE = (
   existing: string,

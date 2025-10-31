@@ -3,7 +3,6 @@ import { Agent } from '@mastra/core/agent';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
 import { z } from 'zod';
-import logger from '@/utils/logger';
 import { logAnalyzerConfig } from './config';
 import { MB_TO_BYTES } from './constants';
 import {
@@ -24,11 +23,9 @@ import {
 } from './prompts';
 import { normalizeLineEndings, cropMiddle } from './utils';
 
-// Initialize logCoreAnalyzerLogger for this workflow
-const logCoreAnalyzerLogger = logger.child({
-  name: logAnalyzerConfig.logging.name,
-  level: logAnalyzerConfig.logging.level,
-});
+// ============================================================================
+// Schemas
+// ============================================================================
 
 // This workflow takes either a file path, raw text, or an URL as input, and optional additional instructions
 // and returns a structured analysis report, as well as a concise summary.
@@ -64,16 +61,62 @@ const WorkflowOutputSchema = z.object({
   summary: z.string(),
 });
 
+const RefinementAgentOutputSchema = z.object({
+  updated: z.boolean(),
+  summary: z.string(),
+});
+
+const WorkflowStateSchema = z.object({
+  text: z.string(),
+  idx: z.number().default(0),
+  chunks: z.array(z.object({ text: z.string() })).optional(),
+  analysisContext: z.string().optional(),
+});
+
+// ============================================================================
+// Agents
+// ============================================================================
+
+// Initial analyzer - uses a bigger model for the first chunk for better understanding of structure and context
+const initialAnalyzerAgent = new Agent({
+  name: 'initial-analyzer-agent',
+  description:
+    'Performs initial analysis of technical documents to understand structure and key patterns',
+  instructions: INITIAL_ANALYZER_INSTRUCTIONS,
+  model: logAnalyzerConfig.models.initial,
+});
+
+// Refinement agent - cheaper model for iterative processing
+// This model is used when we have larger files and we need to iterate through the whole document to get a better summary
+const refinementAgent = new Agent({
+  name: 'refinement-agent',
+  description:
+    'Iteratively refines and updates technical summaries with new chunks',
+  instructions: REFINEMENT_AGENT_INSTRUCTIONS,
+  model: logAnalyzerConfig.models.refinement,
+});
+
+// Report formatter agent - formats final output
+const reportFormatterAgent = new Agent({
+  name: 'report-formatter-agent',
+  description: 'Formats technical summaries into various output formats',
+  instructions: REPORT_FORMATTER_INSTRUCTIONS,
+  model: logAnalyzerConfig.models.formatter,
+});
+
+// ============================================================================
+// Steps
+// ============================================================================
+
 // Unified load step that handles all I/O with validation
 const loadDataStep = createStep({
   id: 'load-data',
   description: 'Load and validate data from any source',
   inputSchema: WorkflowInputSchema,
-  outputSchema: z.object({
-    text: z.string(),
-    analysisContext: z.string().optional(),
-  }),
-  execute: async ({ inputData }) => {
+  stateSchema: WorkflowStateSchema,
+  outputSchema: z.object({}), // Stores data in state, not output
+  execute: async ({ inputData, mastra, setState, state, tracingContext }) => {
+    const logger = mastra.getLogger();
     const { analysisContext, path: filePath, text, url } = inputData;
 
     let result: LoadResult;
@@ -91,7 +134,7 @@ const loadDataStep = createStep({
         );
       }
     } catch (error) {
-      logCoreAnalyzerLogger.error('Failed to load data', error);
+      logger.error('Failed to load data', error);
       throw error;
     }
 
@@ -105,7 +148,7 @@ const loadDataStep = createStep({
       0.2
     );
 
-    logCoreAnalyzerLogger.info('Data loaded successfully', {
+    logger.info('Data loaded successfully', {
       source: result.metadata.source,
       sizeMB: (result.metadata.originalSize / MB_TO_BYTES).toFixed(2),
       estimatedTokens: result.metadata.estimatedTokens,
@@ -120,30 +163,31 @@ const loadDataStep = createStep({
         : truncationNote.trim();
     }
 
-    return {
+    tracingContext.currentSpan?.update({
+      metadata: {
+        analysisContext: analysisContext ?? 'No analysis context provided',
+        textLength: normalizedText?.length ?? 0,
+      },
+    });
+    setState({
+      ...state,
       text: normalizedText,
       analysisContext: enrichedContext,
-    };
+    });
+
+    return {};
   },
 });
 
-const ChunkedSchemaOutput = z.object({
-  chunks: z.array(z.object({ text: z.string() })), // from MDocument.chunk
-  analysisContext: z.string().optional(),
-});
-
-// Modified chunk step to use loaded data with metadata
 const chunkStep = createStep({
   id: 'chunk',
   description: 'Token-aware chunking with overlap',
-  inputSchema: z.object({
-    text: z.string(),
-    analysisContext: z.string().optional(),
-  }),
-  outputSchema: ChunkedSchemaOutput,
-  execute: async ({ inputData }) => {
-    const { analysisContext, text } = inputData;
-
+  stateSchema: WorkflowStateSchema,
+  inputSchema: z.object({}),
+  outputSchema: z.object({}),
+  execute: async ({ mastra, setState, state, tracingContext }) => {
+    const logger = mastra.getLogger();
+    const { text } = state;
     const doc = MDocument.fromText(text);
     const chunks = await doc.chunk({
       strategy: 'token',
@@ -152,179 +196,53 @@ const chunkStep = createStep({
       overlap: logAnalyzerConfig.chunking.overlapTokens,
     });
 
-    logCoreAnalyzerLogger.debug('Chunking complete', {
+    logger.debug('Chunking complete', {
       chunkCount: chunks.length,
     });
 
-    return { chunks, analysisContext };
-  },
-});
-
-// This schema passed across steps during the refinement loop, keeps track of the current chunk index and summary
-const LoopStateSchema = z.object({
-  idx: z.number(),
-  chunks: z.array(z.object({ text: z.string() })),
-  summary: z.string(),
-  analysisContext: z.string().optional(),
-});
-
-// Define the log analyzer agent for chunked processing
-// Initial analyzer - We use a bigger model for the first chunk, for better understanding of the structure and context
-
-const initialAnalyzerAgent = new Agent({
-  name: 'initial-analyzer-agent',
-  description:
-    'Performs initial analysis of technical documents to understand structure and key patterns',
-  instructions: INITIAL_ANALYZER_INSTRUCTIONS,
-  model: logAnalyzerConfig.models.initial,
-});
-
-const initialStep = createStep({
-  id: 'initial-summary',
-  description: 'Summarize first chunk using log analyzer agent',
-  inputSchema: ChunkedSchemaOutput,
-  outputSchema: LoopStateSchema,
-  execute: async ({ inputData, tracingContext }) => {
-    const { analysisContext, chunks } = inputData;
-    const first = chunks[0]?.text ?? '';
-    logCoreAnalyzerLogger.debug('Initial chunk for analysis', {
-      first: first.slice(0, 100),
-      analysisContext,
+    tracingContext.currentSpan?.update({
+      metadata: {
+        chunkCount: chunks.length,
+        chunkSize: logAnalyzerConfig.chunking.maxSize,
+      },
     });
-    logCoreAnalyzerLogger.debug('Chunk length', { length: first.length });
-    logCoreAnalyzerLogger.debug('Calling LLM for initial summary');
 
-    const result = await initialAnalyzerAgent.generate(
-      [
-        {
-          role: 'user',
-          content: USER_INITIAL_PROMPT(first, analysisContext),
-        },
-      ],
-      {
-        structuredOutput: {
-          schema: RefinementAgentOutputSchema,
-          model: logAnalyzerConfig.models.schemaFormatter,
-        },
-        tracingContext,
-      }
-    );
-
-    const response = result.object as unknown as z.infer<
-      typeof RefinementAgentOutputSchema
-    >;
-
-    const { summary } = response;
-
-    return { idx: 1, chunks, summary, analysisContext };
-  },
-});
-
-const RefinementAgentOutputSchema = z.object({
-  updated: z.boolean(),
-  summary: z.string(),
-});
-
-/*
- * Refinement agent - cheaper model for iterative processing
- * This model is used when we have larger files and we need to iterate through the whole document to get a better summary
- */
-const refinementAgent = new Agent({
-  name: 'refinement-agent',
-  description:
-    'Iteratively refines and updates technical summaries with new chunks',
-  instructions: REFINEMENT_AGENT_INSTRUCTIONS,
-  model: logAnalyzerConfig.models.refinement,
-});
-
-const refineStep = createStep({
-  id: 'refine-summary',
-  description:
-    'Iteratively refine the summary with context from previous chunks',
-  inputSchema: LoopStateSchema,
-  outputSchema: LoopStateSchema,
-  execute: async ({ inputData, tracingContext }) => {
-    const {
-      analysisContext,
+    setState({
+      ...state,
       chunks,
-      idx,
-      summary: existingSummary,
-    } = inputData;
-    const chunk = chunks[idx]?.text ?? '';
-
-    // TODO: make sure summary size stays manageable
-    if (!chunk) {
-      return {
-        idx: idx + 1,
-        chunks,
-        summary: existingSummary,
-        analysisContext,
-      };
-    }
-
-    logCoreAnalyzerLogger.debug(`Refine step for chunk #${idx + 1}:`, {
-      total: chunks.length,
     });
-    const result = await refinementAgent.generate(
-      USER_REFINE(existingSummary, chunk, analysisContext),
-      {
-        structuredOutput: {
-          schema: RefinementAgentOutputSchema,
-          model: logAnalyzerConfig.models.schemaFormatter,
-        },
-        tracingContext,
-      }
-    );
-
-    const response = result.object as unknown as z.infer<
-      typeof RefinementAgentOutputSchema
-    >;
-
-    const updated = response.updated ?? false;
-    let newSummary = existingSummary;
-    if (updated) {
-      newSummary = response.summary ?? existingSummary;
-    }
-
-    return {
-      idx: idx + 1,
-      chunks,
-      summary: newSummary,
-      analysisContext,
-    };
+    return {};
   },
 });
 
-// Define the report formatter agent for final output
-const reportFormatterAgent = new Agent({
-  name: 'report-formatter-agent',
-  description: 'Formats technical summaries into various output formats',
-  instructions: REPORT_FORMATTER_INSTRUCTIONS,
-  model: logAnalyzerConfig.models.formatter,
-});
+// --- Single-Pass Path (for files with 1 chunk) ---
 
-// Single-pass step for files that fit in one chunk - generates both markdown and summary in one call
 const singlePassStep = createStep({
   id: 'single-pass-analysis',
   description: 'Direct analysis and report generation for single-chunk files',
-  inputSchema: ChunkedSchemaOutput,
-  outputSchema: WorkflowOutputSchema,
-  execute: async ({ inputData, tracingContext }) => {
-    const { analysisContext, chunks } = inputData;
+  stateSchema: WorkflowStateSchema,
+  inputSchema: z.object({}),
+  outputSchema: z.object({
+    markdown: z.string(),
+    summary: z.string(),
+  }),
+  execute: async ({ abortSignal, mastra, state, tracingContext }) => {
+    const logger = mastra.getLogger();
+    const { analysisContext, chunks } = state;
 
+    if (!chunks) {
+      throw new Error('Chunks are not available');
+    }
     // Validate we have exactly one chunk
     if (chunks.length !== 1) {
-      logCoreAnalyzerLogger.warn(
-        'Single-pass step called with multiple chunks',
-        {
-          chunkCount: chunks.length,
-        }
-      );
+      logger.warn('Single-pass step called with multiple chunks', {
+        chunkCount: chunks.length,
+      });
     }
 
     const text = chunks[0]?.text ?? '';
 
-    logCoreAnalyzerLogger.debug('Single-pass analysis starting', {
+    logger.debug('Single-pass analysis starting', {
       textLength: text.length,
       analysisContext,
     });
@@ -337,21 +255,148 @@ const singlePassStep = createStep({
           schema: WorkflowOutputSchema,
           model: logAnalyzerConfig.models.schemaFormatter,
         },
+        abortSignal,
         tracingContext,
       }
     );
-    const response = result.object as unknown as z.infer<
-      typeof WorkflowOutputSchema
-    >;
+    const response = result.object;
 
-    logCoreAnalyzerLogger.debug('Single-pass analysis complete', {
+    logger.debug('Single-pass analysis complete', {
       markdownLength: response.markdown?.length ?? 0,
       summaryLength: response.summary?.length ?? 0,
     });
 
+    if (response.markdown === undefined || response.summary === undefined) {
+      throw new Error('Failed to generate markdown and summary');
+    }
     return {
-      markdown: response.markdown || '',
-      summary: response.summary || '',
+      markdown: response.markdown,
+      summary: response.summary,
+    };
+  },
+});
+
+// --- Iterative Refinement Path (for files with multiple chunks) ---
+
+const initialStep = createStep({
+  id: 'initial-summary',
+  description: 'Summarize first chunk using log analyzer agent',
+  stateSchema: WorkflowStateSchema,
+  inputSchema: z.object({}),
+  outputSchema: z.object({
+    summary: z.string(),
+  }),
+  execute: async ({ abortSignal, mastra, setState, state, tracingContext }) => {
+    const logger = mastra.getLogger();
+    const { analysisContext, chunks } = state;
+    if (!chunks) {
+      throw new Error('Chunks are not available');
+    }
+    const first = chunks[0]?.text ?? '';
+
+    logger.debug('Chunk length', { length: first.length });
+
+    const result = await initialAnalyzerAgent.generate(
+      USER_INITIAL_PROMPT(first, analysisContext),
+      {
+        tracingContext,
+        abortSignal,
+      }
+    );
+
+    const summary = result.text;
+    tracingContext.currentSpan?.update({
+      metadata: {
+        idx: 1,
+        total: chunks.length,
+      },
+      output: {
+        summary,
+      },
+    });
+    setState({
+      ...state,
+      idx: 1,
+    });
+    return {
+      summary,
+    };
+  },
+});
+
+const refineStep = createStep({
+  id: 'refine-summary',
+  description:
+    'Iteratively refine the summary with context from previous chunks',
+  stateSchema: WorkflowStateSchema,
+  inputSchema: z.object({
+    summary: z.string(),
+  }),
+  outputSchema: z.object({
+    summary: z.string(),
+  }),
+  execute: async ({
+    abortSignal,
+    inputData,
+    mastra,
+    setState,
+    state,
+    tracingContext,
+  }) => {
+    const logger = mastra.getLogger();
+    const { analysisContext, chunks, idx } = state;
+    const { summary: existingSummary } = inputData;
+    if (!chunks) {
+      throw new Error('Chunks are not available');
+    }
+    const chunk = chunks[state.idx]?.text ?? '';
+
+    // TODO: make sure summary size stays manageable
+    if (!chunk) {
+      return {
+        summary: existingSummary,
+      };
+    }
+
+    logger.debug(`Refine step for chunk #${idx + 1}:`, {
+      total: chunks.length,
+    });
+    const result = await refinementAgent.generate(
+      USER_REFINE(existingSummary, chunk, analysisContext),
+      {
+        structuredOutput: {
+          schema: RefinementAgentOutputSchema,
+          model: logAnalyzerConfig.models.schemaFormatter,
+        },
+        tracingContext,
+        abortSignal,
+      }
+    );
+
+    const response = result.object;
+
+    const updated = response.updated ?? false;
+    let newSummary = existingSummary;
+    if (updated) {
+      newSummary = response.summary ?? existingSummary;
+    }
+
+    tracingContext.currentSpan?.update({
+      metadata: {
+        idx: idx + 1,
+        total: chunks.length,
+      },
+      output: {
+        summary: newSummary,
+      },
+    });
+    setState({
+      ...state,
+      idx: idx + 1,
+      analysisContext,
+    });
+    return {
+      summary: newSummary,
     };
   },
 });
@@ -359,36 +404,45 @@ const singlePassStep = createStep({
 const finalizeStep = createStep({
   id: 'finalize',
   description: 'Generate final markdown report and concise summary',
-  inputSchema: LoopStateSchema,
+  inputSchema: z.object({
+    summary: z.string(),
+  }),
+  stateSchema: WorkflowStateSchema,
   outputSchema: WorkflowOutputSchema,
-  execute: async ({ inputData, tracingContext }) => {
-    const { analysisContext, summary } = inputData;
-    logCoreAnalyzerLogger.debug('Generating final markdown report', {
-      summary: summary.slice(0, 100),
-      analysisContext,
-    });
+  execute: async ({
+    abortSignal,
+    inputData,
+    mastra,
+    state,
+    tracingContext,
+  }) => {
+    const logger = mastra.getLogger();
+    const { summary } = inputData;
+    const { analysisContext } = state;
 
     // Generate markdown report
     const markdownRes = await reportFormatterAgent.generate(
       USER_MARKDOWN_PROMPT(summary, analysisContext),
       {
         tracingContext,
+        abortSignal,
       }
     );
-    logCoreAnalyzerLogger.debug('Final markdown report generated', {
+    logger.debug('Final markdown report generated', {
       length: markdownRes.text.length,
     });
 
     // Generate concise summary from the markdown report
-    logCoreAnalyzerLogger.debug('Generating concise summary');
+    logger.debug('Generating concise summary');
     const conciseSummaryRes = await reportFormatterAgent.generate(
       USER_CONCISE_SUMMARY_PROMPT(markdownRes.text, analysisContext),
       {
         tracingContext,
+        abortSignal,
       }
     );
 
-    logCoreAnalyzerLogger.debug('Concise summary generated', {
+    logger.debug('Concise summary generated', {
       length: conciseSummaryRes.text.length,
     });
 
@@ -399,36 +453,51 @@ const finalizeStep = createStep({
   },
 });
 
+// ============================================================================
+// Workflows
+// ============================================================================
+
 const iterativeRefinementWorkflow = createWorkflow({
   id: 'iterative-refinement',
-  description: `Perform a 3 step iterative refinement process: initial and final analysis with an expensive model, 
+  description: `Perform a 3 step iterative refinement process: initial and final analysis with an expensive model,
     and a lightweight refinement loop going through the whole document`,
-  inputSchema: ChunkedSchemaOutput,
+  inputSchema: z.object({}),
   outputSchema: WorkflowOutputSchema,
+  stateSchema: WorkflowStateSchema,
+  // Occasionally, the workflow fails at a step, so we retry it a few times
+  retryConfig: {
+    attempts: 3,
+    delay: 1000,
+  },
 })
   .then(initialStep)
   .dowhile(
     refineStep,
-    async params =>
+    async ({ state }) =>
       // Access inputData from the full params object
-      params.inputData.idx < params.inputData.chunks.length
+      state.idx < (state.chunks?.length ?? 0)
   )
   .then(finalizeStep)
   .commit();
 
-// This was initially a `.branch()` workflow step, but it involved too much complexity like unwrapping types correctly,
-// or wrapping iterativeRefinementWorkflow into its own step. This option is much simpler.
 const decideAndRunStep = createStep({
   id: 'decide-and-run',
   description: 'Choose single-pass vs iterative workflow and run it',
-  inputSchema: ChunkedSchemaOutput,
+  inputSchema: z.object({}),
   outputSchema: WorkflowOutputSchema,
+  stateSchema: WorkflowStateSchema,
   execute: async params => {
-    const { chunks } = params.inputData;
-    if (chunks.length === 1) {
+    const { mastra, state } = params;
+    const logger = mastra.getLogger();
+    if (!state.chunks) {
+      throw new Error('Chunks are not available');
+    }
+    if (state.chunks.length === 1) {
+      logger.debug('Running single-pass step for single chunk');
       // run the single-pass step directly
       return singlePassStep.execute(params);
     }
+    logger.debug('Running iterative refinement workflow for multiple chunks');
     // run the iterative workflow
     return iterativeRefinementWorkflow.execute(params);
   },
@@ -446,11 +515,16 @@ export const logCoreAnalyzerWorkflow = createWorkflow({
     'NOTE: This tool analyzes raw file content. It does NOT fetch data from Evergreen or other APIs - provide the actual content or a direct URL/path to it.',
   inputSchema: WorkflowInputSchema,
   outputSchema: WorkflowOutputSchema,
+  stateSchema: WorkflowStateSchema,
 })
   .then(loadDataStep) // Use the new unified load step with validation
   .then(chunkStep)
   .then(decideAndRunStep)
   .commit();
+
+// ============================================================================
+// Tool Export
+// ============================================================================
 
 export const logCoreAnalyzerTool: ReturnType<
   typeof createTool<
@@ -464,8 +538,17 @@ export const logCoreAnalyzerTool: ReturnType<
     'Analyzes log files and text content',
   inputSchema: logCoreAnalyzerWorkflow.inputSchema,
   outputSchema: logCoreAnalyzerWorkflow.outputSchema,
-  execute: async ({ context, runtimeContext, tracingContext }) => {
-    const run = await logCoreAnalyzerWorkflow.createRunAsync({});
+  execute: async ({
+    context,
+    resourceId,
+    runId,
+    runtimeContext,
+    tracingContext,
+  }) => {
+    const run = await logCoreAnalyzerWorkflow.createRunAsync({
+      resourceId,
+      runId,
+    });
 
     const runResult = await run.start({
       inputData: context,
@@ -476,9 +559,11 @@ export const logCoreAnalyzerTool: ReturnType<
       return runResult.result;
     }
     if (runResult.status === 'failed') {
-      throw new Error(
-        `Log analyzer workflow failed: ${runResult.error.message}`
-      );
+      const errorMessage =
+        runResult.error instanceof Error
+          ? runResult.error.message
+          : String(runResult.error);
+      throw new Error(`Log analyzer workflow failed: ${errorMessage}`);
     }
     throw new Error(
       `Unexpected workflow execution status: ${runResult.status}. Expected 'success' or 'failed'.`
