@@ -296,7 +296,6 @@ const initialStep = createStep({
     const first = chunks[0]?.text ?? '';
 
     logger.debug('Chunk length', { length: first.length });
-    logger.debug('Calling LLM for initial summary');
 
     const result = await initialAnalyzerAgent.generate(
       USER_INITIAL_PROMPT(first, analysisContext),
@@ -321,6 +320,15 @@ const initialStep = createStep({
       });
       throw error;
     }
+    tracingContext.currentSpan?.update({
+      metadata: {
+        idx: 1,
+        total: chunks.length,
+      },
+      output: {
+        summary,
+      },
+    });
     setState({
       ...state,
       idx: 1,
@@ -388,6 +396,15 @@ const refineStep = createStep({
       newSummary = response.summary ?? existingSummary;
     }
 
+    tracingContext.currentSpan?.update({
+      metadata: {
+        idx: idx + 1,
+        total: chunks.length,
+      },
+      output: {
+        summary: newSummary,
+      },
+    });
     setState({
       ...state,
       idx: idx + 1,
