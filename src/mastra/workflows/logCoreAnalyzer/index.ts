@@ -449,6 +449,22 @@ const iterativeRefinementWorkflow = createWorkflow({
   .then(finalizeStep)
   .commit();
 
+const decideAndRunStep = createStep({
+  id: 'decide-and-run',
+  description: 'Choose single-pass vs iterative workflow and run it',
+  inputSchema: ChunkedSchemaOutput,
+  outputSchema: WorkflowOutputSchema,
+  execute: async params => {
+    const { chunks } = params.inputData;
+    if (chunks.length === 1) {
+      // run the single-pass step directly
+      return singlePassStep.execute(params);
+    }
+    // run the iterative workflow
+    return iterativeRefinementWorkflow.execute(params);
+  },
+});
+
 export const logCoreAnalyzerWorkflow = createWorkflow({
   id: 'log-core-analyzer',
   description:
@@ -464,13 +480,7 @@ export const logCoreAnalyzerWorkflow = createWorkflow({
 })
   .then(loadDataStep) // Use the new unified load step with validation
   .then(chunkStep)
-  .branch([
-    [async ({ inputData }) => inputData.chunks.length === 1, singlePassStep],
-    [
-      async ({ inputData }) => inputData.chunks.length > 1,
-      iterativeRefinementWorkflow,
-    ],
-  ])
+  .then(decideAndRunStep)
   .commit();
 
 // ============================================================================
