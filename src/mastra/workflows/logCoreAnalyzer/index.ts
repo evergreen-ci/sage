@@ -61,11 +61,6 @@ const WorkflowOutputSchema = z.object({
   summary: z.string(),
 });
 
-const ChunkedSchemaOutput = z.object({
-  chunks: z.array(z.object({ text: z.string() })), // from MDocument.chunk
-  analysisContext: z.string().optional(),
-});
-
 const RefinementAgentOutputSchema = z.object({
   updated: z.boolean(),
   summary: z.string(),
@@ -73,7 +68,7 @@ const RefinementAgentOutputSchema = z.object({
 
 const WorkflowStateSchema = z.object({
   text: z.string(),
-  idx: z.number().optional().default(0),
+  idx: z.number().default(0),
   chunks: z.array(z.object({ text: z.string() })).optional(),
   analysisContext: z.string().optional(),
 });
@@ -119,7 +114,7 @@ const loadDataStep = createStep({
   description: 'Load and validate data from any source',
   inputSchema: WorkflowInputSchema,
   stateSchema: WorkflowStateSchema,
-  outputSchema: z.object({}),
+  outputSchema: z.object({}), // Stores data in state, not output
   execute: async ({ inputData, mastra, setState, state, tracingContext }) => {
     const logger = mastra.getLogger();
     const { analysisContext, path: filePath, text, url } = inputData;
@@ -194,7 +189,7 @@ const chunkStep = createStep({
   outputSchema: z.object({}),
   execute: async ({ mastra, setState, state, tracingContext }) => {
     const logger = mastra.getLogger();
-    const { analysisContext, text } = state;
+    const { text } = state;
     const doc = MDocument.fromText(text);
     const chunks = await doc.chunk({
       strategy: 'token',
@@ -216,7 +211,6 @@ const chunkStep = createStep({
     setState({
       ...state,
       chunks,
-      analysisContext,
     });
     return {};
   },
@@ -367,10 +361,7 @@ const refineStep = createStep({
     // TODO: make sure summary size stays manageable
     if (!chunk) {
       return {
-        idx: idx + 1,
-        chunks,
         summary: existingSummary,
-        analysisContext,
       };
     }
 
@@ -490,7 +481,7 @@ const iterativeRefinementWorkflow = createWorkflow({
 const decideAndRunStep = createStep({
   id: 'decide-and-run',
   description: 'Choose single-pass vs iterative workflow and run it',
-  inputSchema: ChunkedSchemaOutput,
+  inputSchema: z.object({}),
   outputSchema: WorkflowOutputSchema,
   stateSchema: WorkflowStateSchema,
   execute: async params => {
