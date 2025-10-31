@@ -26,12 +26,15 @@ export const mastra: Mastra = new Mastra({
     configs: {
       braintrust: {
         serviceName: 'sage',
-        exporters: [
-          new BraintrustExporter({
-            apiKey: config.braintrust.apiKey,
-            projectName: config.braintrust.projectName,
-          }),
-        ],
+        exporters:
+          process.env.BRAINTRUST_EVAL === 'true'
+            ? []
+            : [
+                new BraintrustExporter({
+                  apiKey: config.braintrust.apiKey,
+                  projectName: config.braintrust.projectName,
+                }),
+              ],
       },
     },
   },
