@@ -1563,10 +1563,10 @@
   dependencies:
     braintrust "^0.4.3"
 
-"@mastra/core@^0.23.2":
-  version "0.23.2"
-  resolved "https://registry.yarnpkg.com/@mastra/core/-/core-0.23.2.tgz#f4eade6296de7330d6914e74e09d5950f40a09c2"
-  integrity sha512-7Qw9vZKMkFyBAtohYJCA/ddsVCkX0hMgiXJ6SFVzxke66y0f5YlHaL3rQxIGaWkpwLFRjY0SE3tJdPSchiLKMA==
+"@mastra/core@^0.23.3":
+  version "0.23.3"
+  resolved "https://registry.yarnpkg.com/@mastra/core/-/core-0.23.3.tgz#ae16b3e5305f0a64b702e9db598d9a1e6f0970d6"
+  integrity sha512-5AqzE19M03T7If9ea0xjj3wr/i9MGeazdK7wbFrrJz44GnYGoSy179KYsyciXzpgXCxuWFi0ytg1jFSry/UCIQ==
   dependencies:
     "@a2a-js/sdk" "~0.2.4"
     "@ai-sdk/anthropic-v5" "npm:@ai-sdk/anthropic@2.0.33"
@@ -1614,15 +1614,15 @@
     xstate "^5.20.1"
     zod-to-json-schema "^3.24.6"
 
-"@mastra/deployer@^0.21.1":
-  version "0.21.1"
-  resolved "https://registry.yarnpkg.com/@mastra/deployer/-/deployer-0.21.1.tgz#64d00e5413a5efc2637b5b6cf099a96d1fc04422"
-  integrity sha512-bkwARFO9PRCvVzCsTYGOP/JpYem9QEYqSEjv8i1MdH/6u+GK4XqbCufO5NLM014aAN3h5OrTIcdImuy2rnih6w==
+"@mastra/deployer@^0.23.3":
+  version "0.23.3"
+  resolved "https://registry.yarnpkg.com/@mastra/deployer/-/deployer-0.23.3.tgz#4db55874bf1da98b17e3e2e46c50274bde6ea6f8"
+  integrity sha512-EPElb2h3J6Al3CK9STo05seO0nNp2329TGpM3CTF1qraw24/jGqiQk5i98e0QauSelB62jzQ6Xa+Q0qjlkD5oQ==
   dependencies:
     "@babel/core" "^7.28.4"
     "@babel/helper-module-imports" "^7.27.1"
     "@babel/preset-typescript" "^7.27.1"
-    "@mastra/server" "^0.21.1"
+    "@mastra/server" "^0.23.3"
     "@neon-rs/load" "^0.1.82"
     "@optimize-lodash/rollup-plugin" "^5.0.2"
     "@rollup/plugin-alias" "5.1.1"
@@ -1655,14 +1655,6 @@
   integrity sha512-jkYCsv00qzhjq4nyscChovW8cfeb8r8VkgzW+iPU9SBLu7pDX2HGgC/WSvSOeH1Ll0twqL2iql6gKXGAnDmRfw==
   dependencies:
     "@libsql/client" "^0.15.15"
-
-"@mastra/loggers@^0.10.16":
-  version "0.10.16"
-  resolved "https://registry.yarnpkg.com/@mastra/loggers/-/loggers-0.10.16.tgz#aebf0714971f5e5087ea507564bb556ec9f9d61f"
-  integrity sha512-zZiaz/kfChdA9L8ks0F73pn/kh6gU8FkS8VMigKH5uc7Ez8gvWsaC9Orgg5k7Og4bkXrZ3j2fN5RewtjI8appA==
-  dependencies:
-    pino "^9.7.0"
-    pino-pretty "^13.0.0"
 
 "@mastra/loggers@^0.10.18":
   version "0.10.18"
@@ -1723,10 +1715,10 @@
     zod-from-json-schema-v3 "npm:zod-from-json-schema@^0.0.5"
     zod-to-json-schema "^3.24.6"
 
-"@mastra/server@^0.21.1":
-  version "0.21.1"
-  resolved "https://registry.yarnpkg.com/@mastra/server/-/server-0.21.1.tgz#66c281193d7921bb19cce17599b796c808545f7c"
-  integrity sha512-qf14MT+lGiPAgv7oqOC2+bcOa5jED1Ucmlm66y7TZKywUr1n8qDNePoGj+RTU1Nz/oLI0NloNYu3kCUO2GW/sA==
+"@mastra/server@^0.23.3":
+  version "0.23.3"
+  resolved "https://registry.yarnpkg.com/@mastra/server/-/server-0.23.3.tgz#cb9913b02de8cb0ec378f4cf343f5a1f93e4eb80"
+  integrity sha512-ByZAk3EGh4ohpkHED5j7GJA8GGrKJGpFaCbEhZt8koSgDHRAjwG4rWTcYe4yDOery0DjQY8WzoUPlVPN6rH0Hg==
 
 "@mongodb-js/saslprep@^1.1.9":
   version "1.3.0"
@@ -7980,15 +7972,15 @@ map-cache@^0.2.0:
   resolved "https://registry.yarnpkg.com/map-cache/-/map-cache-0.2.2.tgz#c32abd0bd6525d9b051645bb4f26ac5dc98a0dbf"
   integrity sha512-8y/eV9QQZCiyn1SprXSrCmqJN0yNRATe+PO8ztwqrvrbdRLA3eYJF0yaR0YayLWkMbsQSKWS9N2gPcGEc4UsZg==
 
-mastra@^0.17.0:
-  version "0.17.0"
-  resolved "https://registry.yarnpkg.com/mastra/-/mastra-0.17.0.tgz#808396ee637b8a4e5d1f671154d49a34e07facbf"
-  integrity sha512-PKFqD6toWiTcoBLa6B/9Pqb1SEQNptr+4SHTWNl27gTaprmad3ZSC/b2yvRNyNG25aDBeYs0YQGoeuD81mLhxg==
+mastra@^0.17.7:
+  version "0.17.7"
+  resolved "https://registry.yarnpkg.com/mastra/-/mastra-0.17.7.tgz#d02f0479db8acae293006c25671477ca9e5bc6da"
+  integrity sha512-H2LrmahKL4yCayBBOwNKqDZanpY3C1zOAQMf1PsEzEaT7K+hvJzGeQJZsDfTRjtkSPD1gesQ1SAJulL0qkwIdA==
   dependencies:
     "@clack/prompts" "^0.11.0"
     "@expo/devcert" "^1.2.0"
-    "@mastra/deployer" "^0.21.1"
-    "@mastra/loggers" "^0.10.16"
+    "@mastra/deployer" "^0.23.3"
+    "@mastra/loggers" "^0.10.18"
     "@opentelemetry/auto-instrumentations-node" "^0.62.1"
     "@opentelemetry/core" "^2.0.1"
     "@opentelemetry/exporter-trace-otlp-grpc" "^0.203.0"
