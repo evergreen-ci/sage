@@ -33,10 +33,6 @@ const sdk = new NodeSDK({
 
 console.log('Starting OpenTelemetry SDK');
 sdk.start();
-console.log(config.honeycomb.otelCollectorURL, 'otelCollectorURL');
-console.log(config.honeycomb.apiKey, 'apiKey');
-console.log(config.honeycomb.otelLogCollectorURL, 'otelLogCollectorURL');
-console.log(config.honeycomb.apiKey, 'apiKey');
 
 /**
  * Gracefully shuts down the OpenTelemetry SDK

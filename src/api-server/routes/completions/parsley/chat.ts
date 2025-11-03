@@ -83,8 +83,8 @@ const chatRoute = async (
       },
       ...(spanContext
         ? {
-            traceId: spanContext?.traceId,
-            parentSpanId: spanContext?.spanId,
+            traceId: spanContext.traceId,
+            parentSpanId: spanContext.spanId,
           }
         : {}),
       tracingOptions: {
@@ -185,8 +185,8 @@ const chatRoute = async (
             },
             ...(spanContext
               ? {
-                  traceId: spanContext?.traceId,
-                  parentSpanId: spanContext?.spanId,
+                  traceId: spanContext.traceId,
+                  parentSpanId: spanContext.spanId,
                 }
               : {}),
           },
