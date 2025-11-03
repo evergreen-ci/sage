@@ -1,4 +1,5 @@
 import { BraintrustExporter } from '@mastra/braintrust';
+import type { AnyExportedAISpan } from '@mastra/core/ai-tracing';
 import { Mastra } from '@mastra/core/mastra';
 import { initLogger } from 'braintrust';
 import { config } from '@/config';
@@ -13,6 +14,21 @@ export const braintrustLogger = initLogger({
   projectName: config.braintrust.projectName,
   apiKey: config.braintrust.apiKey,
 });
+
+// Monkeypatch BraintrustExporter to use our pre-initialized braintrustLogger
+// This prevents the exporter from creating its own internal logger instances
+(
+  BraintrustExporter.prototype as unknown as {
+    initLogger: (span: AnyExportedAISpan) => Promise<void>;
+  }
+).initLogger = async function (span: AnyExportedAISpan) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Accessing private traceMap field
+  (this as any).traceMap.set(span.traceId, {
+    logger: braintrustLogger,
+    spans: new Map(),
+    activeIds: new Set(),
+  });
+};
 
 export const mastra: Mastra = new Mastra({
   workflows: {
