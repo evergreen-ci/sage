@@ -1,6 +1,7 @@
 // IMPORTANT: Instrumentation must be imported FIRST to properly instrument the application
 // eslint-disable-next-line import/order
 import { shutdownOtel } from '@/instrumentation';
+import './instrumentation';
 import './sentry-instrument';
 import server from '@/api-server';
 import { validateConfig } from '@/config';
