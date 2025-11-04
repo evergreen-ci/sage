@@ -48,3 +48,7 @@ const sdk = new NodeSDK({
 });
 
 sdk.start();
+
+export const shutdownOtel = async () => {
+  await sdk.shutdown();
+};

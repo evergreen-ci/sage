@@ -1,3 +1,5 @@
+import type { Server as HttpServer } from 'http';
+import type { Socket } from 'net';
 import * as Sentry from '@sentry/node';
 import cors from 'cors';
 import express, { Application } from 'express';
@@ -21,8 +23,9 @@ import { sentryUserContextMiddleware } from './middlewares/sentryContext';
  */
 class SageServer {
   private app: Application;
-  private serverInstance: ReturnType<Application['listen']> | null = null;
+  private serverInstance: HttpServer | null = null;
   private startTime: Date | null = null;
+  private connections = new Set<Socket>();
 
   constructor() {
     this.app = express();
@@ -94,6 +97,14 @@ class SageServer {
         logger.info(`${route.methods.join(', ')} ${route.path}`);
       });
     });
+
+    // Track active connections for graceful shutdown
+    this.serverInstance.on('connection', (socket: Socket) => {
+      this.connections.add(socket);
+      socket.on('close', () => {
+        this.connections.delete(socket);
+      });
+    });
   }
 
   public async stop(): Promise<void> {
@@ -104,8 +115,38 @@ class SageServer {
 
     logger.info('Stopping Sage server');
 
+    // Disconnect from database first
     await db.disconnect();
 
+    // Wait briefly for connections to close naturally
+    const gracePeriod = 5000; // 5 seconds
+    const startTime = Date.now();
+
+    // Wait for connections to close or grace period to expire
+    await new Promise<void>(resolve => {
+      const checkInterval = setInterval(() => {
+        if (
+          this.connections.size === 0 ||
+          Date.now() - startTime >= gracePeriod
+        ) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 100);
+    });
+
+    // Force close any remaining connections
+    if (this.connections.size > 0) {
+      logger.warn(
+        `Forcefully closing ${this.connections.size} remaining connections`
+      );
+      for (const socket of this.connections) {
+        socket.destroy();
+      }
+      this.connections.clear();
+    }
+
+    // Stop the HTTP server and wait for it to close
     await new Promise<void>((resolve, reject) => {
       this.serverInstance!.close((err?: Error) => {
         if (err) {
@@ -117,6 +158,7 @@ class SageServer {
         }
       });
     });
+
     this.serverInstance = null;
     this.startTime = null;
   }
