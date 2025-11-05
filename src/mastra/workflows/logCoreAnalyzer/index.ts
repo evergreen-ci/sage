@@ -127,7 +127,7 @@ const loadDataStep = createStep({
       } else if (url) {
         result = await loadFromUrl(url);
       } else if (text) {
-        result = loadFromText(text);
+        result = await loadFromText(text);
       } else {
         throw new Error(
           'No input source provided (path, url, or text required)'

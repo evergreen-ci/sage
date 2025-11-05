@@ -72,7 +72,7 @@ describe('dataLoader', () => {
       vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('log content'));
 
       const result = await loadFromFile('valid.log');
-      expect(result.text).toBe('log content');
+      expect(result.text).toBe('[L:      0] log content');
       expect(result.metadata.source).toBe(SourceType.File);
       expect(result.metadata.originalSize).toBe(validSizeBytes);
     });
@@ -147,7 +147,7 @@ describe('dataLoader', () => {
       });
 
       const result = await loadFromUrl(TEST_CONSTANTS.TEST_URLS.VALID);
-      expect(result.text).toBe(content);
+      expect(result.text).toBe(`[L:      0] ${content}`);
       expect(result.metadata.source).toBe(SourceType.URL);
       expect(result.metadata.truncated).toBe(false);
     });
@@ -185,7 +185,7 @@ describe('dataLoader', () => {
       );
 
       try {
-        loadFromText(hugeText);
+        await loadFromText(hugeText);
         throw new Error('Should have thrown an error');
       } catch (error) {
         expect((error as Error).message).toMatch(
@@ -194,29 +194,29 @@ describe('dataLoader', () => {
       }
     });
 
-    it('should accept large text within limits', () => {
+    it('should accept large text within limits', async () => {
       // Test with text that's large but within both size and token limits
       const charCount = Math.floor(
         logAnalyzerConfig.limits.maxTextLength * 0.9
       );
       const text = 'x'.repeat(charCount);
 
-      const result = loadFromText(text);
-      expect(result.text).toBe(text);
+      const result = await loadFromText(text);
+      expect(result.text).toBe(`[L:      0] ${text}`);
       expect(result.metadata.source).toBe(SourceType.Text);
       expect(result.metadata.originalSize).toBe(charCount);
     });
 
-    it('should reject empty or null text', () => {
+    it('should reject empty or null text', async () => {
       try {
-        loadFromText('');
+        await loadFromText('');
         throw new Error('Should have thrown an error');
       } catch (error) {
         expect((error as Error).message).toMatch(/Text cannot be empty/);
       }
 
       try {
-        loadFromText(null as unknown as string);
+        await loadFromText(null as unknown as string);
         throw new Error('Should have thrown an error');
       } catch (error) {
         expect((error as Error).message).toMatch(
@@ -225,11 +225,11 @@ describe('dataLoader', () => {
       }
     });
 
-    it('should accept valid text', () => {
+    it('should accept valid text', async () => {
       const text = 'Valid log content';
 
-      const result = loadFromText(text);
-      expect(result.text).toBe(text);
+      const result = await loadFromText(text);
+      expect(result.text).toBe(`[L:      0] ${text}`);
       expect(result.metadata.source).toBe(SourceType.Text);
       expect(result.metadata.originalSize).toBe(text.length);
     });
