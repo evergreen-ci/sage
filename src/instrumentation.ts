@@ -10,6 +10,11 @@ import {
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { config } from '@/config';
 
+// Global type declaration for hot reload persistence
+declare global {
+  var __OTEL_SDK_STARTED__: boolean | undefined;
+}
+
 const otlpExporter = config.honeycomb.otelCollectorURL
   ? new OTLPTraceExporter({
       url: config.honeycomb.otelCollectorURL,
@@ -47,7 +52,13 @@ const sdk = new NodeSDK({
   }),
 });
 
-sdk.start();
+// Guard against multiple initializations during hot reload
+// This prevents EventEmitter memory leaks from accumulated child process listeners
+// Use globalThis to persist flag across module reloads
+if (!globalThis.__OTEL_SDK_STARTED__) {
+  sdk.start();
+  globalThis.__OTEL_SDK_STARTED__ = true;
+}
 
 export const shutdownOtel = async () => {
   await sdk.shutdown();

@@ -58,5 +58,10 @@ const gracefulShutdown = async (signal: string) => {
 };
 
 // Gracefully shutdown the server
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+// Prevent duplicate listeners during hot reload
+const hasSignalListeners = process.listenerCount('SIGINT') > 0;
+
+if (!hasSignalListeners) {
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+}

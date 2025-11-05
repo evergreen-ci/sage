@@ -18,6 +18,11 @@ import {
 } from './middlewares/logging';
 import { sentryUserContextMiddleware } from './middlewares/sentryContext';
 
+// Global type declaration for hot reload persistence
+declare global {
+  var __SAGE_SERVER_INSTANCE__: SageServer | undefined;
+}
+
 /**
  * `startServer` is a function that starts the server.
  */
@@ -26,6 +31,7 @@ class SageServer {
   private serverInstance: HttpServer | null = null;
   private startTime: Date | null = null;
   private connections = new Set<Socket>();
+  private allConnectionsClosed: (() => void) | null = null;
 
   constructor() {
     this.app = express();
@@ -103,6 +109,11 @@ class SageServer {
       this.connections.add(socket);
       socket.on('close', () => {
         this.connections.delete(socket);
+        // Notify if we're waiting for all connections to close
+        if (this.connections.size === 0 && this.allConnectionsClosed) {
+          this.allConnectionsClosed();
+          this.allConnectionsClosed = null;
+        }
       });
     });
   }
@@ -126,19 +137,13 @@ class SageServer {
       await Promise.race([
         // Resolve immediately when all connections close
         new Promise<void>(resolve => {
-          const checkConnections = () => {
-            if (this.connections.size === 0) {
-              resolve();
-            }
-          };
-          // Check on each socket close event
-          for (const socket of this.connections) {
-            socket.once('close', checkConnections);
-          }
+          this.allConnectionsClosed = resolve;
         }),
         // Timeout after grace period
         new Promise<void>(resolve => setTimeout(() => resolve(), gracePeriod)),
       ]);
+      // Clean up callback if it wasn't called
+      this.allConnectionsClosed = null;
     }
 
     // Force close any remaining connections
@@ -181,4 +186,21 @@ class SageServer {
   }
 }
 
-export default new SageServer();
+// Singleton pattern to prevent multiple instances during hot reload (e.g., with vite-node)
+// This prevents EventEmitter memory leaks from accumulated child process listeners
+// Use globalThis to persist singleton across module reloads
+
+/**
+ * Gets the singleton SageServer instance.
+ * Creates a new instance on first call, returns the same instance on subsequent calls.
+ * This prevents multiple server instances during hot reload.
+ * @returns The singleton SageServer instance
+ */
+function getSageServer(): SageServer {
+  if (!globalThis.__SAGE_SERVER_INSTANCE__) {
+    globalThis.__SAGE_SERVER_INSTANCE__ = new SageServer();
+  }
+  return globalThis.__SAGE_SERVER_INSTANCE__;
+}
+
+export default getSageServer();
