@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest';
 import { streamLines, appendLineNumbers } from './stream';
 
 // Helper function to create a ReadableStream for testing - taken from Parsley
