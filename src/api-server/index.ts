@@ -120,20 +120,26 @@ class SageServer {
 
     // Wait briefly for connections to close naturally
     const gracePeriod = 5000; // 5 seconds
-    const startTime = Date.now();
 
     // Wait for connections to close or grace period to expire
-    await new Promise<void>(resolve => {
-      const checkInterval = setInterval(() => {
-        if (
-          this.connections.size === 0 ||
-          Date.now() - startTime >= gracePeriod
-        ) {
-          clearInterval(checkInterval);
-          resolve();
-        }
-      }, 100);
-    });
+    if (this.connections.size > 0) {
+      await Promise.race([
+        // Resolve immediately when all connections close
+        new Promise<void>(resolve => {
+          const checkConnections = () => {
+            if (this.connections.size === 0) {
+              resolve();
+            }
+          };
+          // Check on each socket close event
+          for (const socket of this.connections) {
+            socket.once('close', checkConnections);
+          }
+        }),
+        // Timeout after grace period
+        new Promise<void>(resolve => setTimeout(() => resolve(), gracePeriod)),
+      ]);
+    }
 
     // Force close any remaining connections
     if (this.connections.size > 0) {

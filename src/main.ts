@@ -42,7 +42,7 @@ const gracefulShutdown = async (signal: string) => {
       new Promise((_, reject) =>
         setTimeout(
           () => reject(new Error('Shutdown operations timeout')),
-          SHUTDOWN_TIMEOUT - 1000
+          SHUTDOWN_TIMEOUT
         )
       ),
     ]);
