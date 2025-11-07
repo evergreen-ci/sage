@@ -1,3 +1,4 @@
+import { toAISdkFormat } from '@mastra/ai-sdk';
 import { AgentMemoryOption } from '@mastra/core/agent';
 import { trace } from '@opentelemetry/api';
 import {
@@ -12,6 +13,7 @@ import { mastra } from '@/mastra';
 import { SAGE_THINKING_AGENT_NAME, USER_ID } from '@/mastra/agents/constants';
 import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
 import { runWithRequestContext } from '@/mastra/utils/requestContext';
+import { createAISdkStreamWithMetadata } from '@/utils/ai';
 import { logger } from '@/utils/logger';
 import { uiMessageSchema } from './validators';
 
@@ -177,7 +179,6 @@ const chatRoute = async (
         await agent.stream(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
-          format: 'aisdk',
           tracingOptions: {
             metadata: {
               userId: res.locals.userId,
@@ -196,11 +197,12 @@ const chatRoute = async (
     // Get the UIMessage stream and pipe it to Express with correct headers & backpressure.
     pipeUIMessageStreamToResponse({
       response: res,
-      stream: stream.toUIMessageStream({
-        messageMetadata: () => ({
+      stream: createAISdkStreamWithMetadata(
+        toAISdkFormat(stream, { from: 'agent' })!,
+        {
           spanId: stream.traceId,
-        }),
-      }),
+        }
+      ),
     });
   } catch (error) {
     logger.error('Error in add message route', {
