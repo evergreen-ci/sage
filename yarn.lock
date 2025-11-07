@@ -1549,10 +1549,10 @@
   resolved "https://registry.yarnpkg.com/@libsql/win32-x64-msvc/-/win32-x64-msvc-0.5.22.tgz#3d8eb9d092ebe18005dea97953575d981f669621"
   integrity sha512-Fj0j8RnBpo43tVZUVoNK6BV/9AtDUM5S7DF3LB4qTYg1LMSZqi3yeCneUTLJD6XomQJlZzbI4mst89yspVSAnA==
 
-"@mastra/ai-sdk@^0.2.5":
-  version "0.2.5"
-  resolved "https://registry.yarnpkg.com/@mastra/ai-sdk/-/ai-sdk-0.2.5.tgz#2b2d7165126d0d2c4e7b4e043934a7e92a4f2420"
-  integrity sha512-mryjN4Rx9hpZJFkOl/cdYFwC7yXsAYC3OIWHyC9amtkWwoxwTYbXMppL0xyfARGf4NAzb8RwetOoNlc4CC1Juw==
+"@mastra/ai-sdk@^0.2.6":
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/@mastra/ai-sdk/-/ai-sdk-0.2.6.tgz#f36797fcb8f7ab9d5475063149cf29801beed2c5"
+  integrity sha512-zvPopeT8wpkipjV84ucXLR5o5cBioZQEyqGpEdzal8UlQQ8mzcU8Vk7GD4FXG/FdFyDN/Ers9EBGPu+wVab3Rg==
   dependencies:
     ai "^5.0.60"
 
