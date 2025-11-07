@@ -4,6 +4,7 @@ import { authenticatedEvergreenFetch } from '@/utils/fetch';
 import { logger } from '@/utils/logger';
 import { logAnalyzerConfig } from './config';
 import { SourceType, MB_TO_BYTES } from './constants';
+import { appendLineNumbers } from './stream';
 import { validateSize, validateTokenLimit } from './utils';
 
 export interface LoadResult {
@@ -30,10 +31,9 @@ export const loadFromFile = async (filePath: string): Promise<LoadResult> => {
 
   // Read file
   const buffer = await fs.readFile(resolvedPath);
-  const text = buffer.toString('utf8');
+  const { text: textWithLineNumbers } = await appendLineNumbers(buffer);
 
-  // Check token limit
-  const estimatedTokens = validateTokenLimit(text);
+  const estimatedTokens = validateTokenLimit(textWithLineNumbers);
 
   logger.debug('File loaded successfully', {
     path: filePath,
@@ -42,7 +42,7 @@ export const loadFromFile = async (filePath: string): Promise<LoadResult> => {
   });
 
   return {
-    text,
+    text: textWithLineNumbers,
     metadata: {
       source: SourceType.File,
       originalSize: stats.size,
@@ -75,45 +75,19 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
       );
     }
 
-    // Stream download with size limit enforcement
-    const maxSizeBytes = logAnalyzerConfig.limits.maxSizeMB * MB_TO_BYTES;
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('Response body is not readable');
+    if (!response.body) {
+      throw new Error('Response body is not defined');
     }
 
-    const chunks: Uint8Array[] = [];
-    let totalSize = 0;
-    let truncated = false;
+    const {
+      text: textWithLineNumbers,
+      totalSize,
+      truncated,
+    } = await appendLineNumbers(response.body, {
+      maxSizeBytes: logAnalyzerConfig.limits.maxSizeMB * MB_TO_BYTES,
+    });
 
-    while (true) {
-      // eslint-disable-next-line no-await-in-loop
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      totalSize += value.length;
-
-      // Stop downloading if size limit exceeded
-      if (totalSize > maxSizeBytes) {
-        truncated = true;
-        reader.cancel();
-        logger.warn('URL content truncated due to size limit', {
-          url,
-          limitMB: logAnalyzerConfig.limits.maxSizeMB,
-          downloadedMB: (totalSize / MB_TO_BYTES).toFixed(2),
-        });
-        break;
-      }
-
-      chunks.push(value);
-    }
-
-    // Combine chunks into text
-    const buffer = Buffer.concat(chunks);
-    const text = buffer.toString('utf8');
-
-    // Check token limit
-    const estimatedTokens = validateTokenLimit(text);
+    const estimatedTokens = validateTokenLimit(textWithLineNumbers);
 
     logger.debug('URL loaded successfully', {
       url,
@@ -123,7 +97,7 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
     });
 
     return {
-      text,
+      text: textWithLineNumbers,
       metadata: {
         source: SourceType.URL,
         originalSize: totalSize,
@@ -148,7 +122,9 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
  * @param text - Raw text to validate and load
  * @returns Loaded text and metadata
  */
-export const loadFromText = (text: string | null | undefined): LoadResult => {
+export const loadFromText = async (
+  text: string | null | undefined
+): Promise<LoadResult> => {
   if (text === null || text === undefined) {
     throw new Error('Text cannot be null or undefined');
   }
@@ -160,8 +136,8 @@ export const loadFromText = (text: string | null | undefined): LoadResult => {
   const size = text.length;
   validateSize(size, SourceType.Text);
 
-  // Check token limit
-  const estimatedTokens = validateTokenLimit(text);
+  const { text: textWithLineNumbers } = await appendLineNumbers(text);
+  const estimatedTokens = validateTokenLimit(textWithLineNumbers);
 
   logger.debug('Text validated successfully', {
     size,
@@ -169,7 +145,7 @@ export const loadFromText = (text: string | null | undefined): LoadResult => {
   });
 
   return {
-    text,
+    text: textWithLineNumbers,
     metadata: {
       source: SourceType.Text,
       originalSize: size,
