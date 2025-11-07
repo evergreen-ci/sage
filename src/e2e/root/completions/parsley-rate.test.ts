@@ -47,8 +47,12 @@ describe('POST /completions/parsley/conversations/rate', () => {
       spanId = extractSpanIdFromStream(chatResponse.text, true) as string;
       expect(spanId).toBeTruthy();
     });
-    it('sends a 0 rating to Braintrust', async () => {
+    beforeEach(async () => {
       expect(spanId).toBeDefined();
+      // Pause for 1 second to give the span time to be created
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    });
+    it('sends a 0 rating to Braintrust', async () => {
       const response = await request(app)
         .post(rateEndpoint)
         .send({ spanId, rating: 0 });
@@ -56,7 +60,6 @@ describe('POST /completions/parsley/conversations/rate', () => {
     });
 
     it('sends a 1 rating to Braintrust', async () => {
-      expect(spanId).toBeDefined();
       const response = await request(app)
         .post(rateEndpoint)
         .send({ spanId, rating: 1 });
@@ -64,7 +67,6 @@ describe('POST /completions/parsley/conversations/rate', () => {
     });
 
     it('catches an input error', async () => {
-      expect(spanId).toBeDefined();
       const response = await request(app)
         .post(rateEndpoint)
         .send({ spanId: spanId, rating: -1 });
