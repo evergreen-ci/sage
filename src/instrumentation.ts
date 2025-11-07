@@ -1,12 +1,9 @@
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
+import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
-import { NodeSDK, logs } from '@opentelemetry/sdk-node';
-import {
-  BatchSpanProcessor,
-  SpanProcessor,
-} from '@opentelemetry/sdk-trace-base';
+import { NodeSDK } from '@opentelemetry/sdk-node';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { config } from '@/config';
 
@@ -15,41 +12,45 @@ declare global {
   var __OTEL_SDK_STARTED__: boolean | undefined;
 }
 
-const otlpExporter = config.honeycomb.otelCollectorURL
-  ? new OTLPTraceExporter({
-      url: config.honeycomb.otelCollectorURL,
-      headers: {
-        'x-honeycomb-team': config.honeycomb.apiKey,
-      },
-    })
-  : undefined;
-
-const otlpLogExporter = config.honeycomb.otelLogCollectorURL
-  ? new OTLPLogExporter({
-      url: config.honeycomb.otelLogCollectorURL,
-      headers: {
-        'x-honeycomb-team': config.honeycomb.apiKey,
-      },
-    })
-  : undefined;
-
-const spanProcessors: SpanProcessor[] = [];
-if (otlpExporter) {
-  spanProcessors.push(new BatchSpanProcessor(otlpExporter));
-}
-
-const logRecordProcessors: logs.LogRecordProcessor[] = [];
-if (otlpLogExporter) {
-  logRecordProcessors.push(new logs.SimpleLogRecordProcessor(otlpLogExporter));
-}
-
 const sdk = new NodeSDK({
-  logRecordProcessors,
-  instrumentations: [getNodeAutoInstrumentations()],
-  spanProcessors,
   resource: resourceFromAttributes({
     [ATTR_SERVICE_NAME]: 'sage',
   }),
+  // Use traceExporter instead of spanProcessors for cleaner setup
+  traceExporter: config.honeycomb.otelCollectorURL
+    ? new OTLPTraceExporter({
+        url: config.honeycomb.otelCollectorURL,
+        headers: {
+          'x-honeycomb-team': config.honeycomb.apiKey,
+        },
+      })
+    : undefined,
+  // Ensure async context propagation works correctly
+  contextManager: new AsyncLocalStorageContextManager(),
+  // Use W3C trace context for proper header propagation
+  textMapPropagator: new W3CTraceContextPropagator(),
+  // Single source of instrumentations with proper configuration
+  instrumentations: [
+    getNodeAutoInstrumentations({
+      '@opentelemetry/instrumentation-http': {
+        enabled: false,
+      },
+      '@opentelemetry/instrumentation-express': {
+        enabled: true,
+        // Ensure HTTP server span names use the route pattern
+        spanNameHook: info => {
+          const { request, route } = info;
+          const req = request as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+          const base =
+            route || req?.route?.path || req?.originalUrl || req?.url || '/';
+          return `${(req?.method || 'GET').toUpperCase()} ${base}`;
+        },
+      },
+      '@opentelemetry/instrumentation-mongodb': {
+        enabled: true,
+      },
+    }),
+  ],
 });
 
 // Guard against multiple initializations during hot reload

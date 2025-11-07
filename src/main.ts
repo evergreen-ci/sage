@@ -1,11 +1,11 @@
-// IMPORTANT: Sentry must be imported FIRST to properly instrument the application
+// IMPORTANT: OpenTelemetry instrumentation MUST be imported FIRST before any other modules
+// This allows it to monkey-patch HTTP, Express, MongoDB, etc. before they are loaded
+// eslint-disable-next-line import/order
+import { shutdownOtel } from '@/instrumentation';
 import './sentry-instrument';
-// eslint-disable-next-line import/no-duplicates
-import './instrumentation';
+
 import server from '@/api-server';
 import { validateConfig } from '@/config';
-// eslint-disable-next-line import/no-duplicates
-import { shutdownOtel } from '@/instrumentation';
 import { sentryService } from '@/utils/sentry';
 
 // Validate configuration on startup
