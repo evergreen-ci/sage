@@ -113,22 +113,3 @@ ${CONCISE_SUMMARY_REQUIREMENTS}
 
 Source report:
 """${markdown}"""`;
-
-export const SINGLE_PASS_PROMPT = (text: string, analysisContext?: string) =>
-  `Analyze this technical document and provide both a markdown report and concise summary.
-${analysisContext ? `\nAnalysis Context:\n${analysisContext}\nUse this context to guide your analysis, focusing on relevant aspects and answering any specific questions.\n` : ''}
-
-Document:
-"""${text}"""
-
-Return a JSON response with two fields:
-{
-  "markdown": "# Technical Analysis Report\n\n## Overview\n...[full markdown report]",
-  "summary": "3-4 line concise summary"
-}
-
-Requirements for the markdown report:
-${MARKDOWN_REPORT_FORMAT}
-
-Requirements for the concise summary:
-${CONCISE_SUMMARY_REQUIREMENTS}`;
