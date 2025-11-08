@@ -24,11 +24,11 @@ You always respond as compact JSON matching the provided schema.
   update the summary to reflect that failure and its cause.`;
 
 export const REPORT_FORMATTER_INSTRUCTIONS = `You are a senior engineer creating technical reports and summaries.
-You respond ONLY with the requested format—no JSON wrapper, no additional fields.
+You respond ONLY with the requested format - no JSON wrapper, no additional fields.
 Focus on clarity, precision, and appropriate formatting for the requested output type.`;
 
 // Formatting Requirements
-const CONCISE_SUMMARY_REQUIREMENTS = `- 3–4 lines maximum
+const CONCISE_SUMMARY_REQUIREMENTS = `- 3-4 lines maximum
 - Focus on: what happened, key impacts/metrics, critical actions needed
 - Plain text only, no markdown formatting
 - Be direct and factual

@@ -111,14 +111,13 @@ const reportFormatterAgent = new Agent({
 
 /**
  * Generates both a markdown report and concise summary from input text
- * @param params - Parameters object
- * @param params.analysisContext - Optional context for analysis
- * @param params.text - Input text to analyze
- * @param params.agent - Agent to use for generation
- * @param params.abortSignal - Optional abort signal
- * @param params.tracingContext - Tracing context for observability
- * @param params.logger - Logger instance
- * @returns Object containing markdown report and concise summary
+ * @param {AbortSignal} [abortSignal] - Optional abort signal
+ * @param {Agent} agent - Agent to use for generation
+ * @param {string} [analysisContext] - Optional context for analysis
+ * @param {IMastraLogger} logger - Logger instance
+ * @param {string} text - Input text to analyze
+ * @param {TracingContext} tracingContext - Tracing context for observability
+ * @returns {{ markdown: string, summary: string }} Object containing markdown report and concise summary
  */
 const generateMarkdownAndSummary = async ({
   abortSignal,
