@@ -1,7 +1,5 @@
 import { createTool } from '@mastra/core';
 import { Agent } from '@mastra/core/agent';
-import { TracingContext } from '@mastra/core/ai-tracing';
-import { IMastraLogger } from '@mastra/core/logger';
 import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
 import { z } from 'zod';
@@ -21,6 +19,7 @@ import {
   USER_REFINE,
   USER_MARKDOWN_PROMPT,
   USER_CONCISE_SUMMARY_PROMPT,
+  SINGLE_PASS_PROMPT,
 } from './prompts';
 import { normalizeLineEndings, cropMiddle } from './utils';
 
@@ -104,71 +103,6 @@ const reportFormatterAgent = new Agent({
   instructions: REPORT_FORMATTER_INSTRUCTIONS,
   model: logAnalyzerConfig.models.formatter,
 });
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Generates both a markdown report and concise summary from input text
- * @param params - Parameters object
- * @param params.analysisContext - Optional context for analysis
- * @param params.text - Input text to analyze
- * @param params.agent - Agent to use for generation
- * @param params.abortSignal - Optional abort signal
- * @param params.tracingContext - Tracing context for observability
- * @param params.logger - Logger instance
- * @returns Object containing markdown report and concise summary
- */
-const generateMarkdownAndSummary = async ({
-  abortSignal,
-  agent,
-  analysisContext,
-  logger,
-  text,
-  tracingContext,
-}: {
-  abortSignal?: AbortSignal;
-  agent: Agent;
-  analysisContext?: string;
-  logger: IMastraLogger;
-  text: string;
-  tracingContext: TracingContext;
-}) => {
-  logger.debug('Generating markdown report', {
-    textLength: text.length,
-  });
-
-  const markdownResult = await agent.generate(
-    USER_MARKDOWN_PROMPT(text, analysisContext),
-    {
-      abortSignal,
-      tracingContext,
-    }
-  );
-  const markdown = markdownResult.text;
-
-  logger.debug('Markdown report generated', {
-    markdownLength: markdown.length,
-  });
-
-  logger.debug('Generating concise summary');
-
-  const summaryResult = await agent.generate(
-    USER_CONCISE_SUMMARY_PROMPT(markdown, analysisContext),
-    {
-      abortSignal,
-      tracingContext,
-    }
-  );
-  const summary = summaryResult.text;
-
-  logger.debug('Concise summary generated', {
-    summaryLength: summary.length,
-  });
-
-  return { markdown, summary };
-};
 
 // ============================================================================
 // Steps
@@ -301,9 +235,9 @@ const singlePassStep = createStep({
     }
     // Validate we have exactly one chunk
     if (chunks.length !== 1) {
-      throw new Error(
-        `Single-pass step requires exactly one chunk, but got ${chunks.length} chunks`
-      );
+      logger.warn('Single-pass step called with multiple chunks', {
+        chunkCount: chunks.length,
+      });
     }
 
     const text = chunks[0]?.text ?? '';
@@ -313,21 +247,32 @@ const singlePassStep = createStep({
       analysisContext,
     });
 
-    const result = await generateMarkdownAndSummary({
-      abortSignal,
-      agent: reportFormatterAgent,
-      analysisContext,
-      logger,
-      text,
-      tracingContext,
-    });
+    // Use structured output to get both markdown and summary
+    const result = await reportFormatterAgent.generate(
+      SINGLE_PASS_PROMPT(text, analysisContext),
+      {
+        structuredOutput: {
+          schema: WorkflowOutputSchema,
+          model: logAnalyzerConfig.models.schemaFormatter,
+        },
+        abortSignal,
+        tracingContext,
+      }
+    );
+    const response = result.object;
 
     logger.debug('Single-pass analysis complete', {
-      markdownLength: result.markdown.length,
-      summaryLength: result.summary.length,
+      markdownLength: response.markdown?.length ?? 0,
+      summaryLength: response.summary?.length ?? 0,
     });
 
-    return result;
+    if (response.markdown === undefined || response.summary === undefined) {
+      throw new Error('Failed to generate markdown and summary');
+    }
+    return {
+      markdown: response.markdown,
+      summary: response.summary,
+    };
   },
 });
 
@@ -475,23 +420,36 @@ const finalizeStep = createStep({
     const { summary } = inputData;
     const { analysisContext } = state;
 
-    logger.debug('Finalize step starting');
-
-    const result = await generateMarkdownAndSummary({
-      abortSignal,
-      agent: reportFormatterAgent,
-      analysisContext,
-      logger,
-      text: summary,
-      tracingContext,
+    // Generate markdown report
+    const markdownRes = await reportFormatterAgent.generate(
+      USER_MARKDOWN_PROMPT(summary, analysisContext),
+      {
+        tracingContext,
+        abortSignal,
+      }
+    );
+    logger.debug('Final markdown report generated', {
+      length: markdownRes.text.length,
     });
 
-    logger.debug('Finalize step complete', {
-      markdownLength: result.markdown.length,
-      summaryLength: result.summary.length,
+    // Generate concise summary from the markdown report
+    logger.debug('Generating concise summary');
+    const conciseSummaryRes = await reportFormatterAgent.generate(
+      USER_CONCISE_SUMMARY_PROMPT(markdownRes.text, analysisContext),
+      {
+        tracingContext,
+        abortSignal,
+      }
+    );
+
+    logger.debug('Concise summary generated', {
+      length: conciseSummaryRes.text.length,
     });
 
-    return result;
+    return {
+      markdown: markdownRes.text,
+      summary: conciseSummaryRes.text,
+    };
   },
 });
 
