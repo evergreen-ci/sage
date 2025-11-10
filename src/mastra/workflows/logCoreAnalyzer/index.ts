@@ -123,7 +123,7 @@ const generateMarkdownAndSummary = async ({
   logger: IMastraLogger;
   text: string;
   tracingContext: TracingContext;
-}) => {
+}): Promise<{ markdown: string; summary: string }> => {
   logger.debug('Generating markdown report', {
     textLength: text.length,
   });
