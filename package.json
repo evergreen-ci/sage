@@ -61,7 +61,7 @@
     "@opentelemetry/semantic-conventions": "^1.37.0",
     "@opentelemetry/winston-transport": "^0.17.0",
     "@sentry/node": "10.22.0",
-    "ai": "^5.0.82",
+    "ai": "^5.0.83",
     "braintrust": "^0.4.9",
     "cors": "^2.8.5",
     "dotenv-flow": "^4.1.0",
