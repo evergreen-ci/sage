@@ -54,12 +54,18 @@ const rateMessageRoute = async (
   }
 
   try {
+    logger.info('Logging feedback to Braintrust', {
+      spanId,
+      rating,
+      feedback,
+    });
     braintrustLogger.logFeedback({
       id: logRowId,
       comment: feedback,
       scores: {
         correctness: rating,
       },
+      source: 'app',
       metadata: {
         timestamp: new Date(),
         user_id: res.locals.userId,

@@ -1,4 +1,6 @@
+import { toAISdkFormat } from '@mastra/ai-sdk';
 import { AgentMemoryOption } from '@mastra/core/agent';
+import { trace } from '@opentelemetry/api';
 import {
   pipeUIMessageStreamToResponse,
   UIMessage,
@@ -11,6 +13,7 @@ import { mastra } from '@/mastra';
 import { SAGE_THINKING_AGENT_NAME, USER_ID } from '@/mastra/agents/constants';
 import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
 import { runWithRequestContext } from '@/mastra/utils/requestContext';
+import { createAISdkStreamWithMetadata } from '@/utils/ai';
 import { logger } from '@/utils/logger';
 import { uiMessageSchema } from './validators';
 
@@ -29,6 +32,8 @@ const chatRoute = async (
   req: Request,
   res: Response<ReadableStream | ErrorResponse>
 ) => {
+  const currentSpan = trace.getActiveSpan();
+  const spanContext = currentSpan?.spanContext();
   const runtimeContext = createParsleyRuntimeContext();
   runtimeContext.set(USER_ID, res.locals.userId);
   logger.debug('User context set for request', {
@@ -78,6 +83,12 @@ const chatRoute = async (
       inputData: {
         logMetadata: messageData.logMetadata,
       },
+      ...(spanContext
+        ? {
+            traceId: spanContext.traceId,
+            parentSpanId: spanContext.spanId,
+          }
+        : {}),
       tracingOptions: {
         metadata: {
           userId: res.locals.userId,
@@ -168,12 +179,17 @@ const chatRoute = async (
         await agent.stream(validatedMessage, {
           runtimeContext,
           memory: memoryOptions,
-          format: 'aisdk',
           tracingOptions: {
             metadata: {
               userId: res.locals.userId,
               requestID: res.locals.requestId,
             },
+            ...(spanContext
+              ? {
+                  traceId: spanContext.traceId,
+                  parentSpanId: spanContext.spanId,
+                }
+              : {}),
           },
         })
     );
@@ -181,11 +197,12 @@ const chatRoute = async (
     // Get the UIMessage stream and pipe it to Express with correct headers & backpressure.
     pipeUIMessageStreamToResponse({
       response: res,
-      stream: stream.toUIMessageStream({
-        messageMetadata: () => ({
+      stream: createAISdkStreamWithMetadata(
+        toAISdkFormat(stream, { from: 'agent' })!,
+        {
           spanId: stream.traceId,
-        }),
-      }),
+        }
+      ),
     });
   } catch (error) {
     logger.error('Error in add message route', {
