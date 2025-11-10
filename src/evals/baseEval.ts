@@ -94,6 +94,7 @@ const defaultPrintResults = <
 ) => {
   console.log(`Eval for '${result.metadata.testName}':`);
 
+  let didFail = false;
   const resultsTable = Object.keys(result.metadata.scoreThresholds).reduce(
     (acc, key) => {
       const isScoreDefined = result.metadata.scoreThresholds[key] !== null;
@@ -103,10 +104,20 @@ const defaultPrintResults = <
           ? `>= ${result.metadata.scoreThresholds[key]}`
           : 'N/A',
       };
+      if (result.scores[key] < result.metadata.scoreThresholds[key]) {
+        didFail = true;
+      }
       return acc;
     },
     {} as Record<string, { actual: number; expected: string }>
   );
+
+  if (didFail) {
+    console.log('Duration:', result.output.duration);
+    console.log('Input:', result.input);
+    console.log('Output:', result.output);
+    console.log('Expected:', result.expected);
+  }
 
   console.table(resultsTable);
 };
