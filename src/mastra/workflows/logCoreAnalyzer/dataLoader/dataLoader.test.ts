@@ -1,7 +1,7 @@
 import { simulateReadableStream } from 'ai';
-import { logAnalyzerConfig } from './config';
-import { SourceType } from './constants';
-import { loadFromFile, loadFromUrl, loadFromText } from './dataLoader';
+import { logAnalyzerConfig } from '../config';
+import { SourceType } from '../constants';
+import { loadFromFile, loadFromUrl, loadFromText } from '.';
 
 const fsMock = vi.hoisted(() => ({
   stat: vi.fn(),

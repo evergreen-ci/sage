@@ -1,6 +1,6 @@
 import { encode } from 'gpt-tokenizer';
-import { logAnalyzerConfig } from './config';
-import { SourceType, MB_TO_BYTES } from './constants';
+import { logAnalyzerConfig } from '../config';
+import { SourceType, MB_TO_BYTES } from '../constants';
 
 // Constants for size and token estimation
 const SMALL_TEXT_THRESHOLD = 8_192; // chars

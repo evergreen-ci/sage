@@ -4,19 +4,24 @@ const MAX_FINAL_SUMMARY_TOKENS = 2048;
 
 // Agent Instructions
 export const INITIAL_ANALYZER_INSTRUCTIONS = `You are a senior engineer performing initial analysis of technical text (logs, code, configs, telemetry, build output).
+
 Focus on:
 - Understanding the overall structure and format of the content
+- Detecting and emphasizing **failures, error codes, and abnormal terminations**
 - Identifying key patterns, sections, and data types
 - Establishing context and technical domain
-- Preserving critical facts, identifiers, timestamps, error codes
-- Creating a strong foundation summary for further refinement`;
+- Preserving critical facts, identifiers, timestamps, and error codes
+- Always determine whether the task succeeded or failed and summarize the **root cause of any failure**
+- Creating a strong factual foundation summary for further refinement`;
 
 export const REFINEMENT_AGENT_INSTRUCTIONS = `You are a technical analyst updating existing summaries with new information.
 You always respond as compact JSON matching the provided schema.
-- Merge new facts into the existing summary efficiently
-- Collapse repeated patterns; prefer timelines for events
-- If a new chunk adds nothing material, set "updated": false
-- Keep the summary concise while preserving all important details`;
+- Merge new facts into the existing summary efficiently.
+- Collapse repeated patterns; prefer timelines for events.
+- If the new chunk adds nothing material, set "updated": false.
+- Keep the summary concise while preserving all important details.
+- If a new chunk includes failure indicators (non-zero exit code, error, exception, abort),
+  update the summary to reflect that failure and its cause.`;
 
 export const REPORT_FORMATTER_INSTRUCTIONS = `You are a senior engineer creating technical reports and summaries.
 You respond ONLY with the requested format - no JSON wrapper, no additional fields.
@@ -26,9 +31,11 @@ Focus on clarity, precision, and appropriate formatting for the requested output
 const CONCISE_SUMMARY_REQUIREMENTS = `- 3-4 lines maximum
 - Focus on: what happened, key impacts/metrics, critical actions needed
 - Plain text only, no markdown formatting
-- Be direct and factual`;
+- Be direct and factual
+- Keep it under ${MAX_FINAL_SUMMARY_TOKENS} while preserving facts.`;
 
 const MARKDOWN_REPORT_FORMAT = `Use the following structure with proper Markdown headers:
+
 # Technical Analysis Report
 
 ## Overview
@@ -56,8 +63,7 @@ const MARKDOWN_REPORT_FORMAT = `Use the following structure with proper Markdown
 - [ ] Action item 1
 - [ ] Action item 2
 
-Format with proper Markdown: use **bold** for emphasis, \`code\` for technical terms, proper headers (#, ##, ###), tables where appropriate.
-Keep it <= ${MAX_FINAL_SUMMARY_TOKENS} tokens; compress without losing facts.`;
+Format with proper Markdown: use **bold** for emphasis, \`code\` for technical terms, and tables where appropriate.`;
 
 // Prompt Functions
 export const USER_INITIAL_PROMPT = (chunk: string, analysisContext?: string) =>
@@ -69,7 +75,8 @@ Chunk:
 """${chunk}"""
 
 Return:
-"<concise but comprehensive summary>"`;
+"<concise but comprehensive summary>"
+If this appears to be a build/test log, state clearly whether it succeeded or failed and summarize the root cause of failure if identifiable.`;
 
 export const USER_REFINE = (
   existing: string,
@@ -113,22 +120,3 @@ ${CONCISE_SUMMARY_REQUIREMENTS}
 
 Source report:
 """${markdown}"""`;
-
-export const SINGLE_PASS_PROMPT = (text: string, analysisContext?: string) =>
-  `Analyze this technical document and provide both a markdown report and concise summary.
-${analysisContext ? `\nAnalysis Context:\n${analysisContext}\nUse this context to guide your analysis, focusing on relevant aspects and answering any specific questions.\n` : ''}
-
-Document:
-"""${text}"""
-
-Return a JSON response with two fields:
-{
-  "markdown": "# Technical Analysis Report\n\n## Overview\n...[full markdown report]",
-  "summary": "3-4 line concise summary"
-}
-
-Requirements for the markdown report:
-${MARKDOWN_REPORT_FORMAT}
-
-Requirements for the concise summary:
-${CONCISE_SUMMARY_REQUIREMENTS}`;

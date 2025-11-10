@@ -1,4 +1,4 @@
-import { streamLines, appendLineNumbers } from './stream';
+import { streamLines, appendLineNumbers } from '.';
 
 // Helper function to create a ReadableStream for testing - taken from Parsley
 const createReadableStream = (chunks: string[]) => {

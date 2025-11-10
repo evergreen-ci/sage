@@ -2,10 +2,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import { authenticatedEvergreenFetch } from '@/utils/fetch';
 import { logger } from '@/utils/logger';
-import { logAnalyzerConfig } from './config';
-import { SourceType, MB_TO_BYTES } from './constants';
-import { appendLineNumbers } from './stream';
-import { validateSize, validateTokenLimit } from './utils';
+import { logAnalyzerConfig } from '../config';
+import { SourceType, MB_TO_BYTES } from '../constants';
+import { appendLineNumbers } from '../stream';
+import { validateSize, validateTokenLimit } from '../utils';
 
 export interface LoadResult {
   text: string;
