@@ -1,4 +1,4 @@
-import { normalizeLineEndings, cropMiddle } from './utils';
+import { normalizeLineEndings, cropMiddle } from '.';
 
 describe('normalizeLineEndings', () => {
   it('should normalize line endings', async () => {
