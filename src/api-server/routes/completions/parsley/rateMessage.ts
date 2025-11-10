@@ -61,7 +61,7 @@ const rateMessageRoute = async (
     });
     braintrustLogger.logFeedback({
       id: logRowId,
-      comment: feedback || 'No feedback provided',
+      comment: feedback,
       scores: {
         correctness: rating,
       },
