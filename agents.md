@@ -239,7 +239,7 @@ export const myAgent = new Agent({
 
 // Create a tool from the agent
 export const askMyAgentTool = createToolFromAgent(
-  myAgent.id,
+  'myAgent', // Use field name from mastra config, not myAgent.id
   myAgent.getDescription(),
   outputSchema // optional custom output schema
 );
@@ -637,10 +637,15 @@ type MyType = z.infer<typeof mySchema>;
 RuntimeContext is used to pass metadata between components:
 
 ```typescript
-import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
+import { RuntimeContext } from '@mastra/core/runtime-context';
 import { USER_ID } from '@/mastra/agents/constants';
 
-const runtimeContext = createParsleyRuntimeContext();
+type TypeForRuntimeContext = {
+  [USER_ID]?: string;
+  customKey?: string;
+};
+
+const runtimeContext = new RuntimeContext<TypeForRuntimeContext>();
 runtimeContext.set(USER_ID, userId);
 runtimeContext.set('customKey', customValue);
 
