@@ -120,7 +120,7 @@ export const myAgent: Agent = new Agent({
 
 ### Registering Agents
 
-Add your agent to [src/mastra/index.ts:57](src/mastra/index.ts#L57):
+Add your agent to [src/mastra/index.ts:58-63](src/mastra/index.ts#L58-L63):
 
 ```typescript
 export const mastra: Mastra = new Mastra({
@@ -133,6 +133,8 @@ export const mastra: Mastra = new Mastra({
   // ...
 });
 ```
+
+**Important**: The field name you use here (e.g., `sageThinkingAgent`, `myAgent`) is what you'll use to reference the agent throughout your codebase with `mastra.getAgent('sageThinkingAgent')`. This is the agent's registration name, not the `id` property defined in the Agent constructor.
 
 ---
 
@@ -244,6 +246,8 @@ export const askMyAgentTool = createToolFromAgent(
 ```
 
 This allows one agent to invoke another agent as a tool.
+
+**Important**: When referencing agents by name (e.g., in `createToolFromAgent` or `mastra.getAgent()`), use the **field name** from the mastra config, not the agent's `id` field. For example, use `'sageThinkingAgent'` as shown in [src/mastra/index.ts:59](src/mastra/index.ts#L59), not `'sage-thinking-agent'`.
 
 ---
 
@@ -491,7 +495,8 @@ const myRoute = async (req: Request, res: Response) => {
   }
 
   // 5. Get agent and setup memory
-  const agent = mastra.getAgent('my-agent');
+  // Use the field name from mastra config (e.g., 'sageThinkingAgent')
+  const agent = mastra.getAgent('myAgent');
   const memory = await agent.getMemory({ runtimeContext });
 
   let memoryOptions = {
@@ -795,6 +800,7 @@ Eval(
   {
     data: loadTestCases<TestCase>('question_classifier_agent_dataset'),
     task: tracedAgentEval<TestInput, TestResult>({
+      // Use the agent's field name from mastra config (e.g., 'questionClassifierAgent')
       agentName: QUESTION_CLASSIFIER_AGENT_NAME,
       transformResponse: response => {
         const responseJSON = JSON.parse(response.text);
@@ -1059,7 +1065,8 @@ The eval command takes the path to the eval folder and will run all `*.eval.ts` 
 import { tracedAgentEval } from '@/evals/utils/tracedAgent';
 
 task: tracedAgentEval<TestInput, TestResult>({
-  agentName: 'my-agent',
+  // Use the agent's field name from mastra config (e.g., 'myAgent')
+  agentName: 'myAgent',
   transformResponse: response => ({
     result: JSON.parse(response.text),
   }),
