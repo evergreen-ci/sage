@@ -1036,15 +1036,20 @@ export const getTestCases = (): TestCase[] => [
 Run evals using the provided scripts:
 
 ```bash
-# Run all evals
-yarn eval
+# Run specific eval by folder path
+yarn eval src/evals/questionClassifierAgent
 
-# Run specific eval
-EVAL=questionClassifierAgent yarn eval
+# Run log analyzer workflow eval
+yarn eval src/evals/logAnalyzerWorkflow
 
-# Run with specific workflow
-EVAL=logAnalyzerWorkflow yarn eval:run
+# Run sage thinking agent eval
+yarn eval src/evals/sageThinkingAgent
+
+# Run evergreen agent eval
+yarn eval src/evals/evergreenAgent
 ```
+
+The eval command takes the path to the eval folder and will run all `*.eval.ts` files within that directory.
 
 ### Eval Helper Utilities
 
