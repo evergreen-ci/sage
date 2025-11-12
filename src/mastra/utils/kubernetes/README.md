@@ -20,6 +20,7 @@ kubernetes/
 ### File Naming
 
 The current file names are reasonable and follow common conventions:
+
 - **`getSecret.ts`**: Contains both `getK8sSecret()` function and `withK8sSecret()` middleware. The name reflects the primary function of retrieving secrets.
 - **`client.ts`**: Clear and descriptive for Kubernetes client utilities.
 - **`getSecret.test.ts`**: Standard test file naming convention.
@@ -52,10 +53,12 @@ Contains the core secret retrieval functionality and middleware:
 Core function to retrieve a secret from Kubernetes.
 
 **Parameters:**
+
 - `secretName`: The name of the Kubernetes secret to retrieve
 - `key` (optional): Specific key within the secret to retrieve. If omitted, returns all keys
 
 **Returns:**
+
 - `SecretData` object containing:
   - `secretName`: Name of the secret
   - `data`: All key-value pairs (when no specific key requested)
@@ -63,6 +66,7 @@ Core function to retrieve a secret from Kubernetes.
   - `value`: The value of the requested key (when specific key requested)
 
 **Example:**
+
 ```typescript
 import { getK8sSecret } from '@/mastra/utils/kubernetes';
 
@@ -80,6 +84,7 @@ const apiKey = await getK8sSecret('my-secret', 'apiKey');
 Middleware function that wraps a tool with secret access. The secret is fetched before the tool executes and injected into the runtime context.
 
 **Parameters:**
+
 - `tool`: The Mastra tool to wrap with secret access
 - `config`: `SecretMiddlewareConfig` object:
   - `secretName`: Name of the Kubernetes secret to retrieve
@@ -87,9 +92,11 @@ Middleware function that wraps a tool with secret access. The secret is fetched 
   - `contextKey` (optional): Key to inject secret into runtime context (default: `'secrets'`)
 
 **Returns:**
+
 - A new tool with the same interface that has access to the secret via runtime context
 
 **Example:**
+
 ```typescript
 import { createTool } from '@mastra/core';
 import { withK8sSecret } from '@/mastra/utils/kubernetes';
@@ -104,12 +111,12 @@ const myTool = createTool({
   execute: async ({ context, runtimeContext }) => {
     // Access the secret from runtime context
     const apiKey = runtimeContext?.get('apiKey') as string;
-    
+
     // Use the API key in your tool logic
     const response = await fetch('https://api.example.com', {
-      headers: { 'Authorization': `Bearer ${apiKey}` }
+      headers: { Authorization: `Bearer ${apiKey}` },
     });
-    
+
     return { result: await response.text() };
   },
 });
@@ -234,6 +241,7 @@ Tests are located in `getSecret.test.ts` and cover:
 - Edge cases (decoding errors, missing execute functions)
 
 Run tests with:
+
 ```bash
 yarn test src/mastra/utils/kubernetes/getSecret.test.ts
 ```
@@ -245,9 +253,9 @@ yarn test src/mastra/utils/kubernetes/getSecret.test.ts
 ```typescript
 type SecretData = {
   secretName: string;
-  data?: Record<string, string>;  // All keys (when no specific key requested)
-  key?: string;                    // Requested key name
-  value?: string;                  // Requested key value
+  data?: Record<string, string>; // All keys (when no specific key requested)
+  key?: string; // Requested key name
+  value?: string; // Requested key value
 };
 ```
 
@@ -256,8 +264,8 @@ type SecretData = {
 ```typescript
 interface SecretMiddlewareConfig {
   secretName: string;
-  key?: string;                    // Optional: specific key to retrieve
-  contextKey?: string;              // Optional: context key name (default: 'secrets')
+  key?: string; // Optional: specific key to retrieve
+  contextKey?: string; // Optional: context key name (default: 'secrets')
 }
 ```
 
@@ -266,12 +274,14 @@ interface SecretMiddlewareConfig {
 If you were previously using `getK8sSecretTool` (now deprecated), migrate to the middleware pattern:
 
 **Before:**
+
 ```typescript
 // Tool would call getK8sSecretTool internally
 const result = await agent.generate(message, { tools: [getK8sSecretTool] });
 ```
 
 **After:**
+
 ```typescript
 // Wrap your tools with middleware
 const myToolWithSecret = withK8sSecret(myTool, {
@@ -285,4 +295,3 @@ const myToolWithSecret = withK8sSecret(myTool, {
 - [Mastra Tools Documentation](https://mastra.ai/en/docs/tools-mcp/overview)
 - [Mastra Runtime Context](https://mastra.ai/en/docs/core-concepts/runtime-context)
 - [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
-

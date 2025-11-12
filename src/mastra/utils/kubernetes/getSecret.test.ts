@@ -325,6 +325,17 @@ describe('withK8sSecret', () => {
   });
 
   it('should throw error if tool does not have execute function', async () => {
+    // Mock the secret retrieval to succeed so we can test the execute check
+    const secretData = {
+      key: Buffer.from('value').toString('base64'),
+    };
+
+    mockReadNamespacedSecret.mockResolvedValueOnce({
+      body: {
+        data: secretData,
+      },
+    });
+
     const mockTool = {
       id: 'test-tool',
       description: 'Test tool',
