@@ -34,9 +34,7 @@ const tracingContext = {};
 describe('getK8sSecretTool', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset the mock but keep it as a function
     mockReadNamespacedSecret.mockReset();
-    // Ensure the mock client is always returned
     mockGetK8sClient.mockReturnValue(mockK8sClient);
     mockGetNamespace.mockReturnValue('test-namespace');
   });
@@ -136,7 +134,6 @@ describe('getK8sSecretTool', () => {
 
   describe('error handling', () => {
     it('should throw error when secret is not found', async () => {
-      // Kubernetes client throws errors with "not found" or "404" in the message
       const notFoundError = new Error('Secret not found: 404');
 
       mockReadNamespacedSecret.mockRejectedValueOnce(notFoundError);
@@ -169,8 +166,6 @@ describe('getK8sSecretTool', () => {
     });
 
     it('should handle base64 decoding errors gracefully', async () => {
-      // Note: Buffer.from() doesn't throw on invalid base64, it just produces garbage
-      // So we test with a valid base64 value that decodes correctly
       const secretData: Record<string, string> = {
         validKey: Buffer.from('valid-value').toString('base64'),
         anotherKey: Buffer.from('another-value').toString('base64'),
@@ -188,7 +183,6 @@ describe('getK8sSecretTool', () => {
         tracingContext,
       });
 
-      // Should decode all values correctly
       expect(result).toEqual({
         data: {
           anotherKey: 'another-value',
