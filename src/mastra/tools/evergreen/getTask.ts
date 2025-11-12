@@ -18,6 +18,7 @@ const GET_TASK = gql`
       buildVariant
       projectIdentifier
       requester
+      distroId
       baseTask {
         id
       }
@@ -55,6 +56,7 @@ const getTaskOutputSchema = z.object({
     buildVariant: z.string(),
     projectIdentifier: z.string().optional().nullable(),
     requester: z.string(),
+    distroId: z.string(),
     baseTask: z
       .object({
         id: z.string(),

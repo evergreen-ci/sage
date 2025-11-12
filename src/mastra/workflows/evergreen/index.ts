@@ -1,5 +1,4 @@
-import getImageByDistroWorkflow from './getImageByDistroWorkflow';
-import getImageChangesWorkflow from './getImageChangesWorkflow';
+import getImageWorkflow from './getImageWorkflow';
 import getLogFileUrlWorkflow from './getLogFileUrlWorkflow';
 import getTaskHistoryWorkflow from './getTaskHistoryWorkflow';
 import getVersionWorkflow from './getVersionWorkflow';
@@ -8,6 +7,5 @@ export {
   getTaskHistoryWorkflow,
   getVersionWorkflow,
   getLogFileUrlWorkflow,
-  getImageChangesWorkflow,
-  getImageByDistroWorkflow,
+  getImageWorkflow,
 };
