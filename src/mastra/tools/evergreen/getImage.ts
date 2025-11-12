@@ -77,17 +77,7 @@ const getImageOutputSchema = z.object({
     distros: z.array(
       z.object({
         name: z.string(),
-        arch: z
-          .enum([
-            'LINUX_64_BIT',
-            'LINUX_ARM_64_BIT',
-            'LINUX_PPC_64_BIT',
-            'LINUX_ZSERIES',
-            'OSX_64_BIT',
-            'OSX_ARM_64_BIT',
-            'WINDOWS_64_BIT',
-          ])
-          .transform(val => val as Arch),
+        arch: z.enum(Arch),
       })
     ),
     events: z.object({
@@ -99,12 +89,8 @@ const getImageOutputSchema = z.object({
           amiBefore: z.string().optional().nullable(),
           entries: z.array(
             z.object({
-              type: z
-                .enum(['FILE', 'OPERATING_SYSTEM', 'PACKAGE', 'TOOLCHAIN'])
-                .transform(val => val as ImageEventType),
-              action: z
-                .enum(['ADDED', 'DELETED', 'UPDATED'])
-                .transform(val => val as ImageEventEntryAction),
+              type: z.enum(ImageEventType),
+              action: z.enum(ImageEventEntryAction),
               name: z.string(),
               before: z.string(),
               after: z.string(),

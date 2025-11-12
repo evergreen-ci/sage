@@ -30,20 +30,8 @@ const getDistroOutputSchema = z.object({
     .object({
       name: z.string(),
       imageId: z.string(),
-      arch: z
-        .enum([
-          'LINUX_64_BIT',
-          'LINUX_ARM_64_BIT',
-          'LINUX_PPC_64_BIT',
-          'LINUX_ZSERIES',
-          'OSX_64_BIT',
-          'OSX_ARM_64_BIT',
-          'WINDOWS_64_BIT',
-        ])
-        .transform(val => val as Arch),
-      provider: z
-        .enum(['DOCKER', 'EC2_FLEET', 'EC2_ON_DEMAND', 'STATIC'])
-        .transform(val => val as Provider),
+      arch: z.enum(Arch),
+      provider: z.enum(Provider),
       disabled: z.boolean(),
     })
     .nullable(),
