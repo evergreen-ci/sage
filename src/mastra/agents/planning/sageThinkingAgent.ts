@@ -2,6 +2,7 @@ import { Agent } from '@mastra/core/agent';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Memory } from '@mastra/memory';
 import { askEvergreenAgentTool } from '@/mastra/agents/evergreenAgent';
+import { askRuntimeEnvironmentsAgentTool } from '@/mastra/agents/runtimeEnvironmentsAgent';
 import { gpt41 } from '@/mastra/models/openAI/gpt41';
 import { memoryStore } from '@/mastra/utils/memory';
 import { resolveLogFileUrlTool } from '@/mastra/workflows/evergreen/getLogFileUrlWorkflow';
@@ -38,18 +39,30 @@ export const sageThinkingAgent: Agent = new Agent({
    - Fetches data from Evergreen APIs (tasks, builds, versions, patches, logs).
    - Use for: Task details, build status, version info, patch data, log retrieval, and task history.
 
-2. **logCoreAnalyzerTool**
+2. **runtimeEnvironmentsAgent**
+   - Provides information about Evergreen runtime environment images (AMIs), packages, toolchains, and environment changes.
+   - Use for:
+     * Available runtime environment images
+     * Package versions and availability (Python, Node.js, system packages, etc.)
+     * Toolchain/compiler versions (Go, Python, Java, etc.)
+     * OS information for AMIs
+     * Comparing two AMIs to see what changed
+     * Environment change history and timelines
+     * Investigating environment-related build failures
+   - Example queries: "What packages are on ubuntu2204?", "Compare ami-old vs ami-new", "What changed in rhel8 recently?"
+
+3. **logCoreAnalyzerTool**
    - Analyzes raw log/text content provided to it.
    - Use for: Log file or text content analysis (when you possess the content).
    - Accepts: Local file path, direct URL to content, or raw text string.
    - Does NOT fetch directly from Evergreen—use \`evergreenAgent\` to retrieve logs before analyzing.
    - When providing a URL, ensure it is a direct link to the log content. Do not modify the URL.
 
-3. **questionClassifierAgent**
+4. **questionClassifierAgent**
    - Classifies user questions to determine the optimal response strategy.
    - Use for: Assessing user intent and selecting appropriate tools.
 
-4. **resolveLogFileUrlTool**
+5. **resolveLogFileUrlTool**
    - Retrieves the URL for a log file or task logs.
    - Use for: Getting the URL for a log file or task logs.
    - Accepts: LogMetadata object (containing task ID, execution number, and log type). Log type can be one of EVERGREEN_TASK_FILE, EVERGREEN_TASK_LOGS, EVERGREEN_TEST_LOGS.
@@ -80,6 +93,7 @@ export const sageThinkingAgent: Agent = new Agent({
   tools: {
     askQuestionClassifierAgentTool,
     askEvergreenAgentTool,
+    askRuntimeEnvironmentsAgentTool,
     logCoreAnalyzerTool,
     resolveLogFileUrlTool,
   },
