@@ -185,6 +185,7 @@ export type AdminSettings = {
   logPath?: Maybe<Scalars['String']['output']>;
   loggerConfig?: Maybe<LoggerConfig>;
   notify?: Maybe<NotifyConfig>;
+  oldestAllowedCLIVersion?: Maybe<Scalars['String']['output']>;
   parameterStore?: Maybe<ParameterStoreConfig>;
   perfMonitoringKanopyURL?: Maybe<Scalars['String']['output']>;
   perfMonitoringURL?: Maybe<Scalars['String']['output']>;
@@ -239,6 +240,7 @@ export type AdminSettingsInput = {
   logPath?: InputMaybe<Scalars['String']['input']>;
   loggerConfig?: InputMaybe<LoggerConfigInput>;
   notify?: InputMaybe<NotifyConfigInput>;
+  oldestAllowedCLIVersion?: InputMaybe<Scalars['String']['input']>;
   parameterStore?: InputMaybe<ParameterStoreConfigInput>;
   perfMonitoringKanopyURL?: InputMaybe<Scalars['String']['input']>;
   perfMonitoringURL?: InputMaybe<Scalars['String']['input']>;
@@ -385,6 +387,7 @@ export type AuthConfig = {
   kanopy?: Maybe<KanopyAuthConfig>;
   multi?: Maybe<MultiAuthConfig>;
   naive?: Maybe<NaiveAuthConfig>;
+  oauth?: Maybe<OAuthConfig>;
   okta?: Maybe<OktaConfig>;
   preferredType?: Maybe<PreferredAuthType>;
 };
@@ -396,6 +399,7 @@ export type AuthConfigInput = {
   kanopy?: InputMaybe<KanopyAuthConfigInput>;
   multi?: InputMaybe<MultiAuthConfigInput>;
   naive?: InputMaybe<NaiveAuthConfigInput>;
+  oauth?: InputMaybe<OAuthConfigInput>;
   okta?: InputMaybe<OktaConfigInput>;
   preferredType?: InputMaybe<PreferredAuthType>;
 };
@@ -1435,6 +1439,7 @@ export enum HostEventType {
   HostProvisioned = 'HOST_PROVISIONED',
   HostProvisionError = 'HOST_PROVISION_ERROR',
   HostProvisionFailed = 'HOST_PROVISION_FAILED',
+  HostRebooted = 'HOST_REBOOTED',
   HostRunningTaskCleared = 'HOST_RUNNING_TASK_CLEARED',
   HostRunningTaskSet = 'HOST_RUNNING_TASK_SET',
   HostScriptExecuted = 'HOST_SCRIPT_EXECUTED',
@@ -1971,11 +1976,13 @@ export type Mutation = {
   moveAnnotationIssue: Scalars['Boolean']['output'];
   overrideTaskDependencies: Task;
   promoteVarsToRepo: Scalars['Boolean']['output'];
+  quarantineTest: QuarantineTestPayload;
   removeAnnotationIssue: Scalars['Boolean']['output'];
   removeFavoriteProject: Project;
   removePublicKey: Array<PublicKey>;
   removeVolume: Scalars['Boolean']['output'];
   reprovisionToNew: Scalars['Int']['output'];
+  resetAPIKey?: Maybe<UserConfig>;
   restartAdminTasks: RestartAdminTasksPayload;
   restartJasper: Scalars['Int']['output'];
   restartTask: Task;
@@ -2127,6 +2134,10 @@ export type MutationOverrideTaskDependenciesArgs = {
 
 export type MutationPromoteVarsToRepoArgs = {
   opts: PromoteVarsToRepoInput;
+};
+
+export type MutationQuarantineTestArgs = {
+  opts: QuarantineTestInput;
 };
 
 export type MutationRemoveAnnotationIssueArgs = {
@@ -2338,6 +2349,19 @@ export type NotifyConfigInput = {
   bufferIntervalSeconds?: InputMaybe<Scalars['Int']['input']>;
   bufferTargetPerInterval?: InputMaybe<Scalars['Int']['input']>;
   ses?: InputMaybe<SesConfigInput>;
+};
+
+export type OAuthConfig = {
+  __typename?: 'OAuthConfig';
+  clientId: Scalars['String']['output'];
+  connectorId: Scalars['String']['output'];
+  issuer: Scalars['String']['output'];
+};
+
+export type OAuthConfigInput = {
+  clientId: Scalars['String']['input'];
+  connectorId: Scalars['String']['input'];
+  issuer: Scalars['String']['input'];
 };
 
 export type OsInfo = {
@@ -2812,6 +2836,7 @@ export type Project = {
   stepbackBisect?: Maybe<Scalars['Boolean']['output']>;
   stepbackDisabled?: Maybe<Scalars['Boolean']['output']>;
   taskAnnotationSettings: TaskAnnotationSettings;
+  testSelection?: Maybe<TestSelectionSettings>;
   tracksPushEvents?: Maybe<Scalars['Boolean']['output']>;
   triggers?: Maybe<Array<TriggerAlias>>;
   versionControlEnabled?: Maybe<Scalars['Boolean']['output']>;
@@ -2963,6 +2988,7 @@ export type ProjectInput = {
   stepbackBisect?: InputMaybe<Scalars['Boolean']['input']>;
   stepbackDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   taskAnnotationSettings?: InputMaybe<TaskAnnotationSettingsInput>;
+  testSelection?: InputMaybe<TestSelectionSettingsInput>;
   tracksPushEvents?: InputMaybe<Scalars['Boolean']['input']>;
   triggers?: InputMaybe<Array<TriggerAliasInput>>;
   versionControlEnabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -3024,6 +3050,7 @@ export enum ProjectSettingsSection {
   PatchAliases = 'PATCH_ALIASES',
   PeriodicBuilds = 'PERIODIC_BUILDS',
   Plugins = 'PLUGINS',
+  TestSelection = 'TEST_SELECTION',
   Triggers = 'TRIGGERS',
   Variables = 'VARIABLES',
   ViewsAndFilters = 'VIEWS_AND_FILTERS',
@@ -3080,6 +3107,16 @@ export type PublicKey = {
 export type PublicKeyInput = {
   key: Scalars['String']['input'];
   name: Scalars['String']['input'];
+};
+
+export type QuarantineTestInput = {
+  taskId: Scalars['String']['input'];
+  testName: Scalars['String']['input'];
+};
+
+export type QuarantineTestPayload = {
+  __typename?: 'QuarantineTestPayload';
+  success: Scalars['Boolean']['output'];
 };
 
 export type Query = {
@@ -3367,6 +3404,7 @@ export type RepoRef = {
   stepbackBisect?: Maybe<Scalars['Boolean']['output']>;
   stepbackDisabled: Scalars['Boolean']['output'];
   taskAnnotationSettings: TaskAnnotationSettings;
+  testSelection?: Maybe<RepoTestSelectionSettings>;
   tracksPushEvents: Scalars['Boolean']['output'];
   triggers: Array<TriggerAlias>;
   versionControlEnabled: Scalars['Boolean']['output'];
@@ -3414,6 +3452,7 @@ export type RepoRefInput = {
   stepbackBisect?: InputMaybe<Scalars['Boolean']['input']>;
   stepbackDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   taskAnnotationSettings?: InputMaybe<TaskAnnotationSettingsInput>;
+  testSelection?: InputMaybe<TestSelectionSettingsInput>;
   tracksPushEvents?: InputMaybe<Scalars['Boolean']['input']>;
   triggers?: InputMaybe<Array<TriggerAliasInput>>;
   versionControlEnabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -3444,6 +3483,12 @@ export type RepoSettingsInput = {
   repoId: Scalars['String']['input'];
   subscriptions?: InputMaybe<Array<SubscriptionInput>>;
   vars?: InputMaybe<ProjectVarsInput>;
+};
+
+export type RepoTestSelectionSettings = {
+  __typename?: 'RepoTestSelectionSettings';
+  allowed: Scalars['Boolean']['output'];
+  defaultEnabled: Scalars['Boolean']['output'];
 };
 
 export type RepoWorkstationConfig = {
@@ -3877,6 +3922,7 @@ export type SpawnHostInput = {
   sleepSchedule?: InputMaybe<SleepScheduleInput>;
   spawnHostsStartedByTask?: InputMaybe<Scalars['Boolean']['input']>;
   taskId?: InputMaybe<Scalars['String']['input']>;
+  useOAuth?: InputMaybe<Scalars['Boolean']['input']>;
   useProjectSetupScript?: InputMaybe<Scalars['Boolean']['input']>;
   useTaskConfig?: InputMaybe<Scalars['Boolean']['input']>;
   userDataScript?: InputMaybe<Scalars['String']['input']>;
@@ -3884,6 +3930,7 @@ export type SpawnHostInput = {
 };
 
 export enum SpawnHostStatusActions {
+  Reboot = 'REBOOT',
   Start = 'START',
   Stop = 'STOP',
   Terminate = 'TERMINATE',
@@ -4088,6 +4135,7 @@ export type Task = {
   taskGroupMaxHosts?: Maybe<Scalars['Int']['output']>;
   taskLogs: TaskLogs;
   taskOwnerTeam?: Maybe<TaskOwnerTeam>;
+  testSelectionEnabled: Scalars['Boolean']['output'];
   tests: TaskTestResult;
   timeTaken?: Maybe<Scalars['Duration']['output']>;
   totalTestCount: Scalars['Int']['output'];
@@ -4435,6 +4483,17 @@ export type TestSelectionConfigInput = {
   url: Scalars['String']['input'];
 };
 
+export type TestSelectionSettings = {
+  __typename?: 'TestSelectionSettings';
+  allowed?: Maybe<Scalars['Boolean']['output']>;
+  defaultEnabled?: Maybe<Scalars['Boolean']['output']>;
+};
+
+export type TestSelectionSettingsInput = {
+  allowed?: InputMaybe<Scalars['Boolean']['input']>;
+  defaultEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
 export enum TestSortCategory {
   BaseStatus = 'BASE_STATUS',
   Duration = 'DURATION',
@@ -4655,6 +4714,9 @@ export type UserConfig = {
   __typename?: 'UserConfig';
   api_key: Scalars['String']['output'];
   api_server_host: Scalars['String']['output'];
+  oauth_client_id: Scalars['String']['output'];
+  oauth_connector_id: Scalars['String']['output'];
+  oauth_issuer: Scalars['String']['output'];
   ui_server_host: Scalars['String']['output'];
   user: Scalars['String']['output'];
 };
@@ -4953,6 +5015,83 @@ export type WorkstationSetupCommandInput = {
   directory?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type DistroQueryVariables = Exact<{
+  distroId: Scalars['String']['input'];
+}>;
+
+export type DistroQuery = {
+  __typename?: 'Query';
+  distro?: {
+    __typename?: 'Distro';
+    name: string;
+    imageId: string;
+    arch: Arch;
+    provider: Provider;
+    disabled: boolean;
+  } | null;
+};
+
+export type ImageQueryVariables = Exact<{
+  imageId: Scalars['String']['input'];
+}>;
+
+export type ImageQuery = {
+  __typename?: 'Query';
+  image?: {
+    __typename?: 'Image';
+    id: string;
+    ami: string;
+    lastDeployed: Date;
+    distros: Array<{ __typename?: 'Distro'; name: string; arch: Arch }>;
+    events: {
+      __typename?: 'ImageEventsPayload';
+      count: number;
+      eventLogEntries: Array<{
+        __typename?: 'ImageEvent';
+        timestamp: Date;
+        amiAfter: string;
+        amiBefore?: string | null;
+        entries: Array<{
+          __typename?: 'ImageEventEntry';
+          type: ImageEventType;
+          action: ImageEventEntryAction;
+          name: string;
+          before: string;
+          after: string;
+        }>;
+      }>;
+    };
+    packages: {
+      __typename?: 'ImagePackagesPayload';
+      filteredCount: number;
+      totalCount: number;
+      data: Array<{
+        __typename?: 'Package';
+        name: string;
+        manager: string;
+        version: string;
+      }>;
+    };
+    toolchains: {
+      __typename?: 'ImageToolchainsPayload';
+      filteredCount: number;
+      totalCount: number;
+      data: Array<{
+        __typename?: 'Toolchain';
+        name: string;
+        path: string;
+        version: string;
+      }>;
+    };
+    operatingSystem: {
+      __typename?: 'ImageOperatingSystemPayload';
+      filteredCount: number;
+      totalCount: number;
+      data: Array<{ __typename?: 'OSInfo'; name: string; version: string }>;
+    };
+  } | null;
+};
+
 export type GetTaskQueryVariables = Exact<{
   taskId: Scalars['String']['input'];
   execution?: InputMaybe<Scalars['Int']['input']>;
@@ -5139,3 +5278,7 @@ export type VersionQuery = {
     } | null;
   };
 };
+
+export type ImagesQueryVariables = Exact<{ [key: string]: never }>;
+
+export type ImagesQuery = { __typename?: 'Query'; images: Array<string> };

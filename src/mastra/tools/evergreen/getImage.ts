@@ -1,6 +1,13 @@
 import { gql } from 'graphql-tag';
 import { z } from 'zod';
 import { createGraphQLTool } from '@/mastra/utils/graphql/createGraphQLTool';
+import {
+  Arch,
+  ImageEventEntryAction,
+  ImageEventType,
+  ImageQuery,
+  ImageQueryVariables,
+} from '../../../gql/generated/types';
 import evergreenClient from './graphql/evergreenClient';
 
 const GET_IMAGE = gql`
@@ -70,7 +77,17 @@ const getImageOutputSchema = z.object({
     distros: z.array(
       z.object({
         name: z.string(),
-        arch: z.string(),
+        arch: z
+          .enum([
+            'LINUX_64_BIT',
+            'LINUX_ARM_64_BIT',
+            'LINUX_PPC_64_BIT',
+            'LINUX_ZSERIES',
+            'OSX_64_BIT',
+            'OSX_ARM_64_BIT',
+            'WINDOWS_64_BIT',
+          ])
+          .transform(val => val as Arch),
       })
     ),
     events: z.object({
@@ -82,8 +99,12 @@ const getImageOutputSchema = z.object({
           amiBefore: z.string().optional().nullable(),
           entries: z.array(
             z.object({
-              type: z.string(),
-              action: z.string(),
+              type: z
+                .enum(['FILE', 'OPERATING_SYSTEM', 'PACKAGE', 'TOOLCHAIN'])
+                .transform(val => val as ImageEventType),
+              action: z
+                .enum(['ADDED', 'DELETED', 'UPDATED'])
+                .transform(val => val as ImageEventEntryAction),
               name: z.string(),
               before: z.string(),
               after: z.string(),
@@ -126,15 +147,6 @@ const getImageOutputSchema = z.object({
     }),
   }),
 });
-
-// Define types manually since they may not be generated yet
-type ImageQuery = {
-  image: z.infer<typeof getImageOutputSchema>['image'] | null;
-};
-
-type ImageQueryVariables = {
-  imageId: string;
-};
 
 const getImageTool = createGraphQLTool<ImageQuery, ImageQueryVariables>({
   id: 'getImage',
