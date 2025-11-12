@@ -28,7 +28,12 @@ const extractImageIdStep = createStep({
   },
 });
 
-const getImageStep = createStep(getImageTool);
+const getImageStep = createStep({
+  ...getImageTool,
+  inputSchema: z.object({
+    imageId: z.string(),
+  }),
+});
 
 const getImageByDistroWorkflow = createWorkflow({
   id: 'image-by-distro-workflow',
