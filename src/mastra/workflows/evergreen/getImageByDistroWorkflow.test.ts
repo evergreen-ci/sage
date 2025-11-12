@@ -96,7 +96,7 @@ describe('getImageByDistroWorkflow', () => {
     expectSuccess(wr);
     expect(wr.result).toBeDefined();
     expect(wr.result.image).toBeDefined();
-    const { image } = wr.result;
+    const image = wr.result.image!;
     expect(image.id).toBe('image-123');
     expect(image.ami).toBe('ami-abc123');
     expect(image.packages.data).toHaveLength(2);
@@ -152,7 +152,7 @@ describe('getImageByDistroWorkflow', () => {
 
     expectSuccess(wr);
     expect(wr.result.image).toBeDefined();
-    const { image } = wr.result;
+    const image = wr.result.image!;
     expect(image.id).toBe('image-new');
     expect(image.events.eventLogEntries).toHaveLength(0);
   });
