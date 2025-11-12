@@ -5,7 +5,7 @@ import { getImageTool } from '@/mastra/tools/evergreen';
 const getImageStep = createStep(getImageTool);
 
 const getImageChangesStep = createStep({
-  id: 'get-image-changes',
+  id: 'getImageChanges',
   description: 'Extract recent changes from image data',
   inputSchema: getImageStep.outputSchema,
   outputSchema: z.object({
@@ -51,7 +51,7 @@ const getImageChangesStep = createStep({
 });
 
 const getImageChangesWorkflow = createWorkflow({
-  id: 'image-changes-workflow',
+  id: 'imageChanges',
   description:
     'Workflow to retrieve image/AMI information with focus on recent changes from Evergreen',
   inputSchema: getImageStep.inputSchema,

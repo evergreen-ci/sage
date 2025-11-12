@@ -5,7 +5,7 @@ import { getDistroTool, getImageTool } from '@/mastra/tools/evergreen';
 const getDistroStep = createStep(getDistroTool);
 
 const extractImageIdStep = createStep({
-  id: 'extract-image-id',
+  id: 'extractImageId',
   description: 'Extract imageId from distro data',
   inputSchema: getDistroStep.outputSchema,
   outputSchema: z.object({
@@ -36,7 +36,7 @@ const getImageStep = createStep({
 });
 
 const getImageByDistroWorkflow = createWorkflow({
-  id: 'image-by-distro-workflow',
+  id: 'imageByDistro',
   description:
     'Workflow to retrieve image/AMI information from Evergreen starting from a distro ID. Gets the distro to find the associated imageId, then retrieves full image information including packages, toolchains, changes, and operating system details.',
   inputSchema: getDistroStep.inputSchema,
