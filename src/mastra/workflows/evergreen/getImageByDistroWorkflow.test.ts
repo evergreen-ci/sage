@@ -96,11 +96,12 @@ describe('getImageByDistroWorkflow', () => {
     expectSuccess(wr);
     expect(wr.result).toBeDefined();
     expect(wr.result.image).toBeDefined();
-    expect(wr.result.image.id).toBe('image-123');
-    expect(wr.result.image.ami).toBe('ami-abc123');
-    expect(wr.result.image.packages.data).toHaveLength(2);
-    expect(wr.result.image.toolchains.data).toHaveLength(1);
-    expect(wr.result.image.events.eventLogEntries).toHaveLength(1);
+    const { image } = wr.result;
+    expect(image.id).toBe('image-123');
+    expect(image.ami).toBe('ami-abc123');
+    expect(image.packages.data).toHaveLength(2);
+    expect(image.toolchains.data).toHaveLength(1);
+    expect(image.events.eventLogEntries).toHaveLength(1);
     expect(mockGetDistroTool).toHaveBeenCalled();
     expect(mockGetImageTool).toHaveBeenCalled();
   });
@@ -150,8 +151,10 @@ describe('getImageByDistroWorkflow', () => {
     const wr = await startRun('ubuntu2204-small');
 
     expectSuccess(wr);
-    expect(wr.result.image.id).toBe('image-new');
-    expect(wr.result.image.events.eventLogEntries).toHaveLength(0);
+    expect(wr.result.image).toBeDefined();
+    const { image } = wr.result;
+    expect(image.id).toBe('image-new');
+    expect(image.events.eventLogEntries).toHaveLength(0);
   });
 
   it('failed: distro data is missing', async () => {
