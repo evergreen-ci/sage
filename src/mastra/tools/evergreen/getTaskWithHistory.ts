@@ -69,15 +69,9 @@ const getTaskWithHistoryTool = createTool({
       requester,
     } = task;
 
-    if (
-      !taskId ||
-      !displayName ||
-      !buildVariant ||
-      !projectIdentifier ||
-      !requester
-    ) {
+    if (!displayName || !buildVariant || !projectIdentifier || !requester) {
       throw new Error(
-        `Cannot fetch history: missing required fields (id: ${taskId}, displayName: ${displayName}, buildVariant: ${buildVariant}, projectIdentifier: ${projectIdentifier}, requester: ${requester})`
+        `Cannot fetch history: missing required fields (displayName: ${displayName}, buildVariant: ${buildVariant}, projectIdentifier: ${projectIdentifier}, requester: ${requester})`
       );
     }
 
@@ -101,8 +95,8 @@ const getTaskWithHistoryTool = createTool({
       context: {
         options: {
           taskName: displayName,
-          buildVariant: buildVariant,
-          projectIdentifier: projectIdentifier,
+          buildVariant,
+          projectIdentifier,
           cursorParams,
           limit,
         },
