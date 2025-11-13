@@ -17,7 +17,7 @@ const getDistroId = createStep({
   description: 'Get distro either from taskId or use provided distroId',
   inputSchema: workflowInputSchema,
   outputSchema: getDistroTool.inputSchema,
-  execute: async ({ inputData }) => {
+  execute: async ({ inputData, runtimeContext, tracingContext }) => {
     const { distroId, execution, taskId } = inputData;
 
     if (!taskId && !distroId) {
@@ -34,9 +34,9 @@ const getDistroId = createStep({
     // If taskId is provided, get the task and extract distroId
     if (taskId) {
       const taskResult = await getTaskTool.execute({
-        context: { taskId, execution },
-        runtimeContext: {} as any,
-        tracingContext: {} as any,
+        context: { taskId: taskId, execution: execution },
+        runtimeContext: runtimeContext,
+        tracingContext: tracingContext,
       });
 
       const { task } = taskResult;
