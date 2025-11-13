@@ -14,7 +14,7 @@ enum Requester {
   Trigger = 'trigger_request',
 }
 
-const mainlineRequesters = [
+const waterfallRequesters = [
   Requester.AdHoc,
   Requester.GitTag,
   Requester.Gitter,
@@ -22,12 +22,12 @@ const mainlineRequesters = [
 ];
 
 /**
- * Check if a task or version requester is a mainline commit requester
+ * Check if a task or version requester is a waterfall commit requester
  * @param requester - The requester to check
- * @returns true if the requester is a mainline commit requester, false otherwise
+ * @returns true if the requester is a waterfall commit requester, false otherwise
  */
-const isMainlineRequester = (requester: Requester) =>
-  mainlineRequesters.includes(requester);
+const isWaterfallRequester = (requester: Requester) =>
+  waterfallRequesters.includes(requester);
 
 const getTaskWithHistoryInputSchema = z.object({
   taskId: z.string(),
@@ -77,9 +77,9 @@ const getTaskWithHistoryTool = createTool({
 
     // Step 3: Calculate cursor ID based on requester type
     let cursorId = taskId;
-    if (!isMainlineRequester(requester as Requester)) {
+    if (!isWaterfallRequester(requester as Requester)) {
       if (!baseTask) {
-        throw new Error('Base task not found for non-mainline requester');
+        throw new Error('Base task not found for non-waterfall requester');
       }
       cursorId = baseTask.id;
     }
