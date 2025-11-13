@@ -109,7 +109,7 @@ export const myAgent: Agent = new Agent({
   model: gpt41,
   memory: myAgentMemory,
   workflows: {
-    myWorkflow: myWorkflow as Workflow<any, any, any, any, any, any>,
+    myWorkflow: myWorkflow,
   },
   tools: {
     myTool,
