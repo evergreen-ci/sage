@@ -14,9 +14,9 @@ When opening PRs, follow these conventions:
 
 ### PR Title Format
 
-The PR title should follow the format: `[JIRA-TICKET] Summary`
+The PR title should follow the format: `JIRA-TICKET: Summary`
 
-Example: `[DEVPROD-23895] Add user authentication workflow`
+Example: `DEVPROD-23895: Add user authentication workflow`
 
 ### PR Description
 
