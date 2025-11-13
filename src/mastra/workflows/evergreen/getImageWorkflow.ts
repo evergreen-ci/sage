@@ -6,18 +6,17 @@ import {
   getImageTool,
 } from '@/mastra/tools/evergreen';
 
-const routeToDistro = createStep({
-  id: 'routeToDistro',
-  description:
-    'Route to get distro - either from taskId or use provided distroId',
-  inputSchema: z.object({
-    taskId: z.string().optional(),
-    execution: z.number().optional(),
-    distroId: z.string().optional(),
-  }),
-  outputSchema: z.object({
-    distroId: z.string(),
-  }),
+const workflowInputSchema = z.object({
+  taskId: z.string().optional(),
+  execution: z.number().optional(),
+  distroId: z.string().optional(),
+});
+
+const getDistroId = createStep({
+  id: 'get-distro-id',
+  description: 'Get distro either from taskId or use provided distroId',
+  inputSchema: workflowInputSchema,
+  outputSchema: getDistroTool.inputSchema,
   execute: async ({ inputData }) => {
     const { distroId, execution, taskId } = inputData;
 
@@ -62,20 +61,14 @@ const routeToDistro = createStep({
   },
 });
 
-const getDistro = createStep({
-  ...getDistroTool,
-  inputSchema: z.object({
-    distroId: z.string(),
-  }),
-});
+// kim: TODO: figure out if this still works, Parsley AI now errors because it doesn't get any distro data for some reason.
+const getDistro = createStep(getDistroTool);
 
 const extractImageId = createStep({
-  id: 'extractImageId',
+  id: 'extract-image-id',
   description: 'Extract imageId from distro data',
-  inputSchema: getDistroTool.outputSchema,
-  outputSchema: z.object({
-    imageId: z.string(),
-  }),
+  inputSchema: getDistro.outputSchema,
+  outputSchema: getImageTool.inputSchema,
   execute: async ({ inputData }) => {
     const { distro } = inputData;
 
@@ -93,27 +86,16 @@ const extractImageId = createStep({
   },
 });
 
-const getImage = createStep({
-  ...getImageTool,
-  inputSchema: z.object({
-    imageId: z.string(),
-  }),
-});
-
-const workflowInputSchema = z.object({
-  taskId: z.string().optional(),
-  execution: z.number().optional(),
-  distroId: z.string().optional(),
-});
+const getImage = createStep(getImageTool);
 
 const getImageWorkflow = createWorkflow({
-  id: 'getImage',
+  id: 'get-image-workflow',
   description:
     'Unified workflow to retrieve image/AMI information from Evergreen. Can start from either a taskId or distroId. Gets the distro to find the associated imageId, then retrieves full image information including packages, toolchains, changes, and operating system details.',
   inputSchema: workflowInputSchema,
   outputSchema: getImageTool.outputSchema,
 })
-  .then(routeToDistro)
+  .then(getDistroId)
   .then(getDistro)
   .then(extractImageId)
   .then(getImage)
