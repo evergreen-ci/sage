@@ -40,6 +40,10 @@ const GET_TASK_HISTORY = gql`
           author
           message
         }
+        cost {
+          onDemandCost
+          adjustedCost
+        }
       }
     }
   }
@@ -100,6 +104,13 @@ const getTaskHistoryOutputSchema = z.object({
             description: z.string().optional(),
             failingCommand: z.string().optional().nullable(),
             status: z.string(),
+          })
+          .optional()
+          .nullable(),
+        cost: z
+          .object({
+            onDemandCost: z.number(),
+            adjustedCost: z.number(),
           })
           .optional()
           .nullable(),
