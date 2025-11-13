@@ -5,9 +5,9 @@ import { mastra } from '@/mastra';
 
 const app = setupTestAppServer();
 
-const summarizeThreadEndpoint = '/memento/summarize-thread';
+const summarizeThreadEndpoint = '/completions/memento/summarize-thread';
 
-describe('POST /memento/summarize-thread', () => {
+describe('POST /completions/memento/summarize-thread', () => {
   describe('Input validation', () => {
     it('should return 400 if slackThreadCapture is missing', async () => {
       const response = await request(app)

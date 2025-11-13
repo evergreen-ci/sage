@@ -2,7 +2,7 @@ import { Agent } from '@mastra/core/agent';
 import { z } from 'zod';
 import { gpt41 } from '@/mastra/models/openAI/gpt41';
 
-const outputSchema = z.object({
+export const slackThreadSummaryOutputSchema = z.object({
   reporter: z
     .string()
     .describe(
@@ -95,10 +95,10 @@ Given a thread about documentation discrepancy:
 Return **only** a JSON object matching the output schema. Do not include any additional text or explanation.
   `,
   defaultGenerateOptions: {
-    output: outputSchema,
+    output: slackThreadSummaryOutputSchema,
     temperature: 0.3,
   },
   model: gpt41,
 });
 
-export type SlackThreadSummary = z.infer<typeof outputSchema>;
+export type SlackThreadSummary = z.infer<typeof slackThreadSummaryOutputSchema>;

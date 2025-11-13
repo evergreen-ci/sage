@@ -13,13 +13,9 @@ Eval(
     data: loadTestCases<TestCase>('slack_thread_summarizer_agent_dataset'),
     task: tracedAgentEval<TestInput, TestResult>({
       agentName: SLACK_THREAD_SUMMARIZER_AGENT_NAME,
-      transformResponse: response => {
-        console.log('response fields:', Object.keys(response));
-        console.log('response:', JSON.stringify(response, null, 2));
-        return {
-          text: response.text,
-        };
-      },
+      transformResponse: response => ({
+        text: response.text,
+      }),
     }),
     scores: [
       ({ expected, input, output }) =>

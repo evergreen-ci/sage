@@ -2,12 +2,11 @@ import { trace } from '@opentelemetry/api';
 import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from '@/mastra';
+import { SLACK_THREAD_SUMMARIZER_AGENT_NAME } from '@/mastra/agents/constants';
 import {
-  SLACK_THREAD_SUMMARIZER_AGENT_NAME,
-  USER_ID,
-} from '@/mastra/agents/constants';
-import { SlackThreadSummary } from '@/mastra/agents/slackThreadSummarizerAgent';
-import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
+  SlackThreadSummary,
+  slackThreadSummaryOutputSchema,
+} from '@/mastra/agents/slackThreadSummarizerAgent';
 import { runWithRequestContext } from '@/mastra/utils/requestContext';
 import { logger } from '@/utils/logger';
 
@@ -30,13 +29,6 @@ const summarizeThreadRoute = async (
 ) => {
   const currentSpan = trace.getActiveSpan();
   const spanContext = currentSpan?.spanContext();
-  const runtimeContext = createParsleyRuntimeContext();
-  runtimeContext.set(USER_ID, res.locals.userId);
-
-  logger.debug('User context set for Slack thread summarization request', {
-    userId: res.locals.userId,
-    requestId: res.locals.requestId,
-  });
 
   // Validate input
   const {
@@ -73,7 +65,9 @@ const summarizeThreadRoute = async (
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
         await agent.generate(inputData.slackThreadCapture, {
-          runtimeContext,
+          structuredOutput: {
+            schema: slackThreadSummaryOutputSchema,
+          },
           tracingOptions: {
             metadata: {
               userId: res.locals.userId,
@@ -89,8 +83,8 @@ const summarizeThreadRoute = async (
         })
     );
 
-    // Parse the response
-    const summaryData = JSON.parse(result.text) as SlackThreadSummary;
+    // Get the structured output
+    const summaryData = result.object;
 
     logger.info('Successfully generated Slack thread summary', {
       requestId: res.locals.requestId,
