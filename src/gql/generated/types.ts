@@ -5109,6 +5109,7 @@ export type GetTaskQuery = {
     buildVariant: string;
     projectIdentifier?: string | null;
     requester: string;
+    distroId: string;
     baseTask?: { __typename?: 'Task'; id: string } | null;
     versionMetadata: {
       __typename?: 'Version';
