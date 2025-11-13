@@ -14,16 +14,21 @@ const workflowInputSchema = z.object({
 
 const getDistroId = createStep({
   id: 'get-distro-id',
-  description: 'Get distro either from taskId or use provided distroId',
+  description:
+    'Get distro either from taskId (explicit or from runtimeContext) or use provided distroId',
   inputSchema: workflowInputSchema,
   outputSchema: getDistroTool.inputSchema,
   execute: async ({ inputData, runtimeContext, tracingContext }) => {
     const { distroId, execution, taskId } = inputData;
 
-    if (!taskId && !distroId) {
-      throw new Error('Either taskId or distroId must be provided');
-    }
+    // Get taskId from runtimeContext if not provided explicitly
+    const logMetadata = runtimeContext.get('logMetadata') as
+      | { task_id?: string; execution?: number }
+      | undefined;
+    const resolvedTaskId = taskId || logMetadata?.task_id;
+    const resolvedExecution = execution ?? logMetadata?.execution;
 
+    // Priority: distroId > taskId (explicit or from runtimeContext)
     // If distroId is provided, use it directly
     if (distroId) {
       return {
@@ -31,10 +36,13 @@ const getDistroId = createStep({
       };
     }
 
-    // If taskId is provided, get the task and extract distroId
-    if (taskId) {
+    // If taskId is available (explicit or from runtimeContext), get the task and extract distroId
+    if (resolvedTaskId) {
       const taskResult = await getTaskTool.execute({
-        context: { taskId: taskId, execution: execution },
+        context: {
+          taskId: resolvedTaskId,
+          execution: resolvedExecution,
+        },
         runtimeContext: runtimeContext,
         tracingContext: tracingContext,
       });
@@ -57,7 +65,9 @@ const getDistroId = createStep({
       };
     }
 
-    throw new Error('Unexpected: neither taskId nor distroId provided');
+    throw new Error(
+      'Either taskId (explicit or from runtimeContext.logMetadata.task_id) or distroId must be provided'
+    );
   },
 });
 
