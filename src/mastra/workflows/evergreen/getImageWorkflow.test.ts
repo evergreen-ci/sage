@@ -23,9 +23,12 @@ vi.mock('../../tools/evergreen', () => ({
   },
 }));
 
-const startRun = async (inputData: any) => {
+const startRun = async (inputData: any, logMetadata?: any) => {
   const runtimeContext = new RuntimeContext();
   runtimeContext.set(USER_ID, 'test_user');
+  if (logMetadata) {
+    runtimeContext.set('logMetadata', logMetadata);
+  }
   const run = await getImageWorkflow.createRunAsync({});
   const wr = await run.start({ inputData, runtimeContext });
   return wr;
@@ -193,9 +196,312 @@ describe('getImageWorkflow', () => {
     });
   });
 
+  describe('with runtimeContext logMetadata', () => {
+    it('success: returns full image data from runtimeContext.task_id', async () => {
+      const mockTaskData = {
+        task: {
+          id: 'task-from-context',
+          displayName: 'test-task',
+          displayStatus: 'success',
+          execution: 1,
+          patchNumber: 1,
+          buildVariant: 'linux',
+          projectIdentifier: 'project-1',
+          requester: 'user',
+          distroId: 'ubuntu2204-small',
+          baseTask: null,
+          versionMetadata: {
+            id: 'version-1',
+            isPatch: true,
+            message: 'test',
+            projectIdentifier: 'project-1',
+            revision: 'abc123',
+            projectMetadata: null,
+          },
+          details: null,
+        },
+      };
+
+      const mockDistroData = {
+        distro: {
+          name: 'ubuntu2204-small',
+          imageId: 'image-123',
+          arch: 'linux_amd64',
+          provider: 'ec2',
+          disabled: false,
+        },
+      };
+
+      const mockImageData = {
+        image: {
+          id: 'image-123',
+          ami: 'ami-abc123',
+          lastDeployed: new Date('2024-01-15T10:00:00Z'),
+          distros: [{ name: 'ubuntu2204-small', arch: 'linux_amd64' }],
+          events: {
+            count: 1,
+            eventLogEntries: [],
+          },
+          packages: {
+            data: [],
+            filteredCount: 0,
+            totalCount: 0,
+          },
+          toolchains: {
+            data: [],
+            filteredCount: 0,
+            totalCount: 0,
+          },
+          operatingSystem: {
+            data: [],
+            filteredCount: 0,
+            totalCount: 0,
+          },
+        },
+      };
+
+      mockGetTaskTool.mockResolvedValueOnce(mockTaskData);
+      mockGetDistroTool.mockResolvedValueOnce(mockDistroData);
+      mockGetImageTool.mockResolvedValueOnce(mockImageData);
+
+      const wr = await startRun(
+        {},
+        { task_id: 'task-from-context', execution: 1 }
+      );
+
+      expectSuccess(wr);
+      expect(wr.result).toBeDefined();
+      expect(wr.result.image).toBeDefined();
+      expect(mockGetTaskTool).toHaveBeenCalled();
+      const callArgs = mockGetTaskTool.mock.calls[0]![0];
+      expect(callArgs.context.taskId).toBe('task-from-context');
+      expect(callArgs.context.execution).toBe(1);
+      expect(mockGetDistroTool).toHaveBeenCalled();
+      expect(mockGetImageTool).toHaveBeenCalled();
+    });
+
+    it('success: uses execution from runtimeContext when not provided', async () => {
+      const mockTaskData = {
+        task: {
+          id: 'task-from-context',
+          displayName: 'test-task',
+          displayStatus: 'success',
+          execution: 2,
+          patchNumber: 1,
+          buildVariant: 'linux',
+          projectIdentifier: 'project-1',
+          requester: 'user',
+          distroId: 'ubuntu2204-small',
+          baseTask: null,
+          versionMetadata: {
+            id: 'version-1',
+            isPatch: true,
+            message: 'test',
+            projectIdentifier: 'project-1',
+            revision: 'abc123',
+            projectMetadata: null,
+          },
+          details: null,
+        },
+      };
+
+      const mockDistroData = {
+        distro: {
+          name: 'ubuntu2204-small',
+          imageId: 'image-123',
+          arch: 'linux_amd64',
+          provider: 'ec2',
+          disabled: false,
+        },
+      };
+
+      const mockImageData = {
+        image: {
+          id: 'image-123',
+          ami: 'ami-abc123',
+          lastDeployed: new Date('2024-01-15T10:00:00Z'),
+          distros: [{ name: 'ubuntu2204-small', arch: 'linux_amd64' }],
+          events: {
+            count: 1,
+            eventLogEntries: [],
+          },
+          packages: {
+            data: [],
+            filteredCount: 0,
+            totalCount: 0,
+          },
+          toolchains: {
+            data: [],
+            filteredCount: 0,
+            totalCount: 0,
+          },
+          operatingSystem: {
+            data: [],
+            filteredCount: 0,
+            totalCount: 0,
+          },
+        },
+      };
+
+      mockGetTaskTool.mockResolvedValueOnce(mockTaskData);
+      mockGetDistroTool.mockResolvedValueOnce(mockDistroData);
+      mockGetImageTool.mockResolvedValueOnce(mockImageData);
+
+      const wr = await startRun(
+        {},
+        { task_id: 'task-from-context', execution: 2 }
+      );
+
+      expectSuccess(wr);
+      expect(mockGetTaskTool).toHaveBeenCalled();
+      const callArgs = mockGetTaskTool.mock.calls[0]![0];
+      expect(callArgs.context.taskId).toBe('task-from-context');
+      expect(callArgs.context.execution).toBe(2);
+    });
+
+    it('success: explicit taskId takes priority over runtimeContext', async () => {
+      const mockTaskData = {
+        task: {
+          id: 'explicit-task',
+          displayName: 'test-task',
+          displayStatus: 'success',
+          execution: 0,
+          patchNumber: 1,
+          buildVariant: 'linux',
+          projectIdentifier: 'project-1',
+          requester: 'user',
+          distroId: 'ubuntu2204-small',
+          baseTask: null,
+          versionMetadata: {
+            id: 'version-1',
+            isPatch: true,
+            message: 'test',
+            projectIdentifier: 'project-1',
+            revision: 'abc123',
+            projectMetadata: null,
+          },
+          details: null,
+        },
+      };
+
+      const mockDistroData = {
+        distro: {
+          name: 'ubuntu2204-small',
+          imageId: 'image-123',
+          arch: 'linux_amd64',
+          provider: 'ec2',
+          disabled: false,
+        },
+      };
+
+      const mockImageData = {
+        image: {
+          id: 'image-123',
+          ami: 'ami-abc123',
+          lastDeployed: new Date('2024-01-15T10:00:00Z'),
+          distros: [{ name: 'ubuntu2204-small', arch: 'linux_amd64' }],
+          events: {
+            count: 1,
+            eventLogEntries: [],
+          },
+          packages: {
+            data: [],
+            filteredCount: 0,
+            totalCount: 0,
+          },
+          toolchains: {
+            data: [],
+            filteredCount: 0,
+            totalCount: 0,
+          },
+          operatingSystem: {
+            data: [],
+            filteredCount: 0,
+            totalCount: 0,
+          },
+        },
+      };
+
+      mockGetTaskTool.mockResolvedValueOnce(mockTaskData);
+      mockGetDistroTool.mockResolvedValueOnce(mockDistroData);
+      mockGetImageTool.mockResolvedValueOnce(mockImageData);
+
+      const wr = await startRun(
+        { taskId: 'explicit-task' },
+        { task_id: 'runtime-context-task', execution: 1 }
+      );
+
+      expectSuccess(wr);
+      expect(mockGetTaskTool).toHaveBeenCalled();
+      const callArgs = mockGetTaskTool.mock.calls[0]![0];
+      expect(callArgs.context.taskId).toBe('explicit-task');
+      // execution should come from runtimeContext when not explicitly provided
+      expect(callArgs.context.execution).toBe(1);
+    });
+
+    it('success: explicit distroId takes highest priority', async () => {
+      const mockDistroData = {
+        distro: {
+          name: 'ubuntu2204-small',
+          imageId: 'image-123',
+          arch: 'linux_amd64',
+          provider: 'ec2',
+          disabled: false,
+        },
+      };
+
+      const mockImageData = {
+        image: {
+          id: 'image-123',
+          ami: 'ami-abc123',
+          lastDeployed: new Date('2024-01-15T10:00:00Z'),
+          distros: [{ name: 'ubuntu2204-small', arch: 'linux_amd64' }],
+          events: {
+            count: 1,
+            eventLogEntries: [],
+          },
+          packages: {
+            data: [],
+            filteredCount: 0,
+            totalCount: 0,
+          },
+          toolchains: {
+            data: [],
+            filteredCount: 0,
+            totalCount: 0,
+          },
+          operatingSystem: {
+            data: [],
+            filteredCount: 0,
+            totalCount: 0,
+          },
+        },
+      };
+
+      mockGetDistroTool.mockResolvedValueOnce(mockDistroData);
+      mockGetImageTool.mockResolvedValueOnce(mockImageData);
+
+      const wr = await startRun(
+        { distroId: 'ubuntu2204-small' },
+        { task_id: 'runtime-context-task', execution: 1 }
+      );
+
+      expectSuccess(wr);
+      expect(mockGetTaskTool).not.toHaveBeenCalled();
+      expect(mockGetDistroTool).toHaveBeenCalled();
+      expect(mockGetImageTool).toHaveBeenCalled();
+    });
+  });
+
   describe('error cases', () => {
     it('failed: missing both taskId and distroId', async () => {
       const wr = await startRun({});
+
+      expect(wr.status).toBe('failed');
+    });
+
+    it('failed: missing taskId in both input and runtimeContext, and no distroId', async () => {
+      const wr = await startRun({}, { execution: 1 });
 
       expect(wr.status).toBe('failed');
     });
