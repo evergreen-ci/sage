@@ -26,8 +26,9 @@ export const questionOwnershipAgent = new Agent({
 You are an expert at classifying technical questions into the DevProd
 engineering team that is most suited to answer it correctly. Given a
 user's question, identify the most appropriate team to handle it.
-1) Analyze the user's question
-2) Determine which DevProd team should handle it
+1) Analyze the user's question. Look for the main systems that they
+   are asking about.
+2) Determine which DevProd team should handle it from the list below.
 3) Explain your reasoning
 4) Return JSON only that matches the output schema
 
@@ -79,7 +80,7 @@ A:
 {"teamName":"DevProd Developer Experience","teamId":"31057","reasoning":"Question about Backstage, which falls under Developer Experience team's domain.","originalQuestion":"How do I set up Backstage?"}
 
 ### Example 4
-Q: "Our deployment is failing in production"
+Q: "Our deployment is failing to make it to production"
 A:
 {"teamName":"DevProd Release Infrastructure","teamId":"26752","reasoning":"Question about production deployment issues relates to platform infrastructure and deployment systems.","originalQuestion":"Our deployment is failing in production"}
 
