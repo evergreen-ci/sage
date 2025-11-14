@@ -29,22 +29,22 @@ const waterfallRequesters = [
 const isWaterfallRequester = (requester: Requester) =>
   waterfallRequesters.includes(requester);
 
-const getTaskWithHistoryInputSchema = z.object({
+const getTaskHistoryByIdInputSchema = z.object({
   taskId: z.string(),
   execution: z.number().optional(),
   limit: z.number().optional().default(30),
 });
 
-const getTaskWithHistoryOutputSchema = z.object({
+const getTaskHistoryByIdOutputSchema = z.object({
   history: getTaskHistoryTool.outputSchema,
 });
 
-const getTaskWithHistoryTool = createTool({
-  id: 'getTaskWithHistory',
+const getTaskHistoryByIdTool = createTool({
+  id: 'getTaskHistoryById',
   description:
-    'Get a task and its history from Evergreen. This tool fetches task details and then retrieves the historical execution data for that task. It requires a taskId and optionally an execution number and limit.',
-  inputSchema: getTaskWithHistoryInputSchema,
-  outputSchema: getTaskWithHistoryOutputSchema,
+    'Get the execution history of a task from Evergreen using its task ID. This tool fetches task details internally to determine the correct parameters, then retrieves and returns only the historical execution data for that task. It requires a taskId and optionally an execution number and limit.',
+  inputSchema: getTaskHistoryByIdInputSchema,
+  outputSchema: getTaskHistoryByIdOutputSchema,
   execute: async ({ context, runtimeContext, tracingContext }) => {
     const { execution, limit, taskId } = context;
 
@@ -111,4 +111,4 @@ const getTaskWithHistoryTool = createTool({
   },
 });
 
-export default getTaskWithHistoryTool;
+export default getTaskHistoryByIdTool;

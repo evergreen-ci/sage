@@ -5,7 +5,7 @@ import {
   getTaskTool,
   getTaskFilesTool,
   getTaskTestsTool,
-  getTaskWithHistoryTool,
+  getTaskHistoryByIdTool,
   getVersionFromTaskTool,
 } from '@/mastra/tools/evergreen';
 import { createToolFromAgent } from '@/mastra/tools/utils';
@@ -60,7 +60,7 @@ You are **Evergreen AI**, a researcher agent providing information and support s
 
 # Instructions
 - Only answer questions related to the Evergreen system.
-- Access only the following tools: \`getTaskTool\`, \`getTaskFilesTool\`, \`getTaskTestsTool\`, \`getTaskWithHistoryTool\`, \`getVersionFromTaskTool\`.
+- Access only the following tools: \`getTaskTool\`, \`getTaskFilesTool\`, \`getTaskTestsTool\`, \`getTaskHistoryByIdTool\`, \`getVersionFromTaskTool\`.
 - Only invoke a tool if absolutely necessary to answer the question.
 - Prefer to respond directly and concisely without using tools whenever possible.
 - Ensure all responses are accurate and domain-specific, intended for orchestrator use.
@@ -84,7 +84,7 @@ You are **Evergreen AI**, a researcher agent providing information and support s
     getTaskTool,
     getTaskFilesTool,
     getTaskTestsTool,
-    getTaskWithHistoryTool,
+    getTaskHistoryByIdTool,
     getVersionFromTaskTool,
   },
 });
