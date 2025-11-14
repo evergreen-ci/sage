@@ -1,6 +1,6 @@
 import { Agent } from '@mastra/core/agent';
 import { z } from 'zod';
-import { gpt41Nano } from '@/mastra/models/openAI/gpt41';
+import { gpt41 } from '@/mastra/models/openAI/gpt41';
 
 export const slackThreadSummaryOutputSchema = z.object({
   reporter: z
@@ -98,7 +98,7 @@ Return **only** a JSON object matching the output schema. Do not include any add
     output: slackThreadSummaryOutputSchema,
     temperature: 0.3,
   },
-  model: gpt41Nano,
+  model: gpt41,
 });
 
 export type SlackThreadSummary = z.infer<typeof slackThreadSummaryOutputSchema>;
