@@ -32,6 +32,10 @@ Example: `DEVPROD-23895: Add user authentication workflow`
 - Keep commits focused and atomic
 - Use conventional commit types when applicable (feat, fix, chore, docs, etc.)
 
+### Prior to pushing code
+
+- Run `yarn format` and `yarn eslint:fix to format the code
+
 ## Table of Contents
 
 - [Creating Agents](#creating-agents)
