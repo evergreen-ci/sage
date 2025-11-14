@@ -1,5 +1,5 @@
 import express from 'express';
-import mementoRouter from '../memento';
+import mementoRouter from './memento';
 import parsleyOrchestratorRouter from './parsley';
 
 // export express router

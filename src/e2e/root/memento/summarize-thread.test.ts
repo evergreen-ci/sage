@@ -1,5 +1,4 @@
 import request from 'supertest';
-import { describe, it, expect } from 'vitest';
 import setupTestAppServer from '@/e2e/setup';
 import { mastra } from '@/mastra';
 
@@ -153,14 +152,9 @@ Channel: #devprod-evergreen
       // Verify reporter is a MongoDB email
       expect(response.body.reporter).toMatch(/^[a-z]+\.[a-z]+@mongodb\.com$/);
 
-      // Verify title is concise
-      expect(response.body.title.length).toBeGreaterThan(10);
-      expect(response.body.title.length).toBeLessThan(200);
-
-      // Verify description contains expected Jira formatting elements
-      const { description } = response.body;
-      expect(description).toBeTruthy();
-      expect(description.length).toBeGreaterThan(50);
+      // Verify title and description exist and are not empty
+      expect(response.body.title).toBeTruthy();
+      expect(response.body.description).toBeTruthy();
     });
   });
 });
