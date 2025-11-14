@@ -28,7 +28,7 @@ Example: `DEVPROD-23895: Add user authentication workflow`
 
 ### Commit Messages
 
-- Follow the same `[JIRA-TICKET] Summary` format for commit messages
+- Follow the same `JIRA-TICKET: Summary` format for commit messages
 - Keep commits focused and atomic
 - Use conventional commit types when applicable (feat, fix, chore, docs, etc.)
 
