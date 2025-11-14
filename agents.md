@@ -25,8 +25,7 @@ import { z } from 'zod';
 import { gpt41 } from '@/mastra/models/openAI/gpt41';
 
 export const myAgent = new Agent({
-  id: 'my-agent',
-  name: 'My Agent',
+  name: 'myAgent',
   description: 'Brief description of what this agent does',
   instructions: `
     Detailed system prompt for the agent.
@@ -41,7 +40,7 @@ export const myAgent = new Agent({
 See [questionClassifierAgent.ts:30-112](src/mastra/agents/planning/questionClassifierAgent.ts#L30-L112):
 
 ```typescript
-const outputSchema = z.object({
+export const outputSchema = z.object({
   confidence: z.number().min(0).max(1),
   questionClass: z.enum([
     'EVERGREEN',
@@ -362,6 +361,9 @@ export const stepTwo = createStep({
     const result = await myAgent.generate(processedData, {
       tracingContext,
       abortSignal,
+      structuredOutput: {
+        schema: outputSchema,
+      },
     });
 
     return {
