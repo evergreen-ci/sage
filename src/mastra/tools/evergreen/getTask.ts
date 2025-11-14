@@ -36,6 +36,10 @@ const GET_TASK = gql`
         failingCommand
         status
       }
+      cost {
+        onDemandCost
+        adjustedCost
+      }
     }
   }
 `;
@@ -78,6 +82,13 @@ const getTaskOutputSchema = z.object({
         description: z.string().optional(),
         failingCommand: z.string().optional().nullable(),
         status: z.string(),
+      })
+      .optional()
+      .nullable(),
+    cost: z
+      .object({
+        onDemandCost: z.number(),
+        adjustedCost: z.number(),
       })
       .optional()
       .nullable(),
