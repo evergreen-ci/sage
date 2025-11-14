@@ -99,8 +99,8 @@ You are **Evergreen AI**, a researcher agent providing information and support s
 `,
   model: gpt41,
   memory: evergreenAgentMemory,
+  /* eslint-disable @typescript-eslint/no-explicit-any -- Workflow type requires any for generic parameters */
   workflows: {
-    /* eslint-disable @typescript-eslint/no-explicit-any -- Workflow type requires any for generic parameters */
     getTaskHistoryWorkflow: getTaskHistoryWorkflow as Workflow<
       any,
       any,
@@ -125,8 +125,8 @@ You are **Evergreen AI**, a researcher agent providing information and support s
       any,
       any
     >,
-    /* eslint-enable @typescript-eslint/no-explicit-any */
   },
+  /* eslint-enable @typescript-eslint/no-explicit-any */
   tools: {
     getTaskTool,
     getTaskFilesTool,

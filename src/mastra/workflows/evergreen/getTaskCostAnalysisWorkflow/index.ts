@@ -15,7 +15,22 @@ const getTaskWithCostHistoryStep = createStep({
     'Get task history with cost data, filtered by version requester for fair comparison',
   inputSchema: getTaskStep.outputSchema,
   outputSchema: z.object({
-    currentTask: getTaskStep.outputSchema.shape.task,
+    currentTask: z.object({
+      id: z.string(),
+      displayName: z.string(),
+      execution: z.number(),
+      requester: z.string(),
+      buildVariant: z.string(),
+      projectIdentifier: z.string().optional().nullable(),
+      baseTask: z.object({ id: z.string() }).optional().nullable(),
+      cost: z
+        .object({
+          onDemandCost: z.number(),
+          adjustedCost: z.number(),
+        })
+        .optional()
+        .nullable(),
+    }),
     historicalTasks: z.array(
       z.object({
         id: z.string(),
@@ -92,17 +107,47 @@ const getTaskWithCostHistoryStep = createStep({
     });
 
     // Filter historical tasks to match the requester type
-    const currentRequester = task.requester;
+    // Note: We use type assertion here because the GraphQL codegen types may not be up to date
+    const taskWithFields = task as typeof task & {
+      requester: string;
+      cost?: { onDemandCost: number; adjustedCost: number } | null;
+    };
     const filteredTasks = historyResult.taskHistory.tasks.filter(
-      historicalTask =>
+      historicalTask => {
+        const htWithFields = historicalTask as typeof historicalTask & {
+          requester: string;
+        };
         // For gitter_requester, only compare with other gitter_requester tasks
         // For mainline requesters, compare with mainline tasks
-        historicalTask.requester === currentRequester
+        return htWithFields.requester === requester;
+      }
     );
 
     return {
-      currentTask: task,
-      historicalTasks: filteredTasks,
+      currentTask: {
+        id: taskWithFields.id,
+        displayName: taskWithFields.displayName,
+        execution: taskWithFields.execution,
+        requester: taskWithFields.requester,
+        buildVariant: taskWithFields.buildVariant,
+        projectIdentifier: taskWithFields.projectIdentifier,
+        baseTask: taskWithFields.baseTask,
+        cost: taskWithFields.cost,
+      },
+      historicalTasks: filteredTasks.map(ht => {
+        const htWithFields = ht as typeof ht & {
+          requester: string;
+          cost?: { onDemandCost: number; adjustedCost: number } | null;
+        };
+        return {
+          id: htWithFields.id,
+          displayName: htWithFields.displayName,
+          execution: htWithFields.execution,
+          requester: htWithFields.requester,
+          cost: htWithFields.cost,
+          versionMetadata: htWithFields.versionMetadata,
+        };
+      }),
     };
   },
 });

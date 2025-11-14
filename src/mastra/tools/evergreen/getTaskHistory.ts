@@ -24,6 +24,7 @@ const GET_TASK_HISTORY = gql`
         execution
         order
         revision
+        requester
         tests(opts: { statuses: ["fail", "silentfail"] }) {
           testResults {
             id
@@ -78,6 +79,7 @@ const getTaskHistoryOutputSchema = z.object({
         displayStatus: z.string(),
         order: z.number(),
         execution: z.number(),
+        requester: z.string(),
         patchNumber: z.number().optional().nullable(),
         buildVariant: z.string(),
         projectIdentifier: z.string().optional().nullable(),
