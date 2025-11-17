@@ -1,4 +1,4 @@
-import { RuntimeContext } from '@mastra/core/runtime-context';
+import { RequestContext } from '@mastra/core/request-context';
 import z from 'zod';
 import { callWorkflowWithTrace } from '@/evals/tracer';
 import { WorkflowOutput } from '@/evals/types';
@@ -6,7 +6,7 @@ import { mastra } from '@/mastra';
 
 interface TracedWorkflowOptions<Input, Output, WorkflowInput> {
   workflowName: string;
-  setupRuntimeContext?: (input: Input) => RuntimeContext;
+  setupRequestContext?: (input: Input) => RequestContext;
   transformResponse?: (
     response: {
       result: string;
@@ -31,19 +31,19 @@ const createTracedWorkflow =
     const transformedInput = options.transformInput
       ? await options.transformInput(input)
       : input;
-    // Create runtime context
-    const runtimeContext = options.setupRuntimeContext
-      ? options.setupRuntimeContext(input)
-      : new RuntimeContext();
+    // Create request context
+    const requestContext = options.setupRequestContext
+      ? options.setupRequestContext(input)
+      : new RequestContext();
 
     // Get the workflow
     const workflow = mastra.getWorkflow(options.workflowName);
 
     // Generate response with default or provided options
-    const run = await workflow.createRunAsync({});
+    const run = await workflow.createRun({});
     const response = await run.start({
       inputData: transformedInput,
-      runtimeContext,
+      requestContext,
     });
     if (response.status === 'failed') {
       throw new Error(`Workflow run failed: ${response.error}`);

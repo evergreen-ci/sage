@@ -11,7 +11,7 @@ import z from 'zod';
 import { logMetadataSchema } from '@/constants/parsley/logMetadata';
 import { mastra } from '@/mastra';
 import { SAGE_THINKING_AGENT_NAME, USER_ID } from '@/mastra/agents/constants';
-import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
+import { createParsleyRequestContext } from '@/mastra/memory/parsley/requestContext';
 import { runWithRequestContext } from '@/mastra/utils/requestContext';
 import { createAISdkStreamWithMetadata } from '@/utils/ai';
 import { logger } from '@/utils/logger';
@@ -34,8 +34,8 @@ const chatRoute = async (
 ) => {
   const currentSpan = trace.getActiveSpan();
   const spanContext = currentSpan?.spanContext();
-  const runtimeContext = createParsleyRuntimeContext();
-  runtimeContext.set(USER_ID, res.locals.userId);
+  const requestContext = createParsleyRequestContext();
+  requestContext.set(USER_ID, res.locals.userId);
   logger.debug('User context set for request', {
     userId: res.locals.userId,
     requestId: res.locals.requestId,
@@ -56,9 +56,9 @@ const chatRoute = async (
     return;
   }
   if (messageData.logMetadata) {
-    runtimeContext.set('logMetadata', messageData.logMetadata);
+    requestContext.set('logMetadata', messageData.logMetadata);
   }
-  if (runtimeContext.get('logURL') === undefined && messageData.logMetadata) {
+  if (requestContext.get('logURL') === undefined && messageData.logMetadata) {
     const logFileUrlWorkflow = mastra.getWorkflowById('resolve-log-file-url');
     if (!logFileUrlWorkflow) {
       logger.error('resolve-log-file-url workflow not found', {
@@ -69,7 +69,7 @@ const chatRoute = async (
         .json({ message: 'resolve-log-file-url workflow not found' });
       return;
     }
-    const run = await logFileUrlWorkflow.createRunAsync({});
+    const run = await logFileUrlWorkflow.createRun({});
     if (!run) {
       logger.error('Failed to create log file url workflow run', {
         requestId: res.locals.requestId,
@@ -95,10 +95,10 @@ const chatRoute = async (
           requestId: res.locals.requestId,
         },
       },
-      runtimeContext,
+      requestContext,
     });
     if (runResult.status === 'success') {
-      runtimeContext.set('logURL', runResult.result);
+      requestContext.set('logURL', runResult.result);
     } else if (runResult.status === 'failed') {
       logger.error('Error in get log file url workflow', {
         requestId: res.locals.requestId,
@@ -130,7 +130,7 @@ const chatRoute = async (
     const agent = mastra.getAgent(SAGE_THINKING_AGENT_NAME);
 
     const memory = await agent.getMemory({
-      runtimeContext,
+      requestContext,
     });
 
     let memoryOptions: AgentMemoryOption = {
@@ -155,7 +155,7 @@ const chatRoute = async (
       };
     } else {
       const newThread = await memory?.createThread({
-        metadata: runtimeContext.toJSON(),
+        metadata: requestContext.toJSON(),
         resourceId: 'parsley_completions',
         threadId: conversationId,
       });
@@ -177,7 +177,7 @@ const chatRoute = async (
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
         await agent.stream(validatedMessage, {
-          runtimeContext,
+          requestContext,
           memory: memoryOptions,
           tracingOptions: {
             metadata: {

@@ -1,4 +1,4 @@
-import { RuntimeContext } from '@mastra/core/runtime-context';
+import { RequestContext } from '@mastra/core/request-context';
 import { ToolResultPart } from 'ai';
 import { Factuality } from 'autoevals';
 import { Eval } from 'braintrust';
@@ -15,10 +15,10 @@ Eval(
     data: loadTestCases<TestCase>('sage_thinking_agent_dataset'),
     task: tracedAgentEval<TestInput, TestResult>({
       agentName: SAGE_THINKING_AGENT_NAME,
-      setupRuntimeContext: input => {
-        const runtimeContext = new RuntimeContext();
-        runtimeContext.set(USER_ID, input.user);
-        return runtimeContext;
+      setupRequestContext: input => {
+        const requestContext = new RequestContext();
+        requestContext.set(USER_ID, input.user);
+        return requestContext;
       },
       transformResponse: response => {
         const toolResults = response.toolResults as ToolResultPart[];

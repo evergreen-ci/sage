@@ -1,4 +1,4 @@
-import { RuntimeContext } from '@mastra/core/runtime-context';
+import { RequestContext } from '@mastra/core/request-context';
 import { z } from 'zod';
 import { callModelWithTrace } from '@/evals/tracer';
 import { ModelOutput, MastraAgentOutput } from '@/evals/types';
@@ -11,9 +11,9 @@ export interface TracedAgentOptions<TInput, TOutput> {
   agentName: string;
 
   /**
-   * Optional function to customize runtime context
+   * Optional function to customize request context
    */
-  setupRuntimeContext?: (input: TInput) => RuntimeContext;
+  setupRequestContext?: (input: TInput) => RequestContext;
 
   /**
    * Function to transform the agent response
@@ -36,10 +36,10 @@ const createTracedAgent =
     options: TracedAgentOptions<TInput, TOutput>
   ): ((input: TInput) => Promise<ModelOutput<TInput, TOutput>>) =>
   async (input: TInput): Promise<ModelOutput<TInput, TOutput>> => {
-    // Create runtime context
-    const runtimeContext = options.setupRuntimeContext
-      ? options.setupRuntimeContext(input)
-      : new RuntimeContext();
+    // Create request context
+    const requestContext = options.setupRequestContext
+      ? options.setupRequestContext(input)
+      : new RequestContext();
 
     // Get the agent
     const agent = mastra.getAgent(options.agentName);
@@ -50,8 +50,7 @@ const createTracedAgent =
         ? input
         : (((input as Record<string, unknown>).content ?? input) as string),
       {
-        runtimeContext,
-        format: 'aisdk',
+        requestContext,
         ...(options.generateOptions || {}),
       }
     );

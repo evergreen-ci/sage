@@ -44,9 +44,7 @@ async function runTest(
 
   const startTime = Date.now();
 
-  const run = await mastra
-    .getWorkflow('logCoreAnalyzerWorkflow')
-    .createRunAsync();
+  const run = await mastra.getWorkflow('logCoreAnalyzerWorkflow').createRun();
 
   const result = await run.start({
     inputData: {
