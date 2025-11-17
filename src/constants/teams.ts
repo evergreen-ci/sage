@@ -12,10 +12,12 @@ export const DEVPROD_TEAMS = {
   },
   'DevProd Correctness Team': {
     id: '26746',
-    description: `Team responsible for testing infrastructure, code coverage, code
-      ownership, and generally code correctness tools and practices. This includes
-      tools like Resmoke, Fern, code coverage, Coveralls, local dev containers,
-      mocha, jstests, and integration tests.`,
+    description: `Team responsible for testing infrastructure, code coverage,
+      code ownership, and generally code correctness tools and practices. This
+      includes tools like Resmoke, Fern, code coverage, Coveralls, local dev
+      containers, mocha, jstests, and integration tests. Question about
+      Gitdailies setup, repository syncing, or Copybara also belong here, as do
+      questions about Github code reviewer sync with out-of-office (OOO) status.`,
   },
   'DevProd Developer Experience': {
     id: '31057',
@@ -63,13 +65,14 @@ export const DEVPROD_TEAMS = {
     id: '26750',
     description: `Team responsible for integrating DevProd tools with critical
       customer needs. Works closely with customer teams to apply DevProd tools
-      to their situation.`,
+      to their situation. They also own the autogen-todo bot.`,
   },
   'DevProd Performance Infrastructure': {
     id: '26751',
     description: `Team responsible for MongoDB performance testing tools and
       infrastructure, including DSI, Weta, Locust, Signal Processing Service
-      (SPS), multipatch runner, and load generation tools. The team also owns
+      (SPS), multipatch runner, and load generation tools.
+      The team owns the 10gen/dsi repo, and associated infrastructure for
       performance monitoring tools/infra, including Performance Baron Tools
       and a plugin to the Evergreen UI for performance analysis.`,
   },
@@ -78,8 +81,11 @@ export const DEVPROD_TEAMS = {
     description: `Team responsible for integrations between Github for source
       code management and version control, Jira for work ticket management,
       Slack messaging, and Evergreen continuous integration (CI).
-      They own CI failure management tools like Foliage, Build Baron, and
-      Autoreverter designed to help keep the main line of development green.
+      They own MMS setup/onboarding scripts, pre-commit hooks, CI failure
+      management tools like Foliage, Build Baron, and Autoreverter designed to
+      help keep the main line of development green. This includes tools to
+      detect flaky tests and flag them to users. They also own the Ask DevProd
+      slack bot powered by Credal (Central RAG service).
       The team manages cross-service sync via tools like Mothra, including 
       Cloud Bot, which keeps PagerDuty oncall schedules aligned with a Google
       Calendar and Slack aliases to page a team's oncall ("rota sync"). They

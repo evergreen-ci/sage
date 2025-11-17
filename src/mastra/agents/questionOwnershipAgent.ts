@@ -1,7 +1,7 @@
 import { Agent } from '@mastra/core/agent';
 import { z } from 'zod';
 import { DEVPROD_TEAMS, TEAM_NAMES } from '@/constants/teams';
-import { gpt41Nano } from '@/mastra/models/openAI/gpt41';
+import { gpt41 } from '@/mastra/models/openAI/gpt41';
 import { createToolFromAgent } from '@/mastra/tools/utils';
 
 /** Output schema for team routing */
@@ -93,7 +93,7 @@ A:
     output: questionOwnershipOutputSchema,
     temperature: 0,
   },
-  model: gpt41Nano,
+  model: gpt41,
 });
 
 export const questionOwnershipAgentTool = createToolFromAgent(
