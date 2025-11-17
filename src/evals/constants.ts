@@ -14,6 +14,7 @@ enum ReporterName {
   QuestionClassifier = 'Question Classifier Eval Reporter',
   SageThinking = 'Sage Thinking Eval Reporter',
   LogAnalyzerWorkflow = 'Log Analyzer Workflow Eval Reporter',
+  SlackThreadSummarizer = 'Slack Thread Summarizer Eval Reporter',
 }
 
 export { PROJECT_NAME, TestUser, ReporterName };

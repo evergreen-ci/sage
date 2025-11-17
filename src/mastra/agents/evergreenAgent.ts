@@ -1,4 +1,3 @@
-import { Workflow } from '@mastra/core';
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { gpt41 } from '@/mastra/models/openAI/gpt41';
@@ -6,13 +5,11 @@ import {
   getTaskTool,
   getTaskFilesTool,
   getTaskTestsTool,
+  getTaskHistoryByIdTool,
+  getVersionFromTaskTool,
 } from '@/mastra/tools/evergreen';
 import { createToolFromAgent } from '@/mastra/tools/utils';
 import { memoryStore } from '@/mastra/utils/memory';
-import {
-  getTaskHistoryWorkflow,
-  getVersionWorkflow,
-} from '@/mastra/workflows/evergreen';
 
 const evergreenAgentMemory = new Memory({
   storage: memoryStore,
@@ -63,13 +60,12 @@ You are **Evergreen AI**, a researcher agent providing information and support s
 
 # Instructions
 - Only answer questions related to the Evergreen system.
-- Use exclusively the available workflows: \`getTaskHistoryWorkflow\`, \`getVersionWorkflow\`.
-- Access only the following tools: \`getTaskTool\`, \`getTaskFilesTool\`, \`getTaskTestsTool\`.
+- Access only the following tools: \`getTaskTool\`, \`getTaskFilesTool\`, \`getTaskTestsTool\`, \`getTaskHistoryByIdTool\`, \`getVersionFromTaskTool\`.
 - Only invoke a tool if absolutely necessary to answer the question.
 - Prefer to respond directly and concisely without using tools whenever possible.
 - Ensure all responses are accurate and domain-specific, intended for orchestrator use.
 - Avoid altering any IDs or URLs when returning results.
-- When answering questions, return relevant evidence (such as tool outputs or referenced workflow results) to support your conclusions whenever possible.
+- When answering questions, return relevant evidence (such as tool outputs) to support your conclusions whenever possible.
 
 # Output Format
 - Use clear and structured markdown formatting for responses when appropriate. Default to plain text; use fenced code blocks for code or samples.
@@ -84,28 +80,12 @@ You are **Evergreen AI**, a researcher agent providing information and support s
 `,
   model: gpt41,
   memory: evergreenAgentMemory,
-  workflows: {
-    getTaskHistoryWorkflow: getTaskHistoryWorkflow as Workflow<
-      any,
-      any,
-      any,
-      any,
-      any,
-      any
-    >,
-    getVersionWorkflow: getVersionWorkflow as Workflow<
-      any,
-      any,
-      any,
-      any,
-      any,
-      any
-    >,
-  },
   tools: {
     getTaskTool,
     getTaskFilesTool,
     getTaskTestsTool,
+    getTaskHistoryByIdTool,
+    getVersionFromTaskTool,
   },
 });
 

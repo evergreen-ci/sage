@@ -15,6 +15,7 @@ describe('Health check', () => {
       'evergreenAgent',
       'questionClassifierAgent',
       'questionOwnershipAgent',
+      'slackThreadSummarizerAgent',
     ]);
   });
 });

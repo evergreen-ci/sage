@@ -45,6 +45,7 @@ buildvariants:
       - name: question-classifier-evals
       - name: log-analyzer-workflow-evals
       - name: sage-thinking-evals
+      - name: slack-thread-summarizer-evals
     display_tasks:
       - name: evals
         execution_tasks:
@@ -52,6 +53,7 @@ buildvariants:
           - "question-classifier-evals"
           - "log-analyzer-workflow-evals"
           - "sage-thinking-evals"
+          - "slack-thread-summarizer-evals"
 tasks:
   - name: compile
     commands:
@@ -123,6 +125,14 @@ tasks:
       - func: attach-braintrust-results
         vars:
           xml_file_name: sage_thinking_evals.xml
+  - name: slack-thread-summarizer-evals
+    commands:
+      - func: yarn-eval
+        vars:
+          eval_dir: slackThreadSummarizerAgent
+      - func: attach-braintrust-results
+        vars:
+          xml_file_name: slack_thread_summarizer_evals.xml
 
 functions:
   attach-test-results:

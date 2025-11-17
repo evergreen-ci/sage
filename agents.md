@@ -2,6 +2,40 @@
 
 This guide provides comprehensive instructions for implementing agents, tools, workflows, and REST routes in the Sage codebase using the Mastra framework.
 
+## Coding Style Guidelines
+
+- **Use arrow functions** for all function declarations (e.g., `const myFunction = () => {}`)
+- **Avoid superfluous comments** - code should be self-documenting with clear naming
+- **Use TypeScript** for type safety with Zod schemas for validation
+
+## Pull Request Guidelines
+
+When opening PRs, follow these conventions:
+
+### PR Title Format
+
+The PR title should follow the format: `JIRA-TICKET: Summary`
+
+Example: `DEVPROD-23895: Add user authentication workflow`
+
+### PR Description
+
+- Reference the Jira ticket template for the full PR description format
+- Include a clear summary of changes
+- List any breaking changes
+- Add testing instructions
+- Reference related tickets/PRs
+
+### Commit Messages
+
+- Follow the same `JIRA-TICKET: Summary` format for commit messages
+- Keep commits focused and atomic
+- Use conventional commit types when applicable (feat, fix, chore, docs, etc.)
+
+### Prior to pushing code
+
+- Run `yarn format` and `yarn eslint:fix to format the code
+
 ## Table of Contents
 
 - [Creating Agents](#creating-agents)
@@ -108,7 +142,7 @@ export const myAgent: Agent = new Agent({
   model: gpt41,
   memory: myAgentMemory,
   workflows: {
-    myWorkflow: myWorkflow as Workflow<any, any, any, any, any, any>,
+    myWorkflow: myWorkflow,
   },
   tools: {
     myTool,
@@ -162,12 +196,8 @@ export const myTool = createTool({
   inputSchema: myToolInputSchema,
   outputSchema: myToolOutputSchema,
   execute: async ({ context, runtimeContext, mastra }) => {
-    // Access input parameters
     const { param1, param2 } = context;
-
-    // Perform the operation
     const result = await doSomething(param1, param2);
-
     return { result };
   },
 });
@@ -310,19 +340,15 @@ export const stepOne = createStep({
   }),
   execute: async ({ inputData, mastra, setState, state, tracingContext }) => {
     const logger = mastra.getLogger();
-
     logger.info('Executing step one', { input: inputData });
 
-    // Process data
     const processedData = await processInput(inputData.param1);
 
-    // Update state for subsequent steps
     setState({
       ...state,
       intermediateData: processedData,
     });
 
-    // Update tracing metadata
     tracingContext.currentSpan?.update({
       metadata: {
         stepName: 'step-one',
@@ -350,14 +376,9 @@ export const stepTwo = createStep({
     abortSignal,
   }) => {
     const logger = mastra.getLogger();
-
-    // Access previous step's output
     const { processedData } = inputData;
-
-    // Access workflow state
     const { intermediateData } = state;
 
-    // Generate result using an agent
     const result = await myAgent.generate(processedData, {
       tracingContext,
       abortSignal,
@@ -452,15 +473,12 @@ const inputSchema = z.object({
 });
 
 const myRoute = async (req: Request, res: Response) => {
-  // 1. Setup tracing
   const currentSpan = trace.getActiveSpan();
   const spanContext = currentSpan?.spanContext();
 
-  // 2. Create runtime context
   const runtimeContext = createParsleyRuntimeContext();
   runtimeContext.set(USER_ID, res.locals.userId);
 
-  // 3. Validate input
   const { data, error, success } = inputSchema.safeParse(req.body);
   if (!success) {
     logger.error('Invalid request body', { error });
@@ -468,7 +486,6 @@ const myRoute = async (req: Request, res: Response) => {
     return;
   }
 
-  // 4. Optionally run a workflow for preprocessing
   if (data.metadata) {
     runtimeContext.set('metadata', data.metadata);
 
@@ -496,8 +513,6 @@ const myRoute = async (req: Request, res: Response) => {
     }
   }
 
-  // 5. Get agent and setup memory
-  // Use the field name from mastra config (e.g., 'sageThinkingAgent')
   const agent = mastra.getAgent('myAgent');
   const memory = await agent.getMemory({ runtimeContext });
 
@@ -528,7 +543,6 @@ const myRoute = async (req: Request, res: Response) => {
     };
   }
 
-  // 6. Stream response from agent
   try {
     const stream = await runWithRequestContext(
       { userId: res.locals.userId, requestId: res.locals.requestId },
@@ -551,7 +565,6 @@ const myRoute = async (req: Request, res: Response) => {
         })
     );
 
-    // 7. Pipe stream to response
     pipeUIMessageStreamToResponse({
       response: res,
       stream: createAISdkStreamWithMetadata(
@@ -807,7 +820,6 @@ Eval(
   {
     data: loadTestCases<TestCase>('question_classifier_agent_dataset'),
     task: tracedAgentEval<TestInput, TestResult>({
-      // Use the agent's field name from mastra config (e.g., 'questionClassifierAgent')
       agentName: QUESTION_CLASSIFIER_AGENT_NAME,
       transformResponse: response => {
         const responseJSON = JSON.parse(response.text);
@@ -1040,7 +1052,6 @@ export const getTestCases = (): TestCase[] => [
       },
     },
   },
-  // More test cases...
 ];
 ```
 
@@ -1072,7 +1083,6 @@ The eval command takes the path to the eval folder and will run all `*.eval.ts` 
 import { tracedAgentEval } from '@/evals/utils/tracedAgent';
 
 task: tracedAgentEval<TestInput, TestResult>({
-  // Use the agent's field name from mastra config (e.g., 'myAgent')
   agentName: 'myAgent',
   transformResponse: response => ({
     result: JSON.parse(response.text),
