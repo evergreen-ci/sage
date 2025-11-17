@@ -22,12 +22,12 @@
     "@ai-sdk/provider" "2.0.0"
     "@ai-sdk/provider-utils" "3.0.12"
 
-"@ai-sdk/azure@^2.0.67":
-  version "2.0.67"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/azure/-/azure-2.0.67.tgz#a08d03a44d9813f534ae40c0b2ed5349d067e065"
-  integrity sha512-02zFmYxBrBv8jtMkAXlgu+lfFBnpZt7/wj2DhuPVjzvIaWi42FteW5oy6Xcfr8XfTWoI9hVFMgObPq4AYMPD3Q==
+"@ai-sdk/azure@^2.0.70":
+  version "2.0.70"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/azure/-/azure-2.0.70.tgz#8154c83afd49126056de3a778855b656c461cfc3"
+  integrity sha512-98teTIKT+8fup5A24EUVo/qhADtyo9j7JwMl6IN0jKnptSqbLPIJonrbG7NT3OewiHUq9vUKd3Vumhvrpg79Qw==
   dependencies:
-    "@ai-sdk/openai" "2.0.65"
+    "@ai-sdk/openai" "2.0.68"
     "@ai-sdk/provider" "2.0.0"
     "@ai-sdk/provider-utils" "3.0.17"
 
@@ -90,10 +90,10 @@
     "@ai-sdk/provider" "2.0.0"
     "@ai-sdk/provider-utils" "3.0.12"
 
-"@ai-sdk/openai@2.0.65", "@ai-sdk/openai@^2.0.57":
-  version "2.0.65"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/openai/-/openai-2.0.65.tgz#9156c06a4de259d53863eb924867069b3340b55f"
-  integrity sha512-Wqo4iNCsxUYJFmEAzAHO0XDnnS76rqvPRX2AUhEAOX3cgL9UEfouFmiNQS2jM9AZhMdWj5GIG41hgr4YOr20tA==
+"@ai-sdk/openai@2.0.68", "@ai-sdk/openai@^2.0.57":
+  version "2.0.68"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/openai/-/openai-2.0.68.tgz#9b86608e8aa3c9d0d8c0eba18ae325871ac76481"
+  integrity sha512-qUSLFkqgUoFArzBwttu0KWVAZYjbsdZGOklSJXpfZ2nDC61yseHxtcnuG8u6tqKnGXDh4eakEgREDWU2sRht7A==
   dependencies:
     "@ai-sdk/provider" "2.0.0"
     "@ai-sdk/provider-utils" "3.0.17"
