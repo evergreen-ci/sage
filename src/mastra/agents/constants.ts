@@ -7,6 +7,7 @@ const USER_ID = 'userId';
 const EVERGREEN_AGENT_NAME = 'evergreenAgent';
 const QUESTION_CLASSIFIER_AGENT_NAME = 'questionClassifierAgent';
 const SAGE_THINKING_AGENT_NAME = 'sageThinkingAgent';
+const SLACK_THREAD_SUMMARIZER_AGENT_NAME = 'slackThreadSummarizerAgent';
 
 const LOG_ANALYZER_WORKFLOW_NAME = 'logCoreAnalyzerWorkflow';
 
@@ -15,5 +16,6 @@ export {
   EVERGREEN_AGENT_NAME,
   QUESTION_CLASSIFIER_AGENT_NAME,
   SAGE_THINKING_AGENT_NAME,
+  SLACK_THREAD_SUMMARIZER_AGENT_NAME,
   LOG_ANALYZER_WORKFLOW_NAME,
 };
