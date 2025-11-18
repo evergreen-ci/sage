@@ -2,6 +2,7 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: sage
+  title: Sage
   description: Server powering the Evergreen AI Service.
   annotations:
     evergreen/project-id: 686d2f07ef37320007ad2596
@@ -15,8 +16,8 @@ spec:
   lifecycle: production
   system: evergreen
   consumesApis:
-    - evergreen-api-graphql
-    - evergreen-api-rest
+    - evergreen-graphql-api
+    - evergreen-rest-api
   dependsOn:
     - component:Sentry
     - component:Honeycomb
