@@ -1,7 +1,7 @@
 import { RequestContext } from '@mastra/core/request-context';
 import { z } from 'zod';
 import { callModelWithTrace } from '@/evals/tracer';
-import { ModelOutput, MastraAgentOutput } from '@/evals/types';
+import { ModelOutput } from '@/evals/types';
 import { mastra } from '@/mastra';
 
 export interface TracedAgentOptions<TInput, TOutput> {
@@ -18,7 +18,10 @@ export interface TracedAgentOptions<TInput, TOutput> {
   /**
    * Function to transform the agent response
    */
-  transformResponse: (response: MastraAgentOutput, input: TInput) => TOutput;
+  transformResponse: (
+    response: ModelOutput<TInput, TOutput>,
+    input: TInput
+  ) => TOutput;
 
   /**
    * Optional generation options for the agent
