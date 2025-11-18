@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { mastra } from '@/mastra';
+import { SLACK_QUESTION_OWNERSHIP_AGENT_NAME } from '@/mastra/agents/constants';
 import { questionOwnershipOutputSchema } from '@/mastra/agents/questionOwnershipAgent';
 import { logger } from '@/utils/logger';
 
@@ -22,7 +23,7 @@ type ErrorResponse = {
 };
 
 /**
- * GET /ownership/slack-question
+ * GET /completions/lumber/determine-owner
  *
  * Routes a user question to the appropriate DevProd team.
  *
@@ -55,7 +56,7 @@ const questionOwnershipRoute = async (
   }
 
   try {
-    const agent = mastra.getAgent('questionOwnershipAgent');
+    const agent = mastra.getAgent(SLACK_QUESTION_OWNERSHIP_AGENT_NAME);
 
     if (!agent) {
       logger.error('question ownership agent not found', {

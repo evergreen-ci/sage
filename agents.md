@@ -59,7 +59,8 @@ import { z } from 'zod';
 import { gpt41 } from '@/mastra/models/openAI/gpt41';
 
 export const myAgent = new Agent({
-  name: 'myAgent',
+  id: 'my-agent',
+  name: 'My Agent',
   description: 'Brief description of what this agent does',
   instructions: `
     Detailed system prompt for the agent.
