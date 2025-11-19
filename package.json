@@ -44,7 +44,7 @@
     "@ai-sdk/openai": "^2.0.68",
     "@ai-sdk/provider": "^2.0.0",
     "@mastra/ai-sdk": "^0.2.7",
-    "@mastra/braintrust": "^1.0.0-beta.0",
+    "@mastra/braintrust": "^1.0.0-beta.1",
     "@mastra/core": "^1.0.0-beta.2",
     "@mastra/libsql": "^0.16.2",
     "@mastra/loggers": "^1.0.0-beta.0",
