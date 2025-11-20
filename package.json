@@ -5,7 +5,7 @@
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
-    "build": "yarn typecheck && vite build",
+    "build": "VERSION=${VERSION:-$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')} yarn typecheck && vite build",
     "start": "NODE_ENV=production node dist/main.js",
     "dev": "VERSION=$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown') NODE_ENV=development yarn dev-run",
     "dev-run": "vite-node --watch src/main.ts",
@@ -61,6 +61,7 @@
     "@opentelemetry/semantic-conventions": "^1.37.0",
     "@opentelemetry/winston-transport": "^0.19.0",
     "@sentry/node": "10.22.0",
+    "@sentry/vite-plugin": "^4.6.0",
     "ai": "^5.0.93",
     "braintrust": "^0.4.9",
     "cors": "^2.8.5",
