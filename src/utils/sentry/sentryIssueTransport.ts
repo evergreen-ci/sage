@@ -5,7 +5,7 @@ class SentryIssueTransport extends Transport {
   log(info: Record<string, unknown>, callback: () => void) {
     setImmediate(() => this.emit('logged', info));
 
-    const { err, error, level, message, stack, ...extra } = info;
+    const { err, error, level, message, ...extra } = info;
 
     // Only create Issues for error-level logs
     if (level === 'error') {
