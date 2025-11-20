@@ -485,7 +485,7 @@ const myRoute = async (req: Request, res: Response) => {
     requestContext.set('metadata', data.metadata);
 
     const workflow = mastra.getWorkflowById('my-preprocessing-workflow');
-    const run = await workflow.createRunAsync({});
+    const run = await workflow.createRun({});
     const runResult = await run.start({
       inputData: { metadata: data.metadata },
       ...(spanContext
@@ -591,7 +591,7 @@ const myWorkflowRoute = async (req: Request, res: Response) => {
 
   try {
     const workflow = mastra.getWorkflowById('my-workflow');
-    const run = await workflow.createRunAsync({});
+    const run = await workflow.createRun({});
 
     const runResult = await run.start({
       inputData: data,
