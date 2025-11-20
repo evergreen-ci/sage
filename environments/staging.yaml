@@ -1,4 +1,4 @@
-arch: 'amd64'
+arch: 'arm64'
 
 ingress:
   enabled: true
