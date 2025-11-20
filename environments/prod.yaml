@@ -1,4 +1,4 @@
-arch: "amd64"
+arch: 'amd64'
 
 ingress:
   enabled: true
@@ -51,6 +51,7 @@ envSecrets:
   MONGODB_URI: parsley-ai-secrets
   BRAINTRUST_API_KEY: parsley-ai-secrets
   HONEYCOMB_API_KEY: parsley-ai-secrets
+  SENTRY_AUTH_TOKEN: parsley-ai-secrets
 
 serviceAccount:
   enabled: true
@@ -66,9 +67,9 @@ autoscaling:
           type: Utilization
           averageUtilization: 80
 
-security:  # Most sensitive info is logs and task metadata.
-  dataClassification: "Internal"
-  dataDesignation: ["MI"]
+security: # Most sensitive info is logs and task metadata.
+  dataClassification: 'Internal'
+  dataDesignation: ['MI']
 
 ownership:
   driEmail: evergreen-team@mongodb.com

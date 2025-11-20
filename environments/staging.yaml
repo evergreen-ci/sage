@@ -1,4 +1,4 @@
-arch: "amd64"
+arch: 'amd64'
 
 ingress:
   enabled: true
@@ -52,13 +52,14 @@ envSecrets:
   OTEL_EXPORTER_OTLP_HEADERS: parsley-ai-secrets
   BRAINTRUST_API_KEY: parsley-ai-secrets
   HONEYCOMB_API_KEY: parsley-ai-secrets
+  SENTRY_AUTH_TOKEN: parsley-ai-secrets
 
 serviceAccount:
   enabled: true
 
-security:  # No sensitive info; dummy data only.
-  dataClassification: "Public"
-  dataDesignation: ["MI"]
+security: # No sensitive info; dummy data only.
+  dataClassification: 'Public'
+  dataDesignation: ['MI']
 
 ownership:
   driEmail: evergreen-team@mongodb.com
