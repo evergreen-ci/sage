@@ -1,7 +1,6 @@
 import { RequestContext } from '@mastra/core/request-context';
 import { z } from 'zod';
-import { callModelWithTrace } from '@/evals/tracer';
-import { ModelOutput } from '@/evals/types';
+import { AgentEvalOutput, AgentOutput } from '@/evals/types';
 import { mastra } from '@/mastra';
 
 export interface TracedAgentOptions<TInput, TOutput> {
@@ -18,10 +17,7 @@ export interface TracedAgentOptions<TInput, TOutput> {
   /**
    * Function to transform the agent response
    */
-  transformResponse: (
-    response: ModelOutput<TInput, TOutput>,
-    input: TInput
-  ) => TOutput;
+  transformResponse: (response: AgentOutput) => TOutput;
 
   /**
    * Optional generation options for the agent
@@ -35,10 +31,8 @@ export interface TracedAgentOptions<TInput, TOutput> {
 }
 
 const createTracedAgent =
-  <TInput, TOutput>(
-    options: TracedAgentOptions<TInput, TOutput>
-  ): ((input: TInput) => Promise<ModelOutput<TInput, TOutput>>) =>
-  async (input: TInput): Promise<ModelOutput<TInput, TOutput>> => {
+  <TInput, TOutput>(options: TracedAgentOptions<TInput, TOutput>) =>
+  async (input: TInput): Promise<AgentEvalOutput<TInput, TOutput>> => {
     // Create request context
     const requestContext = options.setupRequestContext
       ? options.setupRequestContext(input)
@@ -47,6 +41,7 @@ const createTracedAgent =
     // Get the agent
     const agent = mastra.getAgent(options.agentName);
 
+    const start = Date.now();
     // Generate response with default or provided options
     const response = await agent.generate(
       typeof input === 'string'
@@ -57,8 +52,9 @@ const createTracedAgent =
         ...(options.generateOptions || {}),
       }
     );
+    const end = Date.now();
 
-    const output = options.transformResponse(response, input);
+    const output = options.transformResponse(response);
 
     // Validate output if schema is provided
     if (options.responseSchema) {
@@ -72,9 +68,10 @@ const createTracedAgent =
 
     // Return full traced model output
     return {
-      ...response,
+      agentMetadata: response,
       input,
       output,
+      duration: end - start,
     };
   };
 
@@ -86,6 +83,4 @@ const createTracedAgent =
 export const tracedAgentEval =
   <TInput, TOutput>(options: TracedAgentOptions<TInput, TOutput>) =>
   async (input: TInput) =>
-    await callModelWithTrace<TInput, TOutput>(
-      async () => await createTracedAgent(options)(input)
-    );
+    await createTracedAgent(options)(input);

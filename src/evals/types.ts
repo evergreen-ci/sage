@@ -1,5 +1,4 @@
-import { AISDKV5OutputStream, OutputSchema } from '@mastra/core/dist/stream';
-
+import { MastraModelOutput } from '@mastra/core/dist/stream';
 // Base types
 export type BaseScores = {
   [key: string]: number;
@@ -47,13 +46,18 @@ export interface ReporterEvalResult<
 }
 
 // Output types
-export type MastraAgentOutput = Awaited<
-  ReturnType<AISDKV5OutputStream<OutputSchema>['getFullOutput']>
+/**
+ * This is what the generate call to the agent returns
+ */
+export type AgentOutput = Awaited<
+  ReturnType<MastraModelOutput['getFullOutput']>
 >;
-
-export type ModelOutput<TInput, TOutput> = Promise<
-  MastraAgentOutput & { input: TInput; output: TOutput }
->;
+export type AgentEvalOutput<TInput, TOutput> = {
+  agentMetadata: AgentOutput;
+  input: TInput;
+  output: TOutput;
+  duration: number;
+};
 
 export type WorkflowOutput<TInput, TOutput> = {
   input: TInput;
