@@ -1,4 +1,4 @@
-import { RuntimeContext } from '@mastra/core/runtime-context';
+import { RequestContext } from '@mastra/core/request-context';
 import { z } from 'zod';
 import { GraphQLClientError } from '@/utils/graphql/client';
 import logger from '@/utils/logger';
@@ -27,12 +27,12 @@ const query = `
   }
 `;
 
-const context = { taskId: 'abc123' };
+const inputData = { taskId: 'abc123' };
 
-const makeRuntimeContext = (userID?: string) => {
-  const runtimeContext = new RuntimeContext();
-  runtimeContext.set('userId', userID);
-  return runtimeContext;
+const makeRequestContext = (userID?: string) => {
+  const requestContext = new RequestContext();
+  requestContext.set('userId', userID);
+  return requestContext;
 };
 
 const tracingContext = {};
@@ -62,16 +62,15 @@ describe('createGraphQLTool', () => {
       client: mockClient as any,
     });
 
-    const result = await tool.execute?.({
-      context,
-      runtimeContext: makeRuntimeContext('user-123'),
+    const result = await tool.execute?.(inputData, {
+      requestContext: makeRequestContext('user-123'),
       tracingContext,
     });
 
     expect(result).toEqual({ data: 'mockData' });
     expect(mockExecuteQuery).toHaveBeenCalledWith(
       query,
-      context,
+      inputData,
       expect.objectContaining({
         userID: 'user-123',
       })
@@ -89,13 +88,12 @@ describe('createGraphQLTool', () => {
     });
 
     await expect(
-      tool.execute?.({
-        context,
-        runtimeContext: makeRuntimeContext(undefined),
+      tool.execute?.(inputData, {
+        requestContext: makeRequestContext(undefined),
         tracingContext,
       })
     ).rejects.toThrow(
-      'User ID not available in RuntimeContext unable to execute query'
+      'User ID not available in RequestContext unable to execute query'
     );
   });
 
@@ -117,9 +115,8 @@ describe('createGraphQLTool', () => {
     });
 
     await expect(
-      tool.execute?.({
-        context,
-        runtimeContext: makeRuntimeContext('user-456'),
+      tool.execute?.(inputData, {
+        requestContext: makeRequestContext('user-456'),
         tracingContext,
       })
     ).rejects.toThrow(GraphQLClientError);
@@ -149,9 +146,8 @@ describe('createGraphQLTool', () => {
     });
 
     await expect(
-      tool.execute?.({
-        context,
-        runtimeContext: makeRuntimeContext('user-789'),
+      tool.execute?.(inputData, {
+        requestContext: makeRequestContext('user-789'),
         tracingContext,
       })
     ).rejects.toThrow('Oops');

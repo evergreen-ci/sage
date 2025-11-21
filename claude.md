@@ -11,7 +11,7 @@ The [agents.md](agents.md) file contains:
 - **Creating Workflows**: How to build multi-step workflows with createWorkflow() and createStep(), including control flow and state management
 - **Creating REST Routes**: Patterns for Express routes that use agents (with streaming) and workflows, including runtime context and memory setup
 - **Creating Evals**: How to build evaluations for agents and workflows using Braintrust, including test cases, scorers, reporters, and helper utilities
-- **Key Patterns**: Essential patterns like Zod schemas, RuntimeContext, tracing, memory, and composition strategies
+- **Key Patterns**: Essential patterns like Zod schemas, RequestContext, tracing, memory, and composition strategies
 
 ## Architecture Overview
 

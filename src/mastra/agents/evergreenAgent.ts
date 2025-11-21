@@ -39,13 +39,11 @@ const evergreenAgentMemory = new Memory({
 - Potential Issues:
 `,
     },
-    threads: {
-      generateTitle: false,
-    },
   },
 });
 
 export const evergreenAgent: Agent = new Agent({
+  id: 'evergreenAgent',
   name: 'evergreenAgent',
   description:
     'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources',

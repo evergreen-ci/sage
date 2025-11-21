@@ -1,12 +1,11 @@
-import { RuntimeContext } from '@mastra/core/runtime-context';
+import { RequestContext } from '@mastra/core/request-context';
 import z from 'zod';
-import { callWorkflowWithTrace } from '@/evals/tracer';
-import { WorkflowOutput } from '@/evals/types';
+import { WorkflowEvalOutput } from '@/evals/types';
 import { mastra } from '@/mastra';
 
 interface TracedWorkflowOptions<Input, Output, WorkflowInput> {
   workflowName: string;
-  setupRuntimeContext?: (input: Input) => RuntimeContext;
+  setupRequestContext?: (input: Input) => RequestContext;
   transformResponse?: (
     response: {
       result: string;
@@ -27,24 +26,29 @@ const createTracedWorkflow =
   <Input, Output, WorkflowInput>(
     options: TracedWorkflowOptions<Input, Output, WorkflowInput>
   ) =>
-  async (input: Input): Promise<WorkflowOutput<Input, Output>> => {
+  async (input: Input): Promise<WorkflowEvalOutput<Input, Output>> => {
     const transformedInput = options.transformInput
       ? await options.transformInput(input)
       : input;
-    // Create runtime context
-    const runtimeContext = options.setupRuntimeContext
-      ? options.setupRuntimeContext(input)
-      : new RuntimeContext();
+
+    // Create request context
+    const requestContext = options.setupRequestContext
+      ? options.setupRequestContext(input)
+      : new RequestContext();
 
     // Get the workflow
     const workflow = mastra.getWorkflow(options.workflowName);
 
+    const start = Date.now();
     // Generate response with default or provided options
-    const run = await workflow.createRunAsync({});
+    const run = await workflow.createRun({});
+    console.log(transformedInput);
     const response = await run.start({
       inputData: transformedInput,
-      runtimeContext,
+      requestContext,
     });
+    const end = Date.now();
+    console.log('ended here ');
     if (response.status === 'failed') {
       throw new Error(`Workflow run failed: ${response.error}`);
     }
@@ -77,6 +81,7 @@ const createTracedWorkflow =
     return {
       input,
       output,
+      duration: end - start,
     };
   };
 
@@ -90,6 +95,4 @@ export const tracedWorkflowEval =
     options: TracedWorkflowOptions<Input, Output, WorkflowInput>
   ) =>
   async (input: Input) =>
-    await callWorkflowWithTrace<Input, Output>(
-      async () => await createTracedWorkflow(options)(input)
-    );
+    await createTracedWorkflow(options)(input);

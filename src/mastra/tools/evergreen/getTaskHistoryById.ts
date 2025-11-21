@@ -1,6 +1,7 @@
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { TaskHistoryDirection } from '@/gql/generated/types';
+import { isValidationError } from '@/mastra/tools/utils';
 import getTaskTool from './getTask';
 import getTaskHistoryTool from './getTaskHistory';
 
@@ -45,15 +46,14 @@ const getTaskHistoryByIdTool = createTool({
     'Get the execution history of a task from Evergreen using its task ID. This tool fetches task details internally to determine the correct parameters, then retrieves and returns only the historical execution data for that task. It requires a taskId and optionally an execution number and limit.',
   inputSchema: getTaskHistoryByIdInputSchema,
   outputSchema: getTaskHistoryByIdOutputSchema,
-  execute: async ({ context, runtimeContext, tracingContext }) => {
-    const { execution, limit, taskId } = context;
-
+  execute: async (inputData, context) => {
+    const { limit, taskId } = inputData;
     // Step 1: Fetch task data
-    const taskResult = await getTaskTool.execute({
-      context: { taskId, execution },
-      runtimeContext,
-      tracingContext,
-    });
+    const taskResult = await getTaskTool.execute(inputData, context);
+
+    if (isValidationError(taskResult)) {
+      throw new Error(taskResult.message);
+    }
 
     const { task } = taskResult;
     if (!task) {
@@ -91,8 +91,8 @@ const getTaskHistoryByIdTool = createTool({
     };
 
     // Step 4: Fetch task history
-    const historyResult = await getTaskHistoryTool.execute({
-      context: {
+    const historyResult = await getTaskHistoryTool.execute(
+      {
         options: {
           taskName: displayName,
           buildVariant,
@@ -101,9 +101,12 @@ const getTaskHistoryByIdTool = createTool({
           limit,
         },
       },
-      tracingContext,
-      runtimeContext,
-    });
+      context
+    );
+
+    if (isValidationError(historyResult)) {
+      throw new Error(historyResult.message);
+    }
 
     return {
       history: historyResult,

@@ -1,5 +1,5 @@
-import { createTool, Tool } from '@mastra/core';
-import { ToolExecutionContext } from '@mastra/core/tools';
+import type { ValidationError } from '@mastra/core/dist/tools/validation';
+import { createTool } from '@mastra/core/tools';
 import { z, ZodType } from 'zod';
 
 const inputSchema = z.object({
@@ -22,10 +22,7 @@ const constructAgentMessage = (input: z.infer<typeof inputSchema>) => `
  * @returns A tool that can be used to execute the agent.
  */
 export const createToolFromAgent = <
-  TInputSchema extends ZodType = typeof inputSchema,
   TOutputSchema extends ZodType = typeof outputSchema,
-  TSuspendSchema extends ZodType = ZodType<unknown>,
-  TResumeSchema extends ZodType = ZodType<unknown>,
 >(
   agentId: string,
   description: string,
@@ -36,21 +33,45 @@ export const createToolFromAgent = <
     description,
     inputSchema,
     outputSchema: customOutputSchema || outputSchema,
-    execute: async ({ context, mastra, runtimeContext }) => {
-      const callableAgent = mastra?.getAgent(agentId);
+    execute: async (inputData, context) => {
+      const { requestContext } = context || {};
+      const callableAgent = context?.mastra?.getAgent(agentId);
       if (!callableAgent) {
         throw new Error(`Agent ${agentId} not found`);
       }
-      const constructedMessage = constructAgentMessage(context);
+      const constructedMessage = constructAgentMessage(inputData);
       const result = await callableAgent.generate(constructedMessage, {
-        runtimeContext,
+        requestContext,
       });
       return result.text;
     },
-  }) as Tool<
-    TInputSchema,
-    TOutputSchema,
-    TSuspendSchema,
-    TResumeSchema,
-    ToolExecutionContext<TInputSchema>
-  >;
+  });
+
+/**
+ * Type guard to check if a tool response is a validation error.
+ * @param response - The response from a tool execution
+ * @returns True if the response is a ValidationError, false otherwise
+ */
+export const isValidationError = (
+  response: unknown
+): response is ValidationError => {
+  if (!response || typeof response !== 'object') {
+    return false;
+  }
+
+  const possibleError = response as Record<string, unknown>;
+
+  return (
+    possibleError.error === true &&
+    typeof possibleError.message === 'string' &&
+    possibleError.validationErrors !== undefined
+  );
+};
+
+/**
+ * Type guard to check if a tool response is a successful response (not a validation error).
+ * @param response - The response from a tool execution
+ * @returns True if the response is a successful tool response, false if it's a validation error
+ */
+export const isToolResponse = <T = unknown>(response: unknown): response is T =>
+  !isValidationError(response);

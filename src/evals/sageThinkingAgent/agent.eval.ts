@@ -1,5 +1,4 @@
-import { RuntimeContext } from '@mastra/core/runtime-context';
-import { ToolResultPart } from 'ai';
+import { RequestContext } from '@mastra/core/request-context';
 import { Factuality } from 'autoevals';
 import { Eval } from 'braintrust';
 import { ReporterName, PROJECT_NAME } from '@/evals/constants';
@@ -15,14 +14,14 @@ Eval(
     data: loadTestCases<TestCase>('sage_thinking_agent_dataset'),
     task: tracedAgentEval<TestInput, TestResult>({
       agentName: SAGE_THINKING_AGENT_NAME,
-      setupRuntimeContext: input => {
-        const runtimeContext = new RuntimeContext();
-        runtimeContext.set(USER_ID, input.user);
-        return runtimeContext;
+      setupRequestContext: input => {
+        const requestContext = new RequestContext();
+        requestContext.set(USER_ID, input.user);
+        return requestContext;
       },
       transformResponse: response => {
-        const toolResults = response.toolResults as ToolResultPart[];
-        const toolsUsed = toolResults.map(t => t.toolName);
+        const toolResults = response.toolCalls;
+        const toolsUsed = toolResults.map(t => t.payload.toolName);
         return {
           text: response.text,
           toolsUsed,
@@ -34,20 +33,20 @@ Eval(
         metadata.scoreThresholds.Factuality
           ? Factuality({
               expected: expected.text,
-              output: output.text,
+              output: output.output.text,
               input: input.content,
             })
           : null,
       ({ expected, output }) =>
         ToolUsage({
-          output: output.toolsUsed,
+          output: output.output.toolsUsed,
           expected: expected.toolsUsed,
           mode: ToolUsageMode.Subset,
         }),
       ({ expected, metadata, output }) =>
         metadata.scoreThresholds.TechnicalAccuracy
           ? TechnicalAccuracy({
-              output: output.text,
+              output: output.output.text,
               expected: expected.text,
             })
           : null,

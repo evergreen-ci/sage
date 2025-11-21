@@ -1,4 +1,5 @@
-import { createWorkflow, createStep, createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
+import { createWorkflow, createStep } from '@mastra/core/workflows';
 import { z } from 'zod';
 import { logMetadataSchema } from '@/constants/parsley/logMetadata';
 import {
@@ -6,6 +7,7 @@ import {
   getEvergreenTaskFileURL,
 } from '@/constants/parsley/logURLTemplates';
 import { getTaskTestsTool } from '@/mastra/tools/evergreen';
+import { isValidationError } from '@/mastra/tools/utils';
 import { LogTypes } from '@/types/parsley';
 
 /** Log types that can be turned into URLs directly from metadata */
@@ -78,23 +80,25 @@ const fetchTestResultsForTestLog = createStep({
     testId: z.string(),
     groupId: z.string().optional(),
   }),
-  execute: async ({ inputData, runtimeContext, suspend, tracingContext }) => {
+  execute: async ({ inputData, ...contextArgs }) => {
     const { logMetadata } = inputData;
 
     if (logMetadata.log_type !== LogTypes.EVERGREEN_TEST_LOGS) {
       throw new Error('Expected test log metadata but received a non-test log');
     }
 
-    const testResults = await getTaskTestsTool.execute({
-      context: {
+    const testResults = await getTaskTestsTool.execute(
+      {
         id: logMetadata.task_id,
         execution: logMetadata.execution,
         groupId: logMetadata.group_id,
       },
-      runtimeContext,
-      tracingContext,
-      suspend,
-    });
+      contextArgs
+    );
+
+    if (isValidationError(testResults)) {
+      throw new Error(testResults.message);
+    }
 
     return {
       testResults,
@@ -215,13 +219,12 @@ export const resolveLogFileUrlTool = createTool<
     logMetadata: logMetadataSchema,
   }),
   outputSchema: z.string(),
-  execute: async ({ context, runtimeContext, tracingContext }) => {
-    const run = await resolveLogFileUrl.createRunAsync({});
+  execute: async (inputData, context) => {
+    const run = await resolveLogFileUrl.createRun({});
 
     const runResult = await run.start({
-      inputData: context,
-      runtimeContext,
-      tracingContext,
+      inputData,
+      ...context,
     });
     if (runResult.status === 'success') {
       return runResult.result;

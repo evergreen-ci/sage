@@ -16,7 +16,7 @@ const healthRoute = async (req: Request, res: Response) => {
     return;
   }
 
-  const agents = mastra.getAgents();
+  const agents = mastra.listAgents();
   if (!agents || Object.keys(agents).length === 0) {
     res.status(500).json({
       status: 'error',

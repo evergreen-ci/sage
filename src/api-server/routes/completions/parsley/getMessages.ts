@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from '@/mastra';
 import { SAGE_THINKING_AGENT_NAME } from '@/mastra/agents/constants';
-import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
+import { createParsleyRequestContext } from '@/mastra/memory/parsley/requestContext';
 import { logger } from '@/utils/logger';
 
 const getMessagesParamsSchema = z.object({
@@ -36,7 +36,7 @@ const getMessagesRoute = async (
 
   const { conversationId } = paramsData;
 
-  const runtimeContext = createParsleyRuntimeContext();
+  const requestContext = createParsleyRequestContext();
 
   try {
     const agent = mastra.getAgent(SAGE_THINKING_AGENT_NAME);
@@ -48,7 +48,7 @@ const getMessagesRoute = async (
       res.status(500).json({ message: 'Agent not found' });
       return;
     }
-    const memory = await agent.getMemory({ runtimeContext });
+    const memory = await agent.getMemory({ requestContext });
     if (!memory) {
       logger.error('Memory not found', {
         requestId: res.locals.requestId,
@@ -88,12 +88,10 @@ const getMessagesRoute = async (
       return;
     }
 
-    const messages = await memory.query({
+    const messages = await memory.recall({
       threadId: conversationId,
     });
-    const convertedMessages = convertMessages(messages.uiMessages).to(
-      'AIV5.UI'
-    );
+    const convertedMessages = convertMessages(messages.messages).to('AIV5.UI');
 
     res.status(200).json({ messages: convertedMessages });
   } catch (error) {

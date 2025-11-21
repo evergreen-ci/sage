@@ -1,4 +1,9 @@
-import { WorkflowResult, Step, StepResult, StepsRecord } from '@mastra/core';
+import {
+  WorkflowResult,
+  StepResult,
+  StepsRecord,
+  Step,
+} from '@mastra/core/workflows';
 import { z } from 'zod';
 
 /**

@@ -1,5 +1,6 @@
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { isValidationError } from '@/mastra/tools/utils';
 import getTaskTool from './getTask';
 import getVersionTool from './getVersion';
 
@@ -16,24 +17,17 @@ const getVersionFromTaskTool = createTool({
     'Get version information from Evergreen using a task ID. This tool fetches the task details first, then retrieves the associated version information. It requires a taskId and optionally an execution number.',
   inputSchema: getVersionFromTaskInputSchema,
   outputSchema: getVersionFromTaskOutputSchema,
-  execute: async ({ context, runtimeContext, tracingContext }) => {
-    const { execution, taskId } = context;
-
+  execute: async (inputData, context) => {
     // Step 1: Fetch task data
-    const taskResult = await getTaskTool.execute({
-      context: { taskId, execution },
-      runtimeContext,
-      tracingContext,
-    });
+    const taskResult = await getTaskTool.execute(inputData, context);
 
-    const { task } = taskResult;
-
-    if (!task) {
-      throw new Error('Cannot fetch version: task data is missing');
+    if (isValidationError(taskResult)) {
+      throw new Error(taskResult.message);
     }
 
+    const { task } = taskResult;
     // Step 2: Extract and validate version ID
-    const versionId = task.versionMetadata?.id;
+    const versionId = task?.versionMetadata?.id;
 
     if (!versionId) {
       throw new Error(
@@ -42,13 +36,16 @@ const getVersionFromTaskTool = createTool({
     }
 
     // Step 3: Fetch version data
-    const versionResult = await getVersionTool.execute({
-      context: {
+    const versionResult = await getVersionTool.execute(
+      {
         id: versionId,
       },
-      tracingContext,
-      runtimeContext,
-    });
+      context
+    );
+
+    if (isValidationError(versionResult)) {
+      throw new Error(versionResult.message);
+    }
 
     return versionResult;
   },
