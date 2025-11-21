@@ -59,9 +59,10 @@ export type AgentEvalOutput<TInput, TOutput> = {
   duration: number;
 };
 
-export type WorkflowOutput<TInput, TOutput> = {
+export type WorkflowEvalOutput<TInput, TOutput> = {
   input: TInput;
   output: TOutput;
+  duration: number;
 };
 
 // Utility types
