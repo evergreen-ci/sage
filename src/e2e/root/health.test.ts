@@ -14,6 +14,7 @@ describe('Health check', () => {
       'sageThinkingAgent',
       'evergreenAgent',
       'questionClassifierAgent',
+      'questionOwnershipAgent',
       'slackThreadSummarizerAgent',
     ]);
   });

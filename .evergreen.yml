@@ -46,6 +46,7 @@ buildvariants:
       - name: log-analyzer-workflow-evals
       - name: sage-thinking-evals
       - name: slack-thread-summarizer-evals
+      - name: slack-question-ownership-evals
     display_tasks:
       - name: evals
         execution_tasks:
@@ -54,6 +55,7 @@ buildvariants:
           - "log-analyzer-workflow-evals"
           - "sage-thinking-evals"
           - "slack-thread-summarizer-evals"
+          - "slack-question-ownership-evals"
 tasks:
   - name: compile
     commands:
@@ -133,6 +135,14 @@ tasks:
       - func: attach-braintrust-results
         vars:
           xml_file_name: slack_thread_summarizer_evals.xml
+  - name: slack-question-ownership-evals
+    commands:
+      - func: yarn-eval
+        vars:
+          eval_dir: questionOwnershipAgent
+      - func: attach-braintrust-results
+        vars:
+          xml_file_name: slack_question_ownership_evals.xml
 
 functions:
   attach-test-results:
