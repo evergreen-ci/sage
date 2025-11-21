@@ -11,7 +11,6 @@ COPY package.json yarn.lock ./
 RUN yarn install
 
 COPY . .
-# Build with VERSION already set as environment variable
 RUN yarn build
 
 
