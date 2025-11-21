@@ -41,7 +41,6 @@ describe('Logger', () => {
 
       expect(loggerInstance.error).toHaveBeenCalledWith(message, {
         error: error,
-        stack: error.stack,
         userId: '123',
         action: 'test',
       });
@@ -80,7 +79,6 @@ describe('Logger', () => {
 
       expect(loggerInstance.error).toHaveBeenCalledWith(message, {
         error,
-        stack: error.stack,
       });
     });
   });
