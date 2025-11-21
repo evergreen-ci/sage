@@ -121,7 +121,7 @@ export const questionOwnershipOutputSchema = z.object({
 /** @returns Full list of team descriptions in one string. */
 const buildTeamDescriptions = (): string =>
   Object.entries(DEVPROD_TEAMS)
-    .map(([key, team]) => `- ${key}: ${team.description}`)
+    .map(([key, team]) => `- ${key} (ID ${team.id}): ${team.description}`)
     .join('\n');
 
 export const questionOwnershipAgent = new Agent({
@@ -135,6 +135,8 @@ user's question, identify the most appropriate team to handle it.
 1) Analyze the user's question. Look for the main systems that they
    are asking about.
 2) Determine which DevProd team should handle it from the list below.
+   You MUST provide exactly the ID listed for the team you choose. DO
+   NOT GUESS and DO NOT MAKE UP IDs.
 3) Explain your reasoning
 4) Return JSON only that matches the output schema
 
