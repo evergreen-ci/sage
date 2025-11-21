@@ -40,8 +40,8 @@
     "load-dataset-into-braintrust": "vite-node src/evals/scripts/braintrust-dataset-loader.ts"
   },
   "dependencies": {
-    "@ai-sdk/azure": "^2.0.70",
-    "@ai-sdk/openai": "^2.0.68",
+    "@ai-sdk/azure": "^2.0.73",
+    "@ai-sdk/openai": "^2.0.71",
     "@ai-sdk/provider": "^2.0.0",
     "@mastra/ai-sdk": "^1.0.0-beta.3",
     "@mastra/braintrust": "^1.0.0-beta.1",

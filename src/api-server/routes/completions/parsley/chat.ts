@@ -1,4 +1,4 @@
-import { toAISdkFormat } from '@mastra/ai-sdk';
+import { toAISdkStream } from '@mastra/ai-sdk';
 import { AgentMemoryOption } from '@mastra/core/agent';
 import { trace } from '@opentelemetry/api';
 import {
@@ -198,7 +198,7 @@ const chatRoute = async (
     pipeUIMessageStreamToResponse({
       response: res,
       stream: createAISdkStreamWithMetadata(
-        toAISdkFormat(stream, { from: 'agent' })!,
+        toAISdkStream(stream, { from: 'agent' })!,
         {
           spanId: stream.traceId,
         }
