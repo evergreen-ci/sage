@@ -6,7 +6,7 @@ import { TestCase } from './types';
 const createEvalConfig = (): BaseEvalConfig<TestCase> => ({
   reporterName: ReporterName.SlackQuestionOwnership,
   testSuiteName: 'Slack Question Ownership Evals',
-  xmlFileOutputName: 'question_ownership_evals',
+  xmlFileOutputName: 'slack_question_ownership_evals',
   calculateScores: createScoreChecker,
 });
 
