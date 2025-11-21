@@ -6,7 +6,7 @@ clone:
   depth: 50
 
 platform:
-  arch: amd64
+  arch: arm64
 
 trigger:
   branch:
@@ -26,6 +26,8 @@ steps:
       tags:
         - git-${DRONE_COMMIT_SHA:0:7}
         - latest
+      build_args:
+        - VERSION=${DRONE_COMMIT_SHA:0:7}
       access_key:
         from_secret: ecr_access_key
       secret_key:
@@ -78,7 +80,7 @@ steps:
         - promote
       target:
         - production
-  
+
   - name: deploy-staging
     image: public.ecr.aws/kanopy/drone-helm:v3
     settings:
@@ -88,7 +90,7 @@ steps:
       namespace: devprod-evergreen
       release: sage
       values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=sage.devprod-evergreen.staging.corp.mongodb.com,env.VERSION=${DRONE_COMMIT_SHA:0:7}
-      values_files: ["environments/staging.yaml"]
+      values_files: ['environments/staging.yaml']
       api_server: https://api.staging.corp.mongodb.com
       kubernetes_token:
         from_secret: staging_kubernetes_token
@@ -108,7 +110,7 @@ steps:
       namespace: devprod-evergreen
       release: sage
       values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=sage.devprod-evergreen.prod.corp.mongodb.com,env.VERSION=${DRONE_COMMIT_SHA:0:7}
-      values_files: ["environments/prod.yaml"]
+      values_files: ['environments/prod.yaml']
       api_server: https://api.prod.corp.mongodb.com
       kubernetes_token:
         from_secret: prod_kubernetes_token
