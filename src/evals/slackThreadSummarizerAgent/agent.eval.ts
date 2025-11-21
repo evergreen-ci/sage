@@ -21,12 +21,12 @@ Eval(
       ({ expected, input, output }) =>
         Factuality({
           expected: expected.text,
-          output: output.text,
+          output: output.output.text,
           input: input,
         }),
       ({ expected, output }) =>
         TechnicalAccuracy({
-          output: output.text,
+          output: output.output.text,
           expected: expected.text,
         }),
     ],

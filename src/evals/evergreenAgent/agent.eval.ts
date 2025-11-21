@@ -1,5 +1,4 @@
 import { RequestContext } from '@mastra/core/request-context';
-import { ToolResultPart } from 'ai';
 import { Factuality } from 'autoevals';
 import { Eval } from 'braintrust';
 import { ReporterName, PROJECT_NAME } from '@/evals/constants';
@@ -21,8 +20,8 @@ Eval(
         return requestContext;
       },
       transformResponse: response => {
-        const toolResults = response.toolResults as ToolResultPart[];
-        const toolsUsed = toolResults.map(t => t.toolName);
+        const toolResults = response.toolCalls;
+        const toolsUsed = toolResults.map(t => t.payload.toolName);
         return {
           text: response.text,
           toolsUsed,
@@ -33,12 +32,12 @@ Eval(
       ({ expected, input, output }) =>
         Factuality({
           expected: expected.text,
-          output: output.text,
+          output: output.output.text,
           input: input.content,
         }),
       ({ expected, output }) =>
         ToolUsage({
-          output: output.toolsUsed,
+          output: output.output.toolsUsed,
           expected: expected.toolsUsed,
           mode: ToolUsageMode.ExactMatch,
         }),
