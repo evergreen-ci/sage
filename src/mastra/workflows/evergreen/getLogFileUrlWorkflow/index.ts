@@ -156,8 +156,8 @@ const chooseLogUrl = createStep({
   description:
     'Select the resolved log URL from either the direct or test branch',
   inputSchema: z.object({
-    buildDirectLogUrl: z.string(),
-    testLogUrl: z.string(),
+    buildDirectLogUrl: z.string().optional(),
+    testLogUrl: z.string().optional(),
   }),
   outputSchema: z.string(),
   execute: async ({ inputData }) => {

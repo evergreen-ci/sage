@@ -169,7 +169,6 @@ describe('getLogFileUrlWorkflow', () => {
       // execution and fileName missing
     };
 
-    const wr = await startRun(invalid);
-    expect(wr.status).toBe('failed');
+    await expect(startRun(invalid)).rejects.toThrow();
   });
 });

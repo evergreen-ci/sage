@@ -51,7 +51,8 @@ describe('createGraphQLTool', () => {
   });
 
   it('executes query successfully with userID', async () => {
-    mockExecuteQuery.mockResolvedValueOnce({ data: 'mockData' });
+    const mockResponse = { task: { id: 'abc123' } };
+    mockExecuteQuery.mockResolvedValueOnce(mockResponse);
 
     const tool = createGraphQLTool({
       id: 'get-task',
@@ -67,7 +68,7 @@ describe('createGraphQLTool', () => {
       tracingContext,
     });
 
-    expect(result).toEqual({ data: 'mockData' });
+    expect(result).toEqual(mockResponse);
     expect(mockExecuteQuery).toHaveBeenCalledWith(
       query,
       inputData,
