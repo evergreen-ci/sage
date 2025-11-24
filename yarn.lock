@@ -58,13 +58,21 @@
     "@ai-sdk/provider-utils" "3.0.17"
     "@vercel/oidc" "3.0.5"
 
-"@ai-sdk/google-v5@npm:@ai-sdk/google@2.0.23":
-  version "2.0.23"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/google/-/google-2.0.23.tgz#f09b23eb91e6af9251a9d8c0dfbedeef7012391b"
-  integrity sha512-VbCnKR+6aWUVLkAiSW5gUEtST7KueEmlt+d6qwDikxlLnFG9pzy59je8MiDVeM5G2tuSXbvZQF78PGIfXDBmow==
+"@ai-sdk/google-v5@npm:@ai-sdk/google@2.0.40":
+  version "2.0.40"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/google/-/google-2.0.40.tgz#95e94f5ac7e532f8ec7bd39859ca1b64e36abc66"
+  integrity sha512-E7MTVE6vhWXQJzXQDvojwA9t5xlhWpxttCH3R/kUyiE6y0tT8Ay2dmZLO+bLpFBQ5qrvBMrjKWpDVQMoo6TJZg==
   dependencies:
     "@ai-sdk/provider" "2.0.0"
-    "@ai-sdk/provider-utils" "3.0.12"
+    "@ai-sdk/provider-utils" "3.0.17"
+
+"@ai-sdk/mistral-v5@npm:@ai-sdk/mistral@2.0.23":
+  version "2.0.23"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/mistral/-/mistral-2.0.23.tgz#97f067d7076f6e2fd3af3998ca85845c968f2aee"
+  integrity sha512-np2bTlL5ZDi7iAOPCF5SZ5xKqls059iOvsigbgd9VNUCIrWSf6GYOaPvoWEgJ650TUOZitTfMo9MiEhLgutPfA==
+  dependencies:
+    "@ai-sdk/provider" "2.0.0"
+    "@ai-sdk/provider-utils" "3.0.16"
 
 "@ai-sdk/openai-compatible-v5@npm:@ai-sdk/openai-compatible@1.0.22":
   version "1.0.22"
@@ -133,6 +141,15 @@
     "@ai-sdk/provider" "2.0.0"
     "@standard-schema/spec" "^1.0.0"
     eventsource-parser "^3.0.5"
+
+"@ai-sdk/provider-utils@3.0.16":
+  version "3.0.16"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/provider-utils/-/provider-utils-3.0.16.tgz#17b7170bf51a7a690bf0186490ce29a8ce50a961"
+  integrity sha512-lsWQY9aDXHitw7C1QRYIbVGmgwyT98TF3MfM8alNIXKpdJdi+W782Rzd9f1RyOfgRmZ08gJ2EYNDhWNK7RqpEA==
+  dependencies:
+    "@ai-sdk/provider" "2.0.0"
+    "@standard-schema/spec" "^1.0.0"
+    eventsource-parser "^3.0.6"
 
 "@ai-sdk/provider-utils@3.0.17":
   version "3.0.17"
@@ -1556,10 +1573,10 @@
   resolved "https://registry.yarnpkg.com/@libsql/win32-x64-msvc/-/win32-x64-msvc-0.5.22.tgz#3d8eb9d092ebe18005dea97953575d981f669621"
   integrity sha512-Fj0j8RnBpo43tVZUVoNK6BV/9AtDUM5S7DF3LB4qTYg1LMSZqi3yeCneUTLJD6XomQJlZzbI4mst89yspVSAnA==
 
-"@mastra/ai-sdk@^0.2.6":
-  version "0.2.6"
-  resolved "https://registry.yarnpkg.com/@mastra/ai-sdk/-/ai-sdk-0.2.6.tgz#f36797fcb8f7ab9d5475063149cf29801beed2c5"
-  integrity sha512-zvPopeT8wpkipjV84ucXLR5o5cBioZQEyqGpEdzal8UlQQ8mzcU8Vk7GD4FXG/FdFyDN/Ers9EBGPu+wVab3Rg==
+"@mastra/ai-sdk@^0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@mastra/ai-sdk/-/ai-sdk-0.3.1.tgz#1bb04e416847d8b63a48c18c98f47dd38d32bc31"
+  integrity sha512-kCRIl7s5QLlCwaVWQFe/oNjCbmOeyyQFYJD5qVk5zBj0CRrdUzZr/uIOeEJ6MHf47iYuXAc2pxU5NmlJLvQbYQ==
   dependencies:
     ai "^5.0.60"
 
@@ -1570,14 +1587,15 @@
   dependencies:
     braintrust "^0.4.3"
 
-"@mastra/core@^0.24.0":
-  version "0.24.0"
-  resolved "https://registry.yarnpkg.com/@mastra/core/-/core-0.24.0.tgz#bd753e3a840ff2753dcf2884787b2ffa7adfbc21"
-  integrity sha512-lurtcdObDJE1Hb6p6Byu67i2mnNFVSE1ylVnbtcAqSXmfW7rRNx61B+inJmVSMZOu2gVtfoH3Q0tMrjBsJwm6g==
+"@mastra/core@^0.24.5":
+  version "0.24.5"
+  resolved "https://registry.yarnpkg.com/@mastra/core/-/core-0.24.5.tgz#e7c323d8a13ca1d98bcb1a660cb6a47ec0b2230f"
+  integrity sha512-qeME8S7bgc1dbgx5lUcTwt0EOHLu6YBUOHmhRstQFWGRtq3lxMexJ1RPmhZLiOcGPR6/8D8mWDnv/dMOKA8E8w==
   dependencies:
     "@a2a-js/sdk" "~0.2.4"
     "@ai-sdk/anthropic-v5" "npm:@ai-sdk/anthropic@2.0.33"
-    "@ai-sdk/google-v5" "npm:@ai-sdk/google@2.0.23"
+    "@ai-sdk/google-v5" "npm:@ai-sdk/google@2.0.40"
+    "@ai-sdk/mistral-v5" "npm:@ai-sdk/mistral@2.0.23"
     "@ai-sdk/openai-compatible-v5" "npm:@ai-sdk/openai-compatible@1.0.22"
     "@ai-sdk/openai-v5" "npm:@ai-sdk/openai@2.0.53"
     "@ai-sdk/provider" "^1.1.3"
@@ -1621,15 +1639,15 @@
     xstate "^5.20.1"
     zod-to-json-schema "^3.24.6"
 
-"@mastra/deployer@^0.24.0":
-  version "0.24.0"
-  resolved "https://registry.yarnpkg.com/@mastra/deployer/-/deployer-0.24.0.tgz#158a4895e4043e8ae9b83d58e1d54e1696cb6b02"
-  integrity sha512-nC5thq5zuPTtR59LKN61iFq+MFxiFJRDE2gWP6VbaMK7cYV2HAJriX1CRPpxqHNBGpS68V9Vk943YaMOcxIOXA==
+"@mastra/deployer@^0.24.5":
+  version "0.24.5"
+  resolved "https://registry.yarnpkg.com/@mastra/deployer/-/deployer-0.24.5.tgz#2f40569647e3f646adbe314bb08a1f10cae21411"
+  integrity sha512-iTt5nI1dyLFwr9jtRlXNQutoIDgG/rbCrtdCOgiQpRlybmtSEuf86V8EoYd+ueA7ZiFk9r+hCwfaj/UdTsrDfQ==
   dependencies:
     "@babel/core" "^7.28.4"
     "@babel/helper-module-imports" "^7.27.1"
     "@babel/preset-typescript" "^7.27.1"
-    "@mastra/server" "^0.24.0"
+    "@mastra/server" "^0.24.5"
     "@neon-rs/load" "^0.1.82"
     "@optimize-lodash/rollup-plugin" "^5.0.2"
     "@rollup/plugin-alias" "5.1.1"
@@ -1700,10 +1718,10 @@
     mongodb "^6.17.0"
     uuid "^11.1.0"
 
-"@mastra/rag@^1.3.4":
-  version "1.3.4"
-  resolved "https://registry.yarnpkg.com/@mastra/rag/-/rag-1.3.4.tgz#0fe85413d48a6f64479294f8b46cc6c265e868ae"
-  integrity sha512-Lg0pH4TBiWqYYvMI9ypn1cQQnntbFEw8mL2CWHQEl30SYTqG3WW8/C76X73y3QFE6elnWU3hix66KDFYqgxo9g==
+"@mastra/rag@^1.3.5":
+  version "1.3.5"
+  resolved "https://registry.yarnpkg.com/@mastra/rag/-/rag-1.3.5.tgz#80e5c1cfa6ab3e0e3cd0d13aee7cf49a2f1f18ee"
+  integrity sha512-Uy/2F0V/AacloTezNE9r0mCeRskoLccoocgRQrUD8VnCtu8zTo2O+yxt3rU+ipaY/ovMKShzCtrBwFY3FbbN4Q==
   dependencies:
     "@paralleldrive/cuid2" "^2.2.2"
     big.js "^7.0.1"
@@ -1722,10 +1740,10 @@
     zod-from-json-schema-v3 "npm:zod-from-json-schema@^0.0.5"
     zod-to-json-schema "^3.24.6"
 
-"@mastra/server@^0.24.0":
-  version "0.24.0"
-  resolved "https://registry.yarnpkg.com/@mastra/server/-/server-0.24.0.tgz#3b8a137485e1cd69760ce4ae51c3bdf812eeedb0"
-  integrity sha512-/p26002D8Lpg4bztazSJZxVtoAmi7cwHLkhgEdFf352ePxn44JOLLdBq/3Jk2EJ0xjfPwsDs8ByqpKBOOrybYw==
+"@mastra/server@^0.24.5":
+  version "0.24.5"
+  resolved "https://registry.yarnpkg.com/@mastra/server/-/server-0.24.5.tgz#cd5305cacee030168bd101cc69ef379f859e5cb4"
+  integrity sha512-MVw/o0ALgdDXXxVD0j3EmgpN1yKIXc5CpcuCUWzvLOmnnH/L80ouD1ObNXYXJPcpEzvWl0TvKEZjENxNhpIs+A==
 
 "@mongodb-js/saslprep@^1.1.9":
   version "1.3.0"
@@ -7946,14 +7964,14 @@ map-cache@^0.2.0:
   resolved "https://registry.yarnpkg.com/map-cache/-/map-cache-0.2.2.tgz#c32abd0bd6525d9b051645bb4f26ac5dc98a0dbf"
   integrity sha512-8y/eV9QQZCiyn1SprXSrCmqJN0yNRATe+PO8ztwqrvrbdRLA3eYJF0yaR0YayLWkMbsQSKWS9N2gPcGEc4UsZg==
 
-mastra@^0.18.0:
-  version "0.18.0"
-  resolved "https://registry.yarnpkg.com/mastra/-/mastra-0.18.0.tgz#48a9ef9de25fa856bd202a20dc418fccf62250b6"
-  integrity sha512-qfSk/wjxPrw1kpYq4K/XWXl451+mIW6U7d7HlVOeDdlVGTORLXwSDFf7OP7LWOkLCDhkZVYVOObH/4GQ7UcKWg==
+mastra@^0.18.5:
+  version "0.18.5"
+  resolved "https://registry.yarnpkg.com/mastra/-/mastra-0.18.5.tgz#e7b79ede0cea8647f37219e38ef2fc7997022f2e"
+  integrity sha512-/e5/h8BzjZLm01Y0VsONqxBu+jgij/ERmRQZXXSds5gVmkkWmyfnVpjE9eqxZjQZyyzovLs/XIqVmuJ6QUGs+w==
   dependencies:
     "@clack/prompts" "^0.11.0"
     "@expo/devcert" "^1.2.0"
-    "@mastra/deployer" "^0.24.0"
+    "@mastra/deployer" "^0.24.5"
     "@mastra/loggers" "^0.10.19"
     "@opentelemetry/auto-instrumentations-node" "^0.62.1"
     "@opentelemetry/core" "^2.0.1"
