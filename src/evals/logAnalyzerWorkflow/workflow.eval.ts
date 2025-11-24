@@ -37,12 +37,12 @@ Eval(
       ({ expected, input, output }) =>
         Factuality({
           expected: expected.summary,
-          output: output.summary,
+          output: output.output.summary,
           input: input.file.reference.filename,
         }),
       ({ expected, output }) =>
         TechnicalAccuracy({
-          output: output.summary,
+          output: output.output.summary,
           expected: expected.summary,
         }),
     ],
