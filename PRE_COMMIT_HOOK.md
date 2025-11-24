@@ -7,12 +7,10 @@ This project uses [Husky](https://typicode.github.io/husky/) to manage Git hooks
 The pre-commit hook runs the following checks on staged files:
 
 1. **TypeScript Compilation Check** (`yarn tsc --noEmit`)
-
    - Ensures all TypeScript code compiles without errors
    - Uses `--noEmit` flag to only check compilation without generating output files
 
 2. **ESLint Strict Check** (`yarn eslint:strict`)
-
    - Runs ESLint with strict mode enabled (`STRICT=1`)
    - Enforces stricter linting rules that are treated as errors instead of warnings
 
