@@ -201,6 +201,7 @@ For detailed information about running evals, managing datasets, scoring, and re
 Before deploying, you can check which commits are pending deployment to an environment:
 
 1. Switch to the appropriate kubectl context:
+
    - **Production**: Run `kcp` (switches to production context)
    - **Staging**: Run `kcs` (switches to staging context)
 

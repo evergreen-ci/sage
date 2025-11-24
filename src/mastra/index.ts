@@ -9,6 +9,7 @@ import { questionClassifierAgent } from './agents/planning/questionClassifierAge
 import { sageThinkingAgent } from './agents/planning/sageThinkingAgent';
 import { questionOwnershipAgent } from './agents/questionOwnershipAgent';
 import { slackThreadSummarizerAgent } from './agents/slackThreadSummarizerAgent';
+import { releaseNotesAgent } from './agents/releaseNotesAgent';
 import * as evergreenWorkflows from './workflows/evergreen';
 import { logCoreAnalyzerWorkflow } from './workflows/logCoreAnalyzer';
 
@@ -48,11 +49,11 @@ export const mastra: Mastra = new Mastra({
           process.env.BRAINTRUST_EVAL === 'true'
             ? []
             : [
-                new BraintrustExporter({
-                  apiKey: config.braintrust.apiKey,
-                  projectName: config.braintrust.projectName,
-                }),
-              ],
+              new BraintrustExporter({
+                apiKey: config.braintrust.apiKey,
+                projectName: config.braintrust.projectName,
+              }),
+            ],
       },
     },
   },
@@ -62,6 +63,7 @@ export const mastra: Mastra = new Mastra({
     questionClassifierAgent,
     questionOwnershipAgent,
     slackThreadSummarizerAgent,
+    releaseNotesAgent,
   },
   logger: new WinstonMastraLogger({
     name: 'Mastra',

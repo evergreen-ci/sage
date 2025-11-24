@@ -1,0 +1,331 @@
+{
+  "jiraIssues": [
+    {
+      "key": "CLOUDP-349236",
+      "issueType": "IMPROVEMENT",
+      "summary": "Introduce an APP setting to bypass on demand snapshots triggered by FCV change detection",
+      "description": "\u00a0\n{code:java}\n[mms         ] 14:08:37.586 INFO           (ClusterFCVChangeSvc.java:86) Queuing on demand snapshot due to replica set FCV change at timestamp: TS time:Mon Sep 29 14:07:48 GMT 2025 inc:1 \n[mms         ] 14:18:37.593 INFO           (ClusterFCVChangeSvc.java:86) Queuing on demand snapshot due to replica set FCV change at timestamp: TS time:Mon Sep 29 14:13:45 GMT 2025 inc:1 \n\n[mms         ] 14:08:51.979 INFO  (WTCheckpointTargetedConfigCallSvc.jav Triggering queued Ondemand snapshot for replica set rs0 requested by system at: TS time:Mon Sep 29 14:08:37 GMT 2025 inc:1 \n[mms         ] 14:23:40.117 INFO  (WTCheckpointTargetedConfigCallSvc.jav Triggering queued Ondemand snapshot for replica set rs0 requested by system at: TS time:Mon Sep 29 14:18:37 GMT 2025 inc:1  {code}\n\u00a0\n\n\u00a0"
+    },
+    {
+      "key": "CLOUDP-349395",
+      "issueType": "IMPROVEMENT",
+      "summary": "MBRU -Refactor allowList and denyList fallback logic to use value-based comparisons instead of pointer checks"
+    },
+    {
+      "key": "CLOUDP-352555",
+      "issueType": "BUG",
+      "summary": "Fix GetProcessConfigJobSuite.TestGetProcessConfigJob",
+      "description": "Addressing these flaky tests once and for all"
+    },
+    {
+      "key": "CLOUDP-350099",
+      "issueType": "IMPROVEMENT",
+      "summary": "Split agent integration and full tests",
+      "description": "We don't have a great differentiation between integration and full tests in the agent, which results in long patch times and difficulty requiring certain tests to pass.\u00a0\n\nThe goal of this ticket is to split up our test groups between full tests (that spawn an agent and/or perform permanent server changes) and integration tests so that they can be run separately.\u00a0"
+    },
+    {
+      "key": "CLOUDP-337723",
+      "issueType": "IMPROVEMENT",
+      "summary": "Break mms-automation fulltest package into multiple sub-packages to streamline CODEOWNERS",
+      "description": "Right now PRs that add or modify a fulltest always trigger an automation CODEOWNERS review.\n\nWe should break up this package into multiple modules to make it easier for teams to define their areas of ownership."
+    },
+    {
+      "key": "CLOUDP-342297",
+      "issueType": "IMPROVEMENT",
+      "summary": "Update power build to use rhel8",
+      "description": "We need to remove the rhel7 build of the agent in ops-manager 8.0+"
+    },
+    {
+      "key": "CLOUDP-343657",
+      "issueType": "IMPROVEMENT",
+      "summary": "Normalize the `role.privileges.resource` record before sending to server",
+      "description": "Automation agent should sanitize the role.privileges.resource record to ensure that empty db and collection are not being passed to server if `cluster: true`:\n\n{noformat}\ndb.createRole({\n... role: \"BypassWriteBlockingRole\",\n... privileges: [\n... {\n... resource: { cluster: true, db: \"\", collection: \"\" },\n... actions: [ \"bypassWriteBlockingMode\" ]\n... }\n... ],\n... roles: []\n... })\n{noformat}\n\n\n\n"
+    },
+    {
+      "key": "CLOUDP-352922",
+      "issueType": "IMPROVEMENT",
+      "summary": "Update golangci-lint to 2.5.0"
+    },
+    {
+      "key": "CLOUDP-95257",
+      "issueType": "IMPROVEMENT",
+      "summary": "Process CPU metrics not collected when using an alias",
+      "description": "As noticed in HELP-25966, when a deployment is using the [Host Mappings alias|https://docs.opsmanager.mongodb.com/current/tutorial/nav/host-mappings/#aliases] feature, process CPU metrics are not reported. This results in an empty chart. We fail to report process cpu metrics in this situation because in order to collect metrics, we first run a check to see if the connection's hostname-port matches the process's [here|https://github.com/10gen/mms-automation/blob/49fff48b393fd2ac5a318313694e20577f5f48e2/go_planner/src/com.tengen/cm/metrics/processcpu/processcpu.go#L53-L56]. In addition to checking {{process.MonitoringHostPort}}, we want to check if {{connParams.HostPort}} matches the alias.\u00a0\n\nThe above check was added as part of\u00a0CLOUDP-36835. Be sure to verify that adding this check does not impact the issue fixed in CLOUDP-36835.\u00a0"
+    },
+    {
+      "key": "CLOUDP-335977",
+      "issueType": "IMPROVEMENT",
+      "summary": "Implement general-purpose admin settings API",
+      "description": "Implement a general purpose admin settings API that will support setting up authentication programatically. More information in [this spike.|https://docs.google.com/document/d/1RKZCoI--AsOT7qPV2qcyki_f5VrIYueUEqsUsfDnYiI/edit?tab=t.vl55rsakjit2#heading=h.ho3njb3zfk9v]\n\n\u00a0\n\nSubtasks:\n # Implement GET and PATCH API\n ## Also implement the notion of properties that take effect only when OM is restarted\n # Make server side validations consistent with UI\n # Implement LDAP validation logic with LDAP params",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-335977: General purpose public API for admin settings (#140340)",
+          "description": "PR created by backporter.py\nCherry-picking 8b452c60eb55f2190ade66f03de8510f08ec713e onto branch ops-manager-8.0.\nOriginal PR(s): [CLOUDP-335977: General purpose public API for admin settings](https://github.com/10gen/mms/pull/140340)\nJira Issue: [CLOUDP-335977](https://jira.mongodb.org/browse/CLOUDP-335977)"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-342593",
+      "issueType": "IMPROVEMENT",
+      "summary": "Block snapshot until all nodes are on the same 4.4.29-s8 special build",
+      "description": "For this project purposes, we only need to take a snapshot for 4.4.29-s8 special build.\u00a0 We don't need to take snapshot for 8.0.S8 build or any intermediary FCV state changes.\u00a0 Attached an image to demonstrate entire upgrade path.\u00a0\n\n\u00a0\n\n\u00a0\n\nCustomer will be upgrading from 4.4.29 FCV 4.4 to\u00a0 4.4.29-s8 FCV 4.4.\u00a0 While customer is not planning on taking a snapshot during the binary mixed stage, we still should block snapshots to be safe until all the nodes finished upgrading.\u00a0\n\n\u00a0\n\n\u00a0\n\nI think ops manager does not block snapshot if shard's have mixed binaries.\u00a0 The following targeted config call could be a good spot to adjust new requirements - it retrieves all backup statuses belonging to a cluster, but iterates each one individually.\u00a0\n\n\u00a0\n\n\u00a0\n\n[https://github.com/10gen/mms/blob/9f760c50d797c33ca9f318a64dc8c5c2de06f64d/server/src/main/com/xgen/cloud/brs/web/_public/svc/WTCheckpointTargetedConfigCallSvc.java#L237-#L252]\n\n\u00a0",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-342593: Block snapshots until all nodes are on the same speci",
+          "description": "\u2026l build, gate FCV on demand snapshots behind feature flag (#144653)\n\n# Ticket\n[CLOUDP-349236](https://jira.mongodb.org/browse/CLOUDP-349236), [CLOUDP-342593](https://jira.mongodb.org/browse/CLOUDP-342593)\n\n# Description\nManual back-port of commit  https://github.com/10gen/mms/pull/144653"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-356482",
+      "issueType": "IMPROVEMENT",
+      "summary": "Update Ops Manager 8.0.16 Open JDK",
+      "description": "\nMore info on JDK releases: https://adoptium.net\nJDK repackaging guide: https://wiki.corp.mongodb.com/x/IwhABQ\n\nNOTE: This ticket is a P1 due to it being a release blocker for Ops Manager 8.0.16\nMarking such tickets as P1 has been previously agreed in the OM Release Automation Scope: https://docs.google.com/a/mongodb.com/document/d/1STedF-tTDG0vSw03XuvSLD4gh9SEA1zTCnmOrmFqNjw/edit?disco=AAAADdKR8bU\n",
+      "additionalMetadata": {
+        "release_notes": "JDK updated to jdk-21.0.9+10"
+      },
+      "pullRequests": [
+        {
+          "title": "CLOUDP-356482: Update Ops Manager 8.0.16 Open JDK",
+          "description": "CLOUDP-356482\n\nThis PR was created by [PCT](https://docs.devprod.prod.corp.mongodb.com/mms/python/src/pct).\n\n> Actually manually\n\nPlease see the [JDK Upgrade Guide](https://docs.devprod.prod.corp.mongodb.com/mms/python/src/pct/apps/jdk) for more information.\n\n# Reviewer Checklist\n- [x] `WORKSPACE` file OpenJDK version was updated (if needed)\n- [x] `.tools-version` OpenJDK version was updated (if needed)\n**NOTE:** Only instances where the previous version's major version matches the new version's major version should be updated.\nIn other words, an update to the JDK17 version should only be applied to instances of JDK17, and should not update the major version of other instances (i.e. JDK11)."
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-298218",
+      "issueType": "IMPROVEMENT",
+      "summary": "Backup agent restores download direct from s3",
+      "description": "Backup Restores download direct from s3",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-298218: [OM-8.0] Adds direct S3 restore feature.",
+          "description": "Backport https://github.com/10gen/mms/pull/131605\n\nhttps://jira.mongodb.org/browse/CLOUDP-298218"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-340162",
+      "issueType": "BUG",
+      "summary": "Time range filter in the Ops Manager Activity Feed tab not working",
+      "description": "The time range filter in the Ops Manager Activity Feed tab is not working properly.\nOM versions: 7.0.15 and 8.0.12\nThe dialog disappeared after clicking Apply.\n\nBut it work as expected with\nOM versions: 7.0.12 and 8.0.1\n\nPlease refer to the HELP ticket attached for the UI screenshot attachments",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-340162: Fix time range filter in OM activity feed (#146038)",
+          "description": "PR created by backporter.py\nCherry-picking 2f74a5db2de470a95d1cff62378712c3d09a960b onto branch ops-manager-8.0.\nOriginal PR(s): [CLOUDP-340162: Fix time range filter in OM activity feed](https://github.com/10gen/mms/pull/146038)\nJira Issue: [CLOUDP-340162](https://jira.mongodb.org/browse/CLOUDP-340162)"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-356384",
+      "issueType": "BUG",
+      "summary": "Delete a newly introduced validation to avoid breaking customers setup",
+      "description": "We introduced new server side validations that match client side validations as part of CLOUDP-346599. However one of the validation introduced would break customer's setup: \"mms.mongoDbUsage.defaultUsageType\"\n\nThis setting can be provided as either enum or string (without the validation in place) e.g both \"Production Server\" and \"PRODUCTION_SERVER\" are valid values. For now we will remove this validation until we can come up with something better",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-356384: Remove app setting validation for mms.mongoDbUsage.defaultUsageType",
+          "description": "# Ticket\n\nJira: https://jira.mongodb.org/browse/CLOUDP-356384\n\n# Description\n\n<!-- Please include a summary of the changes and the related issue. Be sure to include relevant motivation and context. -->\n\nWe introduced new server side validations that match client side validations as part of [CLOUDP-346599](https://jira.mongodb.org/browse/CLOUDP-346599). However one of the validation introduced would break customer's setup: \"mms.mongoDbUsage.defaultUsageType\"\n\nThis setting can be provided as either enum or string (without the validation in place) e.g both \"Production Server\" and \"PRODUCTION_SERVER\" are valid values. For now we will remove this validation until we can come up with something better\n\n# Testing\n\n- [x] Unit tests\n- [x] Evergreen test stuite \n\n# Documentation\n\n<!-- Please describe the documentation changes that need to be made. -->\n\n<!--\nAvailable Evergreen Comment Commands\nevergreen retry - attempts to create a new PR patch; this is useful when something went wrong with automatically creating PR patches\nevergreen keep-definitions - reuse the tasks from the previous patch in subsequent patches\nevergreen reset-definitions - reset the patch tasks to the original definition\nevergreen refresh - resyncs PR GitHub checks\nevergreen help - comments the above info\n -->"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-354438",
+      "issueType": "IMPROVEMENT",
+      "summary": "Add junit5 support to ops-manager-8.0",
+      "description": "Some PRs checked in to ops-manager-main, as part of this effort, relied on junit5 for unit tests. Junit5 is present on ops-manager-main but not on ops-manager-8.0 or ops-manager-8.0. Since we don't plan to develop any new features in 7.0 due to its upcoming EOL, this Jira tracks the effort for introducing Junit5 only to ops-manager-8.0.",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-354438: Backport of CLOUDP-298146 - add JUnit 5 dependencies (#120154)",
+          "description": "Cherry picking [3e3d207](https://github.com/10gen/mms/commit/3e3d207fc3df808d51ebc198588516b664663250) onto branch ops-manager-8.0.\n\nOriginal PR: [CLOUDP-298146: add JUnit 5 dependencies](https://github.com/10gen/mms/pull/120154)\n\nJira Issue: [CLOUDP-354438](https://jira.mongodb.org/browse/CLOUDP-354438)"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-347217",
+      "issueType": "IMPROVEMENT",
+      "summary": "Stale/old workloads - Deprecated deployments on Project page",
+      "description": "https://docs.google.com/document/d/18Ugl0kPccV0QsFDDFF4bw_lrh59dI0E2ODoTStYrOdw/edit?tab=t.0#heading=h.d3xrovyxw7a",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-347217 warning on Deployment page regarding unsupported hosts.",
+          "description": "backport of https://github.com/10gen/mms/pull/146394\n\n# Ticket\n\nhttps://jira.mongodb.org/browse/CLOUDP-347217"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-349624",
+      "issueType": "IMPROVEMENT",
+      "summary": "Add restartRequired for appropriate Admin settings exposed via public API",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-349624: Return restartRequired flag in admin settings api (#144410)",
+          "description": "PR created by backporter.py\nCherry-picking d0af3a5d83cb3eee9462103dd48942972106b1db onto branch ops-manager-8.0.\nOriginal PR(s): [CLOUDP-349624: Return restartRequired flag in admin settings api](https://github.com/10gen/mms/pull/144410)\nJira Issue: [CLOUDP-349624](https://jira.mongodb.org/browse/CLOUDP-349624)"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-351256",
+      "issueType": "IMPROVEMENT",
+      "summary": "Stale/old workloads - Feature Flag",
+      "description": "[https://docs.google.com/document/d/18Ugl0kPccV0QsFDDFF4bw_lrh59dI0E2ODoTStYrOdw/edit?tab=t.0#heading=h.d3xrovyxw7a]\n\nAll changes should be protected by feature flag.",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-351256 feature flag for unsupported hosts monitoring ",
+          "description": "backport of https://github.com/10gen/mms/pull/146671\n# Ticket\n\nhttps://jira.mongodb.org/browse/CLOUDP-351256"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-345316",
+      "issueType": "BUG",
+      "summary": "Fix the race condition when finishing up/ starting up a clustershot",
+      "description": "\u00a0I think there was a *race condition* in the linked HELP ticket and here were the flow of operations that led to this issue:\n - Lets say we have a a cluster with Shards A-Z\n - The very last shard, shard Z, tries to finalize the current WTC Custershot.\n - Shard Z takes a while to update the next snapshot timestamp AND remove it's cursor description timestamp AFTER removing the topology document.\n - In the meantime other shards does their usual config calls to find out that it's time for clustershot again (from the previous next snapshot timestamp) and one the shards creates a new topology document because of it.\n - Then They all (Shards A - Y) posts their descriptions\n - Then They all (Shards A - Y) call finalize file list endpoint to extend their timestamp, since all the shards at this time has their backup cursor descriptions in the DB the next clustershot continues...\n\n - NOW the Shard Z is done finishing up on the previous clustershot and REMOVES it's own cursor description and mark the clustershot as complete.\n - When the Shard Z's agent does config call OM finds that there is a topology document and create a checkpoint.next view for the agent to start taking snapshot BUT BUT it sees that there is an incomplete clustershot ( the new one ) with No description from shard Z so it sets the checkpointing.next to null for this shard thinking that this shard still needs to send the description.\n\n - THis last shard-z keep calling the config endpoint keep getting back null checkpoints and hence shard Z never finishes and hence the clustershot never finishes.\n\n\u00a0\n\n\u00a0\n\n\u00a0\n\nPlease investigate if this scenario could happen and fix it as well.",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-345316:[OM-8.0-Backport] Check for invalid topology before starting a clustershot",
+          "description": "Original PR(s): https://github.com/10gen/mms/pull/141887\nJira Issue: [CLOUDP-345316](https://jira.mongodb.org/browse/CLOUDP-345316)"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-351557",
+      "issueType": "BUG",
+      "summary": "[OM] Add a warning for using 8.2 version of AppDB",
+      "description": "h3. Background\n\nUsing MongoDB 8.2 version as AppDB is not currently supported. Therefore, Ops Manager should display a warning during startup indicating that the unsupported version is used.\n\nMore details about the issue:\n\n[https://mongodb.slack.com/archives/C1WJ164MU/p1759943445934769]\nh3. Ask\n\nAdd a pre-flight check with the corresponding warning message if the unsupported version is used",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-351557 - [OM] Add a warning for using 8.2 version of AppDB (#144408)",
+          "description": "PR created by backporter.py\nCherry-picking 2e3bf445de6743818d60b502929e71c30d9979c8 onto branch ops-manager-8.0.\nOriginal PR(s): [CLOUDP-351557 - [OM] Add a warning for using 8.2 version of AppDB](https://github.com/10gen/mms/pull/144408)\nJira Issue: [CLOUDP-351557](https://jira.mongodb.org/browse/CLOUDP-351557)"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-347214",
+      "issueType": "IMPROVEMENT",
+      "summary": "Stale/Old workloads - Admin page with deprecated deployments",
+      "description": "https://docs.google.com/document/d/18Ugl0kPccV0QsFDDFF4bw_lrh59dI0E2ODoTStYrOdw/edit?tab=t.0#heading=h.yihixqo5tn9f",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-347214 Admin page with deprecated deployments. (#144266)",
+          "description": "backport of https://github.com/10gen/mms/pull/144266\n\n# Ticket\n\nhttps://jira.mongodb.org/browse/CLOUDP-347214\n\n\n"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-334792",
+      "issueType": "IMPROVEMENT",
+      "summary": "Third-Party Live Restore E2Es",
+      "description": "Clone all of the tests - Replica Set, PIT, Sharded Cluster, PIT Sharded Cluster, Embedded Config\n\nAgent, snapshot, and ops manager are on the same machine\n\nClone current restore test but instead of copying the snapshot to the DB path we'll give the path where the snapshot is as the liveRestore path. Need to update the waiting for the restore job.",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-334792 Add E2Es for third-party live restore (#144203)",
+          "description": "# Ticket\n\nCLOUDP-334792\n\n# Description\n\nBackport https://github.com/10gen/mms/pull/144203\nCommit [457c5e7](https://github.com/10gen/mms/commit/457c5e7691e4a96751dcbfb82a43fcf91a098d9b)\n# Testing\n\n- [ ] <!-- Please describe the tests you ran to verify your changes and include any links to patches. -->\n\n# Documentation\n\n<!-- Please describe the documentation changes that need to be made. -->\n\n<!--\nAvailable Evergreen Comment Commands\nevergreen retry - attempts to create a new PR patch; this is useful when something went wrong with automatically creating PR patches\nevergreen keep-definitions - reuse the tasks from the previous patch in subsequent patches\nevergreen reset-definitions - reset the patch tasks to the original definition\nevergreen refresh - resyncs PR GitHub checks\nevergreen help - comments the above info\n -->"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-347218",
+      "issueType": "IMPROVEMENT",
+      "summary": "Stale/old workloads - REST API",
+      "description": "https://docs.google.com/document/d/18Ugl0kPccV0QsFDDFF4bw_lrh59dI0E2ODoTStYrOdw/edit?tab=t.0#heading=h.i3k506qwn43w",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-347218 - initial rest endpoint. (#145774)",
+          "description": "backport of https://github.com/10gen/mms/pull/145774\n\n# Ticket\n\nhttps://jira.mongodb.org/browse/CLOUDP-347218"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-349378",
+      "issueType": "BUG",
+      "summary": "UnsupportedMongoDbVersionCheck fails on missing host version",
+      "description": "https://jira.mongodb.org/browse/HELP-82585",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-349378 Do not alert on empty host or empty/invalid host version. (#143293)",
+          "description": "PR created by backporter.py\nCherry-picking 9266981ec8aa4967472b6149974183a3ca81dbe7 onto branch ops-manager-8.0.\nOriginal PR(s): [CLOUDP-349378 Do not alert on empty host or empty/invalid host version.](https://github.com/10gen/mms/pull/143293)\nJira Issue: [CLOUDP-349378](https://jira.mongodb.org/browse/CLOUDP-349378)"
+        },
+        {
+          "title": "CLOUDP-349378 don't print exception for invalid version. ",
+          "description": "backport of https://github.com/10gen/mms/pull/144977\n\n# Ticket\nhttps://jira.mongodb.org/browse/CLOUDP-349378"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-346599",
+      "issueType": "BUG",
+      "summary": "Make server side admin settings validation same as UI",
+      "description": "Today there is a mismatch/gap in validation that happens on UI vs server when setting app settings. This task will port over any missing validation that happens on the UI, on server as well.\n\n*Why this change?*\nWe are introduce a new public admin settings API. If we add these validations later in the future, that will be a backwards incompatible change for our customer's deployments. Therefore doing this effort as part of the admin settings API effort.",
+      "additionalMetadata": {
+        "release_notes": "This change introduces new server side validations on a limited set of app settings documented below. \n\nImportant Note: If customers have invalid values for these settings they may start noticing ops manager bootstrap failures due to pre-flight checks. This is intentional for failing fast and have customers fix these values rather than having some abrupt failure thrown later in the code which uses that app settings.\n\nList of configuration validations:\n1. \"mms.https.ClientCertificateMode\":  If present, value must be one of \"none\", \"agents_only\", \"required\"\n2. When LDAP Authentication configured:\n  * \"mms.ldap.url\": must be a URL starting with ldap:// or ldaps:// \n  * \"mms.ldap.referral\": when set, must be one of \"follow\" or \"ignore\"\n3. When SAML Authentication configured:\n  * \"mms.saml.idp.uri\": must not be blank\n  * \"mms.saml.sso.url\": must not be blank\n  * \"mms.saml.x509.cert\": must not be blank\n  * \"mms.saml.global.role.owner\": must not be blank\n  * \"mms.saml.user.firstName\": must not be blank\n  * \"mms.saml.user.lastName\": must not be blank\n  * \"mms.saml.user.email\": must not be blank\n  * \"mms.saml.group.member\": must not be blank\n  * \"mms.saml.signature.algorithm\": when set, must be one of the following\n    * \"http://www.w3.org/2000/09/xmldsig#rsa-sha1\"\n    * \"http://www.w3.org/2000/09/xmldsig#dsa-sha1\"\n    * \"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256\"\n    * \"http://www.w3.org/2001/04/xmldsig-more#rsa-sha384\"\n    * \"http://www.w3.org/2001/04/xmldsig-more#rsa-sha512\"\n4. \"brs.queryable.lruCacheCapacityMB\": when set, must be a positive integer\n5. \"mms.alerts.ReplicaSetAlertCheck.maximumPingAgeMinutes\": when set, must be a positive integer\n6. Any configuration that begins with \"mms.featureFlag\" must be one of \"enabled\", \"controlled\", \"disabled\""
+      },
+      "pullRequests": [
+        {
+          "title": "CLOUDP-346599: Bring server side validations in line with UI client (#142179)",
+          "description": "Cherry-picking [0a7cafc](https://github.com/10gen/mms/commit/0a7cafc468be5e30511e497c1ab3e5b417979365) onto branch ops-manager-8.0.\nOriginal PR(s): [CLOUDP-346599: Bring server side validations in line with UI client](https://github.com/10gen/mms/pull/142179)\nJira Issue: [CLOUDP-346599](https://jira.mongodb.org/browse/CLOUDP-346599)\n"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-349965",
+      "issueType": "IMPROVEMENT",
+      "summary": "Include straight to 8 specific 4.S, 8.S build versions in BackupAppSettings",
+      "description": "We have two patch builds at the moment but there could be updates/fixes to those builds and new patches could be created.\u00a0 Update the BackupAppSettings default value accordingly.\u00a0",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-349965: Enforce straight to 8 restrictions by prefix (#145249)",
+          "description": "PR created by backporter.py\nCherry-picking 7bc39b044c4bb72b671ba9b271702fe24e45e903 onto branch ops-manager-8.0.\nOriginal PR(s): [CLOUDP-349965: Enforce straight to 8 restrictions by prefix (#144859)](https://github.com/10gen/mms/pull/145249)\nJira Issue: [CLOUDP-349965](https://jira.mongodb.org/browse/CLOUDP-349965)"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-353446",
+      "issueType": "IMPROVEMENT",
+      "summary": "Avoid minor releases being the recommended version",
+      "description": "We need to avoid recommending that customers use minor releases.\n\nHere's some context: The release notes for OM introduction of 8.2 support need tweaking a little, but are going to say something along the lines of:\n{quote} * Enables MongoDB Server 8.2 for production use for MongoDB deployments managed by Ops Manager 8.0 but is NOT supported for Ops Manager 8.0 backing databases, including AppDB.\n ** This minor release provides early access to *new features and improvements* ahead of the next Long Term Support (LTS) version.\n ** Minor releases like 8.2 are *not LTS* and follow a ~6-month release cadence. To receive ongoing bug and security fixes, you *must stay on the LTS version or upgrade to the latest available minor release*. Patches are not backported to previous minor versions (e.g., once 8.3 is released, 8.2 will no longer receive patches).\n ** Choosing the minor release path requires a commitment to performing *sequential upgrades* through each subsequent release. Skipping minor versions is not supported when upgrading.\n ** Upgrading to a new minor version requires updating the *Feature Compatibility Version (FCV)*, which is a critical step in the upgrade process, and adheres to the same upgrade logic as a [major version upgrade|https://www.mongodb.com/docs/ops-manager/current/tutorial/change-mongodb-version/].\n ** You have a *grace period of 2 months* after the next release is available to complete your upgrade and remain supported.{quote}\n\nUnfortunately, we don't have general docs to cover minor releases universally.\u00a0\n\n\u00a0\n\nBut what I think we ought to do is:\n # Ensure that only the latest major version patch (e.g. 8.0.x) shows up as the default selection for use.\n # If a minor version is selected, show a warning of:\n\n{quote}_*Caution:*_ *You are selecting a non-LTS (Minor) release.*\n\nMinor releases (e.g., 8.2) give you access to new server features sooner, but they have a rapid, ~6-month support cycle.\n\nPlease review the following support considerations before proceeding:\n # *No Backported Fixes* To receive ongoing bug and security patches, you *must* upgrade to the latest minor release. Once the next version (e.g., 8.3) is out, previous versions ( e.g., 8.2) *will no longer receive updates*.\n # *Sequential Upgrades Required* Once on this path, you *cannot skip* versions. To get from 8.2 to 9.0, you must upgrade sequentially through every subsequent minor release (e.g., 8.2 \u2192 8.3 \u2192 ... \u2192 9.0).\n # *FCV Upgrade Required* Each minor version upgrade requires an FCV (Feature Compatibility Version) change. This is a significant operation, [similar to a major version upgrade|https://www.mongodb.com/docs/ops-manager/current/tutorial/change-mongodb-version/], and impacts your ability to downgrade.\n # *Support Grace Period* You have a 2-month grace period to complete your upgrade after the next release becomes available.{quote}\n\nNot sure how we should convey this in the API??!\n\n\n",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-353446 - Avoid minor releases being the recommended version (#145741)",
+          "description": "PR created by backporter.py\nCherry-picking 76c1daac587818d541dea5a6f40a603138652d7d onto branch ops-manager-8.0.\nOriginal PR(s): [CLOUDP-353446 - Avoid minor releases being the recommended version](https://github.com/10gen/mms/pull/145741)\nJira Issue: [CLOUDP-353446](https://jira.mongodb.org/browse/CLOUDP-353446)"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-353364",
+      "issueType": "IMPROVEMENT",
+      "summary": "Release cloud-automation-ops-manager-8.0 108.0.16.8895-1 to Ops Manager 8.0 (MMS ops-manager-8.0)",
+      "description": "This issue will release cloud-automation-ops-manager-8.0 108.0.16.8895-1 to Ops Manager 8.0 (MMS ops-manager-8.0).\nThe patch build to test this release against Ops Manager 8.0 (MMS ops-manager-8.0) is https://spruce.mongodb.com/version/68f97eabb204e2000796924a\n\nExtra info from the upstream:\nThis ticket will release MongoDB Agent build: https://spruce.mongodb.com/version/cloud_automation_ops_manager_8.0_d14c4c29900c577bf7aeeeba292dbb1c3909292c/tasks?statuses=failed,system-failed&variant=%5E%28%3F%21.%2A%5Cb%28%3F%3APower%7CWindows%7CzSeries%29%5Cb%29.%2B%24\nThe associated Agent commit hash is d14c4c29900c577bf7aeeeba292dbb1c3909292c: https://github.com/10gen/mms-automation/commit/d14c4c29900c577bf7aeeeba292dbb1c3909292c\nThis build contains the latest commits from this waterfall: https://spruce.mongodb.com/commits/cloud-automation-ops-manager-8.0?chartOpen=false&requester=gitter_request&view=FAILED",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-353364: Release cloud-automation-ops-manager-8.0 108.0.16.8895-1",
+          "description": "This PR was created by upstream_release_helper.py"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-356929",
+      "issueType": "BUG",
+      "summary": "Security Finding: update jetty to 11.0.26",
+      "description": "CVE detected for jetty 11.0.25:\n\n[https://nvd.nist.gov/vuln/detail/CVE-2025-5115]\n\nDetected by https://jira.mongodb.org/browse/VULN-741 , but VULN ticket only mentioned http2-common \n\nAll jetty libraries should also be bumped to 11.0.26.\n\nCVE caught by customer (HELP-84203).",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-356929: bump jetty to .26 for CVE fix (#146758)",
+          "description": "# Ticket\n\nhttps://jira.mongodb.org/browse/CLOUDP-356929\n\n# Description\n\nBackport https://github.com/10gen/mms/pull/146758\n\n# Testing\n\n- [x] evergreen\n\n# Documentation\n\n<!-- Please describe the documentation changes that need to be made. -->\n\n<!--\nAvailable Evergreen Comment Commands\nevergreen retry - attempts to create a new PR patch; this is useful when something went wrong with automatically creating PR patches\nevergreen keep-definitions - reuse the tasks from the previous patch in subsequent patches\nevergreen reset-definitions - reset the patch tasks to the original definition\nevergreen refresh - resyncs PR GitHub checks\nevergreen help - comments the above info\n -->"
+        }
+      ]
+    },
+    {
+      "key": "CLOUDP-350236",
+      "issueType": "IMPROVEMENT",
+      "summary": "Release BI Connector 2.14.25 to CM/OM",
+      "description": "Release BI Connector 2.14.25 to CM/OM\n\nRelease notes: https://docs.mongodb.com/bi-connector/current/release-notes/",
+      "pullRequests": [
+        {
+          "title": "CLOUDP-350236: Releasing BI Connector 2.14.25 to OM 8",
+          "description": "# Ticket\n\n[Jira](https://jira.mongodb.org/browse/CLOUDP-350236)\n\n# Description\n\nReleasing BI Connector 2.14.25 to OM 8\n\n# Testing\n\n- [ ] [EVG](https://spruce.mongodb.com/version/69010578d9b14e00074a9f86/tasks?sorts=STATUS%3AASC%3BBASE_STATUS%3ADESC)\n\n# Documentation\n\n<!-- Please describe the documentation changes that need to be made. -->\n\n<!--\nAvailable Evergreen Comment Commands\nevergreen retry - attempts to create a new PR patch; this is useful when something went wrong with automatically creating PR patches\nevergreen keep-definitions - reuse the tasks from the previous patch in subsequent patches\nevergreen reset-definitions - reset the patch tasks to the original definition\nevergreen refresh - resyncs PR GitHub checks\nevergreen help - comments the above info\n -->"
+        }
+      ]
+    }
+  ],
+  "customGuidelines": "Use the Ops Manager release style:\n- Keep the section order as Improvements followed by Bug Fixes.\n- Under Improvements, list version upgrade bullets first in this exact sequence: MongoDB Agent, MongoDB Connector for BI, MongoDB Database Tools, JDK. If multiple Jira issues mention the same upgrade, merge them into a single bullet that cites every issue, references the latest version, and adds a links entry for that version pointing to the release notes URL.\n- Place the remaining improvements after the version upgrade bullets.\n- In Bug Fixes, describe regular fixes first and end with a parent bullet titled \"Fixes the following CVEs:\" whenever vulnerability issues exist. Add one sub-bullet per CVE, cite the related Jira issue, and include links entries for each CVE identifier when a URL is supplied. Omit the CVE bullet entirely when no vulnerability issues are present, and omit citations on the parent CVE bullet since the children carry them.\n- Wrap literal tokens that readers may copy (versions, package names, config keys, CLI commands) in single backticks and ensure any hyperlink targets are recorded in the links array instead of inline markup.\n- Do not introduce extra headings or narrative outside of the requested sections.\n- When adding links, use these URL templates:\n    • MongoDB Agent: https://www.mongodb.com/docs/ops-manager/current/release-notes/mongodb-agent/#std-label-mongodb-<VERSION>\n    • MongoDB Connector for BI: https://www.mongodb.com/docs/bi-connector/current/\n    • MongoDB Database Tools: https://www.mongodb.com/docs/database-tools/release-notes/database-tools-changelog/#std-label-dbtools-<VERSION>-changelog\n    • JDK: https://adoptium.net/temurin/release-notes/?version=<VERSION>\n    • CVE entries: https://nvd.nist.gov/vuln/detail/<CVE_ID>\nCapture these URLs using the links array on the corresponding bullet (use the version or CVE identifier as the link text) instead of creating subitems that just reference release notes. Create subitems only when there is additional actionable guidance beyond linking.",
+  "sections": ["Improvements", "Bug Fixes"]
+}

@@ -4,6 +4,7 @@
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "Node",
+    "resolveJsonModule": true,
     "lib": ["ES2022"],
     "esModuleInterop": true,
     "strict": true,
@@ -39,7 +40,7 @@
     "noFallthroughCasesInSwitch": true,
     "composite": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/**/*.json"],
   // Exclude mastra directory from build. It should be built by mastra dev command.
   "exclude": ["node_modules", "dist"],
   "references": [{ "path": "./tsconfig.node.json" }]
