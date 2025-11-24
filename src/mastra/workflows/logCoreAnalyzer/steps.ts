@@ -104,6 +104,9 @@ export const chunkStep = createStep({
   execute: async ({ mastra, setState, state, tracingContext }) => {
     const logger = mastra.getLogger();
     const { text } = state;
+    if (!text) {
+      throw new Error('Text content is missing in state');
+    }
     const doc = MDocument.fromText(text);
     const chunks = await doc.chunk({
       strategy: 'token',

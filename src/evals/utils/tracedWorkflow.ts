@@ -41,7 +41,7 @@ const createTracedWorkflow =
 
     const start = Date.now();
     // Generate response with default or provided options
-    const run = await workflow.createRun({});
+    const run = await workflow.createRun();
     const response = await run.start({
       inputData: transformedInput,
       requestContext,
