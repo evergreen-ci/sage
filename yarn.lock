@@ -4765,10 +4765,10 @@ ai@^4.3.19:
     "@opentelemetry/api" "1.9.0"
     jsondiffpatch "0.6.0"
 
-ai@^5.0.101, ai@^5.0.60:
-  version "5.0.101"
-  resolved "https://registry.yarnpkg.com/ai/-/ai-5.0.101.tgz#aea90e8503192fb1fc75d94c6440e203d5bc5911"
-  integrity sha512-/P4fgs2PGYTBaZi192YkPikOudsl9vccA65F7J7LvoNTOoP5kh1yAsJPsKAy6FXU32bAngai7ft1UDyC3u7z5g==
+ai@^5.0.102, ai@^5.0.60:
+  version "5.0.102"
+  resolved "https://registry.yarnpkg.com/ai/-/ai-5.0.102.tgz#1c313495edccf19459ec87b4b22da5a7eee42bb5"
+  integrity sha512-snRK3nS5DESOjjpq7S74g8YszWVMzjagfHqlJWZsbtl9PyOS+2XUd8dt2wWg/jdaq/jh0aU66W1mx5qFjUQyEg==
   dependencies:
     "@ai-sdk/gateway" "2.0.15"
     "@ai-sdk/provider" "2.0.0"
