@@ -197,9 +197,10 @@ Q: "What's for lunch?"
 A:
 {"teamName":"Unassigned","teamId":"unassigned","reasoning":"Question is unrelated to DevProd team domains and does not match any team keywords or responsibilities.","originalQuestion":"What's for lunch?"}
   `,
-  defaultGenerateOptions: {
-    output: questionOwnershipOutputSchema,
-    temperature: 0,
+  defaultOptions: {
+    modelSettings: {
+      temperature: 0,
+    },
   },
   model: gpt41,
 });
