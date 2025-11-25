@@ -7,6 +7,7 @@ import { WinstonMastraLogger } from '@/utils/logger/winstonMastraLogger';
 import { evergreenAgent } from './agents/evergreenAgent';
 import { questionClassifierAgent } from './agents/planning/questionClassifierAgent';
 import { sageThinkingAgent } from './agents/planning/sageThinkingAgent';
+import { questionOwnershipAgent } from './agents/questionOwnershipAgent';
 import { slackThreadSummarizerAgent } from './agents/slackThreadSummarizerAgent';
 import * as evergreenWorkflows from './workflows/evergreen';
 import { logCoreAnalyzerWorkflow } from './workflows/logCoreAnalyzer';
@@ -39,6 +40,7 @@ export const mastra: Mastra = new Mastra({
     sageThinkingAgent,
     evergreenAgent,
     questionClassifierAgent,
+    questionOwnershipAgent,
     slackThreadSummarizerAgent,
   },
   logger: new WinstonMastraLogger({

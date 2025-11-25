@@ -61,6 +61,10 @@ class SageServer {
         credentials: true,
       })
     );
+
+    if (config.sentry.enabled) {
+      Sentry.setupExpressErrorHandler(this.app);
+    }
   }
 
   private setupRoutes() {
