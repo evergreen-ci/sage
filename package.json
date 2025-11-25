@@ -61,6 +61,7 @@
     "@opentelemetry/semantic-conventions": "^1.37.0",
     "@opentelemetry/winston-transport": "^0.19.0",
     "@sentry/node": "10.22.0",
+    "@sentry/vite-plugin": "^4.6.0",
     "ai": "^5.0.101",
     "braintrust": "^0.4.9",
     "cors": "^2.8.5",
