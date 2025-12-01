@@ -11,7 +11,12 @@ import {
 import evergreenClient from '../graphql/evergreenClient';
 
 const GET_IMAGE = gql`
-  query Image($imageId: String!) {
+  query Image(
+    $imageId: String!
+    $packageOpts: PackageOpts
+    $toolchainOpts: ToolchainOpts
+    $operatingSystemOpts: OperatingSystemOpts
+  ) {
     image(imageId: $imageId) {
       id
       ami
@@ -35,7 +40,7 @@ const GET_IMAGE = gql`
           }
         }
       }
-      packages(opts: {}) {
+      packages(opts: $packageOpts) {
         data {
           name
           manager
@@ -44,7 +49,7 @@ const GET_IMAGE = gql`
         filteredCount
         totalCount
       }
-      toolchains(opts: {}) {
+      toolchains(opts: $toolchainOpts) {
         data {
           name
           path
@@ -53,7 +58,7 @@ const GET_IMAGE = gql`
         filteredCount
         totalCount
       }
-      operatingSystem(opts: {}) {
+      operatingSystem(opts: $operatingSystemOpts) {
         data {
           name
           version
@@ -67,6 +72,28 @@ const GET_IMAGE = gql`
 
 const getImageInputSchema = z.object({
   imageId: z.string(),
+  packageOpts: z
+    .object({
+      limit: z.number().optional(),
+      manager: z.string().optional(),
+      name: z.string().optional(),
+      page: z.number().optional(),
+    })
+    .optional(),
+  toolchainOpts: z
+    .object({
+      limit: z.number().optional(),
+      name: z.string().optional(),
+      page: z.number().optional(),
+    })
+    .optional(),
+  operatingSystemOpts: z
+    .object({
+      limit: z.number().optional(),
+      name: z.string().optional(),
+      page: z.number().optional(),
+    })
+    .optional(),
 });
 
 const getImageOutputSchema = z.object({
