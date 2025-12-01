@@ -59,6 +59,13 @@ class SageServer {
       cors({
         origin: true,
         credentials: true,
+        allowedHeaders: [
+          'Content-Type',
+          'Authorization',
+          'User-Agent',
+          'x-authenticated-sage-user',
+          'x-kanopy-internal-authorization',
+        ],
       })
     );
 
