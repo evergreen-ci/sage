@@ -65,7 +65,8 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
   );
 
   try {
-    const response = await authenticatedEvergreenFetch(url, {
+    const encodedUrl = new URL(url).toString();
+    const response = await authenticatedEvergreenFetch(encodedUrl, {
       signal: controller.signal,
     });
 
