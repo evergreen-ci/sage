@@ -2,10 +2,10 @@ import { RuntimeContext } from '@mastra/core/runtime-context';
 import { USER_ID } from '@/mastra/agents/constants';
 import { GraphQLClientError } from '@/utils/graphql/client';
 import logger from '@/utils/logger';
-import getDistroTool from './getDistro';
-import evergreenClient from './graphql/evergreenClient';
+import evergreenClient from '../graphql/evergreenClient';
+import getDistroTool from '.';
 
-vi.mock('./graphql/evergreenClient', () => ({
+vi.mock('../graphql/evergreenClient', () => ({
   default: {
     executeQuery: vi.fn(),
   },
@@ -40,6 +40,17 @@ describe('getDistroTool', () => {
         arch: 'linux_amd64',
         provider: 'ec2',
         disabled: false,
+        costData: {
+          onDemandPrice: 0.12,
+          spotPrice: 0.05,
+        },
+        userSpawnAllowed: true,
+        adminOnly: false,
+        warningNote: null,
+        workDir: '/home/ubuntu',
+        hostAllocatorSettings: {
+          maximumHosts: 10,
+        },
       },
     };
 

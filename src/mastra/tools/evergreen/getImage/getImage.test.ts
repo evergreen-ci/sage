@@ -2,10 +2,10 @@ import { RuntimeContext } from '@mastra/core/runtime-context';
 import { USER_ID } from '@/mastra/agents/constants';
 import { GraphQLClientError } from '@/utils/graphql/client';
 import logger from '@/utils/logger';
-import getImageTool from './getImage';
-import evergreenClient from './graphql/evergreenClient';
+import evergreenClient from '../graphql/evergreenClient';
+import getImageTool from '.';
 
-vi.mock('./graphql/evergreenClient', () => ({
+vi.mock('../graphql/evergreenClient', () => ({
   default: {
     executeQuery: vi.fn(),
   },

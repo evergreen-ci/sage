@@ -1,7 +1,7 @@
 import { gql } from 'graphql-tag';
 import { z } from 'zod';
 import { createGraphQLTool } from '@/mastra/utils/graphql/createGraphQLTool';
-import evergreenClient from './graphql/evergreenClient';
+import evergreenClient from '../graphql/evergreenClient';
 
 const LIST_IMAGES = gql`
   query Images {

@@ -7,8 +7,8 @@ import {
   ImageEventType,
   ImageQuery,
   ImageQueryVariables,
-} from '../../../gql/generated/types';
-import evergreenClient from './graphql/evergreenClient';
+} from '../../../../gql/generated/types';
+import evergreenClient from '../graphql/evergreenClient';
 
 const GET_IMAGE = gql`
   query Image($imageId: String!) {

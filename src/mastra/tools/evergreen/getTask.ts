@@ -19,6 +19,7 @@ const GET_TASK = gql`
       projectIdentifier
       requester
       distroId
+      imageId
       baseTask {
         id
       }
@@ -57,6 +58,7 @@ const getTaskOutputSchema = z.object({
     projectIdentifier: z.string().optional().nullable(),
     requester: z.string(),
     distroId: z.string(),
+    imageId: z.string().optional().nullable(),
     baseTask: z
       .object({
         id: z.string(),
