@@ -177,6 +177,13 @@ describe('dataLoader', () => {
       ).rejects.toThrow();
     });
 
+    it('should reject malformed URLs with clear error message', async () => {
+      const malformedUrl = 'not-a-valid-url';
+      await expect(loadFromUrl(malformedUrl)).rejects.toThrow(
+        `Invalid URL provided: "${malformedUrl}". Please provide a valid, well-formed URL.`
+      );
+    });
+
     it('should correctly encode URLs with special characters', async () => {
       const unencodedUrl = 'http://example.com/path with spaces?query=value';
       const encodedUrl = encodeURI(unencodedUrl); // or new URL(unencodedUrl).toString() which is what implementation does
