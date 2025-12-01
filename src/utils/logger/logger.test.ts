@@ -40,8 +40,7 @@ describe('Logger', () => {
       logger.error(message, error, meta);
 
       expect(loggerInstance.error).toHaveBeenCalledWith(message, {
-        error: 'Test error',
-        stack: error.stack,
+        error: error,
         userId: '123',
         action: 'test',
       });
@@ -79,8 +78,7 @@ describe('Logger', () => {
       logger.error(message, error);
 
       expect(loggerInstance.error).toHaveBeenCalledWith(message, {
-        error: 'Test error',
-        stack: error.stack,
+        error,
       });
     });
   });
