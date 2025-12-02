@@ -66,6 +66,7 @@ class SageServer {
           'x-authenticated-sage-user',
           'x-kanopy-internal-authorization',
         ],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
       })
     );
 
