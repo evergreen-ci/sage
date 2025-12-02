@@ -43,6 +43,28 @@ class SageServer {
   private setupMiddleware() {
     // Middleware to add the request id to the request
     this.app.use(requestIdMiddleware);
+
+    // CORS middleware MUST come before authentication to handle OPTIONS preflight requests
+    // OPTIONS requests don't include authentication headers, so they must be handled first
+    this.app.use(
+      cors({
+        origin: true,
+        credentials: true,
+        allowedHeaders: [
+          'Accept',
+          'Accept-Language',
+          'Content-Language',
+          'Content-Type',
+          'Authorization',
+          'User-Agent',
+          'user-agent', // Include lowercase version for Safari/Firefox case sensitivity
+          'x-authenticated-sage-user',
+          'x-kanopy-internal-authorization',
+        ],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+      })
+    );
+
     // Middleware to add the authenticated user id to the request trace
     this.app.use(userIdMiddleware);
     // Middleware to set Sentry user context from authenticated user
@@ -54,14 +76,6 @@ class SageServer {
     // Basic Express middleware
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-
-    this.app.use(
-      cors({
-        origin: true,
-        credentials: true,
-        allowedHeaders: ['User-Agent'],
-      })
-    );
 
     if (config.sentry.enabled) {
       Sentry.setupExpressErrorHandler(this.app);

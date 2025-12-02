@@ -67,6 +67,11 @@ export const userIdMiddleware = (
   res: express.Response,
   next: express.NextFunction
 ) => {
+  // Skip authentication for OPTIONS preflight requests (handled by CORS middleware)
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   const authenticatedUserId = getUserIdFromRequest(req);
   if (!authenticatedUserId) {
     logger.error('No authentication provided', {
