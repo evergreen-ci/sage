@@ -7,6 +7,10 @@
  * @returns The corresponding row ID if found, otherwise undefined.
  * @throws {Error} If the API key is missing or the request fails.
  */
+// Prevent BTQL injection by escaping backslashes and single quotes.
+const escapeForBtql = (value: string): string =>
+  value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
 export const resolveRowIdByTraceId = async (
   traceId: string,
   projectId: string,
@@ -21,10 +25,13 @@ export const resolveRowIdByTraceId = async (
     throw new Error('BRAINTRUST_API_KEY is required to query BTQL');
   }
 
+  const safeProjectId = escapeForBtql(projectId);
+  const safeTraceId = escapeForBtql(traceId);
+
   const query = `
-from: project_logs('${projectId}')
+from: project_logs('${safeProjectId}')
 select: id
-filter: (root_span_id = '${traceId}' AND span_parents = ['${traceId}']) or root_span_id = '${traceId}'
+filter: (root_span_id = '${safeTraceId}' AND span_parents = ['${safeTraceId}']) or root_span_id = '${safeTraceId}'
 sort: created desc
 limit: 1
 `;

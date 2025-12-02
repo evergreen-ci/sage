@@ -31,9 +31,11 @@ export const loadFromFile = async (filePath: string): Promise<LoadResult> => {
 
   // Read file
   const buffer = await fs.readFile(resolvedPath);
-  const { text: textWithLineNumbers } = await appendLineNumbers(buffer);
+  const fileContent = buffer.toString('utf8');
 
-  const estimatedTokens = validateTokenLimit(textWithLineNumbers);
+  // Validate token limits before doing the heavier line-number formatting.
+  const estimatedTokens = validateTokenLimit(fileContent);
+  const { text: textWithLineNumbers } = await appendLineNumbers(fileContent);
 
   logger.debug('File loaded successfully', {
     path: filePath,

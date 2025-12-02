@@ -23,6 +23,13 @@ export const sentryUserContextMiddleware = (
       email: `${res.locals.userId}@mongodb.com`,
       ip_address: req.ip,
     });
+
+    // Clear the user context after the response lifecycle to avoid leaking it to other requests.
+    const clearUserContext = () => {
+      Sentry.setUser(null);
+    };
+    res.once('finish', clearUserContext);
+    res.once('close', clearUserContext);
   }
 
   next();
