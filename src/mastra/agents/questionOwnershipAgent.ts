@@ -23,8 +23,8 @@ const DEVPROD_TEAMS = {
       code ownership, and generally code correctness tools and practices. This
       includes tools like Resmoke, Fern, code coverage, Coveralls, local dev
       containers, mocha, jstests, and integration tests. Any questions about
-      task timeouts, test timeouts, timeouts causing BFs, variant configuration,
-      Gitdailies setup go here.
+      task timeouts, test timeouts, timeouts causing BFs, setting up timeouts,
+      variant configuration, or Gitdailies setup go here.
       Correctness also owns branch and repository syncing (Copybara) for
       10gen/mongo, as well as questions about Github code reviewer sync with
       out-of-office (OOO) status.`,
@@ -41,9 +41,9 @@ const DEVPROD_TEAMS = {
       platform and backend. They handle questions about configuring evergreen
       via YAML files, tasks running (or not running) when they should/shouldn't,
       scheduling of tasks, patches, versions, and CI projects.
-      This team is typically not responsible for explaining why a particular
-      task failed (those go to Unassigned), or understanding what software
-      is running on the host executing the task (goes to DevProd Infrastructure).`,
+      But questions asking why a particular task failed should go to Unassigned.
+      Questions about what software is running on the distro or variant or host
+      executing the task go to DevProd Infrastructure.`,
   },
   'DevProd Evergreen UI': {
     id: '26749',
@@ -104,7 +104,10 @@ const DEVPROD_TEAMS = {
       Cloud Bot, which keeps PagerDuty oncall schedules aligned with a Google
       Calendar and Slack aliases to page a team's oncall ("rota sync"). They
       also support DevProd online documentation (Pine), automated test selection
-      (TSS), and run the Test ROI project.`,
+      (TSS), and run the Test ROI project.
+      But questions about how to debug a BF don't belong here. Instead consider
+      the explanation for why the BF is failing and assign to the appropriate
+      team based on that.`,
   },
   Unassigned: {
     id: 'unassigned',
