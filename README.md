@@ -17,6 +17,9 @@ Non-secret variables are tracked in `.env.defaults`, with environment-specific v
 
 Update `.env.local` or `.env.<NODE_ENV>.local` files with secrets for external services. These files are ignored by git. Refer to the team password manager or ask a teammate for credentials.
 
+- `REDIS_URL` – required for Jira webhooks; points at the Redis instance that backs the issue queue.
+- `JIRA_ISSUE_QUEUE_KEY` – optional key name for the Redis list that stores incoming issue keys (defaults to `queues:jira:issue-keys`).
+
 ### Installation
 
 1. Clone the repository or navigate to the project directory.
@@ -112,6 +115,16 @@ yarn clean
 ```
 
 Removes the `dist/` directory.
+
+---
+
+## Jira Webhooks
+
+- **Endpoint**: `POST /webhooks/jira`
+- **Payload**: Any Jira webhook body that includes `issue.key` (or `issueKey` / `issue_key`)
+- **Behavior**: Extracts the issue key and pushes it onto the Redis list defined by `JIRA_ISSUE_QUEUE_KEY`. Returns `202 Accepted` when queued, `400` for invalid payloads, and `503` if Redis is unavailable.
+
+Requests must be sent with a `Content-Type: application/json` header. Ensure `REDIS_URL` is configured before enabling production webhooks; otherwise, the server will reject incoming Jira events.
 
 ---
 

@@ -75,6 +75,7 @@
     "graphql-tag": "^2.12.6",
     "mongodb": "^6.18.0",
     "query-string": "^9.3.1",
+    "redis": "^5.10.0",
     "uuid": "^13.0.0",
     "winston": "^3.18.3",
     "zod": "^4.1.12"

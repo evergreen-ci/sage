@@ -5,11 +5,16 @@ import cors from 'cors';
 import express, { Application } from 'express';
 import expressListEndpoints from 'express-list-endpoints';
 import { userIdMiddleware } from '@/api-server/middlewares/authentication';
-import { completionsRoute, loginRoute } from '@/api-server/routes';
+import {
+  completionsRoute,
+  loginRoute,
+  jiraWebhookRoute,
+} from '@/api-server/routes';
 import healthRoute from '@/api-server/routes/health';
 import rootRoute from '@/api-server/routes/root';
 import { config } from '@/config';
 import { db } from '@/db/connection';
+import { jiraIssueQueue } from '@/queues/jiraIssueQueue';
 import { logger } from '@/utils/logger';
 import {
   requestIdMiddleware,
@@ -72,6 +77,7 @@ class SageServer {
     this.app.get('/health', healthRoute);
     this.app.use('/completions', completionsRoute);
     this.app.use('/login', loginRoute);
+    this.app.use('/webhooks/jira', jiraWebhookRoute);
   }
 
   private setupErrorHandling() {
@@ -132,6 +138,7 @@ class SageServer {
 
     // Disconnect from database first
     await db.disconnect();
+    await jiraIssueQueue.shutdown();
 
     // Wait briefly for connections to close naturally
     const gracePeriod = 5000; // 5 seconds

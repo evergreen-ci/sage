@@ -89,6 +89,14 @@ export interface Config {
     /** SENTRY_CAPTURE_CONSOLE */
     captureConsole: boolean;
   };
+  redis: {
+    /** REDIS_URL */
+    url: string;
+  };
+  queues: {
+    /** JIRA_ISSUE_QUEUE_KEY */
+    jiraIssueKeyQueue: string;
+  };
 }
 
 /**
@@ -178,6 +186,15 @@ export const config: Config = {
     attachStacktrace: getEnvVar('SENTRY_ATTACH_STACKTRACE', 'true') === 'true',
     captureConsole: getEnvVar('SENTRY_CAPTURE_CONSOLE', 'false') === 'true',
   },
+  redis: {
+    url: getEnvVar('REDIS_URL', ''),
+  },
+  queues: {
+    jiraIssueKeyQueue: getEnvVar(
+      'JIRA_ISSUE_QUEUE_KEY',
+      'queues:jira:issue-keys'
+    ),
+  },
 };
 
 /**
@@ -204,6 +221,7 @@ export const validateConfig = (): string[] | undefined => {
     'EVERGREEN_GRAPHQL_ENDPOINT',
     'EVERGREEN_API_USER',
     'EVERGREEN_API_KEY',
+    'REDIS_URL',
   ];
 
   const errors: string[] = [];
