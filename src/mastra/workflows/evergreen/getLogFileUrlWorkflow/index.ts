@@ -209,6 +209,7 @@ const resolveLogFileUrl = createWorkflow({
   .commit();
 
 export const resolveLogFileUrlTool = createTool<
+  'resolveLogFileUrlTool',
   typeof resolveLogFileUrl.inputSchema,
   typeof resolveLogFileUrl.outputSchema
 >({

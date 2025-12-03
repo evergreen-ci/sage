@@ -125,6 +125,7 @@ const buildTeamDescriptions = (): string =>
     .join('\n');
 
 export const questionOwnershipAgent = new Agent({
+  id: 'questionOwnershipAgent',
   name: SLACK_QUESTION_OWNERSHIP_AGENT_NAME,
   description: `Routes user questions to the appropriate DevProd team 
     based on content analysis.`,

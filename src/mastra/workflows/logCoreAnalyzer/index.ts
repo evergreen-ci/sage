@@ -29,6 +29,7 @@ export const logCoreAnalyzerWorkflow = createWorkflow({
 
 export const logCoreAnalyzerTool: ReturnType<
   typeof createTool<
+    'logCoreAnalyzerTool',
     typeof logCoreAnalyzerWorkflow.inputSchema,
     typeof logCoreAnalyzerWorkflow.outputSchema
   >
