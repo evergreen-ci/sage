@@ -14,6 +14,15 @@
     express "^4.21.2"
     uuid "^11.1.0"
 
+"@ai-sdk/azure@^2.0.0":
+  version "2.0.78"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/azure/-/azure-2.0.78.tgz#e660acabe1b48ee0dc931be7b968740928bc5f23"
+  integrity sha512-g/zroxY9UaXP1nOK9UFiArpme1Cce5vFzsL+z7eWHf2B4f+VN2aOQ9+TC0phc2C7brUXTXwzZLg/z0tDoVZDdQ==
+  dependencies:
+    "@ai-sdk/openai" "2.0.76"
+    "@ai-sdk/provider" "2.0.0"
+    "@ai-sdk/provider-utils" "3.0.18"
+
 "@ai-sdk/azure@^2.0.73":
   version "2.0.73"
   resolved "https://registry.yarnpkg.com/@ai-sdk/azure/-/azure-2.0.73.tgz#f532cea6aa47b9709bc01abb65d14291e88d81e6"
@@ -58,6 +67,14 @@
     "@ai-sdk/provider" "2.0.0"
     "@ai-sdk/provider-utils" "3.0.17"
 
+"@ai-sdk/openai@2.0.76":
+  version "2.0.76"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/openai/-/openai-2.0.76.tgz#c4c67204f696532be7c11cbce9dd48477939d02b"
+  integrity sha512-ryUkhTDVxe3D1GSAGc94vPZsJlSY8ZuBDLkpf4L81Dm7Ik5AgLfhQrZa8+0hD4kp0dxdVaIoxhpa3QOt1CmncA==
+  dependencies:
+    "@ai-sdk/provider" "2.0.0"
+    "@ai-sdk/provider-utils" "3.0.18"
+
 "@ai-sdk/provider-utils-v5@npm:@ai-sdk/provider-utils@3.0.12":
   version "3.0.12"
   resolved "https://registry.yarnpkg.com/@ai-sdk/provider-utils/-/provider-utils-3.0.12.tgz#9812a0b7ce36f2cae81dff3afe70f0c4bde76213"
@@ -89,6 +106,15 @@
   version "3.0.17"
   resolved "https://registry.yarnpkg.com/@ai-sdk/provider-utils/-/provider-utils-3.0.17.tgz#2f3d0be398d3f165efe8dd252b63aea6ac3896d1"
   integrity sha512-TR3Gs4I3Tym4Ll+EPdzRdvo/rc8Js6c4nVhFLuvGLX/Y4V9ZcQMa/HTiYsHEgmYrf1zVi6Q145UEZUfleOwOjw==
+  dependencies:
+    "@ai-sdk/provider" "2.0.0"
+    "@standard-schema/spec" "^1.0.0"
+    eventsource-parser "^3.0.6"
+
+"@ai-sdk/provider-utils@3.0.18":
+  version "3.0.18"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/provider-utils/-/provider-utils-3.0.18.tgz#fc7757ad7eb48a48ce1976da3025f0b9215b1aff"
+  integrity sha512-ypv1xXMsgGcNKUP+hglKqtdDuMg68nWHucPPAhIENrbFAI+xCHiqPVN8Zllxyv1TNZwGWUghPxJXU+Mqps0YRQ==
   dependencies:
     "@ai-sdk/provider" "2.0.0"
     "@standard-schema/spec" "^1.0.0"
@@ -1543,10 +1569,10 @@
   dependencies:
     "@lukeed/csprng" "^1.1.0"
 
-"@mastra/ai-sdk@^1.0.0-beta.3":
-  version "1.0.0-beta.3"
-  resolved "https://registry.yarnpkg.com/@mastra/ai-sdk/-/ai-sdk-1.0.0-beta.3.tgz#a9276a572ca1f6cb6c423084eee51832faad19ef"
-  integrity sha512-ccIbd5Hra3uLpvL/mZz1xRaMIwA9YBLcFCd9UJEuwwRODNA0pMszWVvQQeVjuty2SIHlZzDm648pBp3K3uie6A==
+"@mastra/ai-sdk@^1.0.0-beta.4":
+  version "1.0.0-beta.4"
+  resolved "https://registry.yarnpkg.com/@mastra/ai-sdk/-/ai-sdk-1.0.0-beta.4.tgz#6be1fa2bc60deb07b39ae31ab7a37c0a7a92965a"
+  integrity sha512-GIuRDk6Y3XxN2T9aUfCzjgM5tpgjRwRpRH5SebIMBEZRrQHPHk8QLBmUNv8mZHMFXw9qM2kofrIxhyT32olvHw==
   dependencies:
     ai "^5.0.60"
 
@@ -1558,18 +1584,19 @@
     "@mastra/observability" "1.0.0-beta.1"
     braintrust "^0.4.9"
 
-"@mastra/core@^1.0.0-beta.4":
-  version "1.0.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@mastra/core/-/core-1.0.0-beta.4.tgz#55158b64406ee6b93d9f5870017bc21059e55de4"
-  integrity sha512-4h27OL9ywUVXhRUO6vaYGy0OB+tpQnbuvDOU2XxVt6V/sRfE+7llRVZNzQ45ZHFYcbHaoquECjOZUSrqEH6lUg==
+"@mastra/core@^1.0.0-beta.5":
+  version "1.0.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@mastra/core/-/core-1.0.0-beta.5.tgz#f95aae2d83e569b27a8e3c35a17c065017083a91"
+  integrity sha512-nDg4erEKFWJ5XbZqm3qvNXsaDczlYpVjOtwrsYfaYa/KoXotFDa0QgcMxg4KOnaiprQgLzaKC/MTOUyUmDxt0w==
   dependencies:
     "@a2a-js/sdk" "~0.2.4"
+    "@ai-sdk/azure" "^2.0.0"
     "@ai-sdk/provider-utils-v5" "npm:@ai-sdk/provider-utils@3.0.12"
     "@ai-sdk/provider-v5" "npm:@ai-sdk/provider@2.0.0"
     "@ai-sdk/ui-utils-v5" "npm:@ai-sdk/ui-utils@1.2.11"
     "@isaacs/ttlcache" "^1.4.1"
     "@lukeed/uuid" "^2.0.1"
-    "@mastra/schema-compat" "1.0.0-beta.0"
+    "@mastra/schema-compat" "1.0.0-beta.1"
     "@modelcontextprotocol/sdk" "^1.17.5"
     "@openrouter/ai-sdk-provider-v5" "npm:@openrouter/ai-sdk-provider@1.2.3"
     "@sindresorhus/slugify" "^2.2.1"
@@ -1584,14 +1611,14 @@
     p-retry "^7.1.0"
     radash "^12.1.1"
 
-"@mastra/deployer@^1.0.0-beta.4":
-  version "1.0.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@mastra/deployer/-/deployer-1.0.0-beta.4.tgz#068eb0166a11f1bea4a18c05f54508b5baa38463"
-  integrity sha512-yBghWo0xIA9FhC9rUH/NA3lqCUDNLXgsTs0EPlDziAYRo5Xm+8eicqzmDzOl4yvzeD+LDTRTwurpWApF4N6jaQ==
+"@mastra/deployer@^1.0.0-beta.5":
+  version "1.0.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@mastra/deployer/-/deployer-1.0.0-beta.5.tgz#a7d6e1789681a3fe50d2d7e0a45f21d55d67723e"
+  integrity sha512-3hCnnajraI+CPUvyeDbDVHsiGoRUtjd4Io5+tIpdouAnydykbSNpvnMP+pEHRvXWyN7lFE3oqZ6AE2I+C1J8YA==
   dependencies:
     "@babel/core" "^7.28.5"
     "@babel/preset-typescript" "^7.27.1"
-    "@mastra/server" "^1.0.0-beta.4"
+    "@mastra/server" "^1.0.0-beta.5"
     "@optimize-lodash/rollup-plugin" "^5.0.2"
     "@rollup/plugin-alias" "6.0.0"
     "@rollup/plugin-commonjs" "29.0.0"
@@ -1613,10 +1640,10 @@
     tinyglobby "^0.2.15"
     typescript-paths "^1.5.1"
 
-"@mastra/libsql@^1.0.0-beta.1":
-  version "1.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@mastra/libsql/-/libsql-1.0.0-beta.1.tgz#0dfbc27b45ad8503af338af6ddbb5ab15e49b2c2"
-  integrity sha512-3+63hXAb3T+gaVvws5m7FEMT5NO75LGt9UZshQSic1o+gHcACTl4k+kk/SIwZnym7J05+Z3QQvx1EfT1WcyGQQ==
+"@mastra/libsql@^1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@mastra/libsql/-/libsql-1.0.0-beta.2.tgz#302ae3c1041fbb2d4aebb43c0a3b2804a7878c3f"
+  integrity sha512-CYJqrgM7AEsZtVHll17tfpxEH1h02J445Yur/nSB21Wvs6av2Jbw0kJAFR10tl/ofKMNWe7t6oatEiwZMKXyfg==
   dependencies:
     "@libsql/client" "^0.15.15"
 
@@ -1628,12 +1655,12 @@
     pino "^10.1.0"
     pino-pretty "^13.0.0"
 
-"@mastra/memory@^1.0.0-beta.1":
-  version "1.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@mastra/memory/-/memory-1.0.0-beta.1.tgz#53a7b2a9f206c2a7c01a6319a2e1b462df435e0f"
-  integrity sha512-Yr8dToZou4bVkVeOBzZee8uebAjhy8dNzJHiY7OOhGtuj6lJ5msd/tmuKeGqo66auwF+4c5/M5RlRQd+cf+ggg==
+"@mastra/memory@^1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@mastra/memory/-/memory-1.0.0-beta.2.tgz#a9bac6a0f0e4a67fc629ab530476bbec55570d80"
+  integrity sha512-NgP8s06r8zRYxy+Sg3Des+7eoeNxaDHt8NQQ6OapRGGWJZoeI2nwxkDUE+ARiAkfyrFGzpnsUhRFfjoPkuRrLA==
   dependencies:
-    "@mastra/schema-compat" "1.0.0-beta.0"
+    "@mastra/schema-compat" "1.0.0-beta.1"
     ai "^4.3.19"
     ai-v5 "npm:ai@5.0.60"
     async-mutex "^0.5.0"
@@ -1641,10 +1668,10 @@
     json-schema "^0.4.0"
     xxhash-wasm "^1.1.0"
 
-"@mastra/mongodb@^1.0.0-beta.1":
-  version "1.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@mastra/mongodb/-/mongodb-1.0.0-beta.1.tgz#2411dbfef9c53971f5dfc02e3bc3a7419b922b9b"
-  integrity sha512-yqsLd5FdxD8e2B5FW2RIWaxZXIbx/UUAB/zM93226RYiRgR+Gtj6i4erm7PxH5XoUpicALLeSCA11dE9j4M9wQ==
+"@mastra/mongodb@^1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@mastra/mongodb/-/mongodb-1.0.0-beta.2.tgz#e9db563f433a8dc4431cf28126f0544ca2f56045"
+  integrity sha512-JvQQ9q5JpUwEwwZHqOw45RHh3ooeTy+b8LM/6TN1bjeLX4Yflas1eKRJKm4DzH6kfY2OiW+n06h/jGAL21ullA==
   dependencies:
     "@types/mongodb" "^4.0.7"
     cloudflare "^4.5.0"
@@ -1658,10 +1685,10 @@
   dependencies:
     zod "^3.25.76"
 
-"@mastra/rag@^2.0.0-beta.1":
-  version "2.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@mastra/rag/-/rag-2.0.0-beta.1.tgz#2d554fee8810042a3aed84be7daacdfa44070f4f"
-  integrity sha512-DuEeApANwGZHx2jhfmECgRnuyUuZaXOkHB5+q9hMD7EXFDj3pJUEncK2quNs366Ap0Lqk3u2ScPkfpLqBZJ6Pg==
+"@mastra/rag@^2.0.0-beta.2":
+  version "2.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@mastra/rag/-/rag-2.0.0-beta.2.tgz#457f938aa2bd997ebbbf420c5c88388988e3355b"
+  integrity sha512-YLwcy4GEcnb83gTcIVNeZ0bBU//6ru9Yl/qGoLvb2AeXiJ4lA+lrcJyAgkHh3tc1Qymvd3mfWAm92aJC4/aB9w==
   dependencies:
     "@paralleldrive/cuid2" "^2.3.1"
     big.js "^7.0.1"
@@ -1670,20 +1697,22 @@
     pathe "^2.0.3"
     zeroentropy "0.1.0-alpha.6"
 
-"@mastra/schema-compat@1.0.0-beta.0":
-  version "1.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@mastra/schema-compat/-/schema-compat-1.0.0-beta.0.tgz#4a72cbaeb9ef314cb71b1170b8fe613ccb13790c"
-  integrity sha512-KHs9/5Tdgx5X6P57fzXfynakJtxVNTjV04siVXO2HKb6XQ+MZncfFG+OIfEMqEzTCrah1rc8OHZwMJeSaO+AIA==
+"@mastra/schema-compat@1.0.0-beta.1":
+  version "1.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@mastra/schema-compat/-/schema-compat-1.0.0-beta.1.tgz#417c928ed9c0ee0cbd9baff29b2bc0028ed16ac3"
+  integrity sha512-z55GglIfBl9XMWxPyaq5HhdiYQZamwztGIAXGH+xFtSXgurYk32IWLdlG1xASvwC4TxvoRA+PaReeIwwW3u7nw==
   dependencies:
     json-schema "^0.4.0"
     zod-from-json-schema "^0.5.0"
     zod-from-json-schema-v3 "npm:zod-from-json-schema@^0.0.5"
     zod-to-json-schema "^3.24.6"
 
-"@mastra/server@^1.0.0-beta.4":
-  version "1.0.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@mastra/server/-/server-1.0.0-beta.4.tgz#9c7054eea25c3396983f50bcc8e72f8fffe42ade"
-  integrity sha512-UvpX/MhfIaJWMk2CjANI1iVY2I+XfxfSS+335tEVV7stuIVuMwJr1lTptUTPmGoBIjI8h4CgUhqzh45Cg/zu1Q==
+"@mastra/server@^1.0.0-beta.5":
+  version "1.0.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@mastra/server/-/server-1.0.0-beta.5.tgz#02fcae06fe47e48d26606242e4ea2a793effc2f9"
+  integrity sha512-4dOj9xfrdUVAQsN6ezAXmVZGtpzHou9PTCOFdJ7sdMLaThZbcPulIVpqXFnV+MOrpYpUK8r89xyjWgenPyL11A==
+  dependencies:
+    hono "^4.10.5"
 
 "@modelcontextprotocol/sdk@^1.17.5":
   version "1.22.0"
@@ -7307,14 +7336,14 @@ map-cache@^0.2.0:
   resolved "https://registry.yarnpkg.com/map-cache/-/map-cache-0.2.2.tgz#c32abd0bd6525d9b051645bb4f26ac5dc98a0dbf"
   integrity sha512-8y/eV9QQZCiyn1SprXSrCmqJN0yNRATe+PO8ztwqrvrbdRLA3eYJF0yaR0YayLWkMbsQSKWS9N2gPcGEc4UsZg==
 
-mastra@^1.0.0-beta.3:
-  version "1.0.0-beta.3"
-  resolved "https://registry.yarnpkg.com/mastra/-/mastra-1.0.0-beta.3.tgz#0c3ecb80731c0a5a435b5472a2859a5032479603"
-  integrity sha512-q6Y+bq2fBBeMC9xjkRaeJ/Tcko2/D61UP6eVpRWcnP8pMGnHf8mCvGTenXQodVt8w4lVdE4s1lPX5NwTG/r3WQ==
+mastra@^1.0.0-beta.4:
+  version "1.0.0-beta.4"
+  resolved "https://registry.yarnpkg.com/mastra/-/mastra-1.0.0-beta.4.tgz#ae96f0928a8789a12497756e47a973acc90b062d"
+  integrity sha512-AuEpChPIj2hwYWrMbxH4aS1OVmskg6LXzwTVLRuS3LAayyeL0bvJ/cCa3oKIO2MyqJrqMm+FaoYRQo2gRjOb6A==
   dependencies:
     "@clack/prompts" "^0.11.0"
     "@expo/devcert" "^1.2.0"
-    "@mastra/deployer" "^1.0.0-beta.4"
+    "@mastra/deployer" "^1.0.0-beta.5"
     "@mastra/loggers" "^1.0.0-beta.1"
     commander "^14.0.2"
     dotenv "^17.2.3"
