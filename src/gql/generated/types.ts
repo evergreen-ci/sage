@@ -29,7 +29,7 @@ export type Scalars = {
   Duration: { input: number; output: number };
   Map: { input: any; output: any };
   StringMap: { input: { [key: string]: any }; output: { [key: string]: any } };
-  Time: { input: Date; output: Date };
+  Time: { input: string; output: string };
 };
 
 export type ApiConfig = {
@@ -185,6 +185,7 @@ export type AdminSettings = {
   logPath?: Maybe<Scalars['String']['output']>;
   loggerConfig?: Maybe<LoggerConfig>;
   notify?: Maybe<NotifyConfig>;
+  oldestAllowedCLIVersion?: Maybe<Scalars['String']['output']>;
   parameterStore?: Maybe<ParameterStoreConfig>;
   perfMonitoringKanopyURL?: Maybe<Scalars['String']['output']>;
   perfMonitoringURL?: Maybe<Scalars['String']['output']>;
@@ -239,6 +240,7 @@ export type AdminSettingsInput = {
   logPath?: InputMaybe<Scalars['String']['input']>;
   loggerConfig?: InputMaybe<LoggerConfigInput>;
   notify?: InputMaybe<NotifyConfigInput>;
+  oldestAllowedCLIVersion?: InputMaybe<Scalars['String']['input']>;
   parameterStore?: InputMaybe<ParameterStoreConfigInput>;
   perfMonitoringKanopyURL?: InputMaybe<Scalars['String']['input']>;
   perfMonitoringURL?: InputMaybe<Scalars['String']['input']>;
@@ -385,6 +387,7 @@ export type AuthConfig = {
   kanopy?: Maybe<KanopyAuthConfig>;
   multi?: Maybe<MultiAuthConfig>;
   naive?: Maybe<NaiveAuthConfig>;
+  oauth?: Maybe<OAuthConfig>;
   okta?: Maybe<OktaConfig>;
   preferredType?: Maybe<PreferredAuthType>;
 };
@@ -396,6 +399,7 @@ export type AuthConfigInput = {
   kanopy?: InputMaybe<KanopyAuthConfigInput>;
   multi?: InputMaybe<MultiAuthConfigInput>;
   naive?: InputMaybe<NaiveAuthConfigInput>;
+  oauth?: InputMaybe<OAuthConfigInput>;
   okta?: InputMaybe<OktaConfigInput>;
   preferredType?: InputMaybe<PreferredAuthType>;
 };
@@ -1435,6 +1439,7 @@ export enum HostEventType {
   HostProvisioned = 'HOST_PROVISIONED',
   HostProvisionError = 'HOST_PROVISION_ERROR',
   HostProvisionFailed = 'HOST_PROVISION_FAILED',
+  HostRebooted = 'HOST_REBOOTED',
   HostRunningTaskCleared = 'HOST_RUNNING_TASK_CLEARED',
   HostRunningTaskSet = 'HOST_RUNNING_TASK_SET',
   HostScriptExecuted = 'HOST_SCRIPT_EXECUTED',
@@ -1971,11 +1976,13 @@ export type Mutation = {
   moveAnnotationIssue: Scalars['Boolean']['output'];
   overrideTaskDependencies: Task;
   promoteVarsToRepo: Scalars['Boolean']['output'];
+  quarantineTest: QuarantineTestPayload;
   removeAnnotationIssue: Scalars['Boolean']['output'];
   removeFavoriteProject: Project;
   removePublicKey: Array<PublicKey>;
   removeVolume: Scalars['Boolean']['output'];
   reprovisionToNew: Scalars['Int']['output'];
+  resetAPIKey?: Maybe<UserConfig>;
   restartAdminTasks: RestartAdminTasksPayload;
   restartJasper: Scalars['Int']['output'];
   restartTask: Task;
@@ -2127,6 +2134,10 @@ export type MutationOverrideTaskDependenciesArgs = {
 
 export type MutationPromoteVarsToRepoArgs = {
   opts: PromoteVarsToRepoInput;
+};
+
+export type MutationQuarantineTestArgs = {
+  opts: QuarantineTestInput;
 };
 
 export type MutationRemoveAnnotationIssueArgs = {
@@ -2338,6 +2349,19 @@ export type NotifyConfigInput = {
   bufferIntervalSeconds?: InputMaybe<Scalars['Int']['input']>;
   bufferTargetPerInterval?: InputMaybe<Scalars['Int']['input']>;
   ses?: InputMaybe<SesConfigInput>;
+};
+
+export type OAuthConfig = {
+  __typename?: 'OAuthConfig';
+  clientId: Scalars['String']['output'];
+  connectorId: Scalars['String']['output'];
+  issuer: Scalars['String']['output'];
+};
+
+export type OAuthConfigInput = {
+  clientId: Scalars['String']['input'];
+  connectorId: Scalars['String']['input'];
+  issuer: Scalars['String']['input'];
 };
 
 export type OsInfo = {
@@ -2812,6 +2836,7 @@ export type Project = {
   stepbackBisect?: Maybe<Scalars['Boolean']['output']>;
   stepbackDisabled?: Maybe<Scalars['Boolean']['output']>;
   taskAnnotationSettings: TaskAnnotationSettings;
+  testSelection?: Maybe<TestSelectionSettings>;
   tracksPushEvents?: Maybe<Scalars['Boolean']['output']>;
   triggers?: Maybe<Array<TriggerAlias>>;
   versionControlEnabled?: Maybe<Scalars['Boolean']['output']>;
@@ -2963,6 +2988,7 @@ export type ProjectInput = {
   stepbackBisect?: InputMaybe<Scalars['Boolean']['input']>;
   stepbackDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   taskAnnotationSettings?: InputMaybe<TaskAnnotationSettingsInput>;
+  testSelection?: InputMaybe<TestSelectionSettingsInput>;
   tracksPushEvents?: InputMaybe<Scalars['Boolean']['input']>;
   triggers?: InputMaybe<Array<TriggerAliasInput>>;
   versionControlEnabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -3024,6 +3050,7 @@ export enum ProjectSettingsSection {
   PatchAliases = 'PATCH_ALIASES',
   PeriodicBuilds = 'PERIODIC_BUILDS',
   Plugins = 'PLUGINS',
+  TestSelection = 'TEST_SELECTION',
   Triggers = 'TRIGGERS',
   Variables = 'VARIABLES',
   ViewsAndFilters = 'VIEWS_AND_FILTERS',
@@ -3080,6 +3107,16 @@ export type PublicKey = {
 export type PublicKeyInput = {
   key: Scalars['String']['input'];
   name: Scalars['String']['input'];
+};
+
+export type QuarantineTestInput = {
+  taskId: Scalars['String']['input'];
+  testName: Scalars['String']['input'];
+};
+
+export type QuarantineTestPayload = {
+  __typename?: 'QuarantineTestPayload';
+  success: Scalars['Boolean']['output'];
 };
 
 export type Query = {
@@ -3367,6 +3404,7 @@ export type RepoRef = {
   stepbackBisect?: Maybe<Scalars['Boolean']['output']>;
   stepbackDisabled: Scalars['Boolean']['output'];
   taskAnnotationSettings: TaskAnnotationSettings;
+  testSelection?: Maybe<RepoTestSelectionSettings>;
   tracksPushEvents: Scalars['Boolean']['output'];
   triggers: Array<TriggerAlias>;
   versionControlEnabled: Scalars['Boolean']['output'];
@@ -3414,6 +3452,7 @@ export type RepoRefInput = {
   stepbackBisect?: InputMaybe<Scalars['Boolean']['input']>;
   stepbackDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   taskAnnotationSettings?: InputMaybe<TaskAnnotationSettingsInput>;
+  testSelection?: InputMaybe<TestSelectionSettingsInput>;
   tracksPushEvents?: InputMaybe<Scalars['Boolean']['input']>;
   triggers?: InputMaybe<Array<TriggerAliasInput>>;
   versionControlEnabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -3444,6 +3483,12 @@ export type RepoSettingsInput = {
   repoId: Scalars['String']['input'];
   subscriptions?: InputMaybe<Array<SubscriptionInput>>;
   vars?: InputMaybe<ProjectVarsInput>;
+};
+
+export type RepoTestSelectionSettings = {
+  __typename?: 'RepoTestSelectionSettings';
+  allowed: Scalars['Boolean']['output'];
+  defaultEnabled: Scalars['Boolean']['output'];
 };
 
 export type RepoWorkstationConfig = {
@@ -3877,6 +3922,7 @@ export type SpawnHostInput = {
   sleepSchedule?: InputMaybe<SleepScheduleInput>;
   spawnHostsStartedByTask?: InputMaybe<Scalars['Boolean']['input']>;
   taskId?: InputMaybe<Scalars['String']['input']>;
+  useOAuth?: InputMaybe<Scalars['Boolean']['input']>;
   useProjectSetupScript?: InputMaybe<Scalars['Boolean']['input']>;
   useTaskConfig?: InputMaybe<Scalars['Boolean']['input']>;
   userDataScript?: InputMaybe<Scalars['String']['input']>;
@@ -3884,6 +3930,7 @@ export type SpawnHostInput = {
 };
 
 export enum SpawnHostStatusActions {
+  Reboot = 'REBOOT',
   Start = 'START',
   Stop = 'STOP',
   Terminate = 'TERMINATE',
@@ -4084,10 +4131,12 @@ export type Task = {
   /** taskLogs returns the tail 100 lines of the task's logs. */
   stepbackInfo?: Maybe<StepbackInfo>;
   tags: Array<Scalars['String']['output']>;
+  taskCost?: Maybe<TaskCost>;
   taskGroup?: Maybe<Scalars['String']['output']>;
   taskGroupMaxHosts?: Maybe<Scalars['Int']['output']>;
   taskLogs: TaskLogs;
   taskOwnerTeam?: Maybe<TaskOwnerTeam>;
+  testSelectionEnabled: Scalars['Boolean']['output'];
   tests: TaskTestResult;
   timeTaken?: Maybe<Scalars['Duration']['output']>;
   totalTestCount: Scalars['Int']['output'];
@@ -4116,6 +4165,13 @@ export type TaskContainerCreationOpts = {
   memoryMB: Scalars['Int']['output'];
   os: Scalars['String']['output'];
   workingDir: Scalars['String']['output'];
+};
+
+/** TaskCost represents the cost breakdown for a task. */
+export type TaskCost = {
+  __typename?: 'TaskCost';
+  adjustedCost?: Maybe<Scalars['Float']['output']>;
+  onDemandCost?: Maybe<Scalars['Float']['output']>;
 };
 
 /** TaskCountOptions defines the parameters that are used when counting tasks from a Version. */
@@ -4316,7 +4372,7 @@ export type TaskQueueItem = {
   priority: Scalars['Int']['output'];
   project: Scalars['String']['output'];
   projectIdentifier?: Maybe<Scalars['String']['output']>;
-  requester: TaskQueueItemType;
+  requester: Scalars['String']['output'];
   revision: Scalars['String']['output'];
   version: Scalars['String']['output'];
 };
@@ -4404,6 +4460,7 @@ export type TestLog = {
   __typename?: 'TestLog';
   lineNum?: Maybe<Scalars['Int']['output']>;
   renderingType?: Maybe<Scalars['String']['output']>;
+  testName?: Maybe<Scalars['String']['output']>;
   url?: Maybe<Scalars['String']['output']>;
   urlParsley?: Maybe<Scalars['String']['output']>;
   urlRaw?: Maybe<Scalars['String']['output']>;
@@ -4433,6 +4490,17 @@ export type TestSelectionConfig = {
 
 export type TestSelectionConfigInput = {
   url: Scalars['String']['input'];
+};
+
+export type TestSelectionSettings = {
+  __typename?: 'TestSelectionSettings';
+  allowed?: Maybe<Scalars['Boolean']['output']>;
+  defaultEnabled?: Maybe<Scalars['Boolean']['output']>;
+};
+
+export type TestSelectionSettingsInput = {
+  allowed?: InputMaybe<Scalars['Boolean']['input']>;
+  defaultEnabled?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export enum TestSortCategory {
@@ -4655,6 +4723,9 @@ export type UserConfig = {
   __typename?: 'UserConfig';
   api_key: Scalars['String']['output'];
   api_server_host: Scalars['String']['output'];
+  oauth_client_id: Scalars['String']['output'];
+  oauth_connector_id: Scalars['String']['output'];
+  oauth_issuer: Scalars['String']['output'];
   ui_server_host: Scalars['String']['output'];
   user: Scalars['String']['output'];
 };
@@ -5034,12 +5105,13 @@ export type TaskHistoryQuery = {
       __typename?: 'Task';
       id: string;
       activated: boolean;
-      createTime?: Date | null;
+      createTime?: string | null;
       displayStatus: string;
       displayName: string;
       execution: number;
       order: number;
       revision?: string | null;
+      buildVariant: string;
       tests: {
         __typename?: 'TaskTestResult';
         testResults: Array<{
@@ -5113,8 +5185,8 @@ export type VersionQuery = {
     id: string;
     activated?: boolean | null;
     author: string;
-    createTime: Date;
-    finishTime?: Date | null;
+    createTime: string;
+    finishTime?: string | null;
     isPatch: boolean;
     message: string;
     order: number;
@@ -5122,7 +5194,7 @@ export type VersionQuery = {
     projectIdentifier: string;
     requester: string;
     revision: string;
-    startTime?: Date | null;
+    startTime?: string | null;
     status: string;
     taskCount?: number | null;
     baseVersion?: { __typename?: 'Version'; id: string } | null;

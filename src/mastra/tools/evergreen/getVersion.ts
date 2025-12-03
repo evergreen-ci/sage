@@ -50,17 +50,16 @@ const getVersionOutputSchema = z.object({
     id: z.string(),
     activated: z.boolean(),
     author: z.string(),
-    createTime: z.date(),
-    finishTime: z.date().optional(),
+    createTime: z.string(),
+    finishTime: z.string().optional(),
     isPatch: z.boolean(),
     message: z.string(),
     order: z.number(),
     project: z.string(),
     projectIdentifier: z.string(),
-    repo: z.string(),
     requester: z.string(),
     revision: z.string(),
-    startTime: z.date().optional(),
+    startTime: z.string().optional(),
     status: z.string(),
     taskCount: z.number().optional(),
     baseVersion: z.object({
@@ -71,8 +70,13 @@ const getVersionOutputSchema = z.object({
       alias: z.string(),
       patchNumber: z.number(),
     }),
+    previousVersion: z.object({
+      id: z.string(),
+      revision: z.string(),
+    }),
   }),
 });
+
 const getVersionTool = createGraphQLTool<VersionQuery, VersionQueryVariables>({
   id: 'getVersion',
   description:
