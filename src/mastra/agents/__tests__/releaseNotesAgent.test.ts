@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildReleaseNotesSectionPlans,
+  normalizeReleaseNotesOutput,
   releaseNotesInputSchema,
+  releaseNotesOutputSchema,
 } from '@/mastra/agents/releaseNotesAgent';
 import opsManagerSample from '@/mastra/tests/data/release-notes-input-ops-manager-8.0.16.json';
 
@@ -167,5 +169,114 @@ describe('buildReleaseNotesSectionPlans', () => {
 
     expect(planner.sections.length).toBeGreaterThan(0);
     expect(planner.issues.length).toBe(input.jiraIssues.length);
+  });
+});
+
+describe('normalizeReleaseNotesOutput', () => {
+  it('repairs common schema deviations', () => {
+    const raw = {
+      sections: [
+        {
+          title: '  Improvements ',
+          items: [
+            {
+              summary: 'Adds a new metrics dashboard for ops teams.',
+              citations: 'DEVPROD-1, DEVPROD-2',
+              links: [
+                {
+                  label: 'Metrics Dashboard',
+                  href: 'https://example.com/docs',
+                },
+                { text: '', url: '' },
+              ],
+              subitems: [
+                {
+                  text: 'Follow-on task to expand datasets.',
+                  citations: ['DEVPROD-2', ''],
+                },
+                {
+                  text: '  ',
+                },
+              ],
+            },
+            {
+              text: '   ',
+              citations: ['DEVPROD-3'],
+            },
+          ],
+        },
+        {
+          name: 'Bug Fixes',
+          entries: [
+            {
+              title: 'Resolves crash when parsing configs.',
+              citation: 'DEVPROD-9',
+              links: { text: 'Crash Fix', url: 'https://example.com/fix' },
+            },
+          ],
+        },
+      ],
+    };
+
+    const repaired = normalizeReleaseNotesOutput(raw);
+    expect(repaired).toBeDefined();
+
+    const validation = releaseNotesOutputSchema.safeParse(repaired);
+    expect(validation.success).toBe(true);
+
+    if (!validation.success) {
+      return;
+    }
+
+    const [improvements, bugFixes] = validation.data.sections;
+
+    expect(improvements.title).toBe('Improvements');
+    expect(improvements.items).toHaveLength(1);
+    expect(improvements.items[0].citations).toEqual(['DEVPROD-1', 'DEVPROD-2']);
+    expect(improvements.items[0].links).toEqual([
+      { text: 'Metrics Dashboard', url: 'https://example.com/docs' },
+    ]);
+    expect(improvements.items[0].subitems).toHaveLength(1);
+
+    expect(bugFixes.title).toBe('Bug Fixes');
+    expect(bugFixes.items).toHaveLength(1);
+    expect(bugFixes.items[0].citations).toEqual(['DEVPROD-9']);
+  });
+
+  it('extracts sections from keyed object structures', () => {
+    const raw = {
+      sections: {
+        Improvements: [
+          {
+            text: 'Supports automatic sharding.',
+            issues: ['DEVPROD-10'],
+          },
+        ],
+        'Bug Fixes': [
+          {
+            text: 'Fixes rollout regression.',
+            issues: 'DEVPROD-11',
+          },
+        ],
+      },
+    };
+
+    const repaired = normalizeReleaseNotesOutput(raw);
+    expect(repaired).toBeDefined();
+
+    const validation = releaseNotesOutputSchema.safeParse(repaired);
+    expect(validation.success).toBe(true);
+
+    if (!validation.success) {
+      return;
+    }
+
+    expect(validation.data.sections).toHaveLength(2);
+    expect(validation.data.sections[0].items[0].citations).toEqual([
+      'DEVPROD-10',
+    ]);
+    expect(validation.data.sections[1].items[0].citations).toEqual([
+      'DEVPROD-11',
+    ]);
   });
 });

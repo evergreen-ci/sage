@@ -2,6 +2,7 @@ import { Agent } from '@mastra/core/agent';
 import { z } from 'zod';
 import { gpt41 } from '@/mastra/models/openAI/gpt41';
 import { createToolFromAgent } from '@/mastra/tools/utils';
+import { logger } from '@/utils/logger';
 import { RELEASE_NOTES_AGENT_NAME } from './constants';
 
 const normalizeIssueType = (value: string): string =>
@@ -86,6 +87,319 @@ type ReleaseNotesSection = {
 
 type ReleaseNotesOutput = {
   sections: ReleaseNotesSection[];
+};
+
+type UnknownRecord = Record<string, unknown>;
+
+const itemHasRequiredCitations = (item: ReleaseNotesItem): boolean => {
+  const citations =
+    item.citations?.map(candidate => candidate.trim()).filter(Boolean) ?? [];
+
+  if (citations.length > 0) {
+    return true;
+  }
+
+  const subitems = item.subitems ?? [];
+  if (subitems.length === 0) {
+    return false;
+  }
+
+  return subitems.every(itemHasRequiredCitations);
+};
+
+export const validateReleaseNotesCitations = (
+  output: ReleaseNotesOutput
+): void => {
+  for (const section of output.sections) {
+    for (const item of section.items) {
+      if (!itemHasRequiredCitations(item)) {
+        throw new Error(
+          `Release notes item "${item.text}" in section "${section.title}" is missing required citations.`
+        );
+      }
+    }
+  }
+};
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === 'string' && value.trim().length > 0;
+
+const firstNonEmptyString = (
+  record: UnknownRecord,
+  keys: string[]
+): string | undefined => {
+  for (const key of keys) {
+    const value = record[key];
+    if (isNonEmptyString(value)) {
+      return value.trim();
+    }
+  }
+  return undefined;
+};
+
+const toOptionalArray = (value: unknown): unknown[] | undefined => {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  return undefined;
+};
+
+const normalizeCitations = (value: unknown): string[] | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  const normalized: string[] = [];
+
+  const addCitation = (candidate: unknown) => {
+    if (!isNonEmptyString(candidate)) {
+      return;
+    }
+    normalized.push(candidate.trim());
+  };
+
+  if (Array.isArray(value)) {
+    value.forEach(addCitation);
+  } else if (isNonEmptyString(value)) {
+    value
+      .split(/[,|\n]/)
+      .map(part => part.trim())
+      .filter(Boolean)
+      .forEach(part => normalized.push(part));
+  }
+
+  const unique = Array.from(new Set(normalized));
+  return unique.length > 0 ? unique : undefined;
+};
+
+const normalizeLinks = (value: unknown): ReleaseNotesLink[] | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  let entries: unknown[] = [];
+
+  if (Array.isArray(value)) {
+    entries = value;
+  } else if (value && typeof value === 'object') {
+    entries = [value];
+  }
+
+  const links = entries
+    .map(entry => {
+      if (!entry || typeof entry !== 'object') {
+        return undefined;
+      }
+
+      const record = entry as UnknownRecord;
+      const text = firstNonEmptyString(record, ['text', 'label', 'name']);
+      const url = firstNonEmptyString(record, ['url', 'href', 'link']);
+
+      if (!text || !url) {
+        return undefined;
+      }
+
+      return {
+        text,
+        url,
+      };
+    })
+    .filter((candidate): candidate is ReleaseNotesLink => Boolean(candidate));
+
+  return links.length > 0 ? links : undefined;
+};
+
+const normalizeReleaseNotesItem = (
+  value: unknown
+): ReleaseNotesItem | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  if (isNonEmptyString(value)) {
+    return { text: value.trim() };
+  }
+
+  if (typeof value !== 'object') {
+    return undefined;
+  }
+
+  const record = value as UnknownRecord;
+  const text =
+    firstNonEmptyString(record, ['text', 'title', 'summary', 'description']) ??
+    undefined;
+
+  if (!text) {
+    return undefined;
+  }
+
+  const citations =
+    normalizeCitations(
+      record.citations ??
+        record.citation ??
+        record.issueKeys ??
+        record.issues ??
+        record.jira
+    ) ?? undefined;
+
+  const subitemsRaw =
+    toOptionalArray(record.subitems) ??
+    toOptionalArray(record.children) ??
+    toOptionalArray(record.items);
+
+  const subitems = subitemsRaw
+    ?.map(normalizeReleaseNotesItem)
+    .filter((candidate): candidate is ReleaseNotesItem => Boolean(candidate));
+
+  const links =
+    normalizeLinks(record.links ?? record.link ?? record.references) ??
+    undefined;
+
+  const item: ReleaseNotesItem = {
+    text,
+  };
+
+  if (citations && citations.length > 0) {
+    item.citations = citations;
+  }
+
+  if (subitems && subitems.length > 0) {
+    item.subitems = subitems;
+  }
+
+  if (links && links.length > 0) {
+    item.links = links;
+  }
+
+  return item;
+};
+
+const normalizeReleaseNotesSection = (
+  value: unknown
+): ReleaseNotesSection | undefined => {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const record = value as UnknownRecord;
+  const title =
+    firstNonEmptyString(record, ['title', 'name', 'heading']) ?? undefined;
+
+  if (!title) {
+    return undefined;
+  }
+
+  const itemsRaw =
+    toOptionalArray(record.items) ??
+    toOptionalArray(record.bullets) ??
+    toOptionalArray(record.entries);
+
+  if (!itemsRaw) {
+    return undefined;
+  }
+
+  const items = itemsRaw
+    .map(normalizeReleaseNotesItem)
+    .filter((candidate): candidate is ReleaseNotesItem => Boolean(candidate));
+
+  if (items.length === 0) {
+    return undefined;
+  }
+
+  return {
+    title,
+    items,
+  };
+};
+
+export const normalizeReleaseNotesOutput = (
+  raw: unknown
+): ReleaseNotesOutput | undefined => {
+  if (!raw) {
+    return undefined;
+  }
+
+  if (typeof raw === 'string') {
+    try {
+      return normalizeReleaseNotesOutput(JSON.parse(raw));
+    } catch {
+      return undefined;
+    }
+  }
+
+  let sectionsSource: unknown;
+
+  if (Array.isArray(raw)) {
+    sectionsSource = raw;
+  } else if (typeof raw === 'object') {
+    const record = raw as UnknownRecord;
+    if (Array.isArray(record.sections)) {
+      sectionsSource = record.sections;
+    } else if (
+      record.sections &&
+      typeof record.sections === 'object' &&
+      !Array.isArray(record.sections)
+    ) {
+      sectionsSource = Object.entries(record.sections as UnknownRecord).map(
+        ([title, items]) => ({
+          title,
+          items,
+        })
+      );
+    }
+  }
+
+  if (!sectionsSource || !Array.isArray(sectionsSource)) {
+    return undefined;
+  }
+
+  const sections = sectionsSource
+    .map(normalizeReleaseNotesSection)
+    .filter((candidate): candidate is ReleaseNotesSection =>
+      Boolean(candidate)
+    );
+
+  if (sections.length === 0) {
+    return undefined;
+  }
+
+  return {
+    sections,
+  };
+};
+
+type ReleaseNotesValidationContext = {
+  source: 'object' | 'text';
+  rawText?: string;
+};
+
+const ensureReleaseNotesOutput = (
+  value: unknown,
+  context: ReleaseNotesValidationContext
+): ReleaseNotesOutput => {
+  const validation = releaseNotesOutputSchema.safeParse(value);
+  if (validation.success) {
+    validateReleaseNotesCitations(validation.data);
+    return validation.data;
+  }
+
+  const repaired = normalizeReleaseNotesOutput(value);
+  if (repaired) {
+    const repairedValidation = releaseNotesOutputSchema.safeParse(repaired);
+    if (repairedValidation.success) {
+      validateReleaseNotesCitations(repairedValidation.data);
+      logger.warn('Auto-repaired release notes agent output', {
+        source: context.source,
+        issueCount: validation.error.issues.length,
+      });
+      return repairedValidation.data;
+    }
+  }
+
+  throw new Error(
+    'Release notes agent returned output that does not match the expected schema.',
+    { cause: validation.error }
+  );
 };
 
 const releaseNotesLinkSchema: z.ZodType<ReleaseNotesLink> = z.object({
@@ -422,7 +736,7 @@ export const generateReleaseNotes = async (
   if (result.object) {
     return {
       ...result,
-      object: releaseNotesOutputSchema.parse(result.object),
+      object: ensureReleaseNotesOutput(result.object, { source: 'object' }),
     };
   }
 
@@ -430,19 +744,23 @@ export const generateReleaseNotes = async (
     throw new Error('Release notes agent did not return any output text.');
   }
 
+  let parsed: unknown;
   try {
-    const parsed = JSON.parse(result.text);
-    const validated = releaseNotesOutputSchema.parse(parsed);
-    return {
-      ...result,
-      object: validated,
-    };
+    parsed = JSON.parse(result.text);
   } catch (error) {
     throw new Error(
-      'Release notes agent returned unparseable JSON output',
+      'Release notes agent returned unparseable JSON output.',
       error instanceof Error ? { cause: error } : undefined
     );
   }
+
+  return {
+    ...result,
+    object: ensureReleaseNotesOutput(parsed, {
+      source: 'text',
+      rawText: result.text,
+    }),
+  };
 };
 
 /**
