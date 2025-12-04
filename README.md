@@ -115,6 +115,37 @@ Removes the `dist/` directory.
 
 ---
 
+## Docker Builds
+
+- Docker contexts now respect `.dockerignore`, so local `docker build` and `docker buildx` commands skip large directories such as `node_modules/`, `coverage/`, and generated GraphQL schemas. If you need to reference a file that is ignored by default, build with `--no-cache` or temporarily remove the entry.
+
+- The Drone `publish` step uses Kaniko layer caching backed by ECR. Subsequent CI builds reuse previously published layers automatically, so rebuilds after small changes are significantly faster.
+
+### Reusing CI cache locally
+
+You can opt into the same cache when iterating locally with BuildKit:
+
+1. Authenticate against the Sage ECR registry (example):
+
+   ```bash
+   aws ecr get-login-password --region us-east-1 \
+     | docker login --username AWS --password-stdin 795250896452.dkr.ecr.us-east-1.amazonaws.com
+   ```
+
+2. Run `docker buildx build` with the cache image that Drone maintains:
+
+   ```bash
+   docker buildx build \
+     --platform linux/arm64 \
+     --cache-from type=registry,ref=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/sage-cache \
+     --cache-to type=registry,ref=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/sage-cache,mode=max \
+     -t sage:local .
+   ```
+
+Replace `sage` with another repo name if you are building from a fork. The `--cache-to` flag updates the shared cache so that your next build—and CI—can reuse the warmed layers.
+
+---
+
 ## Working with Mastra Agents
 
 The project uses [Mastra](https://mastra.ai/en/docs/overview), a framework for building agentic systems with tools and workflows.
