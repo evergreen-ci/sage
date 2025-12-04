@@ -1,26 +1,26 @@
 # Sage - Evergreen AI Service
 
-A TypeScript-based Express.js server powering the Evergreen AI Service.
+Within these pages resides the TypeScript-driven Express.js engine that animates Evergreen's artifices. Though the incantations below are faithful, they are recounted in the ceremonious diction favored by our guild.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js v22 or higher
-- Yarn package manager
-- MongoDB instance installed and running
-- Azure OpenAI key
+Before attempting any conjuration, be certain the following implements are at the ready:
+
+- Node.js v22 or a more contemporary release
+- Yarn, lest npm muddle the lockfiles
+- A MongoDB daemon already awakened
+- An Azure OpenAI key retrieved from the sanctioned vault
 
 ### Environment Variables
 
-Non-secret variables are tracked in `.env.defaults`, with environment-specific variables in `.env.<NODE_ENV>` files.
-
-Update `.env.local` or `.env.<NODE_ENV>.local` files with secrets for external services. These files are ignored by git. Refer to the team password manager or ask a teammate for credentials.
+Common, non-secret variables dwell in `.env.defaults`, while each environment (`development`, `test`, `production`, and their kin) maintains its own `.env.<NODE_ENV>` scroll. Secrets belong in `.env.local` or `.env.<NODE_ENV>.local`, which git dutifully ignores. Consult the password manager—or a trusted compatriot—before altering these runes.
 
 ### Installation
 
-1. Clone the repository or navigate to the project directory.
-2. Install dependencies:
+1. Clone this repository, or otherwise step into the directory wherein it resides.
+2. Invite all dependencies to manifest:
 
    ```bash
    yarn install
@@ -29,6 +29,8 @@ Update `.env.local` or `.env.<NODE_ENV>.local` files with secrets for external s
 ---
 
 ## Project Structure
+
+Should your bearings falter, contemplate the cartography below:
 
 ```
 sage/
@@ -90,34 +92,38 @@ sage/
 
 ### Development
 
+Invoke the dev server with a single utterance:
+
 ```bash
 yarn dev
 ```
 
-Starts the server using `vite-node`, with hot-reloading and TypeScript support. Default port: `8080` (or set via the `PORT` environment variable).
+This command coaxes `vite-node` into service, providing hot reloading and TypeScript enlightenment. The server ordinarily listens on port `8080`, unless the `PORT` variable decrees otherwise.
 
 ### Production
+
+When the time for sober deployment arrives, follow the two-beat liturgy:
 
 ```bash
 yarn build
 yarn start
 ```
 
-Compiles the TypeScript code and starts the production server using Node.js.
+The first stanza compiles TypeScript into JavaScript fit for Node.js, and the second awakens the compiled artifact.
 
 ### Clean Build
+
+Should detritus accumulate in `dist/`, sweep it away thus:
 
 ```bash
 yarn clean
 ```
 
-Removes the `dist/` directory.
-
 ---
 
 ## Working with Mastra Agents
 
-The project uses [Mastra](https://mastra.ai/en/docs/overview), a framework for building agentic systems with tools and workflows.
+Sage leans heavily upon [Mastra](https://mastra.ai/en/docs/overview), the framework for agents, tools, and workflows. Treat it with the reverence due any capricious spirit.
 
 ### Running the Mastra Dev Server
 
@@ -125,42 +131,35 @@ The project uses [Mastra](https://mastra.ai/en/docs/overview), a framework for b
 yarn mastra:dev
 ```
 
-Launches a local Mastra server at `http://localhost:4111` for agent testing.
+A local Mastra enclave will manifest at `http://localhost:4111`, permitting you to interrogate agents in safety.
 
 ### Customizing Agents
 
-- **Agents**: Add or update agents in `src/mastra/agents`.
-- **Tools**: Place reusable tools in `src/mastra/tools`. Tools are composable functions an agent can call.
-- **Workflows**: Add workflows to `src/mastra/workflows`. Workflows define multi-step logic that agents can follow.
+- **Agents** dwell in `src/mastra/agents`; add or revise them there.
+- **Tools** belong to `src/mastra/tools`, so that common functions may be summoned repeatedly.
+- **Workflows** inhabit `src/mastra/workflows`, weaving multi-step stratagems.
 
-All agents and workflows should be registered in `src/mastra/index.ts`.
+Remember to enlist every new agent or workflow inside `src/mastra/index.ts`, lest it languish unused.
 
 ---
 
 ## GraphQL Setup
 
-Sage relies on Evergreen’s GraphQL schema for both query linting and type
-generation. To keep the schema in sync with Evergreen, create a local symlink
-to the [Evergreen repository’s `graphql/schema`](https://github.com/evergreen-ci/evergreen/tree/master/graphql/schema) directory.
+Sage defers to Evergreen's GraphQL schema both for linting supplications and type generation. Keep the schema synchronized through the ancient art of the symlink.
 
-### 1. Symlink the GraphQL schema
+### 1. Symlink the GraphQL Schema
 
-Run the following command **from the root of the Sage repository**, replacing
-`<path_to_evergreen_repo>` with the absolute path to your local Evergreen
-checkout:
+From the root of this repository, fashion a link named `sdlschema/`, adjusting `<path_to_evergreen_repo>` to match your local Evergreen checkout:
 
 ```bash
 ln -s <path_to_evergreen_repo>/graphql/schema sdlschema
 ```
 
-This creates a folder-level symlink named `sdlschema/` that Sage’s ESLint and
-GraphQL Code Generator will pick up automatically.
+Henceforth, ESLint and the GraphQL code generator shall regard the linkage as gospel.
 
 ### 2. GraphQL Query Linting
 
-With the schema symlinked, ESLint will validate your `.ts`, `.gql`, and
-`.graphql` files against the Evergreen schema during development. You can run a
-manual lint pass at any time with:
+Once the schema is bound, ESLint scrutinizes `.ts`, `.gql`, and `.graphql` files during development. To beckon a manual audit:
 
 ```bash
 yarn lint
@@ -168,85 +167,71 @@ yarn lint
 
 ### 3. GraphQL Type Generation
 
-We use [`@graphql-codegen`](https://www.graphql-code-generator.com/) to generate
-TypeScript types for queries, mutations, and their variables. The generated
-types live in `src/gql/generated/types.ts`.
-
-Run the generator after editing or adding GraphQL operations:
+The [`@graphql-codegen`](https://www.graphql-code-generator.com/) tool breathes TypeScript types into `src/gql/generated/types.ts`. Re-run it whenever queries mutate:
 
 ```bash
 yarn codegen
 ```
 
-If the schema or your operations change, re-run `yarn codegen` to keep the
-types up to date. The command will also run Prettier on the generated file.
+Should the schema or operations shift, repeat the command to renew the generated types; Prettier will polish the result.
 
 ### Troubleshooting
 
-- If ESLint or codegen cannot find the schema, verify the `sdlschema` symlink
-  path and that the Evergreen repository is on the expected branch.
-- If dependencies appear out of date, try `yarn install` or `yarn clean` followed
-  by `yarn install` to refresh `node_modules`.
+- If ESLint or codegen cannot perceive the schema, confirm that `sdlschema` points to an Evergreen checkout on the expected branch.
+- If dependencies appear anachronistic, consider `yarn install`, or `yarn clean` followed by `yarn install`, to restore order.
 
 ## Evals
 
-We use **evals** to measure model performance through the [Braintrust platform](https://www.braintrust.dev/docs/start/eval-sdk).
-
-For detailed information about running evals, managing datasets, scoring, and reporting, see the [Evals documentation](src/evals/README.md).
+Model performance is adjudicated through **evals** on the [Braintrust platform](https://www.braintrust.dev/docs/start/eval-sdk). Consult `src/evals/README.md` for rituals concerning dataset curation, scoring, and reporting.
 
 ## Deployment
 
 ### Checking Pending Commits
 
-Before deploying, you can check which commits are pending deployment to an environment:
+Prior to any deployment, divine which commits await their turn:
 
-1. Switch to the appropriate kubectl context:
-   - **Production**: Run `kcp` (switches to production context)
-   - **Staging**: Run `kcs` (switches to staging context)
-
-2. Check pending commits:
+1. Assume the correct `kubectl` persona:
+   - **Production**: `kcp`
+   - **Staging**: `kcs`
+2. Petition the repository for pending commits:
 
    ```bash
    yarn pending-commits
    ```
 
-   For JSON output:
+   For JSON-laden omens:
 
    ```bash
    yarn pending-commits:json
    ```
 
-This will show all commits between what is currently deployed and your local HEAD, including commit hashes, messages, and GitHub URLs.
+The output recites every commit between the deployed revision and `HEAD`, along with hashes, messages, and GitHub links.
 
 ### Staging
 
-Before pushing to staging, drop a note in 🔒evergreen-ai-devs to make sure no one is using it.
+Alert the denizens of 🔒evergreen-ai-devs before disturbing staging.
 
 #### Drone
 
-Drone can [promote](https://docs.drone.io/promote/) builds opened on PRs to staging. Before starting, [install and configure the Drone CLI](https://kanopy.corp.mongodb.com/docs/cicd/advanced_drone/#drone-cli).
+Drone may [promote](https://docs.drone.io/promote/) any PR build toward staging once the `publish` step completes:
 
-1. Open a PR with your changes (a draft is okay). This will kick off the `publish` step.
-2. Check pending commits using `kcs && yarn pending-commits` to see what will be deployed.
-3. Once the build completes, find the build number on [Drone](https://drone.corp.mongodb.com/evergreen-ci/sage).
-4. Promote the build to staging:
-   - **CLI**: Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> staging`
-   - **Web UI**: Click `…` > `Promote` on your build's page. Enter "staging" in the "Target" field and submit.
+1. Open (even as draft) a PR; this triggers the build.
+2. With `kcs && yarn pending-commits`, observe what shall deploy.
+3. Retrieve the build number from [Drone](https://drone.corp.mongodb.com/evergreen-ci/sage).
+4. Promote the build:
+   - **CLI**: `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> staging`
+   - **Web UI**: choose `…` → `Promote`, type `staging`, and submit.
 
 #### Local
 
-Local deploys are slower but useful. First install [Rancher Desktop](https://rancherdesktop.io) as your container manager. Open Rancher and then run `yarn deploy:staging` from Sage to kick off the deploy.
-
-Note that Drone's [deployments page](https://drone.corp.mongodb.com/evergreen-ci/sage/deployments) will not reflect local deploys. To verify your deploy has been pushed, install [Helm](https://kanopy.corp.mongodb.com/docs/configuration/helm/) and run `helm status sage`.
+For local deployments—slower, yet occasionally necessary—install [Rancher Desktop](https://rancherdesktop.io), open it, and then run `yarn deploy:staging`. Drone's [deployments ledger](https://drone.corp.mongodb.com/evergreen-ci/sage/deployments) ignores such efforts; confirm success with [Helm](https://kanopy.corp.mongodb.com/docs/configuration/helm/) via `helm status sage`.
 
 ### Production
 
-To deploy to production:
+1. Inspect pending commits with `kcp && yarn pending-commits`.
+2. Locate on [Drone](https://drone.corp.mongodb.com/evergreen-ci/sage) the build corresponding to the desired commit on `main`.
+3. Promote that build:
+   - **CLI**: `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> production`
+   - **Web UI**: `…` → `Promote`, specify `production`, and proceed.
 
-1. Check pending commits: `kcp && yarn pending-commits`
-2. Find the build on [Drone](https://drone.corp.mongodb.com/evergreen-ci/sage) for the commit you want to deploy (must be on `main` branch).
-3. Promote the build to production:
-   - **CLI**: Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> production`
-   - **Web UI**: Click `…` > `Promote` on your build's page. Enter "production" in the "Target" field and submit.
-
-**Note**: You must be promoting a Drone build that pushed a commit to `main`.
+**Note**: Only builds already published from `main` may tread into production.
