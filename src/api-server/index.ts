@@ -44,8 +44,24 @@ class SageServer {
     // Middleware to add the request id to the request
     this.app.use(requestIdMiddleware);
 
-    // CORS middleware MUST come before authentication to handle OPTIONS preflight requests
-    // OPTIONS requests don't include authentication headers, so they must be handled first
+    // Middleware to add the authenticated user id to the request trace
+    this.app.use(userIdMiddleware);
+    // Middleware to set Sentry user context from authenticated user
+    this.app.use(sentryUserContextMiddleware);
+
+    // HTTP logging middleware
+    this.app.use(httpLoggingMiddleware);
+
+    // Basic Express middleware
+    this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: true }));
+
+    if (config.sentry.enabled) {
+      Sentry.setupExpressErrorHandler(this.app);
+    }
+
+    // CORS middleware at the end to ensure headers are set after all other middleware
+    // This ensures OTEL instrumentation and other middleware don't interfere with CORS headers
     this.app.use(
       cors({
         origin: true,
@@ -64,22 +80,6 @@ class SageServer {
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
       })
     );
-
-    // Middleware to add the authenticated user id to the request trace
-    this.app.use(userIdMiddleware);
-    // Middleware to set Sentry user context from authenticated user
-    this.app.use(sentryUserContextMiddleware);
-
-    // HTTP logging middleware
-    this.app.use(httpLoggingMiddleware);
-
-    // Basic Express middleware
-    this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: true }));
-
-    if (config.sentry.enabled) {
-      Sentry.setupExpressErrorHandler(this.app);
-    }
   }
 
   private setupRoutes() {
