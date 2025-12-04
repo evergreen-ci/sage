@@ -279,6 +279,9 @@ export const refineStep = createStep({
     );
 
     const response = result.object;
+    if (!response) {
+      throw new Error('Refinement agent returned no structured output');
+    }
 
     const updated = response.updated ?? false;
     let newSummary = existingSummary;

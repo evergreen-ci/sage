@@ -85,6 +85,13 @@ const summarizeThreadRoute = async (
 
     // Get the structured output
     const summaryData = result.object;
+    if (!summaryData) {
+      logger.error('Slack thread summarizer returned no structured output', {
+        requestId: res.locals.requestId,
+      });
+      res.status(502).json({ message: 'Agent returned no structured output' });
+      return;
+    }
 
     logger.info('Successfully generated Slack thread summary', {
       requestId: res.locals.requestId,
