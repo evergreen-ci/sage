@@ -278,10 +278,11 @@ export const refineStep = createStep({
       }
     );
 
-    const response = result.object;
-    if (!response) {
+    if (!result.object) {
       throw new Error('Refinement agent returned no structured output');
     }
+
+    const response: z.infer<typeof RefinementAgentOutputSchema> = result.object;
 
     const updated = response.updated ?? false;
     let newSummary = existingSummary;
