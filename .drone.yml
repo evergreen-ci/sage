@@ -30,7 +30,7 @@ steps:
         - VERSION=${DRONE_COMMIT_SHA:0:7}
       cache: true
       cache_repo: 795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME}-cache
-      cache_ttl: 168h
+      cache_ttl: 168
       access_key:
         from_secret: ecr_access_key
       secret_key:

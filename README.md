@@ -137,12 +137,12 @@ You can opt into the same cache when iterating locally with BuildKit:
    ```bash
    docker buildx build \
      --platform linux/arm64 \
-     --cache-from type=registry,ref=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/sage-cache \
-     --cache-to type=registry,ref=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/sage-cache,mode=max \
+     --cache-from type=registry,ref=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME}-cache \
+     --cache-to type=registry,ref=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME}-cache,mode=max \
      -t sage:local .
    ```
 
-Replace `sage` with another repo name if you are building from a fork. The `--cache-to` flag updates the shared cache so that your next build—and CI—can reuse the warmed layers.
+Replace `${DRONE_REPO_NAME}` with your repository name if you are building from a fork (Sage uses `sage`). The `-t sage:local` tag is just a local image label—name it however you like. The `--cache-to` flag updates the shared cache so that your next build—and CI—can reuse the warmed layers.
 
 ---
 
