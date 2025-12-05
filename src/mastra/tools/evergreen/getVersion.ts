@@ -71,7 +71,7 @@ const getVersionOutputSchema = z.object({
         alias: z.string(),
         patchNumber: z.number(),
       })
-      .optional(),
+      .nullable(),
     previousVersion: z.object({
       id: z.string(),
       revision: z.string(),
