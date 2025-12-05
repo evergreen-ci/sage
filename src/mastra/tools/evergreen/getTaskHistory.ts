@@ -55,7 +55,7 @@ const getTaskHistoryInputSchema = z.object({
     taskName: z.string(),
     cursorParams: z.object({
       cursorId: z.string(),
-      direction: z.nativeEnum(TaskHistoryDirection),
+      direction: z.enum(TaskHistoryDirection),
       includeCursor: z.boolean(),
     }),
   }),
