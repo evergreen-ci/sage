@@ -29,7 +29,7 @@ steps:
       build_args:
         - VERSION=${DRONE_COMMIT_SHA:0:7}
       enable_cache: true
-      cache_repo: devprod-evergreen/${DRONE_REPO_NAME}-cache
+      cache_repo: devprod-evergreen/${DRONE_REPO_NAME}
       cache_ttl: 168
       access_key:
         from_secret: ecr_access_key
