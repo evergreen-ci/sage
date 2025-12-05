@@ -33,20 +33,20 @@ Eval(
         metadata.scoreThresholds.Factuality
           ? Factuality({
               expected: expected.text,
-              output: output.output.text,
+              output: output.text,
               input: input.content,
             })
           : null,
       ({ expected, output }) =>
         ToolUsage({
-          output: output.output.toolsUsed,
+          output: output.toolsUsed,
           expected: expected.toolsUsed,
           mode: ToolUsageMode.Subset,
         }),
       ({ expected, metadata, output }) =>
         metadata.scoreThresholds.TechnicalAccuracy
           ? TechnicalAccuracy({
-              output: output.output.text,
+              output: output.text,
               expected: expected.text,
             })
           : null,

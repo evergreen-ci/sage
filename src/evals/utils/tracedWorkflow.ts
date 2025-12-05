@@ -23,7 +23,7 @@ interface TracedWorkflowOptions<Input, Output, WorkflowInput> {
 }
 
 const createTracedWorkflow =
-  <Input, Output, WorkflowInput>(
+  <Input, Output extends object, WorkflowInput>(
     options: TracedWorkflowOptions<Input, Output, WorkflowInput>
   ) =>
   async (input: Input): Promise<WorkflowEvalOutput<Input, Output>> => {
@@ -77,8 +77,8 @@ const createTracedWorkflow =
 
     // Return full traced model output
     return {
+      ...output,
       input,
-      output,
       duration: end - start,
     };
   };
@@ -89,7 +89,7 @@ const createTracedWorkflow =
  * @returns A function that can be used directly in evals
  */
 export const tracedWorkflowEval =
-  <Input, Output, WorkflowInput>(
+  <Input, Output extends object, WorkflowInput>(
     options: TracedWorkflowOptions<Input, Output, WorkflowInput>
   ) =>
   async (input: Input) =>

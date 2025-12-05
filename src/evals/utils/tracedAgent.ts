@@ -31,7 +31,9 @@ export interface TracedAgentOptions<TInput, TOutput> {
 }
 
 const createTracedAgent =
-  <TInput, TOutput>(options: TracedAgentOptions<TInput, TOutput>) =>
+  <TInput, TOutput extends object>(
+    options: TracedAgentOptions<TInput, TOutput>
+  ) =>
   async (input: TInput): Promise<AgentEvalOutput<TInput, TOutput>> => {
     // Create request context
     const requestContext = options.setupRequestContext
@@ -68,9 +70,9 @@ const createTracedAgent =
 
     // Return full traced model output
     return {
+      ...output,
       agentMetadata: response,
       input,
-      output,
       duration: end - start,
     };
   };
@@ -81,6 +83,8 @@ const createTracedAgent =
  * @returns A function that can be used directly in evals
  */
 export const tracedAgentEval =
-  <TInput, TOutput>(options: TracedAgentOptions<TInput, TOutput>) =>
+  <TInput, TOutput extends object>(
+    options: TracedAgentOptions<TInput, TOutput>
+  ) =>
   async (input: TInput) =>
     await createTracedAgent(options)(input);

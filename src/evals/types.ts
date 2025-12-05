@@ -52,16 +52,14 @@ export interface ReporterEvalResult<
 export type AgentOutput = Awaited<
   ReturnType<MastraModelOutput['getFullOutput']>
 >;
-export type AgentEvalOutput<TInput, TOutput> = {
+export type AgentEvalOutput<TInput, TOutput extends object> = TOutput & {
   agentMetadata: AgentOutput;
   input: TInput;
-  output: TOutput;
   duration: number;
 };
 
-export type WorkflowEvalOutput<TInput, TOutput> = {
+export type WorkflowEvalOutput<TInput, TOutput extends object> = TOutput & {
   input: TInput;
-  output: TOutput;
   duration: number;
 };
 

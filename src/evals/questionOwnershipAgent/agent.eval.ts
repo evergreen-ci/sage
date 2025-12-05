@@ -28,8 +28,8 @@ Eval(
             teamId: expected.teamId,
           },
           output: {
-            teamName: output.output.teamName,
-            teamId: output.output.teamId,
+            teamName: output.teamName,
+            teamId: output.teamId,
           },
         }),
     ],

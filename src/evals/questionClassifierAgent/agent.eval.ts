@@ -28,8 +28,8 @@ Eval(
             nextAction: expected.nextAction,
           },
           output: {
-            questionClass: output.output.questionClass,
-            nextAction: output.output.nextAction,
+            questionClass: output.questionClass,
+            nextAction: output.nextAction,
           },
         }),
     ],

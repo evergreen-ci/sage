@@ -32,12 +32,12 @@ Eval(
       ({ expected, input, output }) =>
         Factuality({
           expected: expected.text,
-          output: output.output.text,
+          output: output.text,
           input: input.content,
         }),
       ({ expected, output }) =>
         ToolUsage({
-          output: output.output.toolsUsed,
+          output: output.toolsUsed,
           expected: expected.toolsUsed,
           mode: ToolUsageMode.ExactMatch,
         }),
