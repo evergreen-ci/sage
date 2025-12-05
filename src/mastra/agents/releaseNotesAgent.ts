@@ -330,9 +330,11 @@ export const normalizeReleaseNotesOutput = (
   let sectionsSource: unknown;
 
   if (Array.isArray(raw)) {
+    // If raw is an array, treat it as sections directly
     sectionsSource = raw;
   } else if (typeof raw === 'object') {
     const record = raw as UnknownRecord;
+    // Extract only the 'sections' field, ignore all other top-level fields (like 'links')
     if (Array.isArray(record.sections)) {
       sectionsSource = record.sections;
     } else if (
@@ -340,13 +342,19 @@ export const normalizeReleaseNotesOutput = (
       typeof record.sections === 'object' &&
       !Array.isArray(record.sections)
     ) {
+      // Handle case where sections is an object with section titles as keys
       sectionsSource = Object.entries(record.sections as UnknownRecord).map(
         ([title, items]) => ({
           title,
           items,
         })
       );
+    } else {
+      // No valid sections field found, return undefined
+      return undefined;
     }
+  } else {
+    return undefined;
   }
 
   if (!sectionsSource || !Array.isArray(sectionsSource)) {
@@ -363,6 +371,7 @@ export const normalizeReleaseNotesOutput = (
     return undefined;
   }
 
+  // Return only the sections field, explicitly excluding any other fields
   return {
     sections,
   };
@@ -373,33 +382,266 @@ type ReleaseNotesValidationContext = {
   rawText?: string;
 };
 
+/**
+ * Strips unknown top-level fields from the output, keeping only 'sections'
+ * @param value - The value to strip unknown fields from
+ * @returns The value with only 'sections' field at top level, or original value if not an object
+ */
+const stripUnknownFields = (value: unknown): unknown => {
+  if (!value || typeof value !== 'object') {
+    return value;
+  }
+
+  const record = value as UnknownRecord;
+  if ('sections' in record) {
+    return {
+      sections: record.sections,
+    };
+  }
+
+  return value;
+};
+
+/**
+ * Recursively converts 'title' to 'text' for items that have 'title' but no 'text'
+ * This handles cases where the LLM incorrectly uses 'title' instead of 'text' for items
+ * @param value - The value to convert (can be object, array, or primitive)
+ * @returns The converted value with 'title' converted to 'text' for items (sections keep 'title')
+ */
+const convertTitleToText = (value: unknown): unknown => {
+  if (value === null || value === undefined) {
+    return value;
+  }
+
+  if (typeof value !== 'object') {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(convertTitleToText);
+  }
+
+  const record = value as UnknownRecord;
+
+  // Check if this is a section (has 'title' AND 'items' array) - sections keep 'title'
+  const isSection =
+    'title' in record &&
+    'items' in record &&
+    Array.isArray(record.items) &&
+    typeof record.title === 'string';
+
+  // Check if this is an item that incorrectly uses 'title' instead of 'text'
+  const hasTitle = 'title' in record && typeof record.title === 'string';
+  const hasText = 'text' in record && typeof record.text === 'string';
+  const needsConversion = hasTitle && !hasText && !isSection;
+
+  // If we need to convert, do it upfront
+  if (needsConversion) {
+    const converted: UnknownRecord = {
+      text: record.title, // Convert 'title' to 'text'
+    };
+
+    // Copy all other fields recursively, skipping 'title'
+    for (const [key, val] of Object.entries(record)) {
+      if (key === 'title') {
+        continue; // Skip the original 'title' field
+      }
+
+      // Recursively clean nested objects/arrays
+      if (val !== null && val !== undefined && typeof val === 'object') {
+        converted[key] = convertTitleToText(val);
+      } else {
+        converted[key] = val;
+      }
+    }
+
+    return converted;
+  }
+
+  // No conversion needed, process normally
+  const cleaned: UnknownRecord = {};
+  for (const [key, val] of Object.entries(record)) {
+    // Recursively clean nested objects/arrays
+    if (val !== null && val !== undefined && typeof val === 'object') {
+      cleaned[key] = convertTitleToText(val);
+    } else {
+      cleaned[key] = val;
+    }
+  }
+
+  return cleaned;
+};
+
+/**
+ * Recursively removes empty citations arrays from items to prevent schema validation failures
+ * Uses JSON parse/stringify as a more reliable way to deep clone and clean
+ * @param value - The value to clean (can be object, array, or primitive)
+ * @returns The cleaned value with empty citations arrays removed
+ */
+const cleanEmptyCitations = (value: unknown): unknown => {
+  if (value === null || value === undefined) {
+    return value;
+  }
+
+  if (typeof value !== 'object') {
+    return value;
+  }
+
+  // Use JSON round-trip for reliable deep cleaning
+  try {
+    const jsonString = JSON.stringify(value, (key, val) => {
+      // Remove empty citations arrays during stringification
+      if (key === 'citations' && Array.isArray(val) && val.length === 0) {
+        return undefined; // Omit this property
+      }
+      return val;
+    });
+    return JSON.parse(jsonString);
+  } catch {
+    // Fallback to manual cleaning if JSON round-trip fails
+    if (Array.isArray(value)) {
+      return value.map(cleanEmptyCitations).filter(item => item !== undefined);
+    }
+
+    const record = value as UnknownRecord;
+    const cleaned: UnknownRecord = {};
+
+    for (const [key, val] of Object.entries(record)) {
+      // Skip empty citations arrays
+      if (key === 'citations' && Array.isArray(val) && val.length === 0) {
+        continue;
+      }
+
+      // Recursively clean all nested objects/arrays
+      if (val !== null && val !== undefined && typeof val === 'object') {
+        const cleanedVal = cleanEmptyCitations(val);
+        if (cleanedVal !== undefined) {
+          cleaned[key] = cleanedVal;
+        }
+      } else {
+        cleaned[key] = val;
+      }
+    }
+
+    return cleaned;
+  }
+};
+
 const ensureReleaseNotesOutput = (
   value: unknown,
   context: ReleaseNotesValidationContext
 ): ReleaseNotesOutput => {
-  const validation = releaseNotesOutputSchema.safeParse(value);
+  // Convert 'title' to 'text' for items FIRST - handles LLM mistakes
+  const titleConverted = convertTitleToText(value);
+
+  // Clean empty citations - this is critical to prevent validation failures
+  const preCleaned = cleanEmptyCitations(titleConverted);
+
+  // Then strip any unknown top-level fields
+  const stripped = stripUnknownFields(preCleaned);
+
+  // Clean empty citations again after stripping (should be redundant but safe)
+  const cleaned = cleanEmptyCitations(stripped);
+
+  // Then try to normalize/repair the output
+  const normalized = normalizeReleaseNotesOutput(cleaned) ?? cleaned;
+
+  // Convert title to text again after normalization (in case normalization didn't catch it)
+  const titleConvertedAgain = convertTitleToText(normalized);
+
+  // Clean empty citations again after normalization (normalization might reintroduce them)
+  const finalCleaned = cleanEmptyCitations(titleConvertedAgain);
+
+  // Debug: Log if we still have empty citations after cleaning
+  const hasEmptyCitations =
+    JSON.stringify(finalCleaned).includes('"citations":[]');
+  if (hasEmptyCitations) {
+    logger.warn(
+      'Found empty citations after cleaning - this should not happen',
+      {
+        source: context.source,
+        cleanedValue: JSON.stringify(finalCleaned).substring(0, 500),
+      }
+    );
+  }
+
+  // Try validation on normalized output
+  let validation = releaseNotesOutputSchema.safeParse(finalCleaned);
+
+  // If validation fails due to empty citations, try one more aggressive clean
+  if (!validation.success) {
+    const hasEmptyCitationsError = validation.error.issues.some(
+      issue =>
+        issue.path.includes('citations') &&
+        (issue.message.includes('non-empty') || issue.message.includes('empty'))
+    );
+
+    if (hasEmptyCitationsError) {
+      logger.warn(
+        'Validation failed due to empty citations, attempting aggressive clean',
+        {
+          source: context.source,
+        }
+      );
+      const aggressivelyCleaned = cleanEmptyCitations(finalCleaned);
+      validation = releaseNotesOutputSchema.safeParse(aggressivelyCleaned);
+    }
+  }
+
   if (validation.success) {
     validateReleaseNotesCitations(validation.data);
+    // Log if normalization was needed
+    if (finalCleaned !== value) {
+      logger.warn('Auto-repaired release notes agent output', {
+        source: context.source,
+      });
+    }
     return validation.data;
   }
 
-  const repaired = normalizeReleaseNotesOutput(value);
-  if (repaired) {
-    const repairedValidation = releaseNotesOutputSchema.safeParse(repaired);
+  // If normalization didn't help, try one more aggressive pass
+  const repaired = normalizeReleaseNotesOutput(cleaned);
+  if (repaired && repaired !== finalCleaned) {
+    // Clean empty citations from repaired output too
+    const cleanedRepaired = cleanEmptyCitations(repaired);
+    const repairedValidation =
+      releaseNotesOutputSchema.safeParse(cleanedRepaired);
     if (repairedValidation.success) {
       validateReleaseNotesCitations(repairedValidation.data);
-      logger.warn('Auto-repaired release notes agent output', {
+      logger.warn('Auto-repaired release notes agent output (second pass)', {
         source: context.source,
         issueCount: validation.error.issues.length,
       });
       return repairedValidation.data;
     }
+    // If repair failed, log the repair validation error
+    logger.error('Normalized output still failed validation', {
+      source: context.source,
+      repairIssues: repairedValidation.error.issues,
+      originalIssues: validation.error.issues,
+    });
+  } else {
+    logger.error('Failed to normalize release notes output', {
+      source: context.source,
+      originalIssues: validation.error.issues,
+      validationErrors: validation.error.issues.map(i => ({
+        path: i.path.join('.'),
+        message: i.message,
+        code: i.code,
+      })),
+    });
   }
 
-  throw new Error(
-    'Release notes agent returned output that does not match the expected schema.',
-    { cause: validation.error }
-  );
+  const errorMessage = `Release notes agent returned output that does not match the expected schema. ${validation.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')}`;
+
+  logger.error('Release notes validation failed', {
+    source: context.source,
+    errorMessage,
+    validationIssues: validation.error.issues,
+    rawValue: JSON.stringify(value, null, 2).substring(0, 1000), // First 1000 chars for debugging
+  });
+
+  throw new Error(errorMessage, { cause: validation.error });
 };
 
 const releaseNotesLinkSchema: z.ZodType<ReleaseNotesLink> = z.object({
@@ -678,32 +920,38 @@ export const releaseNotesAgent = new Agent({
 
 Inputs include Jira issues, optional pull requests, curated metadata, and formatting guidance.
 
-Return ONLY a JSON object matching the provided schema:
+CRITICAL SCHEMA REQUIREMENTS:
+- Return ONLY a JSON object with EXACTLY this structure (no other top-level fields):
 {
   "sections": [
     {
       "title": string,
       "items": [
         {
-          "text": string,
-          "citations"?: string[],
-          "subitems"?: [{ ... }]
+          "text": string,  // REQUIRED: Use "text" NOT "title" for items
+          "citations"?: string[] (non-empty if present),
+          "subitems"?: [{ "text": string, "citations"?: string[], ... }],
+          "links"?: [{ "text": string, "url": string }]
         }
       ]
     }
   ]
 }
 
-  Rules:
-  - Use the section titles surfaced in the Section Planner (e.g., Improvements, Bug Fixes).
-  - Assign each Jira issue to the section that best matches its change; if none fits perfectly, choose the closest and explain the placement.
-  - Every bullet focuses on user-facing impact using the supplied metadata.
-  - Use subitems when additional context (like pull requests or follow-on work) improves clarity.
-  - Wrap any literal token a user might copy (versions, package names, CLI commands, file paths, environment variables) in single backticks. Do not emit multiline code fences.
-  - When hyperlink instructions are present, add entries to the "links" array specifying the exact substring and URL to hyperlink; keep the bullet text itself free of inline markup.
-  - Only include a citations array when at least one Jira issue applies to that bullet; omit the field for structural or grouping bullets, but ensure actionable top-level bullets list their supporting Jira keys.
-  - Avoid redundant subitems that merely repeat release note URLs or restate the parent bullet; use the links array on the parent bullet instead.
-  - Never include markdown fences or explanatory prose around the JSON.`,
+- Do NOT include any fields outside of "sections" at the top level (e.g., no "links", "metadata", etc.)
+- Do NOT include empty arrays for citations - omit the field entirely if there are no citations
+- Do NOT use "title" for items - ALWAYS use "text" for item content (only sections use "title")
+- Do NOT include markdown fences, explanatory text, or any content outside the JSON object
+
+Rules:
+- Use the section titles surfaced in the Section Planner (e.g., Improvements, Bug Fixes).
+- Assign each Jira issue to the section that best matches its change; if none fits perfectly, choose the closest and explain the placement.
+- Every bullet focuses on user-facing impact using the supplied metadata.
+- Use subitems when additional context (like pull requests or follow-on work) improves clarity.
+- Wrap any literal token a user might copy (versions, package names, CLI commands, file paths, environment variables) in single backticks. Do not emit multiline code fences.
+- When hyperlink instructions are present, add entries to the "links" array on the specific item (not at top level) specifying the exact substring and URL to hyperlink; keep the bullet text itself free of inline markup.
+- Only include a citations array when at least one Jira issue applies to that bullet; omit the field entirely for structural or grouping bullets, but ensure actionable top-level bullets list their supporting Jira keys.
+- Avoid redundant subitems that merely repeat release note URLs or restate the parent bullet; use the links array on the parent bullet instead.`,
   defaultGenerateOptions: {
     output: releaseNotesOutputSchema,
     temperature: 0.3, // Low temperature for consistency, but allow some creativity
@@ -731,36 +979,90 @@ export const generateReleaseNotes = async (
   options?: ReleaseNotesAgentGenerateOptions
 ): Promise<ReleaseNotesAgentResult> => {
   const formattedInput = formatInputForAgent(input);
-  const result = await releaseNotesAgent.generate(formattedInput, options);
 
-  if (result.object) {
-    return {
-      ...result,
-      object: ensureReleaseNotesOutput(result.object, { source: 'object' }),
-    };
-  }
-
-  if (!result.text) {
-    throw new Error('Release notes agent did not return any output text.');
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(result.text);
-  } catch (error) {
-    throw new Error(
-      'Release notes agent returned unparseable JSON output.',
-      error instanceof Error ? { cause: error } : undefined
-    );
-  }
-
-  return {
-    ...result,
-    object: ensureReleaseNotesOutput(parsed, {
-      source: 'text',
-      rawText: result.text,
-    }),
+  // Ensure structured output is always requested
+  const generateOptions: ReleaseNotesAgentGenerateOptions = {
+    ...options,
+    structuredOutput: {
+      schema: releaseNotesOutputSchema,
+    },
   };
+
+  const maxRetries = 2;
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      // eslint-disable-next-line no-await-in-loop -- Retries must be sequential
+      const result = await releaseNotesAgent.generate(
+        formattedInput,
+        attempt === 0
+          ? generateOptions
+          : {
+              ...generateOptions,
+              // On retry, add more explicit instructions
+              system: `CRITICAL: Return ONLY valid JSON matching this exact schema. Do not include any fields outside of "sections". Each section must have "title" and "items". Each item MUST use "text" (NOT "title") for the item content. Only sections use "title" - items always use "text". Each item must have "text" and optionally "citations" (non-empty array if present), "subitems", and "links". Remove any top-level fields other than "sections".`,
+            }
+      );
+
+      // Prefer structured output if available
+      if (result.object) {
+        const validated = ensureReleaseNotesOutput(result.object, {
+          source: 'object',
+        });
+        return {
+          ...result,
+          object: validated,
+        };
+      }
+
+      // Fallback to parsing text if structured output not available
+      if (result.text) {
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(result.text);
+        } catch (parseError) {
+          throw new Error(
+            'Release notes agent returned unparseable JSON output.',
+            parseError instanceof Error ? { cause: parseError } : undefined
+          );
+        }
+
+        const validated = ensureReleaseNotesOutput(parsed, {
+          source: 'text',
+          rawText: result.text,
+        });
+        return {
+          ...result,
+          object: validated,
+        };
+      }
+
+      throw new Error('Release notes agent did not return any output.');
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // If this is the last attempt or error is not validation-related, throw
+      if (
+        attempt === maxRetries ||
+        !lastError.message.includes('does not match the expected schema')
+      ) {
+        throw lastError;
+      }
+
+      // Log retry attempt
+      logger.warn('Release notes validation failed, retrying', {
+        attempt: attempt + 1,
+        maxRetries: maxRetries + 1,
+        error: lastError.message,
+      });
+    }
+  }
+
+  // This should never be reached, but TypeScript needs it
+  throw (
+    lastError || new Error('Failed to generate release notes after retries')
+  );
 };
 
 /**
@@ -783,6 +1085,7 @@ const formatInputForAgent = (
 
   const requirements: string[] = [
     'Return valid JSON that exactly matches the schema provided in your system prompt.',
+    'CRITICAL: Use "text" (NOT "title") for all items and subitems. Only sections use "title" - items always use "text".',
     'Use the section titles surfaced in the Section Planner. Add new sections only when the data strongly suggests a distinct category.',
     'Assign each issue to the section that best matches its change; if no section is a perfect fit, choose the closest match and make the rationale clear in the bullet text.',
     'Summarize each bullet in one or two sentences that highlight user-facing impact.',

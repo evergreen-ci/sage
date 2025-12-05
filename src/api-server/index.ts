@@ -75,7 +75,7 @@ class SageServer {
     this.app.get('/', rootRoute);
     this.app.get('/health', healthRoute);
     this.app.use('/completions', completionsRoute);
-    this.app.use(['/release-notes', '/api/release-notes'], releaseNotesRoute);
+    this.app.use('/release-notes', releaseNotesRoute);
     this.app.use('/login', loginRoute);
   }
 

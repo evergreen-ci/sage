@@ -70,11 +70,21 @@ releaseNotesRouter.post('/', async (req, res) => {
     res.status(200).json(result.object);
   } catch (error) {
     logger.error('Failed to generate release notes', {
-      error,
+      error:
+        error instanceof Error
+          ? {
+              message: error.message,
+              stack: error.stack,
+              cause: error.cause,
+            }
+          : String(error),
       requestId: res.locals.requestId,
     });
     res.status(500).json({
       message: 'Failed to generate release notes',
+      ...(error instanceof Error && process.env.NODE_ENV !== 'production'
+        ? { details: error.message }
+        : {}),
     });
   }
 });
