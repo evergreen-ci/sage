@@ -10,14 +10,14 @@ import { SLACK_QUESTION_OWNERSHIP_AGENT_NAME } from './constants';
  * TODO (DEVPROD-24049): this should probably be queried from Backstage or Wiki.
  */
 const DEVPROD_TEAMS = {
-  'DevProd Build Team': {
+  'DevProd Build': {
     id: '26745',
     description: `Team responsible for build tooling, particularly Bazel, including
       compilation, linking, dependencies, and build configurations. Questions about
       EngFlow, remote execution, build caching, Bazel caching, build latency, test
       result caching, and inner loop cycle times should go here.`,
   },
-  'DevProd Correctness Team': {
+  'DevProd Correctness': {
     id: '26746',
     description: `Team responsible for testing infrastructure, code coverage,
       code ownership, and generally code correctness tools and practices. This
@@ -29,7 +29,7 @@ const DEVPROD_TEAMS = {
       10gen/mongo, as well as questions about Github code reviewer sync with
       out-of-office (OOO) status.`,
   },
-  'DevProd Developer Experience': {
+  'DevProd DevEx': {
     id: '31057',
     description: `Team responsible for Backstage IDP and portal. Questions about
       Backstage UI / backend / plugins go here, as well as anything related to
