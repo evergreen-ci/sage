@@ -10,23 +10,26 @@ import { SLACK_QUESTION_OWNERSHIP_AGENT_NAME } from './constants';
  * TODO (DEVPROD-24049): this should probably be queried from Backstage or Wiki.
  */
 const DEVPROD_TEAMS = {
-  'DevProd Build Team': {
+  'DevProd Build': {
     id: '26745',
     description: `Team responsible for build tooling, particularly Bazel, including
       compilation, linking, dependencies, and build configurations. Questions about
       EngFlow, remote execution, build caching, Bazel caching, build latency, test
       result caching, and inner loop cycle times should go here.`,
   },
-  'DevProd Correctness Team': {
+  'DevProd Correctness': {
     id: '26746',
     description: `Team responsible for testing infrastructure, code coverage,
       code ownership, and generally code correctness tools and practices. This
       includes tools like Resmoke, Fern, code coverage, Coveralls, local dev
-      containers, mocha, jstests, and integration tests. Question about
-      Gitdailies setup, repository syncing, or Copybara also belong here, as do
-      questions about Github code reviewer sync with out-of-office (OOO) status.`,
+      containers, mocha, jstests, and integration tests. Any questions about
+      task timeouts, test timeouts, timeouts causing BFs, setting up timeouts,
+      variant configuration, or Gitdailies setup go here.
+      Correctness also owns branch and repository syncing (Copybara) for
+      10gen/mongo, as well as questions about Github code reviewer sync with
+      out-of-office (OOO) status.`,
   },
-  'DevProd Developer Experience': {
+  'DevProd DevEx': {
     id: '31057',
     description: `Team responsible for Backstage IDP and portal. Questions about
       Backstage UI / backend / plugins go here, as well as anything related to
@@ -38,9 +41,9 @@ const DEVPROD_TEAMS = {
       platform and backend. They handle questions about configuring evergreen
       via YAML files, tasks running (or not running) when they should/shouldn't,
       scheduling of tasks, patches, versions, and CI projects.
-      This team is typically not responsible for debugging failures within a
-      particular task (those go to Unassigned), or understanding what software
-      is running on the host executing the task (goes to DevProd Infrastructure).`,
+      But questions asking why a particular task failed should go to Unassigned.
+      Questions about what software is running on the distro or variant or host
+      executing the task go to DevProd Infrastructure.`,
   },
   'DevProd Evergreen UI': {
     id: '26749',
@@ -55,17 +58,20 @@ const DEVPROD_TEAMS = {
   'DevProd Infrastructure': {
     id: '26747',
     description: `Team responsible for underlying AWS infrastructure supporting
-      all DevProd systems. This includes AWS networking, what ports are open in
-      Evergreen task hosts, and how those hosts reach other resources, including
-      storage (AWS S3 and EBS). The team also manages the environments that run
-      Evergreen tasks, installing and removing packages on request.`,
+      all DevProd systems. This includes the underlying Evergreen EC2 task host
+      configuration, AWS networking, what ports are open in Evergreen task hosts
+      and how those hosts reach other resources, including storage (AWS S3 and
+      EBS). The team also manages the hosts and environments ("distros") that
+      run Evergreen tasks, installing and removing packages on request. They
+      field questions about whether anything has changed on a distro lately.`,
   },
   'DevProd Release Infrastructure': {
     id: '26752',
     description: `Team responsible for release engineering tools and processes.
       This includes existing release processes, as well as systems like the feed,
       published MongoDB binaries and containers, Artifactory, the AWS container
-      registry (ECR), code signing (Garasign), Private Cloud Tools (PCT), and
+      registry (ECR), code signing (Garasign), Private Cloud Tools (PCT),
+      software bill of materials (SBOM) generation via Papertrail, and
       Unified Release Platform (URP).`,
   },
   'DevProd Last Mile Team': {
@@ -91,13 +97,17 @@ const DEVPROD_TEAMS = {
       They own MMS setup/onboarding scripts, pre-commit hooks, CI failure
       management tools like Foliage, Build Baron, and Autoreverter designed to
       help keep the main line of development green. This includes tools to
-      detect flaky tests and flag them to users. They also own the Ask DevProd
-      slack bot powered by Credal (Central RAG service).
+      detect flaky tests and flag them to users, Build Failure Genesis (BFG),
+      Build Failures (BFs), auto-resolution rules, and BF data. They also own
+      the Ask DevProd slack bot powered by Credal (Central RAG service).
       The team manages cross-service sync via tools like Mothra, including
       Cloud Bot, which keeps PagerDuty oncall schedules aligned with a Google
       Calendar and Slack aliases to page a team's oncall ("rota sync"). They
       also support DevProd online documentation (Pine), automated test selection
-      (TSS), and run the Test ROI project.`,
+      (TSS), and run the Test ROI project.
+      But questions about how to debug a BF don't belong here. Instead consider
+      the explanation for why the BF is failing and assign to the appropriate
+      team based on that.`,
   },
   Unassigned: {
     id: 'unassigned',
