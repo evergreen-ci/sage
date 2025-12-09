@@ -42,7 +42,6 @@
   "dependencies": {
     "@ai-sdk/azure": "^2.0.73",
     "@ai-sdk/openai": "^2.0.57",
-    "@ai-sdk/openai-compatible": "^1.0.22",
     "@ai-sdk/provider": "^2.0.0",
     "@mastra/ai-sdk": "^0.2.6",
     "@mastra/braintrust": "^0.2.3",
@@ -120,9 +119,6 @@
   },
   "engines": {
     "node": ">=22.0.0"
-  },
-  "resolutions": {
-    "@ai-sdk/provider-utils": "^3.0.17"
   },
   "author": "",
   "license": "ISC"
