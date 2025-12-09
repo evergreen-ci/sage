@@ -121,6 +121,9 @@
   "engines": {
     "node": ">=22.0.0"
   },
+  "resolutions": {
+    "@ai-sdk/provider-utils": "^3.0.17"
+  },
   "author": "",
   "license": "ISC"
 }

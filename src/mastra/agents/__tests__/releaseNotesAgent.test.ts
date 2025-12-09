@@ -7,7 +7,9 @@ import {
 } from '@/mastra/agents/releaseNotesAgent';
 import opsManagerSample from '@/mastra/tests/data/release-notes-input-ops-manager-8.0.16.json';
 
-const baseInput = {};
+const baseInput = {
+  product: 'test-product',
+};
 
 describe('buildReleaseNotesSectionPlans', () => {
   it('groups issues into the correct sections and flags vulnerability grouping', () => {
@@ -121,6 +123,7 @@ describe('buildReleaseNotesSectionPlans', () => {
 
   it('respects custom section configuration order and grouping', () => {
     const input = releaseNotesInputSchema.parse({
+      product: 'test-product',
       sections: ['Highlights', 'Security', 'Stability'],
       jiraIssues: [
         {

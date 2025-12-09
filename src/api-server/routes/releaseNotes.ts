@@ -1,7 +1,9 @@
+import { AgentMemoryOption } from '@mastra/core/agent';
 import { RuntimeContext } from '@mastra/core/runtime-context';
 import { trace } from '@opentelemetry/api';
 import express from 'express';
-import { USER_ID } from '@/mastra/agents/constants';
+import { mastra } from '@/mastra';
+import { RELEASE_NOTES_AGENT_NAME, USER_ID } from '@/mastra/agents/constants';
 import {
   generateReleaseNotes,
   releaseNotesInputSchema,
@@ -41,12 +43,82 @@ releaseNotesRouter.post('/', async (req, res) => {
   const spanContext = currentSpan?.spanContext();
 
   try {
+    // Set up memory options only if product is provided
+    let memoryOptions: AgentMemoryOption | undefined;
+
+    if (parsedInput.data.product) {
+      // Get agent and memory for product-specific context
+      const agent = mastra.getAgent(RELEASE_NOTES_AGENT_NAME);
+      const memory = await agent.getMemory({ runtimeContext });
+
+      if (memory) {
+        // Set up memory options with product-based resourceId
+        const resourceId = `release_notes:${parsedInput.data.product}`;
+        const threadId = `${parsedInput.data.product}-${res.locals.requestId}`;
+
+        memoryOptions = {
+          thread: { id: 'undefined' },
+          resource: 'undefined',
+        };
+
+        // Check if thread exists, otherwise create new one
+        const thread = await memory.getThreadById({ threadId });
+        if (thread && typeof thread !== 'string') {
+          logger.debug('Found existing thread for release notes', {
+            requestId: res.locals.requestId,
+            product: parsedInput.data.product,
+            threadId: thread.id,
+            resourceId: thread.resourceId,
+          });
+          memoryOptions = {
+            thread: { id: thread.id },
+            resource: thread.resourceId,
+          };
+        } else {
+          const newThread = await memory.createThread({
+            metadata: {
+              product: parsedInput.data.product,
+              ...runtimeContext.toJSON(),
+            },
+            resourceId,
+            threadId,
+          });
+          if (newThread) {
+            logger.debug('Created new thread for release notes', {
+              requestId: res.locals.requestId,
+              product: parsedInput.data.product,
+              threadId: newThread.id,
+              resourceId: newThread.resourceId,
+            });
+            memoryOptions = {
+              thread: { id: newThread.id },
+              resource: newThread.resourceId,
+            };
+          } else {
+            logger.warn('Failed to create thread, continuing without memory', {
+              requestId: res.locals.requestId,
+              product: parsedInput.data.product,
+            });
+            memoryOptions = undefined;
+          }
+        }
+      }
+    } else {
+      logger.debug('Skipping memory setup - product not provided', {
+        requestId: res.locals.requestId,
+      });
+    }
+
     const result = await generateReleaseNotes(parsedInput.data, {
       runtimeContext,
+      ...(memoryOptions ? { memory: memoryOptions } : {}),
       tracingOptions: {
         metadata: {
           userId: res.locals.userId,
           requestId: res.locals.requestId,
+          ...(parsedInput.data.product
+            ? { product: parsedInput.data.product }
+            : {}),
         },
         ...(spanContext
           ? {
@@ -60,12 +132,18 @@ releaseNotesRouter.post('/', async (req, res) => {
     if (!result.object) {
       logger.error('Release notes agent returned no structured output', {
         requestId: res.locals.requestId,
+        ...(parsedInput.data.product
+          ? { product: parsedInput.data.product }
+          : {}),
       });
       res.status(502).json({
         message: 'Agent returned no structured output',
       });
       return;
     }
+
+    // Note: Messages are automatically stored by the agent when using memory options
+    // The successful output will be available in memory for future product-specific learning
 
     res.status(200).json(result.object);
   } catch (error) {

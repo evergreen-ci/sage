@@ -1,7 +1,9 @@
-import { Agent } from '@mastra/core/agent';
+import { Agent, AgentMemoryOption } from '@mastra/core/agent';
+import { Memory } from '@mastra/memory';
 import { z } from 'zod';
 import { gpt41 } from '@/mastra/models/openAI/gpt41';
 import { createToolFromAgent } from '@/mastra/tools/utils';
+import { memoryStore } from '@/mastra/utils/memory';
 import { logger } from '@/utils/logger';
 import { RELEASE_NOTES_AGENT_NAME } from './constants';
 
@@ -50,6 +52,13 @@ const jiraIssueSchema = z.object({
 
 /** Input schema for release notes generation */
 const releaseNotesInputSchema = z.object({
+  product: z
+    .string()
+    .min(1, 'Product name must not be empty.')
+    .optional()
+    .describe(
+      'Product name (e.g., "ops-manager", "mongodb-agent"). If provided, enables product-specific memory learning.'
+    ),
   jiraIssues: z
     .array(jiraIssueSchema)
     .describe('Array of Jira issues associated with the release'),
@@ -911,11 +920,42 @@ const isSecurityIssue = (
   );
 };
 
+const releaseNotesAgentMemory = new Memory({
+  storage: memoryStore,
+  options: {
+    workingMemory: {
+      scope: 'resource', // Product-level learning - all releases for a product share memory
+      enabled: true,
+      template: `# Release Notes Context - {{product}}
+
+## Product-Specific Patterns Learned Over Time
+{{#learnedPatterns}}
+- {{learnedPatterns}}
+{{/learnedPatterns}}
+
+## Style Preferences
+{{#stylePreferences}}
+- {{stylePreferences}}
+{{/stylePreferences}}
+
+## Common Feedback & Corrections
+{{#feedback}}
+- {{feedback}}
+{{/feedback}}
+`,
+    },
+    threads: {
+      generateTitle: false,
+    },
+  },
+});
+
 export const releaseNotesAgent = new Agent({
   id: 'release-notes-agent',
   name: 'Release Notes Agent',
   description:
     'Generates structured release note sections using Jira issues and pull request metadata',
+  memory: releaseNotesAgentMemory,
   instructions: `You produce structured release notes.
 
 Inputs include Jira issues, optional pull requests, curated metadata, and formatting guidance.
@@ -939,7 +979,7 @@ CRITICAL SCHEMA REQUIREMENTS:
 }
 
 - Do NOT include any fields outside of "sections" at the top level (e.g., no "links", "metadata", etc.)
-- Do NOT include empty arrays for citations - omit the field entirely if there are no citations
+- Do NOT include empty arrays for citations - omit the field entirely if there are no citations. NEVER include "citations": [] - this will cause validation to fail.
 - Do NOT use "title" for items - ALWAYS use "text" for item content (only sections use "title")
 - Do NOT include markdown fences, explanatory text, or any content outside the JSON object
 
@@ -973,20 +1013,25 @@ type ReleaseNotesAgentResult = Awaited<
  * @param [options] - Optional overrides forwarded to the underlying Mastra agent.
  * @param [options.runtimeContext] - Runtime context instance used when invoking the agent.
  * @param [options.tracingOptions] - Tracing configuration that controls span metadata.
+ * @param [options.memory] - Memory options for product-specific context.
  * @returns Promise resolving to the validated structured release notes result.
  */
 export const generateReleaseNotes = async (
   input: z.infer<typeof releaseNotesInputSchema>,
-  options?: ReleaseNotesAgentGenerateOptions
+  options?: ReleaseNotesAgentGenerateOptions & {
+    memory?: AgentMemoryOption;
+  }
 ): Promise<ReleaseNotesAgentResult> => {
   const formattedInput = formatInputForAgent(input);
 
   // Ensure structured output is always requested
+  const { memory, ...restOptions } = options || {};
   const generateOptions: ReleaseNotesAgentGenerateOptions = {
-    ...options,
+    ...restOptions,
     structuredOutput: {
       schema: releaseNotesOutputSchema,
     },
+    ...(memory ? { memory } : {}),
   };
 
   const maxRetries = 2;
@@ -1002,7 +1047,7 @@ export const generateReleaseNotes = async (
           : {
               ...generateOptions,
               // On retry, add more explicit instructions
-              system: `CRITICAL: Return ONLY valid JSON matching this exact schema. Do not include any fields outside of "sections". Each section must have "title" and "items". Each item MUST use "text" (NOT "title") for the item content. Only sections use "title" - items always use "text". Each item must have "text" and optionally "citations" (non-empty array if present), "subitems", and "links". Remove any top-level fields other than "sections".`,
+              system: `CRITICAL: Return ONLY valid JSON matching this exact schema. Do not include any fields outside of "sections". Each section must have "title" and "items". Each item MUST use "text" (NOT "title") for the item content. Only sections use "title" - items always use "text". Each item must have "text" and optionally "citations" (non-empty array if present), "subitems", and "links". NEVER include "citations": [] - if there are no citations, omit the citations field entirely. Remove any top-level fields other than "sections".`,
             }
       );
 
@@ -1096,7 +1141,7 @@ const formatInputForAgent = (
     'Wrap tokens that a user might copy verbatim (versions, package names, CLI commands, file paths, environment variables) in single backticks; avoid multiline code fences.',
     'When hyperlink guidance is available (for example in metadata or guidelines), populate the links array with { "text", "url" } objects instead of embedding inline markup.',
     'Keep bullet text plain prose (no markdown, Jira formatting, or decorative prefixes).',
-    'Include a citations array only when at least one Jira issue applies to that bullet; omit the field for structural or grouping bullets, but ensure actionable top-level bullets cite their supporting Jira keys.',
+    'Include a citations array only when at least one Jira issue applies to that bullet; omit the field for structural or grouping bullets, but ensure actionable top-level bullets cite their supporting Jira keys. NEVER include an empty citations array ([]). If there are no citations, omit the citations field entirely.',
     'Do not include Jira ticket keys (e.g., "CLOUDP-12345") in the "text" fields - the citations array already contains these keys, so mentioning them in the text is redundant.',
     'Omit the citations property on subitems only when they inherit the citation from their parent bullet.',
     'Do not create subitems that only point to additional reading (for example, “See the release notes”). Capture URLs via the links array on the relevant bullet instead.',

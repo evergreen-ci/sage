@@ -18,6 +18,10 @@ export const createScoreChecker: ScorerFunction<BaseScores, object> = (
 ) => {
   const messages: string[] = [];
 
+  if (!scoreThresholds || typeof scoreThresholds !== 'object') {
+    return messages;
+  }
+
   Object.entries(scoreThresholds).forEach(([key, threshold]) => {
     const score = scores[key] ?? 0; // Default to 0 if undefined
     if (score < threshold) {

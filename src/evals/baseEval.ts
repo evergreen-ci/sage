@@ -62,6 +62,16 @@ export const createBaseEvalReporter = <
             'Metadata is undefined. Did you wrap your agent call in a Tracer?'
           );
         }
+        // Skip results that failed during streaming/validation
+        // These will be handled by reportFailures below
+        if (!r.output) {
+          if (r.error) {
+            // Result failed with an error - this will be handled by reportFailures
+            return;
+          }
+          // If no error but also no output, something unexpected happened
+          throw new Error('Result is missing output field');
+        }
         buildTestCase(testSuite, testSuiteName, r, calculateScores);
         printResults(r);
       });
@@ -95,16 +105,16 @@ const defaultPrintResults = <
   console.log(`Eval for '${result.metadata.testName}':`);
 
   let didFail = false;
-  const resultsTable = Object.keys(result.metadata.scoreThresholds).reduce(
+  const scoreThresholds = result.metadata.scoreThresholds || {};
+  const resultsTable = Object.keys(scoreThresholds).reduce(
     (acc, key) => {
-      const isScoreDefined = result.metadata.scoreThresholds[key] !== null;
+      const isScoreDefined =
+        scoreThresholds[key] !== null && scoreThresholds[key] !== undefined;
       acc[key] = {
-        actual: result.scores[key],
-        expected: isScoreDefined
-          ? `>= ${result.metadata.scoreThresholds[key]}`
-          : 'N/A',
+        actual: result.scores[key] ?? 0,
+        expected: isScoreDefined ? `>= ${scoreThresholds[key]}` : 'N/A',
       };
-      if (result.scores[key] < result.metadata.scoreThresholds[key]) {
+      if (isScoreDefined && (result.scores[key] ?? 0) < scoreThresholds[key]) {
         didFail = true;
       }
       return acc;
