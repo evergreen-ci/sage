@@ -89,6 +89,10 @@ export interface Config {
     /** SENTRY_CAPTURE_CONSOLE */
     captureConsole: boolean;
   };
+  encryption: {
+    /** ENCRYPTION_KEY - 32-byte hex string for AES-256 encryption */
+    key: string;
+  };
 }
 
 /**
@@ -177,6 +181,9 @@ export const config: Config = {
     debug: getEnvVar('SENTRY_DEBUG', 'false') === 'true',
     attachStacktrace: getEnvVar('SENTRY_ATTACH_STACKTRACE', 'true') === 'true',
     captureConsole: getEnvVar('SENTRY_CAPTURE_CONSOLE', 'false') === 'true',
+  },
+  encryption: {
+    key: getEnvVar('ENCRYPTION_KEY', ''),
   },
 };
 
