@@ -28,7 +28,7 @@ const outputSchema = z.object({
 });
 
 export const questionClassifierAgent = new Agent({
-  id: 'question-classifier-agent',
+  id: 'questionClassifierAgent',
   name: 'Question Classifier Agent',
   description: 'Classifies a user question and decides the next action.',
   instructions: `

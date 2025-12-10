@@ -17,7 +17,7 @@ export const slackThreadSummaryOutputSchema = z.object({
 });
 
 export const slackThreadSummarizerAgent = new Agent({
-  id: 'slack-thread-summarizer-agent',
+  id: 'slackThreadSummarizerAgent',
   name: 'Slack Thread Summarizer Agent',
   description:
     'Generates structured summary data from a Slack thread capture for use in ticket creation',

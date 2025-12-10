@@ -11,8 +11,8 @@ import {
  * Uses a larger model config for improved context and structure understanding.
  */
 export const initialAnalyzerAgent = new Agent({
-  id: 'initial-analyzer-agent',
-  name: 'initial-analyzer-agent',
+  id: 'initialAnalyzerAgent',
+  name: 'initialAnalyzerAgent',
   description:
     'Performs initial analysis of technical documents to understand structure and key patterns',
   instructions: INITIAL_ANALYZER_INSTRUCTIONS,
@@ -25,8 +25,8 @@ export const initialAnalyzerAgent = new Agent({
  * Used especially for large files to incrementally enhance the summary.
  */
 export const refinementAgent = new Agent({
-  id: 'refinement-agent',
-  name: 'refinement-agent',
+  id: 'refinementAgent',
+  name: 'refinementAgent',
   description:
     'Iteratively refines and updates technical summaries with new chunks',
   instructions: REFINEMENT_AGENT_INSTRUCTIONS,
@@ -38,8 +38,8 @@ export const refinementAgent = new Agent({
  * Responsible for structuring the final result in various output formats.
  */
 export const reportFormatterAgent = new Agent({
-  id: 'report-formatter-agent',
-  name: 'report-formatter-agent',
+  id: 'reportFormatterAgent',
+  name: 'reportFormatterAgent',
   description: 'Formats technical summaries into various output formats',
   instructions: REPORT_FORMATTER_INSTRUCTIONS,
   model: logAnalyzerConfig.models.formatter,
