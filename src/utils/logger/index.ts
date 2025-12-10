@@ -13,8 +13,7 @@ const logError = (
 ) => {
   if (error instanceof Error) {
     loggerInstance.error(message, {
-      error: error.message,
-      stack: error.stack,
+      error: error,
       ...meta,
     });
   } else {
