@@ -1142,7 +1142,6 @@ const formatInputForAgent = (
     'When hyperlink guidance is available (for example in metadata or guidelines), populate the links array with { "text", "url" } objects instead of embedding inline markup.',
     'Keep bullet text plain prose (no markdown, Jira formatting, or decorative prefixes).',
     'Include a citations array only when at least one Jira issue applies to that bullet; omit the field for structural or grouping bullets, but ensure actionable top-level bullets cite their supporting Jira keys. NEVER include an empty citations array ([]). If there are no citations, omit the citations field entirely.',
-    'Do not include Jira ticket keys (e.g., "CLOUDP-12345") in the "text" fields - the citations array already contains these keys, so mentioning them in the text is redundant.',
     'Omit the citations property on subitems only when they inherit the citation from their parent bullet.',
     'Do not create subitems that only point to additional reading (for example, “See the release notes”). Capture URLs via the links array on the relevant bullet instead.',
   ];

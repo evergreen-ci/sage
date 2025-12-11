@@ -49,6 +49,14 @@ releaseNotesRouter.post('/', async (req, res) => {
     if (parsedInput.data.product) {
       // Get agent and memory for product-specific context
       const agent = mastra.getAgent(RELEASE_NOTES_AGENT_NAME);
+      if (!agent) {
+        logger.error('Release notes agent not found', {
+          requestId: res.locals.requestId,
+          agentName: RELEASE_NOTES_AGENT_NAME,
+        });
+        res.status(500).json({ message: 'Release notes agent not found' });
+        return;
+      }
       const memory = await agent.getMemory({ runtimeContext });
 
       if (memory) {
