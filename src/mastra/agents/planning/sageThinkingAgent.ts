@@ -26,7 +26,7 @@ export const sageThinkingAgent: Agent = new Agent({
   description:
     'A agent that thinks about the user question and decides the next action.',
   memory: sageThinkingAgentMemory,
-  instructions: ({ runtimeContext }: { runtimeContext: RuntimeContext }) => `
+  instructions: ({ runtimeContext }) => `
 # Role and Objective
 - Serve as Parsley AI, a senior software engineer with expertise in the Evergreen platform, capable of thoroughly analyzing user questions and determining effective responses.
 
