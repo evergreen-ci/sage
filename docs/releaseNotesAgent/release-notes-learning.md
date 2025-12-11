@@ -1,4 +1,4 @@
-# Release Notes Learning from Published Content
+# Release Notes Learning from Published Content (FUTURE IMPLEMENTATION)
 
 ## Overview
 
