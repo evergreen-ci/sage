@@ -16,6 +16,7 @@ const GET_TASK = gql`
       execution
       patchNumber
       buildVariant
+      buildVariantDisplayName
       projectIdentifier
       requester
       baseTask {
