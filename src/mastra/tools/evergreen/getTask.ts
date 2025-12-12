@@ -54,6 +54,7 @@ const getTaskOutputSchema = z.object({
     execution: z.number(),
     patchNumber: z.number().optional().nullable(),
     buildVariant: z.string(),
+    buildVariantDisplayName: z.string().optional().nullable(),
     projectIdentifier: z.string().optional().nullable(),
     requester: z.string(),
     baseTask: z
