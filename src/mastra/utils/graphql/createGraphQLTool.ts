@@ -1,20 +1,18 @@
 import { createTool } from '@mastra/core/tools';
 import { DocumentNode } from 'graphql';
-import { z } from 'zod';
+import { ZodType } from 'zod';
 import { USER_ID } from '@/mastra/agents/constants';
 import { GraphQLClient, GraphQLClientError } from '@/utils/graphql/client';
 import logger from '@/utils/logger';
 
-interface GraphQLToolInputParams<
+interface createGraphQLToolParams<
   GraphQLQuery extends object,
   GraphQLQueryVariables extends object,
-> {
-  id: string;
-  description: string;
-  query: string | DocumentNode;
-  inputSchema: z.ZodType<GraphQLQueryVariables>;
-  outputSchema: z.ZodType<GraphQLQuery>;
+> extends ReturnType<typeof createTool> {
   client: GraphQLClient;
+  query: string | DocumentNode;
+  outputSchema: ZodType<GraphQLQuery, GraphQLQuery>;
+  inputSchema: ZodType<GraphQLQueryVariables, GraphQLQueryVariables>;
 }
 
 /**
@@ -38,13 +36,13 @@ export const createGraphQLTool = <
   inputSchema,
   outputSchema,
   query,
-}: GraphQLToolInputParams<GraphQLQuery, GraphQLQueryVariables>) =>
+}: createGraphQLToolParams<GraphQLQuery, GraphQLQueryVariables>) =>
   createTool({
     id,
     inputSchema,
     outputSchema,
     description,
-    execute: async (inputData, context) => {
+    execute: async (inputData, context?) => {
       const { requestContext } = context || {};
       const userId = requestContext?.get(USER_ID) as string | undefined;
       if (!userId) {

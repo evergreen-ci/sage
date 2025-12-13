@@ -47,11 +47,15 @@ const createTracedWorkflow =
       requestContext,
     });
     const end = Date.now();
+    // Validate response status against error statuses
     if (response.status === 'failed') {
       throw new Error(`Workflow run failed: ${response.error}`);
     }
     if (response.status === 'suspended') {
       throw new Error(`Workflow run suspended: ${response.suspended}`);
+    }
+    if (response.status === 'tripwire') {
+      throw new Error(`Workflow run tripwire: ${response.tripwire}`);
     }
 
     // Transform response
