@@ -48,10 +48,10 @@ const getVersionInputSchema = z.object({
 const getVersionOutputSchema = z.object({
   version: z.object({
     id: z.string(),
-    activated: z.boolean(),
+    activated: z.boolean().nullable().optional(),
     author: z.string(),
     createTime: z.string(),
-    finishTime: z.string().optional(),
+    finishTime: z.string().nullable().optional(),
     isPatch: z.boolean(),
     message: z.string(),
     order: z.number(),
@@ -59,23 +59,30 @@ const getVersionOutputSchema = z.object({
     projectIdentifier: z.string(),
     requester: z.string(),
     revision: z.string(),
-    startTime: z.string().optional(),
+    startTime: z.string().nullable().optional(),
     status: z.string(),
-    taskCount: z.number().optional(),
-    baseVersion: z.object({
-      id: z.string(),
-    }),
+    taskCount: z.number().nullable().optional(),
+    baseVersion: z
+      .object({
+        id: z.string(),
+      })
+      .nullable()
+      .optional(),
     patch: z
       .object({
         id: z.string(),
-        alias: z.string(),
+        alias: z.string().nullable().optional(),
         patchNumber: z.number(),
       })
-      .nullable(),
-    previousVersion: z.object({
-      id: z.string(),
-      revision: z.string(),
-    }),
+      .nullable()
+      .optional(),
+    previousVersion: z
+      .object({
+        id: z.string(),
+        revision: z.string(),
+      })
+      .nullable()
+      .optional(),
   }),
 });
 

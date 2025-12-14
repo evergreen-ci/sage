@@ -8,11 +8,16 @@ import logger from '@/utils/logger';
 interface createGraphQLToolParams<
   GraphQLQuery extends object,
   GraphQLQueryVariables extends object,
+  TInputSchema extends ZodType<GraphQLQueryVariables, any> = ZodType<
+    GraphQLQueryVariables,
+    any
+  >,
+  TOutputSchema extends ZodType<GraphQLQuery, any> = ZodType<GraphQLQuery, any>,
 > extends ReturnType<typeof createTool> {
   client: GraphQLClient;
   query: string | DocumentNode;
-  outputSchema: ZodType<GraphQLQuery, GraphQLQuery>;
-  inputSchema: ZodType<GraphQLQueryVariables, GraphQLQueryVariables>;
+  outputSchema: TOutputSchema;
+  inputSchema: TInputSchema;
 }
 
 /**
