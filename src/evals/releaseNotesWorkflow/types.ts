@@ -10,7 +10,7 @@ export type TestInput = z.infer<typeof releaseNotesInputSchema>;
 export type TestResult = ReleaseNotesOutput;
 
 export type Scores = BaseScores & {
-  Factuality: number;
+  Faithfulness: number;
   TechnicalAccuracy: number;
 };
 

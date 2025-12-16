@@ -2,7 +2,7 @@
 // See existing scorers at https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts.
 
 import {
-  Factuality as FactualityScorer,
+  Faithfulness as FaithfulnessScorer,
   LLMClassifierFromTemplate,
 } from 'autoevals';
 import { ScorerFunction, BaseScores } from './types';
@@ -147,23 +147,23 @@ export const TechnicalAccuracy = (args: {
 };
 
 /**
- * Safe wrapper for the Factuality scorer that handles JSON parsing errors.
- * The Factuality scorer from autoevals uses an LLM internally and sometimes
+ * Safe wrapper for the Faithfulness scorer that handles JSON parsing errors.
+ * The Faithfulness scorer from autoevals uses an LLM internally and sometimes
  * returns malformed JSON that causes parsing errors. This wrapper catches those
  * errors and retries before returning a default score.
  *
  * This function wraps the scorer call with error handling and retry logic.
- * It should be used in the same way as the Factuality scorer from autoevals.
- * @param args - Arguments for factuality evaluation
- * @param args.expected - Expected output
- * @param args.output - Actual output
- * @param args.input - Input context (optional)
+ * It should be used in the same way as the Faithfulness scorer from autoevals.
+ * @param args - Arguments for faithfulness evaluation
+ * @param args.output - Generated output to evaluate
+ * @param args.context - Source context (e.g., Jira issues) that the output should be faithful to
+ * @param args.input - Input prompt/question (optional)
  * @param args.maxRetries - Maximum number of retries (default: 1)
  * @returns Score result with error handling
  */
-export const SafeFactuality = async (args: {
-  expected: string;
+export const SafeFaithfulness = async (args: {
   output: string;
+  context: string | string[];
   input?: string;
   maxRetries?: number;
 }): Promise<{
@@ -174,7 +174,7 @@ export const SafeFactuality = async (args: {
   const maxRetries = args.maxRetries ?? 1;
   let lastError: Error | unknown;
 
-  // Check if this is a JSON parsing error (common issue with autoevals Factuality scorer)
+  // Check if this is a JSON parsing error (common issue with autoevals LLM-based scorers)
   const isJsonError = (error: unknown): boolean =>
     error instanceof SyntaxError ||
     (error instanceof Error &&
@@ -192,16 +192,24 @@ export const SafeFactuality = async (args: {
     metadata?: Record<string, unknown>;
   }> => {
     try {
-      // Call the Factuality scorer - autoevals will use the global client if initialized
-      // Type assertion needed because LLMClassifierArgs requires auth, but autoevals
-      // handles this automatically via the global client when used in Braintrust evals
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await (FactualityScorer as any)({
+      // Call the Faithfulness scorer - autoevals will use the global client if initialized
+      // FaithfulnessScorer expects args matching: { output: string; expected?: string; } & RagasArgs
+      // where RagasArgs = { input?: string; context?: string | string[]; model?: string; } & LLMArgs
+      // We construct the args inline without referencing the non-exported RagasArgs type
+      const scorerArgs = {
         output: args.output,
-        expected: args.expected,
+        context: args.context,
         input: args.input,
-      });
-      return result;
+      };
+      // FaithfulnessScorer extends Scorer, so it's callable as a function
+      const result = await FaithfulnessScorer(scorerArgs);
+      // Score.score can be null, but our return type requires number
+      // Convert null to 0 to match expected return type
+      return {
+        name: result.name,
+        score: result.score ?? 0,
+        metadata: result.metadata,
+      };
     } catch (error) {
       lastError = error;
 
@@ -230,31 +238,34 @@ export const SafeFactuality = async (args: {
 
   if (isJsonErr) {
     console.warn(
-      `[SafeFactuality] Factuality scorer encountered a JSON parsing error after ${maxRetries + 1} attempt(s). This may be due to malformed LLM response from the scorer itself. Returning default score of 0.`,
+      `[SafeFaithfulness] Faithfulness scorer encountered a JSON parsing error after ${maxRetries + 1} attempt(s). This may be due to malformed LLM response from the scorer itself. Returning default score of 0.`,
       {
         error:
           lastError instanceof Error ? lastError.message : String(lastError),
         inputLength: args.input?.length ?? 0,
-        expectedLength: args.expected.length,
+        contextLength:
+          typeof args.context === 'string'
+            ? args.context.length
+            : args.context.reduce((sum, ctx) => sum + ctx.length, 0),
         outputLength: args.output.length,
         attempts: maxRetries + 1,
       }
     );
   } else {
     console.error(
-      '[SafeFactuality] Factuality scorer encountered an unexpected error:',
+      '[SafeFaithfulness] Faithfulness scorer encountered an unexpected error:',
       lastError
     );
   }
 
   // Return a default score of 0 with metadata indicating the error
   return {
-    name: 'Factuality',
+    name: 'Faithfulness',
     score: 0,
     metadata: {
       error: lastError instanceof Error ? lastError.message : String(lastError),
       error_type: isJsonErr ? 'json_parsing_error' : 'unknown_error',
-      note: `Factuality scorer failed after ${maxRetries + 1} attempt(s), defaulting to score of 0`,
+      note: `Faithfulness scorer failed after ${maxRetries + 1} attempt(s), defaulting to score of 0`,
       attempts: maxRetries + 1,
     },
   };

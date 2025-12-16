@@ -1,7 +1,7 @@
 import { Eval, initDataset } from 'braintrust';
 import z from 'zod';
 import { ReporterName, PROJECT_NAME } from '@/evals/constants';
-import { SafeFactuality, TechnicalAccuracy } from '@/evals/scorers';
+import { SafeFaithfulness, TechnicalAccuracy } from '@/evals/scorers';
 import { tracedWorkflowEval } from '@/evals/utils/tracedWorkflow';
 import { RELEASE_NOTES_WORKFLOW_NAME } from '@/mastra/agents/constants';
 import { releaseNotesWorkflow } from '@/mastra/workflows/releaseNotes';
@@ -16,7 +16,7 @@ type ReleaseNotesMetadata = {
   product?: string;
   version?: string;
   scoreThresholds?: {
-    Factuality?: number;
+    Faithfulness?: number;
     TechnicalAccuracy?: number;
   };
 };
@@ -41,7 +41,7 @@ const loadReleaseNotesTestCases = async (): Promise<TestCase[]> => {
           metadata?.description ||
           `Release notes for ${metadata?.product || 'unknown'} ${metadata?.version || ''}`.trim(),
         scoreThresholds: {
-          Factuality: metadata?.scoreThresholds?.Factuality ?? 0.7,
+          Faithfulness: metadata?.scoreThresholds?.Faithfulness ?? 0.7,
           TechnicalAccuracy:
             metadata?.scoreThresholds?.TechnicalAccuracy ?? 0.8,
         },
@@ -65,11 +65,11 @@ Eval(
       workflowName: RELEASE_NOTES_WORKFLOW_NAME,
     }),
     scores: [
-      ({ expected, input, output }) =>
-        SafeFactuality({
-          expected: JSON.stringify(expected, null, 2),
+      ({ input, output }) =>
+        SafeFaithfulness({
           output: JSON.stringify(output, null, 2),
-          input: JSON.stringify(input, null, 2),
+          context: JSON.stringify(input.jiraIssues, null, 2),
+          input: `Generate release notes for ${input.product || 'product'}`,
         }),
       ({ expected, output }) =>
         TechnicalAccuracy({
