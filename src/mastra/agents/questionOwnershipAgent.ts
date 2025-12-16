@@ -31,7 +31,7 @@ export const questionOwnershipAgent = new Agent({
         )
         .join('\n\n');
     }
-    throw new Error('Unsupported prompt type from Braintrust');
+    throw new Error(`Unsupported prompt type '${promptConfig.prompt?.type}' from Braintrust`);
   },
   defaultGenerateOptions: {
     output: questionOwnershipOutputSchema,
