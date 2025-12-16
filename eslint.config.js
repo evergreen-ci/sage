@@ -29,7 +29,6 @@ const globalIgnores = {
     'tsconfig.json',
     'graphql.config.ts',
     'evergreen/**',
-    'src/mastra/tests/data/*.json',
   ],
 };
 

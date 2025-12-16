@@ -1,9 +1,7 @@
-import { Agent, AgentMemoryOption } from '@mastra/core/agent';
-import { Memory } from '@mastra/memory';
+import { Agent } from '@mastra/core/agent';
 import { z } from 'zod';
 import { gpt41 } from '@/mastra/models/openAI/gpt41';
 import { createToolFromAgent } from '@/mastra/tools/utils';
-import { memoryStore } from '@/mastra/utils/memory';
 import { logger } from '@/utils/logger';
 import { RELEASE_NOTES_AGENT_NAME } from './constants';
 
@@ -57,7 +55,7 @@ const releaseNotesInputSchema = z.object({
     .min(1, 'Product name must not be empty.')
     .optional()
     .describe(
-      'Product name (e.g., "ops-manager", "mongodb-agent"). If provided, enables product-specific memory learning.'
+      'Product name (e.g., "ops-manager", "mongodb-agent"). Used for tracking and logging purposes.'
     ),
   jiraIssues: z
     .array(jiraIssueSchema)
@@ -920,42 +918,11 @@ const isSecurityIssue = (
   );
 };
 
-const releaseNotesAgentMemory = new Memory({
-  storage: memoryStore,
-  options: {
-    workingMemory: {
-      scope: 'resource', // Product-level learning - all releases for a product share memory
-      enabled: true,
-      template: `# Release Notes Context - {{product}}
-
-## Product-Specific Patterns Learned Over Time
-{{#learnedPatterns}}
-- {{learnedPatterns}}
-{{/learnedPatterns}}
-
-## Style Preferences
-{{#stylePreferences}}
-- {{stylePreferences}}
-{{/stylePreferences}}
-
-## Common Feedback & Corrections
-{{#feedback}}
-- {{feedback}}
-{{/feedback}}
-`,
-    },
-    threads: {
-      generateTitle: false,
-    },
-  },
-});
-
 export const releaseNotesAgent = new Agent({
   id: 'release-notes-agent',
   name: 'Release Notes Agent',
   description:
     'Generates structured release note sections using Jira issues and pull request metadata',
-  memory: releaseNotesAgentMemory,
   instructions: `You produce structured release notes.
 
 Inputs include Jira issues, optional pull requests, curated metadata, and formatting guidance.
@@ -1013,25 +980,20 @@ type ReleaseNotesAgentResult = Awaited<
  * @param [options] - Optional overrides forwarded to the underlying Mastra agent.
  * @param [options.runtimeContext] - Runtime context instance used when invoking the agent.
  * @param [options.tracingOptions] - Tracing configuration that controls span metadata.
- * @param [options.memory] - Memory options for product-specific context.
  * @returns Promise resolving to the validated structured release notes result.
  */
 export const generateReleaseNotes = async (
   input: z.infer<typeof releaseNotesInputSchema>,
-  options?: ReleaseNotesAgentGenerateOptions & {
-    memory?: AgentMemoryOption;
-  }
+  options?: ReleaseNotesAgentGenerateOptions
 ): Promise<ReleaseNotesAgentResult> => {
   const formattedInput = formatInputForAgent(input);
 
   // Ensure structured output is always requested
-  const { memory, ...restOptions } = options || {};
   const generateOptions: ReleaseNotesAgentGenerateOptions = {
-    ...restOptions,
+    ...options,
     structuredOutput: {
       schema: releaseNotesOutputSchema,
     },
-    ...(memory ? { memory } : {}),
   };
 
   const maxRetries = 2;
@@ -1175,6 +1137,7 @@ export {
   jiraIssueSchema,
   pullRequestSchema,
   buildReleaseNotesSectionPlans,
+  ensureReleaseNotesOutput,
 };
 
 export type {

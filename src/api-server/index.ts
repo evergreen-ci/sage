@@ -5,11 +5,7 @@ import cors from 'cors';
 import express, { Application } from 'express';
 import expressListEndpoints from 'express-list-endpoints';
 import { userIdMiddleware } from '@/api-server/middlewares/authentication';
-import {
-  completionsRoute,
-  loginRoute,
-  releaseNotesRoute,
-} from '@/api-server/routes';
+import { completionsRoute, loginRoute } from '@/api-server/routes';
 import healthRoute from '@/api-server/routes/health';
 import rootRoute from '@/api-server/routes/root';
 import { config } from '@/config';
@@ -76,7 +72,6 @@ class SageServer {
     this.app.get('/', rootRoute);
     this.app.get('/health', healthRoute);
     this.app.use('/completions', completionsRoute);
-    this.app.use('/release-notes', releaseNotesRoute);
     this.app.use('/login', loginRoute);
   }
 

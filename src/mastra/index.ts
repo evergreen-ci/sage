@@ -12,6 +12,7 @@ import { releaseNotesAgent } from './agents/releaseNotesAgent';
 import { slackThreadSummarizerAgent } from './agents/slackThreadSummarizerAgent';
 import * as evergreenWorkflows from './workflows/evergreen';
 import { logCoreAnalyzerWorkflow } from './workflows/logCoreAnalyzer';
+import { releaseNotesWorkflow } from './workflows/releaseNotes';
 
 export const braintrustLogger = initLogger({
   projectName: config.braintrust.projectName,
@@ -37,6 +38,7 @@ export const mastra: Mastra = new Mastra({
   workflows: {
     ...evergreenWorkflows,
     logCoreAnalyzerWorkflow,
+    releaseNotesWorkflow,
   },
   telemetry: {
     enabled: false,
