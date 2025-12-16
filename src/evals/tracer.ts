@@ -64,7 +64,7 @@ export const callWorkflowWithTrace = async <TInput, TOutput>(
 
     // Workflow outputs should always be objects based on schemas
     // Add duration to the output object
-    // Safe to assert as Record<string, unknown> because we've verified at runtime that:
+    // We verify at runtime that output is safe to spread:
     // 1. output is truthy (not null/undefined)
     // 2. output is an object (typeof === 'object')
     // 3. output is not an array (!Array.isArray(output))

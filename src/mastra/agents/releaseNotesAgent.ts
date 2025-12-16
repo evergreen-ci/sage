@@ -355,18 +355,31 @@ CRITICAL SCHEMA REQUIREMENTS:
 {
   "sections": [
     {
-      "title": string,
+      "title": "Section Title",
       "items": [
         {
-          "text": string,  // REQUIRED: Use "text" NOT "title" for items
-          "citations"?: string[] (non-empty if present),
-          "subitems"?: [{ "text": string, "citations"?: string[], ... }],
-          "links"?: [{ "text": string, "url": string }]
+          "text": "Item text content",
+          "citations": ["JIRA-123"],
+          "subitems": [
+            {
+              "text": "Subitem text",
+              "citations": ["JIRA-456"]
+            }
+          ],
+          "links": [
+            {
+              "text": "Link text",
+              "url": "https://example.com"
+            }
+          ]
         }
       ]
     }
   ]
 }
+
+Note: Optional fields (citations, subitems, links) may be omitted entirely if not needed.
+If citations array is present, it must be non-empty. Do not include empty arrays.
 
 - Do NOT include any fields outside of "sections" at the top level (e.g., no "links", "metadata", etc.)
 - Do NOT include empty arrays for citations - omit the field entirely if there are no citations. NEVER include "citations": [] - this will cause validation to fail.

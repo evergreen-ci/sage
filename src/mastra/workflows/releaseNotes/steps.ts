@@ -23,8 +23,18 @@ const MAX_AGENT_GENERATION_ATTEMPTS = 3;
 
 /**
  * System prompt used for retry attempts when the agent fails to return valid JSON.
- * This prompt is more strict than the default agent instructions and focuses
- * specifically on ensuring schema compliance.
+ *
+ * This prompt is intentionally more strict and prescriptive than the agent's base
+ * instructions. While there is some duplication with the base instructions, this
+ * duplication is necessary because:
+ * 1. Retry attempts need stricter enforcement after a validation failure
+ * 2. The prompt emphasizes critical schema requirements more forcefully
+ * 3. It provides explicit guidance on common failure patterns (e.g., using "title"
+ *    instead of "text" for items, including empty citations arrays)
+ *
+ * The base agent instructions provide general guidance, while this retry prompt
+ * focuses specifically on ensuring schema compliance when the agent has already
+ * failed validation once.
  */
 const RETRY_SYSTEM_PROMPT = [
   'CRITICAL: Return ONLY valid JSON matching this exact schema.',
