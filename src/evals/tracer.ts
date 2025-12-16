@@ -72,7 +72,19 @@ export const callWorkflowWithTrace = async <TInput, TOutput>(
     const outputWithDuration =
       output && typeof output === 'object' && !Array.isArray(output)
         ? { ...(output as Record<string, unknown>), duration }
-        : { result: output, duration };
+        : (() => {
+            // Log warning when falling back to non-object output
+            // This helps detect unexpected output types during development
+            console.warn(
+              '[Workflow Tracer] Unexpected output type: workflow returned non-object output',
+              {
+                outputType: typeof output,
+                isArray: Array.isArray(output),
+                outputValue: output,
+              }
+            );
+            return { result: output, duration };
+          })();
 
     return {
       input,

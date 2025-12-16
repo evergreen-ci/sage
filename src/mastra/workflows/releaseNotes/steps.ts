@@ -26,7 +26,16 @@ const MAX_AGENT_GENERATION_ATTEMPTS = 3;
  * This prompt is more strict than the default agent instructions and focuses
  * specifically on ensuring schema compliance.
  */
-const RETRY_SYSTEM_PROMPT = `CRITICAL: Return ONLY valid JSON matching this exact schema. Do not include any fields outside of "sections". Each section must have "title" and "items". Each item MUST use "text" (NOT "title") for the item content. Only sections use "title" - items always use "text". Each item must have "text" and optionally "citations" (non-empty array if present), "subitems", and "links". NEVER include "citations": [] - if there are no citations, omit the citations field entirely. Remove any top-level fields other than "sections".`;
+const RETRY_SYSTEM_PROMPT = [
+  'CRITICAL: Return ONLY valid JSON matching this exact schema.',
+  'Do not include any fields outside of "sections".',
+  'Each section must have "title" and "items".',
+  'Each item MUST use "text" (NOT "title") for the item content.',
+  'Only sections use "title" - items always use "text".',
+  'Each item must have "text" and optionally "citations" (non-empty array if present), "subitems", and "links".',
+  'NEVER include "citations": [] - if there are no citations, omit the citations field entirely.',
+  'Remove any top-level fields other than "sections".',
+].join('\n');
 
 /**
  * Formats section plans into a prompt string for the agent
@@ -247,24 +256,21 @@ export const generateStep = createStep({
           maxAttempts: MAX_AGENT_GENERATION_ATTEMPTS,
         });
 
-        // eslint-disable-next-line no-await-in-loop -- Retries must be sequential
-        const result = await releaseNotesAgent.generate(
-          state.formattedPrompt,
+        // On retry attempts, prepend stricter instructions to the prompt
+        // Note: Mastra's agent.generate() doesn't support a 'system' parameter,
+        // so we prepend the retry instructions to the user message instead
+        const promptForAttempt =
           attempt === 0
-            ? {
-                structuredOutput: {
-                  schema: releaseNotesOutputSchema,
-                },
-                abortSignal,
-              }
-            : {
-                structuredOutput: {
-                  schema: releaseNotesOutputSchema,
-                },
-                abortSignal,
-                system: RETRY_SYSTEM_PROMPT,
-              }
-        );
+            ? state.formattedPrompt
+            : `${RETRY_SYSTEM_PROMPT}\n\n---\n\n${state.formattedPrompt}`;
+
+        // eslint-disable-next-line no-await-in-loop -- Retries must be sequential
+        const result = await releaseNotesAgent.generate(promptForAttempt, {
+          structuredOutput: {
+            schema: releaseNotesOutputSchema,
+          },
+          abortSignal,
+        });
 
         tracingContext.currentSpan?.update({
           metadata: {
