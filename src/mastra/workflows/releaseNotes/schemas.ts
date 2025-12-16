@@ -42,5 +42,4 @@ export const WorkflowStateSchema = z.object({
     })
     .optional(),
   formattedPrompt: z.string().optional(),
-  rawAgentOutput: z.unknown().optional(),
 });
