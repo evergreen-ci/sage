@@ -223,14 +223,14 @@ export const generateStep = createStep({
       throw new Error('Formatted prompt not found in state');
     }
 
-    const maxRetries = 2;
+    const maxAttempts = 3;
     let lastError: Error | undefined;
 
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         logger.debug('Calling release notes agent', {
           attempt: attempt + 1,
-          maxAttempts: maxRetries + 1,
+          maxAttempts,
         });
 
         // eslint-disable-next-line no-await-in-loop -- Retries must be sequential
@@ -267,7 +267,7 @@ export const generateStep = createStep({
         lastError = error instanceof Error ? error : new Error(String(error));
 
         if (
-          attempt === maxRetries ||
+          attempt === maxAttempts - 1 ||
           !lastError.message.includes('does not match the expected schema')
         ) {
           throw lastError;
@@ -275,7 +275,7 @@ export const generateStep = createStep({
 
         logger.warn('Release notes generation failed, retrying', {
           attempt: attempt + 1,
-          maxRetries: maxRetries + 1,
+          maxAttempts,
           error: lastError.message,
         });
       }

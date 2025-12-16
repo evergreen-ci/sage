@@ -52,8 +52,8 @@ class SageServer {
     this.app.use(httpLoggingMiddleware);
 
     // Basic Express middleware
-    // Increased limit to 10mb to support large payloads
-    // Default is 100kb which is insufficient for large issue lists for release notes agent
+    // Increased limit to 10MB to support large payloads
+    // Default is 100KB which is insufficient for large issue lists for release notes agent
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
     this.app.use(
