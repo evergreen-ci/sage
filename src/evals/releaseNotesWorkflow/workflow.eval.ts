@@ -8,33 +8,43 @@ import { RELEASE_NOTES_WORKFLOW_NAME } from '@/mastra/agents/constants';
 import { releaseNotesWorkflow } from '@/mastra/workflows/releaseNotes';
 import { TestCase, TestInput, TestResult } from './types';
 
+/**
+ * Expected structure of row.metadata from Braintrust dataset
+ */
+type ReleaseNotesMetadata = {
+  testName?: string;
+  description?: string;
+  product?: string;
+  version?: string;
+  scoreThresholds?: {
+    Factuality?: number;
+    TechnicalAccuracy?: number;
+  };
+};
+
 const loadReleaseNotesTestCases = async (): Promise<TestCase[]> => {
   const dataset = initDataset(PROJECT_NAME, {
     dataset: 'product_release_notes_dataset',
   });
   const testCases: TestCase[] = [];
   for await (const row of dataset) {
+    // Cast row.metadata once at the top of the loop
+    const metadata = row.metadata as ReleaseNotesMetadata;
     // Transform the row to ensure it has the required metadata structure
     const testCase: TestCase = {
       input: row.input as TestInput,
       expected: row.expected as TestResult,
       metadata: {
         testName:
-          (row.metadata as { testName?: string })?.testName ||
-          `Release Notes - ${(row.metadata as { product?: string })?.product || 'unknown'} ${(row.metadata as { version?: string })?.version || ''}`.trim(),
+          metadata?.testName ||
+          `Release Notes - ${metadata?.product || 'unknown'} ${metadata?.version || ''}`.trim(),
         description:
-          (row.metadata as { description?: string })?.description ||
-          `Release notes for ${(row.metadata as { product?: string })?.product || 'unknown'} ${(row.metadata as { version?: string })?.version || ''}`.trim(),
+          metadata?.description ||
+          `Release notes for ${metadata?.product || 'unknown'} ${metadata?.version || ''}`.trim(),
         scoreThresholds: {
-          Factuality:
-            (row.metadata as { scoreThresholds?: { Factuality?: number } })
-              ?.scoreThresholds?.Factuality ?? 0.7,
+          Factuality: metadata?.scoreThresholds?.Factuality ?? 0.7,
           TechnicalAccuracy:
-            (
-              row.metadata as {
-                scoreThresholds?: { TechnicalAccuracy?: number };
-              }
-            )?.scoreThresholds?.TechnicalAccuracy ?? 0.8,
+            metadata?.scoreThresholds?.TechnicalAccuracy ?? 0.8,
         },
       },
     };

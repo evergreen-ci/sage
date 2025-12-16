@@ -49,7 +49,7 @@ const formatSectionPlansForPrompt = (
         lines.push(`- ${key}: ${value}`);
       }
     }
-    if (issue.pullRequests.length > 0) {
+    if (issue.pullRequests && issue.pullRequests.length > 0) {
       lines.push('Pull Requests:');
       for (const pr of issue.pullRequests) {
         const prLine =
