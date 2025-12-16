@@ -14,6 +14,21 @@ import {
 } from './schemas';
 
 /**
+ * Maximum number of attempts for agent generation retries.
+ * This is distinct from workflow-level retries (configured in retryConfig).
+ * Workflow retries retry the entire step if it throws an error.
+ * Agent generation retries retry the agent call if JSON validation fails.
+ */
+const MAX_AGENT_GENERATION_ATTEMPTS = 3;
+
+/**
+ * System prompt used for retry attempts when the agent fails to return valid JSON.
+ * This prompt is more strict than the default agent instructions and focuses
+ * specifically on ensuring schema compliance.
+ */
+const RETRY_SYSTEM_PROMPT = `CRITICAL: Return ONLY valid JSON matching this exact schema. Do not include any fields outside of "sections". Each section must have "title" and "items". Each item MUST use "text" (NOT "title") for the item content. Only sections use "title" - items always use "text". Each item must have "text" and optionally "citations" (non-empty array if present), "subitems", and "links". NEVER include "citations": [] - if there are no citations, omit the citations field entirely. Remove any top-level fields other than "sections".`;
+
+/**
  * Formats section plans into a prompt string for the agent
  * This mirrors the logic from formatSectionPlansForPrompt in the agent file
  * @param context - The section planner context containing sections and issues
@@ -223,14 +238,13 @@ export const generateStep = createStep({
       throw new Error('Formatted prompt not found in state');
     }
 
-    const maxAttempts = 3;
     let lastError: Error | undefined;
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    for (let attempt = 0; attempt < MAX_AGENT_GENERATION_ATTEMPTS; attempt++) {
       try {
         logger.debug('Calling release notes agent', {
           attempt: attempt + 1,
-          maxAttempts,
+          maxAttempts: MAX_AGENT_GENERATION_ATTEMPTS,
         });
 
         // eslint-disable-next-line no-await-in-loop -- Retries must be sequential
@@ -248,7 +262,7 @@ export const generateStep = createStep({
                   schema: releaseNotesOutputSchema,
                 },
                 abortSignal,
-                system: `CRITICAL: Return ONLY valid JSON matching this exact schema. Do not include any fields outside of "sections". Each section must have "title" and "items". Each item MUST use "text" (NOT "title") for the item content. Only sections use "title" - items always use "text". Each item must have "text" and optionally "citations" (non-empty array if present), "subitems", and "links". NEVER include "citations": [] - if there are no citations, omit the citations field entirely. Remove any top-level fields other than "sections".`,
+                system: RETRY_SYSTEM_PROMPT,
               }
         );
 
@@ -267,7 +281,7 @@ export const generateStep = createStep({
         lastError = error instanceof Error ? error : new Error(String(error));
 
         if (
-          attempt === maxAttempts - 1 ||
+          attempt === MAX_AGENT_GENERATION_ATTEMPTS - 1 ||
           !lastError.message.includes('does not match the expected schema')
         ) {
           throw lastError;
@@ -275,7 +289,7 @@ export const generateStep = createStep({
 
         logger.warn('Release notes generation failed, retrying', {
           attempt: attempt + 1,
-          maxAttempts,
+          maxAttempts: MAX_AGENT_GENERATION_ATTEMPTS,
           error: lastError.message,
         });
       }
