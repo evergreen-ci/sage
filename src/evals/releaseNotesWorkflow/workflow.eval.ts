@@ -1,8 +1,7 @@
-import { Factuality } from 'autoevals';
 import { Eval, initDataset } from 'braintrust';
 import z from 'zod';
 import { ReporterName, PROJECT_NAME } from '@/evals/constants';
-import { TechnicalAccuracy } from '@/evals/scorers';
+import { SafeFactuality, TechnicalAccuracy } from '@/evals/scorers';
 import { tracedWorkflowEval } from '@/evals/utils/tracedWorkflow';
 import { RELEASE_NOTES_WORKFLOW_NAME } from '@/mastra/agents/constants';
 import { releaseNotesWorkflow } from '@/mastra/workflows/releaseNotes';
@@ -67,7 +66,7 @@ Eval(
     }),
     scores: [
       ({ expected, input, output }) =>
-        Factuality({
+        SafeFactuality({
           expected: JSON.stringify(expected, null, 2),
           output: JSON.stringify(output, null, 2),
           input: JSON.stringify(input, null, 2),
