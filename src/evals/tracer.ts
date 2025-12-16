@@ -62,5 +62,15 @@ export const callWorkflowWithTrace = async <TInput, TOutput>(
       },
     });
 
-    return { ...output, duration };
+    // Workflow outputs should always be objects based on schemas
+    // Add duration to the output object
+    const outputWithDuration =
+      output && typeof output === 'object' && !Array.isArray(output)
+        ? { ...(output as Record<string, unknown>), duration }
+        : { result: output, duration };
+
+    return {
+      input,
+      output: outputWithDuration as TOutput & { duration: number },
+    };
   });

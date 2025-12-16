@@ -90,8 +90,8 @@ export const planSectionsStep = createStep({
     const logger = mastraInstance.getLogger();
 
     logger.debug('Building section plans', {
-      issueCount: inputData.jiraIssues.length,
-      sectionCount: inputData.sections.length,
+      issueCount: inputData.jiraIssues?.length ?? 0,
+      sectionCount: inputData.sections?.length ?? 0,
     });
 
     const sectionPlans = buildReleaseNotesSectionPlans(inputData);

@@ -59,9 +59,7 @@ const createTracedWorkflow =
 
     const output = options.transformResponse
       ? options.transformResponse(baseResponse, input)
-      : ({
-          ...response.result,
-        } as unknown as Output);
+      : (response.result as unknown as Output);
 
     // Validate output if schema is provided
     if (options.responseSchema) {
@@ -89,7 +87,9 @@ export const tracedWorkflowEval =
   <Input, Output, WorkflowInput>(
     options: TracedWorkflowOptions<Input, Output, WorkflowInput>
   ) =>
-  async (input: Input) =>
-    await callWorkflowWithTrace<Input, Output>(
+  async (input: Input) => {
+    const result = await callWorkflowWithTrace<Input, Output>(
       async () => await createTracedWorkflow(options)(input)
     );
+    return result.output;
+  };

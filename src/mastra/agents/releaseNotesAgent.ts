@@ -205,12 +205,12 @@ const CURATED_COPY_KEYS = ['release_notes', 'customer_impact', 'upgrade_notes'];
 const buildReleaseNotesSectionPlans = (
   input: z.infer<typeof releaseNotesInputSchema>
 ): SectionPlannerContext => {
-  const sections = input.sections.map(title => ({
+  const sections = (input.sections ?? DEFAULT_SECTION_TITLES).map(title => ({
     title,
     focus: deriveDefaultFocus(title),
   }));
 
-  const issues = input.jiraIssues.map(createSectionPlanIssue);
+  const issues = (input.jiraIssues ?? []).map(createSectionPlanIssue);
 
   return {
     sections,
