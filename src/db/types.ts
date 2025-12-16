@@ -1,7 +1,13 @@
 import { ObjectId } from 'mongodb';
+import { z } from 'zod';
 
 /**
- * Represents the status of a job run
+ * Zod schema for MongoDB ObjectId
+ */
+const objectIdSchema = z.instanceof(ObjectId);
+
+/**
+ * Job run status enum values
  */
 export enum JobRunStatus {
   Pending = 'pending',
@@ -12,57 +18,90 @@ export enum JobRunStatus {
 }
 
 /**
- * Represents a single job run for processing a Jira ticket
+ * Zod schema for JobRunStatus
  */
-export interface JobRun {
-  _id?: ObjectId;
+export const jobRunStatusSchema = z.nativeEnum(JobRunStatus);
+
+/**
+ * Zod schema for JobRun documents stored in MongoDB
+ */
+export const jobRunSchema = z.object({
+  _id: objectIdSchema.optional(),
   /** The Jira ticket key (e.g., "PROJ-123") */
-  jiraTicketKey: string;
+  jiraTicketKey: z.string().min(1),
   /** Cursor agent ID once launched */
-  cursorAgentId?: string;
+  cursorAgentId: z.string().optional(),
   /** Current status of the job */
-  status: JobRunStatus;
-  /** User email who initiated the job */
-  initiatedBy: string;
+  status: jobRunStatusSchema,
+  /** User email who initiated the job (added the sage-bot label) */
+  initiatedBy: z.string().email(),
+  /** User email of the ticket assignee (whose API key will be used) */
+  assignee: z.string().email().nullable(),
   /** Timestamp when the job was created */
-  createdAt: Date;
+  createdAt: z.date(),
   /** Timestamp when the job was last updated */
-  updatedAt: Date;
+  updatedAt: z.date(),
   /** Timestamp when the job started processing */
-  startedAt?: Date;
+  startedAt: z.date().optional(),
   /** Timestamp when the job completed (success or failure) */
-  completedAt?: Date;
+  completedAt: z.date().optional(),
   /** Error message if the job failed */
-  errorMessage?: string;
+  errorMessage: z.string().optional(),
   /** Additional metadata about the job */
-  metadata?: Record<string, unknown>;
-}
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
 
 /**
- * Input for creating a new job run (without auto-generated fields)
+ * TypeScript type inferred from the JobRun schema
  */
-export type CreateJobRunInput = Pick<JobRun, 'jiraTicketKey' | 'initiatedBy'> &
-  Partial<Pick<JobRun, 'metadata'>>;
+export type JobRun = z.infer<typeof jobRunSchema>;
 
 /**
- * Represents stored user credentials for accessing external services
+ * Zod schema for creating a new job run (without auto-generated fields)
  */
-export interface UserCredentials {
-  _id?: ObjectId;
+export const createJobRunInputSchema = z.object({
+  jiraTicketKey: z.string().min(1),
+  initiatedBy: z.string().email(),
+  assignee: z.string().email().nullable(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
+
+/**
+ * TypeScript type for CreateJobRunInput
+ */
+export type CreateJobRunInput = z.infer<typeof createJobRunInputSchema>;
+
+/**
+ * Zod schema for UserCredentials documents stored in MongoDB
+ */
+export const userCredentialsSchema = z.object({
+  _id: objectIdSchema.optional(),
   /** User's email address (unique identifier) */
-  email: string;
+  email: z.string().email(),
   /** Encrypted Cursor API key for the user */
-  cursorApiKey: string;
+  cursorApiKey: z.string().min(1),
   /** Timestamp when the credentials were created */
-  createdAt: Date;
+  createdAt: z.date(),
   /** Timestamp when the credentials were last updated */
-  updatedAt: Date;
-}
+  updatedAt: z.date(),
+});
 
 /**
- * Input for creating/upserting user credentials (without auto-generated fields)
+ * TypeScript type inferred from the UserCredentials schema
  */
-export type CreateUserCredentialsInput = Pick<
-  UserCredentials,
-  'email' | 'cursorApiKey'
+export type UserCredentials = z.infer<typeof userCredentialsSchema>;
+
+/**
+ * Zod schema for creating/upserting user credentials (without auto-generated fields)
+ */
+export const createUserCredentialsInputSchema = z.object({
+  email: z.string().email(),
+  cursorApiKey: z.string().min(1),
+});
+
+/**
+ * TypeScript type for CreateUserCredentialsInput
+ */
+export type CreateUserCredentialsInput = z.infer<
+  typeof createUserCredentialsInputSchema
 >;

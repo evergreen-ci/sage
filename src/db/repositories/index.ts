@@ -9,10 +9,10 @@ export * as userCredentialsRepository from './userCredentialsRepository';
  * Ensures all repository indexes are created.
  * Should be called once during application startup after database connection.
  */
-export async function ensureAllIndexes(): Promise<void> {
+export const ensureAllIndexes = async (): Promise<void> => {
   logger.info('Creating database indexes...');
 
   await Promise.all([ensureJobRunIndexes(), ensureUserCredentialsIndexes()]);
 
   logger.info('All database indexes created successfully');
-}
+};

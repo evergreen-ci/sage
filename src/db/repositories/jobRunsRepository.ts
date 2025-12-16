@@ -1,28 +1,16 @@
-import { Collection, ObjectId } from 'mongodb';
-import { config } from '@/config';
-import { db } from '@/db/connection';
+import { ObjectId } from 'mongodb';
+import { getCollection } from '@/db/repositories/helpers';
 import { JobRun, JobRunStatus, CreateJobRunInput } from '@/db/types';
 import logger from '@/utils/logger';
 
 const COLLECTION_NAME = 'job_runs';
 
 /**
- * Gets the job_runs collection
- * @returns The MongoDB collection for job runs
- */
-function getCollection(): Collection<JobRun> {
-  return db
-    .getClient()
-    .db(config.db.dbName)
-    .collection<JobRun>(COLLECTION_NAME);
-}
-
-/**
  * Ensures indexes are created for the job_runs collection
  * Should be called once during application startup
  */
-export async function ensureIndexes(): Promise<void> {
-  const collection = getCollection();
+export const ensureIndexes = async (): Promise<void> => {
+  const collection = getCollection<JobRun>(COLLECTION_NAME);
 
   // Index for looking up jobs by Jira ticket
   await collection.createIndex(
@@ -40,20 +28,23 @@ export async function ensureIndexes(): Promise<void> {
   await collection.createIndex({ status: 1 }, { name: 'status_idx' });
 
   logger.info(`Indexes created for ${COLLECTION_NAME} collection`);
-}
+};
 
 /**
  * Creates a new job run
  * @param input - The input data for creating a job run
  * @returns The created job run document
  */
-export async function createJobRun(input: CreateJobRunInput): Promise<JobRun> {
-  const collection = getCollection();
+export const createJobRun = async (
+  input: CreateJobRunInput
+): Promise<JobRun> => {
+  const collection = getCollection<JobRun>(COLLECTION_NAME);
   const now = new Date();
 
   const jobRun: JobRun = {
     jiraTicketKey: input.jiraTicketKey,
     initiatedBy: input.initiatedBy,
+    assignee: input.assignee,
     status: JobRunStatus.Pending,
     createdAt: now,
     updatedAt: now,
@@ -68,7 +59,7 @@ export async function createJobRun(input: CreateJobRunInput): Promise<JobRun> {
   });
 
   return jobRun;
-}
+};
 
 /**
  * Updates a job run's status and related fields
@@ -78,12 +69,12 @@ export async function createJobRun(input: CreateJobRunInput): Promise<JobRun> {
  * @param errorMessage - Optional error message for failed status
  * @returns The updated job run document, or null if not found
  */
-export async function updateJobRunStatus(
+export const updateJobRunStatus = async (
   id: string | ObjectId,
   status: JobRunStatus,
   errorMessage?: string
-): Promise<JobRun | null> {
-  const collection = getCollection();
+): Promise<JobRun | null> => {
+  const collection = getCollection<JobRun>(COLLECTION_NAME);
   const objectId = typeof id === 'string' ? new ObjectId(id) : id;
   const now = new Date();
 
@@ -118,4 +109,21 @@ export async function updateJobRunStatus(
   }
 
   return result;
-}
+};
+
+/**
+ * Finds the most recent job run for a given Jira ticket key
+ * @param ticketKey - The Jira ticket key (e.g., 'PROJ-123')
+ * @returns The most recent job run for the ticket, or null if not found
+ */
+export const findJobRunByTicketKey = async (
+  ticketKey: string
+): Promise<JobRun | null> => {
+  const collection = getCollection<JobRun>(COLLECTION_NAME);
+
+  // Find the most recent job run for this ticket (by createdAt descending)
+  return collection.findOne(
+    { jiraTicketKey: ticketKey },
+    { sort: { createdAt: -1 } }
+  );
+};

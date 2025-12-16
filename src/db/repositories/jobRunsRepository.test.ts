@@ -1,7 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { JobRunStatus } from '@/db/types';
-// Import after mocking
 import * as jobRunsRepository from './jobRunsRepository';
 
 // Mock the db module
@@ -71,11 +69,13 @@ describe('jobRunsRepository', () => {
       const result = await jobRunsRepository.createJobRun({
         jiraTicketKey: 'PROJ-123',
         initiatedBy: 'user@example.com',
+        assignee: 'assignee@example.com',
       });
 
       expect(result).toMatchObject({
         jiraTicketKey: 'PROJ-123',
         initiatedBy: 'user@example.com',
+        assignee: 'assignee@example.com',
         status: JobRunStatus.Pending,
         _id: insertedId,
       });
@@ -92,6 +92,7 @@ describe('jobRunsRepository', () => {
       const result = await jobRunsRepository.createJobRun({
         jiraTicketKey: 'PROJ-456',
         initiatedBy: 'user@example.com',
+        assignee: null,
         metadata,
       });
 

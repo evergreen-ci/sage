@@ -1,6 +1,4 @@
 import { ObjectId } from 'mongodb';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-// Import after mocking
 import { decrypt } from '@/db/encryption';
 import * as userCredentialsRepository from './userCredentialsRepository';
 
