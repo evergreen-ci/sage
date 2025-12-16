@@ -60,6 +60,12 @@ const generateReleaseNotesRoute = async (req: Request, res: Response) => {
     const runResult = await run.start({
       inputData: parsedInput.data,
       runtimeContext,
+      ...(spanContext
+        ? {
+            traceId: spanContext.traceId,
+            parentSpanId: spanContext.spanId,
+          }
+        : {}),
       tracingOptions: {
         metadata: {
           userId: res.locals.userId,
@@ -68,12 +74,6 @@ const generateReleaseNotesRoute = async (req: Request, res: Response) => {
             ? { product: parsedInput.data.product }
             : {}),
         },
-        ...(spanContext
-          ? {
-              traceId: spanContext.traceId,
-              parentSpanId: spanContext.spanId,
-            }
-          : {}),
       },
     });
 

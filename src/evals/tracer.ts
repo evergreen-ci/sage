@@ -38,6 +38,36 @@ export const callModelWithTrace = async <TInput, TOutput>(
   });
 
 /**
+ * Helper function to add duration to the output object.
+ * If output is a plain object (not an array), spread it and add duration.
+ * Otherwise, log a warning and return an object with result and duration.
+ * @param output - The workflow output to add duration to
+ * @param duration - The duration in milliseconds
+ * @returns Output object with duration added, or wrapped in result object if not a plain object
+ */
+function addDurationToOutput<T>(
+  output: T,
+  duration: number
+): (T & { duration: number }) | { result: T; duration: number } {
+  if (output && typeof output === 'object' && !Array.isArray(output)) {
+    return { ...(output as Record<string, unknown>), duration } as T & {
+      duration: number;
+    };
+  }
+  // Log warning when falling back to non-object output
+  // This helps detect unexpected output types during development
+  console.warn(
+    '[Workflow Tracer] Unexpected output type: workflow returned non-object output',
+    {
+      outputType: typeof output,
+      isArray: Array.isArray(output),
+      outputValue: output,
+    }
+  );
+  return { result: output, duration };
+}
+
+/**
  * https://www.braintrust.dev/docs/guides/experiments/write#tracing
  * This is a wrapper function that adds tracing spans to the workflow call.
  * @param callWorkflow - function to call the given workflow
@@ -64,27 +94,7 @@ export const callWorkflowWithTrace = async <TInput, TOutput>(
 
     // Workflow outputs should always be objects based on schemas
     // Add duration to the output object
-    // We verify at runtime that output is safe to spread:
-    // 1. output is truthy (not null/undefined)
-    // 2. output is an object (typeof === 'object')
-    // 3. output is not an array (!Array.isArray(output))
-    // This runtime check ensures the spread operator is safe to use
-    const outputWithDuration =
-      output && typeof output === 'object' && !Array.isArray(output)
-        ? { ...(output as Record<string, unknown>), duration }
-        : (() => {
-            // Log warning when falling back to non-object output
-            // This helps detect unexpected output types during development
-            console.warn(
-              '[Workflow Tracer] Unexpected output type: workflow returned non-object output',
-              {
-                outputType: typeof output,
-                isArray: Array.isArray(output),
-                outputValue: output,
-              }
-            );
-            return { result: output, duration };
-          })();
+    const outputWithDuration = addDurationToOutput(output, duration);
 
     return {
       input,

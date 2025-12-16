@@ -83,7 +83,7 @@ const formatSectionPlansForPrompt = (
         lines.push(`- ${key}: ${value}`);
       }
     }
-    if (issue.pullRequests && issue.pullRequests.length > 0) {
+    if (issue.pullRequests?.length > 0) {
       lines.push('Pull Requests:');
       for (const pr of issue.pullRequests) {
         const prLine =
@@ -259,10 +259,14 @@ export const generateStep = createStep({
 
     let lastError: Error | undefined;
 
-    for (let attempt = 0; attempt < MAX_AGENT_GENERATION_ATTEMPTS; attempt++) {
+    for (
+      let attemptIndex = 0;
+      attemptIndex < MAX_AGENT_GENERATION_ATTEMPTS;
+      attemptIndex++
+    ) {
       try {
         logger.debug('Calling release notes agent', {
-          attempt: attempt + 1,
+          attempt: attemptIndex + 1,
           maxAttempts: MAX_AGENT_GENERATION_ATTEMPTS,
         });
 
@@ -270,7 +274,7 @@ export const generateStep = createStep({
         // Note: Mastra's agent.generate() doesn't support a 'system' parameter,
         // so we prepend the retry instructions to the user message instead
         const promptForAttempt =
-          attempt === 0
+          attemptIndex === 0
             ? state.formattedPrompt
             : `${RETRY_SYSTEM_PROMPT}\n\n---\n\n${state.formattedPrompt}`;
 
@@ -284,7 +288,7 @@ export const generateStep = createStep({
 
         tracingContext.currentSpan?.update({
           metadata: {
-            attempt: attempt + 1,
+            attempt: attemptIndex + 1,
             hasStructuredOutput: !!result.object,
             hasTextOutput: !!result.text,
           },
@@ -297,14 +301,14 @@ export const generateStep = createStep({
         lastError = error instanceof Error ? error : new Error(String(error));
 
         if (
-          attempt === MAX_AGENT_GENERATION_ATTEMPTS - 1 ||
+          attemptIndex === MAX_AGENT_GENERATION_ATTEMPTS - 1 ||
           !lastError.message.includes('does not match the expected schema')
         ) {
           throw lastError;
         }
 
         logger.warn('Release notes generation failed, retrying', {
-          attempt: attempt + 1,
+          attempt: attemptIndex + 1,
           maxAttempts: MAX_AGENT_GENERATION_ATTEMPTS,
           error: lastError.message,
         });
