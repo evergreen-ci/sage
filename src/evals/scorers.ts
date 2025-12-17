@@ -175,6 +175,9 @@ export const SafeFaithfulness = async (args: {
   let lastError: Error | unknown;
 
   // Check if this is a JSON parsing error (common issue with autoevals LLM-based scorers)
+  // Note: This relies on string matching of error messages, which can be fragile if autoevals
+  // changes its error reporting format. If JSON parsing errors persist after autoevals updates,
+  // this function may need to be updated to match new error message patterns.
   const isJsonError = (error: unknown): boolean =>
     error instanceof SyntaxError ||
     (error instanceof Error &&
@@ -216,8 +219,8 @@ export const SafeFaithfulness = async (args: {
       // Only retry on JSON parsing errors
       if (isJsonError(error) && attempt < maxRetries) {
         // Wait a bit before retrying (exponential backoff)
-        const delayMs = Math.min(1000 * Math.pow(2, attempt), 5000);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+        const delayMilliseconds = Math.min(1000 * Math.pow(2, attempt), 5000);
+        await new Promise(resolve => setTimeout(resolve, delayMilliseconds));
         return attemptScoring(attempt + 1);
       }
 

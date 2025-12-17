@@ -43,7 +43,9 @@ export const callModelWithTrace = async <TInput, TOutput>(
  * Otherwise, log a warning and return an object with result and duration.
  * @param output - The workflow output to add duration to
  * @param duration - The duration in milliseconds
- * @returns Output object with duration added, or wrapped in result object if not a plain object
+ * @returns If input is a plain object: `T & { duration: number }` (duration added directly).
+ *          If input is not a plain object (array, null, etc.): `{ result: T; duration: number }` (wrapped in result property).
+ *          Callers should check the structure: if the return value has a `result` property, the input was not a plain object.
  */
 function addDurationToOutput<T>(
   output: T,
