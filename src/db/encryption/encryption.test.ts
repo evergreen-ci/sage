@@ -1,5 +1,4 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { encrypt, decrypt, isEncryptionConfigured } from './encryption';
+import { encrypt, decrypt, isEncryptionConfigured } from '.';
 
 // Valid 32-byte hex key (64 characters)
 const TEST_ENCRYPTION_KEY =

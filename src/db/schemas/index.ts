@@ -20,7 +20,7 @@ export enum JobRunStatus {
 /**
  * Zod schema for JobRunStatus
  */
-export const jobRunStatusSchema = z.nativeEnum(JobRunStatus);
+export const jobRunStatusSchema = z.enum(JobRunStatus);
 
 /**
  * Zod schema for JobRun documents stored in MongoDB
@@ -34,9 +34,9 @@ export const jobRunSchema = z.object({
   /** Current status of the job */
   status: jobRunStatusSchema,
   /** User email who initiated the job (added the sage-bot label) */
-  initiatedBy: z.string().email(),
+  initiatedBy: z.email(),
   /** User email of the ticket assignee (whose API key will be used) */
-  assignee: z.string().email().nullable(),
+  assignee: z.email().nullable(),
   /** Timestamp when the job was created */
   createdAt: z.date(),
   /** Timestamp when the job was last updated */
@@ -56,8 +56,8 @@ export const jobRunSchema = z.object({
  */
 export const createJobRunInputSchema = z.object({
   jiraTicketKey: z.string().min(1),
-  initiatedBy: z.string().email(),
-  assignee: z.string().email().nullable(),
+  initiatedBy: z.email(),
+  assignee: z.email().nullable(),
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -67,7 +67,7 @@ export const createJobRunInputSchema = z.object({
 export const userCredentialsSchema = z.object({
   _id: objectIdSchema.optional(),
   /** User's email address (unique identifier) */
-  email: z.string().email(),
+  email: z.email(),
   /** Encrypted Cursor API key for the user */
   cursorApiKey: z.string().min(1),
   /** Timestamp when the credentials were created */
@@ -80,6 +80,6 @@ export const userCredentialsSchema = z.object({
  * Zod schema for creating/upserting user credentials (without auto-generated fields)
  */
 export const createUserCredentialsInputSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   cursorApiKey: z.string().min(1),
 });

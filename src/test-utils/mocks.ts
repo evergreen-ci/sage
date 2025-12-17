@@ -1,5 +1,3 @@
-import { vi } from 'vitest';
-
 /**
  * Creates a mock logger instance with comprehensive logging methods
  * @returns An object containing mocked logger instances and methods

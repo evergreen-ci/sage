@@ -22,7 +22,7 @@ const KEY_LENGTH = 32; // 256 bits
  * @returns The encryption key as a Buffer
  * @throws {Error} If ENCRYPTION_KEY is not configured or invalid
  */
-function getEncryptionKey(): Buffer {
+const getEncryptionKey = (): Buffer => {
   const keyHex = config.encryption?.key;
 
   if (!keyHex) {
@@ -38,14 +38,14 @@ function getEncryptionKey(): Buffer {
   }
 
   return Buffer.from(keyHex, 'hex');
-}
+};
 
 /**
  * Encrypts a plaintext string using AES-256-GCM
  * @param plaintext The string to encrypt
  * @returns Base64-encoded string containing IV + encrypted data + auth tag
  */
-export function encrypt(plaintext: string): string {
+export const encrypt = (plaintext: string): string => {
   const key = getEncryptionKey();
   const iv = crypto.randomBytes(IV_LENGTH);
 
@@ -64,14 +64,14 @@ export function encrypt(plaintext: string): string {
   const combined = Buffer.concat([iv, encrypted, authTag]);
 
   return combined.toString('base64');
-}
+};
 
 /**
  * Decrypts a string that was encrypted with the encrypt function
  * @param encryptedData Base64-encoded string containing IV + encrypted data + auth tag
  * @returns The decrypted plaintext string
  */
-export function decrypt(encryptedData: string): string {
+export const decrypt = (encryptedData: string): string => {
   const key = getEncryptionKey();
   const combined = Buffer.from(encryptedData, 'base64');
 
@@ -95,17 +95,17 @@ export function decrypt(encryptedData: string): string {
   ]);
 
   return decrypted.toString('utf8');
-}
+};
 
 /**
  * Checks if encryption is properly configured
  * @returns true if encryption is available, false otherwise
  */
-export function isEncryptionConfigured(): boolean {
+export const isEncryptionConfigured = (): boolean => {
   try {
     getEncryptionKey();
     return true;
   } catch {
     return false;
   }
-}
+};

@@ -211,6 +211,7 @@ export const validateConfig = (): string[] | undefined => {
     'EVERGREEN_GRAPHQL_ENDPOINT',
     'EVERGREEN_API_USER',
     'EVERGREEN_API_KEY',
+    'ENCRYPTION_KEY',
   ];
 
   const errors: string[] = [];
