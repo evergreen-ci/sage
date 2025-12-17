@@ -20,6 +20,37 @@ check_for_success() {
     fi
 }
 
+extract_port_from_log() {
+    local log_file="$1"
+    grep -Eo "Sage server is running on port [0-9]+" "$log_file" | tail -n 1 | grep -Eo "[0-9]+"
+}
+
+check_for_route_served() {
+    local log_file="$1"
+    local port="$2"
+
+    if [ -z "$port" ]; then
+        echo "Could not determine server port from logs"
+        return 1
+    fi
+
+    echo "Checking that the server serves a route (GET /) on port $port..."
+
+    local attempt
+    for attempt in 1 2 3 4 5; do
+        if curl -sS -o /dev/null --max-time 2 "http://localhost:${port}/"; then
+            sleep 1
+            if grep -qE "HTTP[[:space:]]+GET[[:space:]]+/[[:space:]]" "$log_file"; then
+                return 0
+            fi
+        fi
+        sleep 1
+    done
+
+    echo "Sage prod server did not appear to serve a route (expected to find an 'HTTP GET /' log line)"
+    return 1
+}
+
 # Capture server output to a log file
 log_file=$(mktemp)
 echo "Starting Sage prod server..."
@@ -50,6 +81,14 @@ fi
 
 # Check for expected success message
 if ! check_for_success "$log_file"; then
+    kill $server_pid 2>/dev/null || true
+    cat "$log_file"
+    rm "$log_file"
+    exit 1
+fi
+
+server_port=$(extract_port_from_log "$log_file")
+if ! check_for_route_served "$log_file" "$server_port"; then
     kill $server_pid 2>/dev/null || true
     cat "$log_file"
     rm "$log_file"
