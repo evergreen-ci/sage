@@ -5,6 +5,7 @@ import {
   Faithfulness as FaithfulnessScorer,
   LLMClassifierFromTemplate,
 } from 'autoevals';
+import { logger } from '@/utils/logger';
 import { ScorerFunction, BaseScores } from './types';
 
 /**
@@ -240,7 +241,7 @@ export const SafeFaithfulness = async (args: {
   const isJsonErr = isJsonError(lastError);
 
   if (isJsonErr) {
-    console.warn(
+    logger.warn(
       `[SafeFaithfulness] Faithfulness scorer encountered a JSON parsing error after ${maxRetries + 1} attempt(s). This may be due to malformed LLM response from the scorer itself. Returning default score of 0.`,
       {
         error:
@@ -255,9 +256,9 @@ export const SafeFaithfulness = async (args: {
       }
     );
   } else {
-    console.error(
+    logger.error(
       '[SafeFaithfulness] Faithfulness scorer encountered an unexpected error:',
-      lastError
+      lastError instanceof Error ? lastError : new Error(String(lastError))
     );
   }
 

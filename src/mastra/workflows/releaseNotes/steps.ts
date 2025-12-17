@@ -48,8 +48,9 @@ const RETRY_SYSTEM_PROMPT = [
 ].join('\n');
 
 /**
- * Formats section plans into a prompt string for the agent
- * This mirrors the logic from formatSectionPlansForPrompt in the agent file
+ * Formats section plans into a prompt string for the agent.
+ * This function formats the section planner context into a structured prompt
+ * that the release notes agent can use for generation.
  * @param context - The section planner context containing sections and issues
  * @returns Formatted prompt string
  */

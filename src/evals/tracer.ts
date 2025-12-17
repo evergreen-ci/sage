@@ -1,4 +1,5 @@
 import { traced } from 'braintrust';
+import { logger } from '@/utils/logger';
 import { ModelOutput, WorkflowOutput } from './types';
 
 /**
@@ -58,7 +59,7 @@ function addDurationToOutput<T>(
   }
   // Log warning when falling back to non-object output
   // This helps detect unexpected output types during development
-  console.warn(
+  logger.warn(
     '[Workflow Tracer] Unexpected output type: workflow returned non-object output',
     {
       outputType: typeof output,
