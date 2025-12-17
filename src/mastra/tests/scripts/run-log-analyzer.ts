@@ -25,6 +25,7 @@ const REPORT_PREFIX = 'report';
  * @param analysisContext - Optional context for analysis
  * @returns Test result object with analysis details
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- script helper predates arrow enforcement
 async function runTest(
   filePath: string,
   index: number,
@@ -119,6 +120,7 @@ async function runTest(
  * @param bytes - File size in bytes
  * @returns Formatted file size string
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- helper predates arrow enforcement
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes}B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
@@ -130,6 +132,7 @@ function formatFileSize(bytes: number): string {
 /**
  *
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- CLI entrypoint kept as named async function
 async function main() {
   const args = process.argv.slice(2);
 

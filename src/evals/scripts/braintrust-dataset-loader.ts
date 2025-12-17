@@ -136,6 +136,7 @@ type OutputRow = {
 /**
  * This script is used to load a CSV file into a Braintrust dataset
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- script entrypoint kept as named async function for clarity
 async function main() {
   try {
     const rows = await readCSV(csvFilePath);

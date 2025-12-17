@@ -204,6 +204,7 @@ class SageServer {
  * This prevents multiple server instances during hot reload.
  * @returns The singleton SageServer instance
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- preserve named function for existing singleton export
 function getSageServer(): SageServer {
   if (!globalThis.__SAGE_SERVER_INSTANCE__) {
     globalThis.__SAGE_SERVER_INSTANCE__ = new SageServer();

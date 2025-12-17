@@ -5,6 +5,7 @@ import { z } from 'zod';
  * Expects a workflow result to be successful
  * @param wr - The workflow result to expect
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- helper predates arrow enforcement and uses complex generics
 export function expectSuccess<
   TInput extends z.ZodTypeAny,
   TOutput extends z.ZodTypeAny,

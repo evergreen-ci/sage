@@ -211,6 +211,7 @@ export const analyzeWorkflowSteps = (
  * @param ms - Duration in milliseconds
  * @returns Formatted duration string
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- helper predates arrow enforcement
 function formatDuration(ms: number): string {
   if (ms < 1000) {
     return `${ms}ms`;
@@ -226,6 +227,7 @@ function formatDuration(ms: number): string {
  * Prints a formatted workflow analysis to the console
  * @param analysis - The workflow analysis to print
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- keep named export for script ergonomics
 export function printWorkflowAnalysis(analysis: WorkflowAnalysis): void {
   console.log('\n=== Workflow Analysis ===\n');
 
@@ -301,6 +303,7 @@ export function printWorkflowAnalysis(analysis: WorkflowAnalysis): void {
  * @param steps - The workflow steps object to analyze
  * @returns The workflow analysis
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- keep named export for script ergonomics
 export function analyzeAndPrint(steps: WorkflowSteps): WorkflowAnalysis {
   const analysis = analyzeWorkflowSteps(steps);
   printWorkflowAnalysis(analysis);

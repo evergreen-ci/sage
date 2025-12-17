@@ -64,6 +64,7 @@ if (
           ]
         : []),
     ],
+    // eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- SDK hook signature favors method shorthand
     beforeSendLog(log) {
       if (logPrefixesToOmit.some(prefix => log.message.startsWith(prefix))) {
         return null;

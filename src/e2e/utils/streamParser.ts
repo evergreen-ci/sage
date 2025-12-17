@@ -13,6 +13,7 @@ interface StreamMessage {
  * @param chunk - Raw chunk string from the stream
  * @returns Array of parsed messages
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- legacy helper kept as named export for compatibility
 export function parseStreamData(chunk: string): StreamMessage[] {
   const lines = chunk.split('\n');
   const messages: StreamMessage[] = [];
@@ -42,6 +43,7 @@ export function parseStreamData(chunk: string): StreamMessage[] {
  * @param debug - Enable debug logging to see all message types
  * @returns The spanId if found, undefined otherwise
  */
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- legacy helper kept as named export for compatibility
 export function extractSpanIdFromStream(
   responseText: string,
   debug = false
