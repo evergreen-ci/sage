@@ -26,6 +26,7 @@ const evergreenAgentMemory = new Memory({
 - Execution ID:
 - Status:
 - Build Variant:
+- Build Variant Display Name:
 - Version:
 - Patch Number:
 - Details:
