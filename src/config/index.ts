@@ -93,6 +93,14 @@ export interface Config {
     /** ENCRYPTION_KEY - 32-byte hex string for AES-256 encryption */
     key: string;
   };
+  sageBot: {
+    /** SAGE_BOT_JIRA_BASE_URL */
+    jiraBaseUrl: string;
+    /** SAGE_BOT_JIRA_API_TOKEN */
+    jiraApiToken: string;
+    /** SAGE_BOT_SUPPORTED_PROJECTS - comma-separated list of Jira project keys */
+    supportedProjects: string[];
+  };
 }
 
 /**
@@ -184,6 +192,14 @@ export const config: Config = {
   },
   encryption: {
     key: getEnvVar('ENCRYPTION_KEY', ''),
+  },
+  sageBot: {
+    jiraBaseUrl: getEnvVar('JIRA_BASE_URL', 'https://jira.mongodb.org'),
+    jiraApiToken: getEnvVar('JIRA_API_TOKEN', ''),
+    supportedProjects: getEnvVar('SAGE_BOT_SUPPORTED_PROJECTS', '')
+      .split(',')
+      .map(p => p.trim())
+      .filter(p => p.length > 0),
   },
 };
 

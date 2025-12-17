@@ -104,6 +104,27 @@ steps:
       target:
         - staging
 
+  - name: deploy-cronjobs-staging
+    image: public.ecr.aws/kanopy/drone-helm:v3
+    settings:
+      chart: mongodb/cronjobs
+      chart_version: 1.22.0
+      helm_repos: mongodb=https://10gen.github.io/helm-charts
+      namespace: devprod-evergreen
+      release: sage-cronjobs
+      values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME}
+      values_files:
+        - environments/cronjobs/staging_deployments.yml
+    environment:
+      API_SERVER: https://api.staging.corp.mongodb.com
+      KUBERNETES_TOKEN:
+        from_secret: staging_kubernetes_token
+    when:
+      event:
+        - promote
+      target:
+        - staging
+
   - name: deploy-prod
     image: public.ecr.aws/kanopy/drone-helm:v3
     settings:
@@ -125,6 +146,30 @@ steps:
         - promote
       target:
         - production
+
+  # TODO(DEVPROD-25118): Uncomment once Sage Bot is ready for production release
+  # - name: deploy-cronjobs-prod
+  #   image: public.ecr.aws/kanopy/drone-helm:v3
+  #   settings:
+  #     chart: mongodb/cronjobs
+  #     chart_version: 1.22.0
+  #     helm_repos: mongodb=https://10gen.github.io/helm-charts
+  #     namespace: devprod-evergreen
+  #     release: sage-cronjobs
+  #     values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME}
+  #     values_files:
+  #       - environments/cronjobs/prod_deployments.yml
+  #   environment:
+  #     API_SERVER: https://api.prod.corp.mongodb.com
+  #     KUBERNETES_TOKEN:
+  #       from_secret: prod_kubernetes_token
+  #   when:
+  #     branch:
+  #       - main
+  #     event:
+  #       - promote
+  #     target:
+  #       - production
 
   - name: send-email-prod-api
     image: alpine/curl:latest
