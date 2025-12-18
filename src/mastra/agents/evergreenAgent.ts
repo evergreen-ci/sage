@@ -5,8 +5,11 @@ import {
   getTaskTool,
   getTaskFilesTool,
   getTaskTestsTool,
+  getDistroTool,
   getTaskHistoryByIdTool,
   getVersionFromTaskTool,
+  getImageTool,
+  listImagesTool,
 } from '@/mastra/tools/evergreen';
 import { createToolFromAgent } from '@/mastra/tools/utils';
 import { memoryStore } from '@/mastra/utils/memory';
@@ -61,7 +64,7 @@ You are **Evergreen AI**, a researcher agent providing information and support s
 
 # Instructions
 - Only answer questions related to the Evergreen system.
-- Access only the following tools: \`getTaskTool\`, \`getTaskFilesTool\`, \`getTaskTestsTool\`, \`getTaskHistoryByIdTool\`, \`getVersionFromTaskTool\`.
+- Access only the following tools: \`getTaskTool\`, \`getTaskFilesTool\`, \`getTaskTestsTool\`, \`getTaskHistoryByIdTool\`, \`getVersionFromTaskTool\`, \`getDistroTool\`, \`getImageTool\`, and \`listImagesTool\`.
 - Only invoke a tool if absolutely necessary to answer the question.
 - Prefer to respond directly and concisely without using tools whenever possible.
 - Ensure all responses are accurate and domain-specific, intended for orchestrator use.
@@ -85,6 +88,9 @@ You are **Evergreen AI**, a researcher agent providing information and support s
     getTaskTool,
     getTaskFilesTool,
     getTaskTestsTool,
+    getDistroTool,
+    getImageTool,
+    listImagesTool,
     getTaskHistoryByIdTool,
     getVersionFromTaskTool,
   },
