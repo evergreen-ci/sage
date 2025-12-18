@@ -2,7 +2,6 @@ import eslint from '@eslint/js';
 import disableConflictsPlugin from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
 import jsdocPlugin from 'eslint-plugin-jsdoc';
-import preferArrowPlugin from 'eslint-plugin-prefer-arrow';
 import prettierConfig from 'eslint-plugin-prettier/recommended';
 import sortDestructureKeysPlugin from 'eslint-plugin-sort-destructure-keys';
 import globals from 'globals';
@@ -52,7 +51,6 @@ const eslintConfig = {
   name: '@eslint/js/rules',
   plugins: {
     '@eslint/js': eslint,
-    'prefer-arrow': preferArrowPlugin,
   },
   files: ['src/**/*.js?(x)', 'src/**/*.ts?(x)'],
   rules: {
@@ -72,6 +70,7 @@ const eslintConfig = {
     'default-param-last': ERROR,
     'dot-notation': [ERROR, { allowKeywords: true }],
     eqeqeq: [errorIfStrict, 'always', { null: 'ignore' }],
+    'func-style': [ERROR, 'expression'],
     'no-await-in-loop': ERROR,
     'no-console': OFF,
     'no-debugger': errorIfStrict,
@@ -107,15 +106,6 @@ const eslintConfig = {
       { enforceForRenamedProperties: false },
     ],
     'prefer-regex-literals': [ERROR, { disallowRedundantWrapping: true }],
-    'prefer-arrow/prefer-arrow-functions': [
-      ERROR,
-      {
-        disallowPrototype: true,
-        singleReturnOnly: false,
-        classPropertiesAllowed: false,
-        allowStandaloneDeclarations: false,
-      },
-    ],
     'prefer-template': ERROR,
     radix: ERROR,
     'spaced-comment': [ERROR, 'always', { markers: ['/'] }], // TODO: This rule is deprecated - fix in DEVPROD-15014.
