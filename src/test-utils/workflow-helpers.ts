@@ -5,7 +5,8 @@ import { z } from 'zod';
  * Expects a workflow result to be successful
  * @param wr - The workflow result to expect
  */
-export const expectSuccess = <
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- TypeScript assertion functions with generics must be function declarations, not arrow functions (TS2775)
+export function expectSuccess<
   TInput extends z.ZodTypeAny,
   TOutput extends z.ZodTypeAny,
   TSteps extends Step<string, any, any>[] = Step<string, any, any>[],
@@ -25,11 +26,11 @@ export const expectSuccess = <
           z.infer<NonNullable<StepsRecord<TSteps>[K]['outputSchema']>>
         >;
   };
-} => {
+} {
   expect(wr.status).toBe('success');
   if (wr.status === 'success') {
     expect(wr.result).toBeDefined();
   } else {
     throw new Error('Workflow result is not successful');
   }
-};
+}
