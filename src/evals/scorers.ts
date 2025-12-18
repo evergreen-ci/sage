@@ -22,22 +22,19 @@ export const createScoreChecker: ScorerFunction<BaseScores, object> = (
     const score = scores[key] ?? 0; // Default to 0 if undefined
     if (score < threshold) {
       if (results?.output && results?.expected) {
-        // Remove 'duration' property from output if present
-        let outputWithoutDuration = results.output as object;
+        // Remove 'duration', 'agentMetadata', and 'input' properties from output if present
+        let outputWithoutMetadata = results.output as object;
         if (
-          outputWithoutDuration &&
-          typeof outputWithoutDuration === 'object' &&
-          'duration' in outputWithoutDuration
+          outputWithoutMetadata &&
+          typeof outputWithoutMetadata === 'object'
         ) {
-          // Create a shallow copy without 'duration'
-          const { duration, ...rest } = outputWithoutDuration as Record<
-            string,
-            unknown
-          >;
-          outputWithoutDuration = rest;
+          // Create a shallow copy without metadata fields
+          const { agentMetadata, duration, input, ...rest } =
+            outputWithoutMetadata as Record<string, unknown>;
+          outputWithoutMetadata = rest;
         }
         messages.push(
-          `${key} score ${score} is below threshold ${threshold}.\n Expected: ${JSON.stringify(results.expected)}.\n Output: ${JSON.stringify(outputWithoutDuration)}.`
+          `${key} score ${score} is below threshold ${threshold}.\n Expected: ${JSON.stringify(results.expected)}.\n Output: ${JSON.stringify(outputWithoutMetadata)}.`
         );
       } else {
         messages.push(`${key} score ${score} is below threshold ${threshold}.`);

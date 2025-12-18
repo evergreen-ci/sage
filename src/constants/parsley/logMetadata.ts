@@ -13,7 +13,7 @@ const evergreenTaskLogsSchema = z.object({
   log_type: z.literal(LogTypes.EVERGREEN_TASK_LOGS),
   task_id: z.string().min(1),
   execution: z.number().min(0),
-  origin: z.nativeEnum(TaskLogOrigin),
+  origin: z.enum(TaskLogOrigin),
 });
 
 const evergreenTestLogsSchema = z.object({

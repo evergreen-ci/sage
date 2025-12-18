@@ -1,20 +1,23 @@
-import { createTool, Tool, ToolExecutionContext } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { DocumentNode } from 'graphql';
-import { z } from 'zod';
+import { ZodType } from 'zod';
 import { USER_ID } from '@/mastra/agents/constants';
 import { GraphQLClient, GraphQLClientError } from '@/utils/graphql/client';
 import logger from '@/utils/logger';
 
-interface GraphQLToolInputParams<
+interface createGraphQLToolParams<
   GraphQLQuery extends object,
   GraphQLQueryVariables extends object,
-> {
-  id: string;
-  description: string;
-  query: string | DocumentNode;
-  inputSchema: z.ZodType<GraphQLQueryVariables>;
-  outputSchema: z.ZodType<GraphQLQuery>;
+  TInputSchema extends ZodType<GraphQLQueryVariables, any> = ZodType<
+    GraphQLQueryVariables,
+    any
+  >,
+  TOutputSchema extends ZodType<GraphQLQuery, any> = ZodType<GraphQLQuery, any>,
+> extends ReturnType<typeof createTool> {
   client: GraphQLClient;
+  query: string | DocumentNode;
+  outputSchema: TOutputSchema;
+  inputSchema: TInputSchema;
 }
 
 /**
@@ -31,8 +34,6 @@ interface GraphQLToolInputParams<
 export const createGraphQLTool = <
   GraphQLQuery extends object,
   GraphQLQueryVariables extends object,
-  TSuspendSchema extends z.ZodType = z.ZodType<unknown>,
-  TResumeSchema extends z.ZodType = z.ZodType<unknown>,
 >({
   client,
   description,
@@ -40,36 +41,29 @@ export const createGraphQLTool = <
   inputSchema,
   outputSchema,
   query,
-}: GraphQLToolInputParams<GraphQLQuery, GraphQLQueryVariables>): Tool<
-  z.ZodType<GraphQLQueryVariables>,
-  z.ZodType<GraphQLQuery>,
-  TSuspendSchema,
-  TResumeSchema,
-  ToolExecutionContext<z.ZodType<GraphQLQueryVariables>>
-> & {
-  inputSchema: z.ZodType<GraphQLQueryVariables>;
-  outputSchema: z.ZodType<GraphQLQuery>;
-  execute: (
-    context: ToolExecutionContext<z.ZodType<GraphQLQueryVariables>>
-  ) => Promise<GraphQLQuery>;
-} =>
+}: createGraphQLToolParams<GraphQLQuery, GraphQLQueryVariables>) =>
   createTool({
     id,
     inputSchema,
     outputSchema,
     description,
-    execute: async ({ context, runtimeContext }) => {
-      const userId = runtimeContext.get(USER_ID) as string | undefined;
+    execute: async (inputData, context?) => {
+      const { requestContext } = context || {};
+      const userId = requestContext?.get(USER_ID) as string | undefined;
       if (!userId) {
         throw new Error(
-          'User ID not available in RuntimeContext unable to execute query'
+          'User ID not available in RequestContext unable to execute query'
         );
       }
 
       try {
-        const result = await client.executeQuery<GraphQLQuery>(query, context, {
-          userID: userId,
-        });
+        const result = await client.executeQuery<GraphQLQuery>(
+          query,
+          inputData,
+          {
+            userID: userId,
+          }
+        );
         return result;
       } catch (error) {
         const baseError = {

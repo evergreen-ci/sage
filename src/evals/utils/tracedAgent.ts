@@ -1,7 +1,6 @@
-import { RuntimeContext } from '@mastra/core/runtime-context';
+import { RequestContext } from '@mastra/core/request-context';
 import { z } from 'zod';
-import { callModelWithTrace } from '@/evals/tracer';
-import { ModelOutput, MastraAgentOutput } from '@/evals/types';
+import { AgentEvalOutput, AgentOutput } from '@/evals/types';
 import { mastra } from '@/mastra';
 
 export interface TracedAgentOptions<TInput, TOutput> {
@@ -11,14 +10,14 @@ export interface TracedAgentOptions<TInput, TOutput> {
   agentName: string;
 
   /**
-   * Optional function to customize runtime context
+   * Optional function to customize request context
    */
-  setupRuntimeContext?: (input: TInput) => RuntimeContext;
+  setupRequestContext?: (input: TInput) => RequestContext;
 
   /**
    * Function to transform the agent response
    */
-  transformResponse: (response: MastraAgentOutput, input: TInput) => TOutput;
+  transformResponse: (response: AgentOutput) => TOutput;
 
   /**
    * Optional generation options for the agent
@@ -32,31 +31,32 @@ export interface TracedAgentOptions<TInput, TOutput> {
 }
 
 const createTracedAgent =
-  <TInput, TOutput>(
+  <TInput, TOutput extends object>(
     options: TracedAgentOptions<TInput, TOutput>
-  ): ((input: TInput) => Promise<ModelOutput<TInput, TOutput>>) =>
-  async (input: TInput): Promise<ModelOutput<TInput, TOutput>> => {
-    // Create runtime context
-    const runtimeContext = options.setupRuntimeContext
-      ? options.setupRuntimeContext(input)
-      : new RuntimeContext();
+  ) =>
+  async (input: TInput): Promise<AgentEvalOutput<TInput, TOutput>> => {
+    // Create request context
+    const requestContext = options.setupRequestContext
+      ? options.setupRequestContext(input)
+      : new RequestContext();
 
     // Get the agent
     const agent = mastra.getAgent(options.agentName);
 
+    const start = Date.now();
     // Generate response with default or provided options
     const response = await agent.generate(
       typeof input === 'string'
         ? input
         : (((input as Record<string, unknown>).content ?? input) as string),
       {
-        runtimeContext,
-        format: 'aisdk',
+        requestContext,
         ...(options.generateOptions || {}),
       }
     );
+    const end = Date.now();
 
-    const output = options.transformResponse(response, input);
+    const output = options.transformResponse(response);
 
     // Validate output if schema is provided
     if (options.responseSchema) {
@@ -70,9 +70,10 @@ const createTracedAgent =
 
     // Return full traced model output
     return {
-      ...response,
+      ...output,
+      agentMetadata: response,
       input,
-      output,
+      duration: end - start,
     };
   };
 
@@ -82,8 +83,8 @@ const createTracedAgent =
  * @returns A function that can be used directly in evals
  */
 export const tracedAgentEval =
-  <TInput, TOutput>(options: TracedAgentOptions<TInput, TOutput>) =>
+  <TInput, TOutput extends object>(
+    options: TracedAgentOptions<TInput, TOutput>
+  ) =>
   async (input: TInput) =>
-    await callModelWithTrace<TInput, TOutput>(
-      async () => await createTracedAgent(options)(input)
-    );
+    await createTracedAgent(options)(input);

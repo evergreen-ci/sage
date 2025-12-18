@@ -13,6 +13,7 @@ export const questionOwnershipOutputSchema = z.object({
 });
 
 export const questionOwnershipAgent = new Agent({
+  id: 'questionOwnershipAgent',
   name: SLACK_QUESTION_OWNERSHIP_AGENT_NAME,
   description: `Routes user questions to the appropriate DevProd team
     based on content analysis.`,
@@ -35,9 +36,13 @@ export const questionOwnershipAgent = new Agent({
       `Unsupported prompt type '${promptConfig.prompt}' from Braintrust`
     );
   },
-  defaultGenerateOptions: {
-    output: questionOwnershipOutputSchema,
-    temperature: 0,
+  defaultOptions: {
+    modelSettings: {
+      temperature: 0,
+    },
+    structuredOutput: {
+      schema: questionOwnershipOutputSchema,
+    },
   },
   model: gpt41,
 });

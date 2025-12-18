@@ -104,6 +104,9 @@ export const chunkStep = createStep({
   execute: async ({ mastra, setState, state, tracingContext }) => {
     const logger = mastra.getLogger();
     const { text } = state;
+    if (!text) {
+      throw new Error('Text content is missing in state');
+    }
     const doc = MDocument.fromText(text);
     const chunks = await doc.chunk({
       strategy: 'token',
@@ -142,7 +145,13 @@ export const singlePassStep = createStep({
     markdown: z.string(),
     summary: z.string(),
   }),
-  execute: async ({ abortSignal, mastra, state, tracingContext }) => {
+  execute: async ({
+    abortSignal,
+    mastra,
+    requestContext,
+    state,
+    tracingContext,
+  }) => {
     const logger = mastra.getLogger();
     const { analysisContext, chunks } = state;
 
@@ -169,7 +178,10 @@ export const singlePassStep = createStep({
       analysisContext,
       logger,
       text,
-      tracingContext,
+      context: {
+        requestContext,
+        tracingContext,
+      },
     });
 
     logger.debug('Single-pass analysis complete', {
@@ -318,6 +330,7 @@ export const finalizeStep = createStep({
     abortSignal,
     inputData,
     mastra,
+    requestContext,
     state,
     tracingContext,
   }) => {
@@ -333,7 +346,10 @@ export const finalizeStep = createStep({
       analysisContext,
       logger,
       text: summary,
-      tracingContext,
+      context: {
+        requestContext,
+        tracingContext,
+      },
     });
 
     logger.debug('Finalize step complete', {

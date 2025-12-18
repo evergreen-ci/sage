@@ -73,6 +73,8 @@ const questionOwnershipRoute = async (
       question: data.question,
     });
 
+    const generateOptions =
+      await agent.getDefaultOptions<typeof questionOwnershipOutputSchema>();
     const result = await agent.generate(data.question, {
       tracingOptions: {
         metadata: {
@@ -80,9 +82,7 @@ const questionOwnershipRoute = async (
           question: data.question,
         },
       },
-      structuredOutput: {
-        schema: questionOwnershipOutputSchema,
-      },
+      ...generateOptions,
     });
 
     // Parse the structured output

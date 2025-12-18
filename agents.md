@@ -130,9 +130,6 @@ const myAgentMemory = new Memory({
 - Details:
 `,
     },
-    threads: {
-      generateTitle: false,
-    },
   },
 });
 
@@ -196,7 +193,7 @@ export const myTool = createTool({
   description: 'Description of what this tool does',
   inputSchema: myToolInputSchema,
   outputSchema: myToolOutputSchema,
-  execute: async ({ context, runtimeContext, mastra }) => {
+  execute: async ({ context, requestContext, mastra }) => {
     const { param1, param2 } = context;
     const result = await doSomething(param1, param2);
     return { result };
@@ -248,7 +245,7 @@ export const myGraphQLTool = createGraphQLTool<MyQuery, MyQueryVariables>({
 
 **Note**: The `createGraphQLTool` helper automatically:
 
-- Retrieves `userId` from RuntimeContext
+- Retrieves `userId` from RequestContext
 - Executes the GraphQL query with proper error handling
 - Returns typed results based on your outputSchema
 
@@ -462,7 +459,7 @@ import { trace } from '@opentelemetry/api';
 import z from 'zod';
 import { mastra } from '@/mastra';
 import { USER_ID } from '@/mastra/agents/constants';
-import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
+import { createParsleyRequestContext } from '@/mastra/memory/parsley/requestContext';
 import { runWithRequestContext } from '@/mastra/utils/requestContext';
 import { createAISdkStreamWithMetadata } from '@/utils/ai';
 import { logger } from '@/utils/logger';
@@ -477,8 +474,8 @@ const myRoute = async (req: Request, res: Response) => {
   const currentSpan = trace.getActiveSpan();
   const spanContext = currentSpan?.spanContext();
 
-  const runtimeContext = createParsleyRuntimeContext();
-  runtimeContext.set(USER_ID, res.locals.userId);
+  const requestContext = createParsleyRequestContext();
+  requestContext.set(USER_ID, res.locals.userId);
 
   const { data, error, success } = inputSchema.safeParse(req.body);
   if (!success) {
@@ -488,10 +485,10 @@ const myRoute = async (req: Request, res: Response) => {
   }
 
   if (data.metadata) {
-    runtimeContext.set('metadata', data.metadata);
+    requestContext.set('metadata', data.metadata);
 
     const workflow = mastra.getWorkflowById('my-preprocessing-workflow');
-    const run = await workflow.createRunAsync({});
+    const run = await workflow.createRun({});
     const runResult = await run.start({
       inputData: { metadata: data.metadata },
       ...(spanContext
@@ -506,16 +503,16 @@ const myRoute = async (req: Request, res: Response) => {
           requestId: res.locals.requestId,
         },
       },
-      runtimeContext,
+      requestContext,
     });
 
     if (runResult.status === 'success') {
-      runtimeContext.set('preprocessedData', runResult.result);
+      requestContext.set('preprocessedData', runResult.result);
     }
   }
 
   const agent = mastra.getAgent('myAgent');
-  const memory = await agent.getMemory({ runtimeContext });
+  const memory = await agent.getMemory({ requestContext });
 
   let memoryOptions = {
     thread: { id: 'undefined' },
@@ -530,7 +527,7 @@ const myRoute = async (req: Request, res: Response) => {
     };
   } else {
     const newThread = await memory?.createThread({
-      metadata: runtimeContext.toJSON(),
+      metadata: requestContext.toJSON(),
       resourceId: 'my_resource',
       threadId: data.id,
     });
@@ -549,7 +546,7 @@ const myRoute = async (req: Request, res: Response) => {
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
         await agent.stream(data.message, {
-          runtimeContext,
+          requestContext,
           memory: memoryOptions,
           tracingOptions: {
             metadata: {
@@ -586,8 +583,8 @@ export default myRoute;
 
 ```typescript
 const myWorkflowRoute = async (req: Request, res: Response) => {
-  const runtimeContext = createParsleyRuntimeContext();
-  runtimeContext.set(USER_ID, res.locals.userId);
+  const requestContext = createParsleyRequestContext();
+  requestContext.set(USER_ID, res.locals.userId);
 
   const { data, success } = inputSchema.safeParse(req.body);
   if (!success) {
@@ -597,7 +594,7 @@ const myWorkflowRoute = async (req: Request, res: Response) => {
 
   try {
     const workflow = mastra.getWorkflowById('my-workflow');
-    const run = await workflow.createRunAsync({});
+    const run = await workflow.createRun({});
 
     const runResult = await run.start({
       inputData: data,
@@ -607,7 +604,7 @@ const myWorkflowRoute = async (req: Request, res: Response) => {
           requestId: res.locals.requestId,
         },
       },
-      runtimeContext,
+      requestContext,
     });
 
     if (runResult.status === 'success') {
@@ -648,25 +645,25 @@ const mySchema = z.object({
 type MyType = z.infer<typeof mySchema>;
 ```
 
-### 2. RuntimeContext for Metadata
+### 2. RequestContext for Metadata
 
-RuntimeContext is used to pass metadata between components:
+RequestContext is used to pass metadata between components:
 
 ```typescript
-import { RuntimeContext } from '@mastra/core/runtime-context';
+import { RequestContext } from '@mastra/core/runtime-context';
 import { USER_ID } from '@/mastra/agents/constants';
 
-type TypeForRuntimeContext = {
+type TypeForRequestContext = {
   [USER_ID]?: string;
   customKey?: string;
 };
 
-const runtimeContext = new RuntimeContext<TypeForRuntimeContext>();
-runtimeContext.set(USER_ID, userId);
-runtimeContext.set('customKey', customValue);
+const requestContext = new RequestContext<TypeForRequestContext>();
+requestContext.set(USER_ID, userId);
+requestContext.set('customKey', customValue);
 
 // Access in tools/agents
-const userId = runtimeContext.get(USER_ID);
+const userId = requestContext.get(USER_ID);
 ```
 
 ### 3. Tracing with Braintrust
@@ -717,9 +714,6 @@ const myMemory = new Memory({
       enabled: true,
       template: `# Memory Template`,
     },
-    threads: {
-      generateTitle: false,
-    },
   },
 });
 
@@ -727,7 +721,7 @@ const myMemory = new Memory({
 const thread = await memory?.getThreadById({ threadId: conversationId });
 if (!thread) {
   await memory?.createThread({
-    metadata: runtimeContext.toJSON(),
+    metadata: requestContext.toJSON(),
     resourceId: 'my_resource_type',
     threadId: conversationId,
   });
@@ -783,7 +777,7 @@ import { mastra } from '@/mastra';
 import { USER_ID } from '@/mastra/agents/constants';
 
 // Utils
-import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
+import { createParsleyRequestContext } from '@/mastra/memory/parsley/requestContext';
 import { memoryStore } from '@/mastra/utils/memory';
 import { logger } from '@/utils/logger';
 ```
@@ -1088,8 +1082,8 @@ task: tracedAgentEval<TestInput, TestResult>({
   transformResponse: response => ({
     result: JSON.parse(response.text),
   }),
-  setupRuntimeContext: input => {
-    const ctx = new RuntimeContext();
+  setupRequestContext: input => {
+    const ctx = new RequestContext();
     ctx.set('userId', 'test-user');
     return ctx;
   },
