@@ -33,12 +33,13 @@ class JiraClient {
     jql: string,
     fields: string[] = ['summary', 'description', 'assignee', 'labels']
   ): Promise<JiraIssue[]> => {
-    const response =
-      await this.client.issueSearch.searchForIssuesUsingJqlEnhancedSearchPost({
-        jql,
-        fields,
-        maxResults: 100,
-      });
+    // Use searchForIssuesUsingJqlPost (not Enhanced) for Jira Server/Data Center compatibility
+    // The "Enhanced" endpoint is Jira Cloud-only and returns 404 on Server
+    const response = await this.client.issueSearch.searchForIssuesUsingJqlPost({
+      jql,
+      fields,
+      maxResults: 100,
+    });
 
     return (response.issues || []).map(issue => ({
       key: issue.key!,
@@ -105,8 +106,9 @@ class JiraClient {
           // Look for label field changes where the label was added
           if (
             item.field === 'labels' &&
-            item.toString?.includes(labelName) &&
-            !item.fromString?.includes(labelName)
+            typeof item.to === 'string' &&
+            item.to.includes(labelName) &&
+            (typeof item.from !== 'string' || !item.from.includes(labelName))
           ) {
             return entry.author?.emailAddress || null;
           }

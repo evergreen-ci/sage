@@ -199,8 +199,8 @@ describe('jiraClient', () => {
               items: [
                 {
                   field: 'labels',
-                  fromString: 'existing-label',
-                  toString: 'existing-label sage-bot',
+                  from: 'existing-label',
+                  to: 'existing-label sage-bot',
                 },
               ],
             },
@@ -227,13 +227,13 @@ describe('jiraClient', () => {
               items: [
                 {
                   field: 'status',
-                  fromString: 'Open',
-                  toString: 'In Progress',
+                  from: 'Open',
+                  to: 'In Progress',
                 },
                 {
                   field: 'priority',
-                  fromString: 'Low',
-                  toString: 'High',
+                  from: 'Low',
+                  to: 'High',
                 },
               ],
             },
@@ -255,8 +255,8 @@ describe('jiraClient', () => {
               items: [
                 {
                   field: 'status',
-                  fromString: 'Open',
-                  toString: 'Closed',
+                  from: 'Open',
+                  to: 'Closed',
                 },
               ],
             },
@@ -265,8 +265,8 @@ describe('jiraClient', () => {
               items: [
                 {
                   field: 'labels',
-                  fromString: '',
-                  toString: 'sage-bot',
+                  from: '',
+                  to: 'sage-bot',
                 },
               ],
             },
