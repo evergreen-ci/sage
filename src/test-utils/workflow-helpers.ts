@@ -25,7 +25,7 @@ export const expectSuccess = <
           z.infer<NonNullable<StepsRecord<TSteps>[K]['outputSchema']>>
         >;
   };
-} {
+} => {
   expect(wr.status).toBe('success');
   if (wr.status === 'success') {
     expect(wr.result).toBeDefined();
