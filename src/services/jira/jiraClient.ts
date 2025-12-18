@@ -33,8 +33,9 @@ class JiraClient {
     jql: string,
     fields: string[] = ['summary', 'description', 'assignee', 'labels']
   ): Promise<JiraIssue[]> => {
-    // Use searchForIssuesUsingJqlPost (not Enhanced) for Jira Server/Data Center compatibility
-    // The "Enhanced" endpoint is Jira Cloud-only and returns 404 on Server
+    // Note: searchForIssuesUsingJqlPost is deprecated, but we must use it for Jira Server/Data Center compatibility.
+    // The newer "Enhanced" endpoint is Jira Cloud-only and returns 404 on Server, so we cannot use it.
+    // Despite its deprecation, this endpoint is still necessary for us to support both Server and Data Center.
     const response = await this.client.issueSearch.searchForIssuesUsingJqlPost({
       jql,
       fields,
