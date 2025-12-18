@@ -70,6 +70,7 @@ const eslintConfig = {
     'default-param-last': ERROR,
     'dot-notation': [ERROR, { allowKeywords: true }],
     eqeqeq: [errorIfStrict, 'always', { null: 'ignore' }],
+    'func-style': [ERROR, 'expression'],
     'no-await-in-loop': ERROR,
     'no-console': OFF,
     'no-debugger': errorIfStrict,
