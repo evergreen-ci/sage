@@ -25,13 +25,12 @@ const REPORT_PREFIX = 'report';
  * @param analysisContext - Optional context for analysis
  * @returns Test result object with analysis details
  */
-// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- script helper predates arrow enforcement
-async function runTest(
+const runTest = async (
   filePath: string,
   index: number,
   total: number,
   analysisContext?: string
-) {
+) => {
   const absolutePath = path.resolve(filePath);
   const stats = fs.statSync(absolutePath);
   const fileSize = stats.size;
@@ -113,27 +112,25 @@ async function runTest(
     stepAnalysis,
     analysisContext,
   };
-}
+};
 
 /**
  * Formats file size in bytes to a human-readable string
  * @param bytes - File size in bytes
  * @returns Formatted file size string
  */
-// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- helper predates arrow enforcement
-function formatFileSize(bytes: number): string {
+const formatFileSize = (bytes: number): string => {
   if (bytes < 1024) return `${bytes}B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
   if (bytes < 1024 * 1024 * 1024)
     return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)}GB`;
-}
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)}GB`;
+};
 
 /**
  *
  */
-// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- CLI entrypoint kept as named async function
-async function main() {
+const main = async () => {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
@@ -364,6 +361,6 @@ async function main() {
     console.error('Error:', error);
     process.exit(1);
   }
-}
+};
 
 main();

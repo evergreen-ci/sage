@@ -5,8 +5,7 @@ const createReadableStream = (chunks: string[]) => {
   const encoder = new TextEncoder();
   const encodedChunks = chunks.map(chunk => encoder.encode(chunk));
   const readableStream = new ReadableStream({
-    // eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- ReadableStream callbacks kept in original form for clarity
-    start(controller) {
+    start: (controller) => {
       encodedChunks.forEach(chunk => controller.enqueue(chunk));
       controller.close();
     },

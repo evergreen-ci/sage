@@ -11,10 +11,9 @@ export const requestContextStorage = new AsyncLocalStorage<RequestContext>();
  * Get the current request context
  * @returns The current request context or undefined if not in a context
  */
-// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- public API remains named function until callers can migrate
-export function getRequestContext(): RequestContext | undefined {
+export const getRequestContext = (): RequestContext | undefined => {
   return requestContextStorage.getStore();
-}
+};
 
 /**
  * Set the request context for the current async execution
@@ -22,10 +21,9 @@ export function getRequestContext(): RequestContext | undefined {
  * @param fn - The function to run with the context
  * @returns The result of the function
  */
-// eslint-disable-next-line prefer-arrow/prefer-arrow-functions -- public API remains named function until callers can migrate
-export function runWithRequestContext<T>(
+export const runWithRequestContext = <T>(
   context: RequestContext,
   fn: () => T
-): T {
+): T => {
   return requestContextStorage.run(context, fn);
-}
+};
