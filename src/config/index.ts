@@ -94,9 +94,9 @@ export interface Config {
     key: string;
   };
   sageBot: {
-    /** SAGE_BOT_JIRA_BASE_URL */
+    /** JIRA_BASE_URL */
     jiraBaseUrl: string;
-    /** SAGE_BOT_JIRA_API_TOKEN */
+    /** JIRA_API_TOKEN */
     jiraApiToken: string;
     /** SAGE_BOT_SUPPORTED_PROJECTS - comma-separated list of Jira project keys */
     supportedProjects: string[];
@@ -228,6 +228,7 @@ export const validateConfig = (): string[] | undefined => {
     'EVERGREEN_API_USER',
     'EVERGREEN_API_KEY',
     'ENCRYPTION_KEY',
+    'SAGE_BOT_SUPPORTED_PROJECTS',
   ];
 
   const errors: string[] = [];

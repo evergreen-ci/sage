@@ -1,0 +1,11 @@
+# Production cronjob configuration (merged with common.yaml and cronjobs/common.yaml)
+# Only contains production-specific overrides
+
+cronjobs:
+  - name: jira-polling
+    command: ['yarn', 'poll-jira:prod']
+    env:
+      BRAINTRUST_PARENT: project_name:sage-prod
+      BRAINTRUST_PROJECT_NAME: sage-prod
+      NODE_ENV: production
+      SENTRY_ENVIRONMENT: production

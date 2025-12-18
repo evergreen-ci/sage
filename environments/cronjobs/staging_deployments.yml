@@ -1,0 +1,11 @@
+# Staging cronjob configuration (merged with common.yaml and cronjobs/common.yaml)
+# Only contains staging-specific overrides
+
+cronjobs:
+  - name: jira-polling
+    command: ['yarn', 'poll-jira:staging']
+    env:
+      BRAINTRUST_PARENT: project_name:sage-staging
+      BRAINTRUST_PROJECT_NAME: sage-staging
+      NODE_ENV: staging
+      SENTRY_ENVIRONMENT: staging

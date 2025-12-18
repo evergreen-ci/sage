@@ -60,7 +60,7 @@ Example: `DEVPROD-23895: Add user authentication workflow`
 
 ### Prior to pushing code
 
-- Run `yarn format` and `yarn eslint:fix to format the code
+- Run `yarn format` and `yarn eslint:fix` to format the code
 
 ## Table of Contents
 
