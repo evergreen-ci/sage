@@ -9,7 +9,12 @@ import { validateConfig } from '@/config';
 import { sentryService } from '@/utils/sentry';
 
 // Validate configuration on startup
-validateConfig();
+const configErrors = validateConfig();
+if (configErrors) {
+  console.error('Configuration validation failed:');
+  configErrors.forEach(error => console.error(`  - ${error}`));
+  process.exit(1);
+}
 
 server.start();
 
