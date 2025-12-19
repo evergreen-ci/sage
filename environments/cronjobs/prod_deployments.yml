@@ -1,6 +1,8 @@
 # Production cronjob configuration
 
-cronjobs:
+defaultArch: arm64
+
+cronJobs:
   - name: jira-polling
     schedule: '* * * * *' # Run every minute
     command: ['yarn', 'poll-jira:prod']
