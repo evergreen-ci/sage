@@ -1,9 +1,16 @@
-# Production cronjob configuration (merged with common.yaml and cronjobs/common.yaml)
-# Only contains production-specific overrides
+# Production cronjob configuration
 
 cronjobs:
   - name: jira-polling
+    schedule: '* * * * *' # Run every minute
     command: ['yarn', 'poll-jira:prod']
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1
+        memory: 2Gi
     env:
       BRAINTRUST_PARENT: project_name:sage-prod
       BRAINTRUST_PROJECT_NAME: sage-prod
