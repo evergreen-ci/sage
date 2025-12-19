@@ -64,11 +64,24 @@ const vitestConfig = defineTestConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['dotenv-flow/config'],
-    include: ['src/**/*.test.ts'],
-    exclude: ['src/e2e/**/*.test.ts'],
-    poolOptions: {
-      forks: { singleFork: true }, // Make tests run sequentially
-    },
+    projects: [
+      {
+        extends: true,
+        test: {
+          include: ['src/e2e/**/*.test.ts'],
+          name: { label: 'e2e', color: 'blue' },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: { label: 'unit', color: 'green' },
+          include: ['src/**/*.test.ts', '!src/e2e/**/*.test.ts'],
+          poolOptions: { forks: { singleFork: true } }, // Make tests run sequentially.
+        },
+      },
+    ],
+    exclude: [],
     outputFile: {
       junit: './bin/test/junit.xml',
     },
@@ -76,23 +89,15 @@ const vitestConfig = defineTestConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['src/**/*.ts'],
       exclude: [
         'node_modules/',
         'dist/',
         'coverage/',
-        '.mastra/',
-        'bin/',
         '**/*.d.ts',
         '**/*.config.*',
         '**/test/**',
         '**/tests/**',
         '**/*.test.ts',
-        '**/test-utils/**',
-        'src/gql/generated/**',
-        'src/evals/**',
-        'src/e2e/**',
-        'src/mastra/tests/**',
       ],
     },
   },

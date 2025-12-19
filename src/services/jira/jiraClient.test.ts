@@ -6,9 +6,9 @@ const {
   mockAddComment,
   mockEditIssue,
   mockGetIssue,
-  mockSearchForIssuesUsingJqlEnhancedSearchPost,
+  mockSearchForIssuesUsingJqlPost,
 } = vi.hoisted(() => ({
-  mockSearchForIssuesUsingJqlEnhancedSearchPost: vi.fn(),
+  mockSearchForIssuesUsingJqlPost: vi.fn(),
   mockEditIssue: vi.fn(),
   mockAddComment: vi.fn(),
   mockGetIssue: vi.fn(),
@@ -17,8 +17,7 @@ const {
 vi.mock('jira.js', () => ({
   Version2Client: vi.fn().mockImplementation(() => ({
     issueSearch: {
-      searchForIssuesUsingJqlEnhancedSearchPost:
-        mockSearchForIssuesUsingJqlEnhancedSearchPost,
+      searchForIssuesUsingJqlPost: mockSearchForIssuesUsingJqlPost,
     },
     issues: { editIssue: mockEditIssue, getIssue: mockGetIssue },
     issueComments: { addComment: mockAddComment },
@@ -32,7 +31,7 @@ describe('jiraClient', () => {
 
   describe('searchIssues', () => {
     it('searches issues using JQL', async () => {
-      mockSearchForIssuesUsingJqlEnhancedSearchPost.mockResolvedValueOnce({
+      mockSearchForIssuesUsingJqlPost.mockResolvedValueOnce({
         issues: [
           {
             key: 'PROJ-123',
@@ -48,9 +47,7 @@ describe('jiraClient', () => {
 
       const result = await jiraClient.searchIssues('project = PROJ');
 
-      expect(
-        mockSearchForIssuesUsingJqlEnhancedSearchPost
-      ).toHaveBeenCalledWith({
+      expect(mockSearchForIssuesUsingJqlPost).toHaveBeenCalledWith({
         jql: 'project = PROJ',
         fields: ['summary', 'description', 'assignee', 'labels'],
         maxResults: 100,
@@ -60,15 +57,13 @@ describe('jiraClient', () => {
     });
 
     it('uses custom fields when provided', async () => {
-      mockSearchForIssuesUsingJqlEnhancedSearchPost.mockResolvedValueOnce({
+      mockSearchForIssuesUsingJqlPost.mockResolvedValueOnce({
         issues: [],
       });
 
       await jiraClient.searchIssues('project = PROJ', ['summary', 'status']);
 
-      expect(
-        mockSearchForIssuesUsingJqlEnhancedSearchPost
-      ).toHaveBeenCalledWith({
+      expect(mockSearchForIssuesUsingJqlPost).toHaveBeenCalledWith({
         jql: 'project = PROJ',
         fields: ['summary', 'status'],
         maxResults: 100,
@@ -76,7 +71,7 @@ describe('jiraClient', () => {
     });
 
     it('returns empty array when no issues found', async () => {
-      mockSearchForIssuesUsingJqlEnhancedSearchPost.mockResolvedValueOnce({
+      mockSearchForIssuesUsingJqlPost.mockResolvedValueOnce({
         issues: undefined,
       });
 
