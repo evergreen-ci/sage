@@ -17,6 +17,18 @@ Non-secret variables are tracked in `.env.defaults`, with environment-specific v
 
 Update `.env.local` or `.env.<NODE_ENV>.local` files with secrets for external services. These files are ignored by git. Refer to the team password manager or ask a teammate for credentials.
 
+#### Encryption Key
+
+The `ENCRYPTION_KEY` environment variable is required for encrypting sensitive data (e.g., user API keys) stored in MongoDB. It must be a 32-byte hex string (64 characters) for AES-256 encryption.
+
+**Generating a new key:**
+
+```bash
+openssl rand -hex 32
+```
+
+**Storage:** In deployed environments, the encryption key is stored in Kanopy secrets. A default key is provided in `.env.defaults` for local development.
+
 ### Installation
 
 1. Clone the repository or navigate to the project directory.

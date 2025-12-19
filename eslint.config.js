@@ -107,6 +107,18 @@ const eslintConfig = {
     ],
     'prefer-regex-literals': [ERROR, { disallowRedundantWrapping: true }],
     'prefer-template': ERROR,
+    'no-restricted-imports': [
+      ERROR,
+      {
+        patterns: [
+          {
+            group: ['vitest'],
+            message:
+              'Do not import from vitest. vi, describe, it, expect, beforeEach, etc. are available globally.',
+          },
+        ],
+      },
+    ],
     radix: ERROR,
     'spaced-comment': [ERROR, 'always', { markers: ['/'] }], // TODO: This rule is deprecated - fix in DEVPROD-15014.
     yoda: ERROR,
