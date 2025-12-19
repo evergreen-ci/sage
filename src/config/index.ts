@@ -229,6 +229,8 @@ export const validateConfig = (): string[] | undefined => {
     'EVERGREEN_API_KEY',
     'ENCRYPTION_KEY',
     'SAGE_BOT_SUPPORTED_PROJECTS',
+    'JIRA_BASE_URL',
+    'JIRA_API_TOKEN',
   ];
 
   const errors: string[] = [];

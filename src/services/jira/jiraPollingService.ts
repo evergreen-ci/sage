@@ -1,4 +1,4 @@
-import { config } from '@/config';
+import { config, validateConfig } from '@/config';
 import {
   createJobRun,
   findJobRunByTicketKey,
@@ -242,6 +242,15 @@ export const pollJiraTickets = async (): Promise<PollingResult> => {
  * Handles database connection and cleanup
  */
 export const runPollingJob = async (): Promise<void> => {
+  logger.info('Validating configuration');
+  const configErrors = validateConfig();
+
+  if (configErrors) {
+    logger.error('Configuration errors:', configErrors);
+    process.exitCode = 1;
+    return;
+  }
+
   const { db } = await import('@/db/connection');
 
   try {
