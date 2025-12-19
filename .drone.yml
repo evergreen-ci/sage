@@ -114,7 +114,7 @@ steps:
       release: sage-cronjobs
       values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME}
       values_files:
-        - environments/common.yaml
+        - environments/cronjobs/common.yaml
         - environments/cronjobs/staging_deployments.yml
       api_server: https://api.staging.corp.mongodb.com
       kubernetes_token:
@@ -158,7 +158,7 @@ steps:
   #     release: sage-cronjobs
   #     values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME}
   #     values_files:
-  #       - environments/common.yaml
+  #       - environments/cronjobs/common.yaml
   #       - environments/cronjobs/prod_deployments.yml
   #     api_server: https://api.prod.corp.mongodb.com
   #     kubernetes_token:

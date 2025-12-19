@@ -26,6 +26,9 @@ envSecrets:
   HONEYCOMB_API_KEY: parsley-ai-secrets
   SENTRY_AUTH_TOKEN: parsley-ai-secrets
   OTEL_EXPORTER_OTLP_HEADERS: parsley-ai-secrets
+  SAGE_BOT_SUPPORTED_PROJECTS: parsley-ai-secrets
+  ENCRYPTION_KEY: parsley-ai-secrets
+  JIRA_API_TOKEN: parsley-ai-secrets
 
 serviceAccount:
   enabled: true

@@ -1,9 +1,8 @@
 # Production cronjob configuration
-
-defaultArch: arm64
+# Environment-specific overrides (merged with cronjobs/common.yaml)
 
 cronJobs:
-  - name: jira-polling
+  - name: sage-bot-jira-polling-job
     schedule: '* * * * *' # Run every minute
     command: ['yarn', 'poll-jira:prod']
     resources:
@@ -14,7 +13,8 @@ cronJobs:
         cpu: 1
         memory: 2Gi
     env:
-      BRAINTRUST_PARENT: project_name:sage-prod
-      BRAINTRUST_PROJECT_NAME: sage-prod
       NODE_ENV: production
       SENTRY_ENVIRONMENT: production
+      BRAINTRUST_PARENT: project_name:sage-prod
+      BRAINTRUST_PROJECT_NAME: sage-prod
+      JIRA_BASE_URL: https://jira.mongodb.org

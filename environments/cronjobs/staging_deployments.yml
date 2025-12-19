@@ -1,9 +1,8 @@
 # Staging cronjob configuration
-
-defaultArch: arm64
+# Environment-specific overrides (merged with cronjobs/common.yaml)
 
 cronJobs:
-  - name: jira-polling
+  - name: sage-bot-jira-polling-job
     schedule: '* * * * *' # Run every minute
     command: ['yarn', 'poll-jira:staging']
     resources:
@@ -14,7 +13,8 @@ cronJobs:
         cpu: 1
         memory: 2Gi
     env:
-      BRAINTRUST_PARENT: project_name:sage-staging
-      BRAINTRUST_PROJECT_NAME: sage-staging
       NODE_ENV: staging
       SENTRY_ENVIRONMENT: staging
+      BRAINTRUST_PARENT: project_name:sage-staging
+      BRAINTRUST_PROJECT_NAME: sage-staging
+      JIRA_BASE_URL: https://jira-staging.corp.mongodb.com
