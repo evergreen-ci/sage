@@ -1,0 +1,34 @@
+# Common cronjob configuration shared across staging and prod
+# Contains all secrets and env vars needed for config validation
+
+defaultArch: arm64
+
+# Global secrets for all cronjobs (from parsley-ai-secrets K8s secret)
+# These map to the envSecrets in environments/common.yaml
+globalEnvSecrets:
+  AZURE_OPENAI_API_KEY: parsley-ai-secrets
+  AZURE_OPENAI_ENDPOINT: parsley-ai-secrets
+  EVERGREEN_API_KEY: parsley-ai-secrets
+  MONGODB_URI: parsley-ai-secrets
+  BRAINTRUST_API_KEY: parsley-ai-secrets
+  HONEYCOMB_API_KEY: parsley-ai-secrets
+  SENTRY_AUTH_TOKEN: parsley-ai-secrets
+  OTEL_EXPORTER_OTLP_HEADERS: parsley-ai-secrets
+  SAGE_BOT_SUPPORTED_PROJECTS: parsley-ai-secrets
+  ENCRYPTION_KEY: parsley-ai-secrets
+  JIRA_API_TOKEN: parsley-ai-secrets
+
+# Global env vars for all cronjobs
+# These map to the env vars in environments/common.yaml
+globalEnv:
+  DB_NAME: sage
+  EVERGREEN_API_USER: sage
+  EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2
+  EVERGREEN_URL: https://evergreen.mongodb.com
+  EVERGREEN_GRAPHQL_ENDPOINT: https://evergreen.mongodb.com/mcp/graphql/query
+  OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
+  OTEL_EXPORTER_OTLP_ENDPOINT: https://api.braintrust.dev/otel
+  OTEL_LOG_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/logs
+  SENTRY_DSN: https://3db76f0989faad4c102a8708fba9446f@o4504991346720768.ingest.us.sentry.io/4509905876942849
+  SENTRY_ENABLED: 'true'
+
