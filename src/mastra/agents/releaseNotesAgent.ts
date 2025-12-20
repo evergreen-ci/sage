@@ -396,9 +396,13 @@ Rules:
 - Only include a citations array when at least one Jira issue applies to that bullet; omit the field entirely for structural or grouping bullets, but ensure actionable top-level bullets list their supporting Jira keys.
 - Do NOT include Jira ticket keys (e.g., "CLOUDP-12345") in the "text" fields - the citations array already contains these keys, so mentioning them in the text is redundant.
 - Avoid redundant subitems that merely repeat release note URLs or restate the parent bullet; use the links array on the parent bullet instead.`,
-  defaultGenerateOptions: {
-    output: releaseNotesOutputSchema,
-    temperature: 0.3, // Low temperature for consistency, but allow some creativity
+  defaultOptions: {
+    structuredOutput: {
+      schema: releaseNotesOutputSchema,
+    },
+    modelSettings: {
+      temperature: 0.3, // Low temperature for consistency, but allow some creativity
+    },
   },
   model: gpt41,
 });
