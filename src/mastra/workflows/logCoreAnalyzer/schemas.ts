@@ -40,7 +40,7 @@ export const RefinementAgentOutputSchema = z.object({
 });
 
 export const WorkflowStateSchema = z.object({
-  text: z.string(),
+  text: z.string().optional(),
   idx: z.number().default(0),
   chunks: z.array(z.object({ text: z.string() })).optional(),
   analysisContext: z.string().optional(),

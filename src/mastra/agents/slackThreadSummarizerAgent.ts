@@ -17,7 +17,7 @@ export const slackThreadSummaryOutputSchema = z.object({
 });
 
 export const slackThreadSummarizerAgent = new Agent({
-  id: 'slack-thread-summarizer-agent',
+  id: 'slackThreadSummarizerAgent',
   name: 'Slack Thread Summarizer Agent',
   description:
     'Generates structured summary data from a Slack thread capture for use in ticket creation',
@@ -94,9 +94,10 @@ Given a thread about documentation discrepancy:
 ## Output Format
 Return **only** a JSON object matching the output schema. Do not include any additional text or explanation.
   `,
-  defaultGenerateOptions: {
-    output: slackThreadSummaryOutputSchema,
-    temperature: 0.3,
+  defaultOptions: {
+    modelSettings: {
+      temperature: 0.3,
+    },
   },
   model: gpt41,
 });

@@ -52,8 +52,8 @@ const GET_TASK_TESTS = gql`
 `;
 
 const TestSortOptionsSchema = z.object({
-  direction: z.nativeEnum(SortDirection),
-  sortBy: z.nativeEnum(TestSortCategory),
+  direction: z.enum(SortDirection),
+  sortBy: z.enum(TestSortCategory),
 });
 
 const StatusEnum = z.enum(['fail', 'pass', 'timeout', 'silentfail']);
@@ -79,7 +79,7 @@ const getTaskTestsOutputSchema = z.object({
       testResults: z.array(
         z.object({
           id: z.string(),
-          baseStatus: z.string().optional(),
+          baseStatus: z.string().nullable(),
           duration: z.number().optional(),
           status: z.string(),
           testName: z.string(),

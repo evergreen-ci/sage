@@ -10,6 +10,7 @@ import healthRoute from '@/api-server/routes/health';
 import rootRoute from '@/api-server/routes/root';
 import { config } from '@/config';
 import { db } from '@/db/connection';
+import { ensureAllIndexes } from '@/db/repositories';
 import { logger } from '@/utils/logger';
 import {
   requestIdMiddleware,
@@ -96,6 +97,7 @@ class SageServer {
     });
 
     await db.connect();
+    await ensureAllIndexes();
 
     this.startTime = new Date();
 
@@ -200,11 +202,11 @@ class SageServer {
  * This prevents multiple server instances during hot reload.
  * @returns The singleton SageServer instance
  */
-function getSageServer(): SageServer {
+const getSageServer = (): SageServer => {
   if (!globalThis.__SAGE_SERVER_INSTANCE__) {
     globalThis.__SAGE_SERVER_INSTANCE__ = new SageServer();
   }
   return globalThis.__SAGE_SERVER_INSTANCE__;
-}
+};
 
 export default getSageServer();

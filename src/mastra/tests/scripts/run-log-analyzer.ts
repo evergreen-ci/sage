@@ -25,12 +25,12 @@ const REPORT_PREFIX = 'report';
  * @param analysisContext - Optional context for analysis
  * @returns Test result object with analysis details
  */
-async function runTest(
+const runTest = async (
   filePath: string,
   index: number,
   total: number,
   analysisContext?: string
-) {
+) => {
   const absolutePath = path.resolve(filePath);
   const stats = fs.statSync(absolutePath);
   const fileSize = stats.size;
@@ -44,9 +44,7 @@ async function runTest(
 
   const startTime = Date.now();
 
-  const run = await mastra
-    .getWorkflow('logCoreAnalyzerWorkflow')
-    .createRunAsync();
+  const run = await mastra.getWorkflow('logCoreAnalyzerWorkflow').createRun();
 
   const result = await run.start({
     inputData: {
@@ -112,25 +110,25 @@ async function runTest(
     stepAnalysis,
     analysisContext,
   };
-}
+};
 
 /**
  * Formats file size in bytes to a human-readable string
  * @param bytes - File size in bytes
  * @returns Formatted file size string
  */
-function formatFileSize(bytes: number): string {
+const formatFileSize = (bytes: number): string => {
   if (bytes < 1024) return `${bytes}B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
   if (bytes < 1024 * 1024 * 1024)
     return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)}GB`;
-}
+};
 
 /**
  *
  */
-async function main() {
+const main = async () => {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
@@ -361,6 +359,6 @@ async function main() {
     console.error('Error:', error);
     process.exit(1);
   }
-}
+};
 
 main();

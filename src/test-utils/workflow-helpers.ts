@@ -1,10 +1,16 @@
-import { WorkflowResult, Step, StepResult, StepsRecord } from '@mastra/core';
+import {
+  WorkflowResult,
+  StepResult,
+  StepsRecord,
+  Step,
+} from '@mastra/core/workflows';
 import { z } from 'zod';
 
 /**
  * Expects a workflow result to be successful
  * @param wr - The workflow result to expect
  */
+// eslint-disable-next-line func-style -- TypeScript assertion functions with generics must be function declarations, not arrow functions (TS2775)
 export function expectSuccess<
   TInput extends z.ZodTypeAny,
   TOutput extends z.ZodTypeAny,

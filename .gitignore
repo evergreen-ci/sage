@@ -74,6 +74,7 @@ Thumbs.db
 
 # Docker
 *.dockerignore
+!.dockerignore
 
 # Mastra
 .mastra/
