@@ -1,4 +1,4 @@
-import { RuntimeContext } from '@mastra/core/runtime-context';
+import { RequestContext } from '@mastra/core/request-context';
 import { trace } from '@opentelemetry/api';
 import { Request, Response } from 'express';
 import { USER_ID } from '@/mastra/agents/constants';
@@ -6,7 +6,7 @@ import { releaseNotesInputSchema } from '@/mastra/agents/releaseNotesAgent';
 import { releaseNotesWorkflow } from '@/mastra/workflows/releaseNotes';
 import { logger } from '@/utils/logger';
 
-type ReleaseNotesRuntimeContext = {
+type ReleaseNotesRequestContext = {
   [USER_ID]?: string;
 };
 
@@ -46,20 +46,20 @@ const generateReleaseNotesRoute = async (req: Request, res: Response) => {
     return;
   }
 
-  const runtimeContext = new RuntimeContext<ReleaseNotesRuntimeContext>();
-  runtimeContext.set(USER_ID, res.locals.userId);
+  const requestContext = new RequestContext<ReleaseNotesRequestContext>();
+  requestContext.set(USER_ID, res.locals.userId);
 
   const currentSpan = trace.getActiveSpan();
   const spanContext = currentSpan?.spanContext();
 
   try {
     // Create workflow run
-    const run = await releaseNotesWorkflow.createRunAsync({});
+    const run = await releaseNotesWorkflow.createRun({});
 
     // Execute workflow
     const runResult = await run.start({
       inputData: parsedInput.data,
-      runtimeContext,
+      requestContext,
       ...(spanContext
         ? {
             traceId: spanContext.traceId,
