@@ -71,7 +71,6 @@ const healthRoute = async (req: Request, res: Response) => {
       enabled: sentryService.isInitialized(),
     },
     otelConfig: {
-      logCollectorURL: config.honeycomb.otelLogCollectorURL,
       traceCollectorURL: config.honeycomb.otelCollectorURL,
     },
   });
