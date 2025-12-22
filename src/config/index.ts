@@ -59,8 +59,6 @@ export interface Config {
     apiKey: string;
     /** OTEL_COLLECTOR_URL */
     otelCollectorURL: string;
-    /** OTEL_LOG_COLLECTOR_URL */
-    otelLogCollectorURL: string;
   };
   braintrust: {
     /** BRAINTRUST_API_KEY */
@@ -172,7 +170,6 @@ export const config: Config = {
   honeycomb: {
     apiKey: getEnvVar('HONEYCOMB_API_KEY', ''),
     otelCollectorURL: getEnvVar('OTEL_COLLECTOR_URL', ''),
-    otelLogCollectorURL: getEnvVar('OTEL_LOG_COLLECTOR_URL', ''),
   },
   braintrust: {
     apiKey: getEnvVar('BRAINTRUST_API_KEY', ''),
