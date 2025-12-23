@@ -9,9 +9,9 @@ import '@/sentry-instrument';
 
 import { sentryService } from '@/utils/sentry';
 import { jiraClient } from '../jiraClient';
-import { SageBotJiraPollingService } from '../jiraPollingService/SageBotJiraPollingService';
+import { SageAutoPRBotJiraPollingService } from '../jiraPollingService/SageAutoPRBotJiraPollingService';
 
-const service = new SageBotJiraPollingService(jiraClient);
+const service = new SageAutoPRBotJiraPollingService(jiraClient);
 
 service
   .runAsJob()

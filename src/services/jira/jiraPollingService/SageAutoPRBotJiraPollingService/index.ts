@@ -45,7 +45,7 @@ const ACTIVE_STATUSES = [JobRunStatus.Pending, JobRunStatus.Running];
  * await service.runAsJob();
  * ```
  */
-export class SageBotJiraPollingService implements IJiraPollingService {
+export class SageAutoPRBotJiraPollingService implements IJiraPollingService {
   private jiraClient: JiraClient;
 
   constructor(jiraClient: JiraClient) {
