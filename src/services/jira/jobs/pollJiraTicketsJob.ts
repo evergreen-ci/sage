@@ -5,12 +5,16 @@
  */
 
 // Initialize Sentry BEFORE any other imports to ensure proper instrumentation
-import '@/utils/sentry-instrument';
+import '@/sentry-instrument';
 
 import { sentryService } from '@/utils/sentry';
-import { runPollingJob } from '../jiraPollingService';
+import { jiraClient } from '../jiraClient';
+import { SageBotJiraPollingService } from '../jiraPollingService/SageBotJiraPollingService';
 
-runPollingJob()
+const service = new SageBotJiraPollingService(jiraClient);
+
+service
+  .runAsJob()
   .catch(error => {
     console.error('Polling job failed:', error);
     process.exitCode = 1;

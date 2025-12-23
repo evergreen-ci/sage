@@ -1,7 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { JobRunStatus } from '@/db/types';
-// Import after mocks are set up
-import { buildJqlQuery, pollJiraTickets, runPollingJob } from '.';
+import { SageBotJiraPollingService } from '.';
 
 // Use vi.hoisted for mock functions that need setup/verification in tests
 const {
@@ -10,7 +9,6 @@ const {
   mockCreateJobRun,
   mockCredentialsExist,
   mockDisconnect,
-  mockExtractTicketData,
   mockFindJobRunByTicketKey,
   mockFindLabelAddedBy,
   mockRemoveLabel,
@@ -19,7 +17,6 @@ const {
 } = vi.hoisted(() => ({
   mockSearchIssues: vi.fn(),
   mockRemoveLabel: vi.fn(),
-  mockExtractTicketData: vi.fn(),
   mockFindLabelAddedBy: vi.fn(),
   mockCreateJobRun: vi.fn(),
   mockFindJobRunByTicketKey: vi.fn(),
@@ -30,14 +27,14 @@ const {
   mockDisconnect: vi.fn(),
 }));
 
-vi.mock('../jiraClient', () => ({
+vi.mock('@/services/jira/jiraClient', () => ({
   jiraClient: {
     searchIssues: mockSearchIssues,
     removeLabel: mockRemoveLabel,
-    extractTicketData: mockExtractTicketData,
     addComment: mockAddComment,
     findLabelAddedBy: mockFindLabelAddedBy,
   },
+  JiraClient: vi.fn(),
 }));
 
 vi.mock('@/db/repositories/jobRunsRepository', () => ({
@@ -57,30 +54,25 @@ vi.mock('@/db/connection', () => ({
   },
 }));
 
-describe('jiraPollingService', () => {
+describe('SageBotJiraPollingService', () => {
+  let service: SageBotJiraPollingService;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    const mockJiraClient = {
+      searchIssues: mockSearchIssues,
+      removeLabel: mockRemoveLabel,
+      addComment: mockAddComment,
+      findLabelAddedBy: mockFindLabelAddedBy,
+    };
+    service = new SageBotJiraPollingService(mockJiraClient as any);
   });
 
-  describe('buildJqlQuery', () => {
-    it('builds correct JQL with single project', () => {
-      const jql = buildJqlQuery(['PROJ']);
-      expect(jql).toBe('labels = "sage-bot" AND project IN ("PROJ")');
-    });
-
-    it('builds correct JQL with multiple projects', () => {
-      const jql = buildJqlQuery(['PROJ1', 'PROJ2', 'PROJ3']);
-      expect(jql).toBe(
-        'labels = "sage-bot" AND project IN ("PROJ1", "PROJ2", "PROJ3")'
-      );
-    });
-  });
-
-  describe('pollJiraTickets', () => {
+  describe('poll()', () => {
     it('returns empty result when no tickets found', async () => {
       mockSearchIssues.mockResolvedValueOnce([]);
 
-      const result = await pollJiraTickets();
+      const result = await service.poll();
 
       expect(result).toEqual({
         ticketsFound: 0,
@@ -99,20 +91,16 @@ describe('jiraPollingService', () => {
         key: 'DEVPROD-123',
         fields: {
           summary: 'Test issue',
-          description: 'repo:mongodb/mongo-tools',
-          assignee: { emailAddress: 'user@example.com' },
-          labels: ['sage-bot'],
+          description: 'Test description',
+          assignee: {
+            emailAddress: 'user@example.com',
+            displayName: 'Test User',
+          },
+          labels: ['sage-bot', 'repo:mongodb/mongo-tools'],
         },
       };
 
       mockSearchIssues.mockResolvedValueOnce([mockIssue]);
-      mockExtractTicketData.mockReturnValueOnce({
-        ticketKey: 'DEVPROD-123',
-        summary: 'Test issue',
-        description: 'repo:mongodb/mongo-tools',
-        assigneeEmail: 'user@example.com',
-        targetRepository: 'mongodb/mongo-tools',
-      });
       mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
       mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
       mockRemoveLabel.mockResolvedValueOnce(undefined);
@@ -124,7 +112,7 @@ describe('jiraPollingService', () => {
         status: JobRunStatus.Pending,
       });
 
-      const result = await pollJiraTickets();
+      const result = await service.poll();
 
       expect(result).toEqual({
         ticketsFound: 1,
@@ -140,7 +128,7 @@ describe('jiraPollingService', () => {
         assignee: 'user@example.com',
         metadata: {
           summary: 'Test issue',
-          description: 'repo:mongodb/mongo-tools',
+          description: 'Test description',
           targetRepository: 'mongodb/mongo-tools',
         },
       });
@@ -151,27 +139,20 @@ describe('jiraPollingService', () => {
         key: 'DEVPROD-456',
         fields: {
           summary: 'Existing issue',
-          description: 'repo:mongodb/test',
+          description: 'Test description',
           assignee: null,
-          labels: ['sage-bot'],
+          labels: ['sage-bot', 'repo:mongodb/test'],
         },
       };
 
       mockSearchIssues.mockResolvedValueOnce([mockIssue]);
-      mockExtractTicketData.mockReturnValueOnce({
-        ticketKey: 'DEVPROD-456',
-        summary: 'Existing issue',
-        description: 'repo:mongodb/test',
-        assigneeEmail: null,
-        targetRepository: 'mongodb/test',
-      });
       mockFindJobRunByTicketKey.mockResolvedValueOnce({
         _id: new ObjectId(),
         jiraTicketKey: 'DEVPROD-456',
         status: JobRunStatus.Pending,
       });
 
-      const result = await pollJiraTickets();
+      const result = await service.poll();
 
       expect(result).toEqual({
         ticketsFound: 1,
@@ -196,20 +177,16 @@ describe('jiraPollingService', () => {
         key: 'DEVPROD-456',
         fields: {
           summary: 'Failed issue retry',
-          description: 'repo:mongodb/test',
-          assignee: { emailAddress: 'user@example.com' },
-          labels: ['sage-bot'],
+          description: 'Test description',
+          assignee: {
+            emailAddress: 'user@example.com',
+            displayName: 'Test User',
+          },
+          labels: ['sage-bot', 'repo:mongodb/test'],
         },
       };
 
       mockSearchIssues.mockResolvedValueOnce([mockIssue]);
-      mockExtractTicketData.mockReturnValueOnce({
-        ticketKey: 'DEVPROD-456',
-        summary: 'Failed issue retry',
-        description: 'repo:mongodb/test',
-        assigneeEmail: 'user@example.com',
-        targetRepository: 'mongodb/test',
-      });
       // Existing job is in Failed status - should allow retry
       mockFindJobRunByTicketKey.mockResolvedValueOnce({
         _id: new ObjectId(),
@@ -225,7 +202,7 @@ describe('jiraPollingService', () => {
         status: JobRunStatus.Pending,
       });
 
-      const result = await pollJiraTickets();
+      const result = await service.poll();
 
       expect(result).toEqual({
         ticketsFound: 1,
@@ -251,14 +228,6 @@ describe('jiraPollingService', () => {
       };
 
       mockSearchIssues.mockResolvedValueOnce([mockIssue]);
-      mockExtractTicketData.mockReturnValueOnce({
-        ticketKey: 'DEVPROD-789',
-        summary: 'No label adder found',
-        description: null,
-        assigneeEmail: null,
-        targetRepository: null,
-        labels: ['sage-bot'],
-      });
       mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
       mockFindLabelAddedBy.mockResolvedValueOnce(null);
       mockRemoveLabel.mockResolvedValueOnce(undefined);
@@ -271,7 +240,7 @@ describe('jiraPollingService', () => {
       mockUpdateJobRunStatus.mockResolvedValueOnce(undefined);
       mockAddComment.mockResolvedValueOnce(undefined);
 
-      const result = await pollJiraTickets();
+      const result = await service.poll();
 
       expect(mockCreateJobRun).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -307,28 +276,16 @@ describe('jiraPollingService', () => {
         key: 'DEVPROD-002',
         fields: {
           summary: 'Issue 2',
-          description: 'repo:mongodb/test',
-          assignee: { emailAddress: 'user@example.com' },
-          labels: ['sage-bot'],
+          description: 'Test description',
+          assignee: {
+            emailAddress: 'user@example.com',
+            displayName: 'Test User',
+          },
+          labels: ['sage-bot', 'repo:mongodb/test'],
         },
       };
 
       mockSearchIssues.mockResolvedValueOnce([mockIssue1, mockIssue2]);
-      mockExtractTicketData
-        .mockReturnValueOnce({
-          ticketKey: 'DEVPROD-001',
-          summary: 'Issue 1',
-          description: null,
-          assigneeEmail: null,
-          targetRepository: null,
-        })
-        .mockReturnValueOnce({
-          ticketKey: 'DEVPROD-002',
-          summary: 'Issue 2',
-          description: 'repo:mongodb/test',
-          assigneeEmail: 'user@example.com',
-          targetRepository: 'mongodb/test',
-        });
       mockFindJobRunByTicketKey
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce(null);
@@ -343,7 +300,7 @@ describe('jiraPollingService', () => {
         status: JobRunStatus.Pending,
       });
 
-      const result = await pollJiraTickets();
+      const result = await service.poll();
 
       expect(result).toEqual({
         ticketsFound: 2,
@@ -367,7 +324,7 @@ describe('jiraPollingService', () => {
     it('throws error when Jira API search fails', async () => {
       mockSearchIssues.mockRejectedValueOnce(new Error('Connection failed'));
 
-      await expect(pollJiraTickets()).rejects.toThrow('Connection failed');
+      await expect(service.poll()).rejects.toThrow('Connection failed');
     });
 
     it('fails validation and posts comment when assignee has no credentials', async () => {
@@ -376,20 +333,15 @@ describe('jiraPollingService', () => {
         fields: {
           summary: 'No credentials test',
           description: 'Test description',
-          assignee: { emailAddress: 'nocreds@example.com' },
+          assignee: {
+            emailAddress: 'nocreds@example.com',
+            displayName: 'No Creds User',
+          },
           labels: ['sage-bot', 'repo:mongodb/test'],
         },
       };
 
       mockSearchIssues.mockResolvedValueOnce([mockIssue]);
-      mockExtractTicketData.mockReturnValueOnce({
-        ticketKey: 'DEVPROD-999',
-        summary: 'No credentials test',
-        description: 'Test description',
-        assigneeEmail: 'nocreds@example.com',
-        targetRepository: 'mongodb/test',
-        labels: ['sage-bot', 'repo:mongodb/test'],
-      });
       mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
       mockFindLabelAddedBy.mockResolvedValueOnce('initiator@example.com');
       mockRemoveLabel.mockResolvedValueOnce(undefined);
@@ -404,7 +356,7 @@ describe('jiraPollingService', () => {
       mockUpdateJobRunStatus.mockResolvedValueOnce(undefined);
       mockAddComment.mockResolvedValueOnce(undefined);
 
-      const result = await pollJiraTickets();
+      const result = await service.poll();
 
       expect(result).toEqual({
         ticketsFound: 1,
@@ -442,13 +394,13 @@ describe('jiraPollingService', () => {
     });
   });
 
-  describe('runPollingJob', () => {
+  describe('runAsJob()', () => {
     it('connects to database, runs polling, and disconnects', async () => {
       mockConnect.mockResolvedValueOnce(undefined);
       mockSearchIssues.mockResolvedValueOnce([]);
       mockDisconnect.mockResolvedValueOnce(undefined);
 
-      await runPollingJob();
+      await service.runAsJob();
 
       expect(mockConnect).toHaveBeenCalled();
       expect(mockSearchIssues).toHaveBeenCalled();
@@ -460,7 +412,7 @@ describe('jiraPollingService', () => {
       mockSearchIssues.mockRejectedValueOnce(new Error('Polling error'));
       mockDisconnect.mockResolvedValueOnce(undefined);
 
-      await expect(runPollingJob()).rejects.toThrow('Polling error');
+      await expect(service.runAsJob()).rejects.toThrow('Polling error');
 
       expect(mockConnect).toHaveBeenCalled();
       expect(mockDisconnect).toHaveBeenCalled();
@@ -479,14 +431,6 @@ describe('jiraPollingService', () => {
 
       mockConnect.mockResolvedValueOnce(undefined);
       mockSearchIssues.mockResolvedValueOnce([mockIssue]);
-      mockExtractTicketData.mockReturnValueOnce({
-        ticketKey: 'DEVPROD-ERR',
-        summary: 'Error issue',
-        description: null,
-        assigneeEmail: null,
-        targetRepository: null,
-        labels: ['sage-bot'],
-      });
       mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
       // Cause a system error during processing
       mockFindLabelAddedBy.mockRejectedValueOnce(new Error('System failure'));
@@ -495,7 +439,7 @@ describe('jiraPollingService', () => {
       // Save original exitCode
       const originalExitCode = process.exitCode;
 
-      await runPollingJob();
+      await service.runAsJob();
 
       expect(process.exitCode).toBe(1);
       expect(mockDisconnect).toHaveBeenCalled();
