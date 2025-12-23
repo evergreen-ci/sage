@@ -17,9 +17,12 @@ const {
   mockExtractTicketData,
   mockFindJobRunByTicketKey,
   mockFindLabelAddedBy,
+  mockGetDefaultBranch,
+  mockIsRepositoryConfigured,
+  mockLaunchCursorAgent,
   mockRemoveLabel,
   mockSearchIssues,
-  mockUpdateJobRunStatus,
+  mockUpdateJobRun,
 } = vi.hoisted(() => ({
   mockSearchIssues: vi.fn(),
   mockRemoveLabel: vi.fn(),
@@ -29,9 +32,12 @@ const {
   mockFindJobRunByTicketKey: vi.fn(),
   mockCredentialsExist: vi.fn(),
   mockAddComment: vi.fn(),
-  mockUpdateJobRunStatus: vi.fn(),
+  mockUpdateJobRun: vi.fn(),
   mockConnect: vi.fn(),
   mockDisconnect: vi.fn(),
+  mockLaunchCursorAgent: vi.fn(),
+  mockIsRepositoryConfigured: vi.fn(),
+  mockGetDefaultBranch: vi.fn(),
 }));
 
 vi.mock('./jiraClient', () => ({
@@ -47,7 +53,16 @@ vi.mock('./jiraClient', () => ({
 vi.mock('@/db/repositories/jobRunsRepository', () => ({
   createJobRun: mockCreateJobRun,
   findJobRunByTicketKey: mockFindJobRunByTicketKey,
-  updateJobRunStatus: mockUpdateJobRunStatus,
+  updateJobRun: mockUpdateJobRun,
+}));
+
+vi.mock('@/services/cursor', () => ({
+  launchCursorAgent: mockLaunchCursorAgent,
+}));
+
+vi.mock('@/services/repositories', () => ({
+  isRepositoryConfigured: mockIsRepositoryConfigured,
+  getDefaultBranch: mockGetDefaultBranch,
 }));
 
 vi.mock('@/db/repositories/userCredentialsRepository', () => ({
@@ -98,12 +113,12 @@ describe('jiraPollingService', () => {
       );
     });
 
-    it('processes tickets and creates job runs', async () => {
+    it('processes tickets and creates job runs with inline ref', async () => {
       const mockIssue = {
         key: 'DEVPROD-123',
         fields: {
           summary: 'Test issue',
-          description: 'repo:mongodb/mongo-tools',
+          description: 'repo:mongodb/mongo-tools@develop',
           assignee: { emailAddress: 'user@example.com' },
           labels: ['sage-bot'],
         },
@@ -113,9 +128,10 @@ describe('jiraPollingService', () => {
       mockExtractTicketData.mockReturnValueOnce({
         ticketKey: 'DEVPROD-123',
         summary: 'Test issue',
-        description: 'repo:mongodb/mongo-tools',
+        description: 'repo:mongodb/mongo-tools@develop',
         assigneeEmail: 'user@example.com',
         targetRepository: 'mongodb/mongo-tools',
+        targetRef: 'develop', // Inline ref from label
       });
       mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
       mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
@@ -127,6 +143,13 @@ describe('jiraPollingService', () => {
         jiraTicketKey: 'DEVPROD-123',
         status: JobRunStatus.Pending,
       });
+      mockLaunchCursorAgent.mockResolvedValueOnce({
+        success: true,
+        agentId: 'bc_test123',
+        agentUrl: 'https://cursor.com/agents?id=bc_test123',
+      });
+      mockUpdateJobRun.mockResolvedValueOnce(undefined);
+      mockAddComment.mockResolvedValueOnce(undefined);
 
       const result = await pollJiraTickets();
 
@@ -144,9 +167,82 @@ describe('jiraPollingService', () => {
         assignee: 'user@example.com',
         metadata: {
           summary: 'Test issue',
-          description: 'repo:mongodb/mongo-tools',
+          description: 'repo:mongodb/mongo-tools@develop',
           targetRepository: 'mongodb/mongo-tools',
         },
+      });
+      expect(mockLaunchCursorAgent).toHaveBeenCalledWith({
+        ticketKey: 'DEVPROD-123',
+        summary: 'Test issue',
+        description: 'repo:mongodb/mongo-tools@develop',
+        targetRepository: 'mongodb/mongo-tools',
+        targetRef: 'develop',
+        assigneeEmail: 'user@example.com',
+        autoCreatePr: true,
+      });
+      expect(mockUpdateJobRun).toHaveBeenCalledWith(mockJobId, {
+        cursorAgentId: 'bc_test123',
+        status: JobRunStatus.Running,
+      });
+    });
+
+    it('processes tickets using config default branch when no inline ref', async () => {
+      const mockIssue = {
+        key: 'DEVPROD-123',
+        fields: {
+          summary: 'Test issue',
+          description: 'Test description',
+          assignee: { emailAddress: 'user@example.com' },
+          labels: ['sage-bot', 'repo:mongodb/mongo-tools'],
+        },
+      };
+
+      mockSearchIssues.mockResolvedValueOnce([mockIssue]);
+      mockExtractTicketData.mockReturnValueOnce({
+        ticketKey: 'DEVPROD-123',
+        summary: 'Test issue',
+        description: 'Test description',
+        assigneeEmail: 'user@example.com',
+        targetRepository: 'mongodb/mongo-tools',
+        targetRef: null, // No inline ref
+      });
+      mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
+      mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
+      mockRemoveLabel.mockResolvedValueOnce(undefined);
+      mockIsRepositoryConfigured.mockReturnValueOnce(true);
+      mockGetDefaultBranch.mockReturnValueOnce('master');
+      mockCredentialsExist.mockResolvedValueOnce(true);
+      const mockJobId = new ObjectId();
+      mockCreateJobRun.mockResolvedValueOnce({
+        _id: mockJobId,
+        jiraTicketKey: 'DEVPROD-123',
+        status: JobRunStatus.Pending,
+      });
+      mockLaunchCursorAgent.mockResolvedValueOnce({
+        success: true,
+        agentId: 'bc_test123',
+        agentUrl: 'https://cursor.com/agents?id=bc_test123',
+      });
+      mockUpdateJobRun.mockResolvedValueOnce(undefined);
+      mockAddComment.mockResolvedValueOnce(undefined);
+
+      const result = await pollJiraTickets();
+
+      expect(result).toEqual({
+        ticketsFound: 1,
+        ticketsProcessed: 1,
+        ticketsSkipped: 0,
+        ticketsErrored: 0,
+        results: [{ ticketKey: 'DEVPROD-123', success: true }],
+      });
+      expect(mockLaunchCursorAgent).toHaveBeenCalledWith({
+        ticketKey: 'DEVPROD-123',
+        summary: 'Test issue',
+        description: 'Test description',
+        targetRepository: 'mongodb/mongo-tools',
+        targetRef: 'master', // From config
+        assigneeEmail: 'user@example.com',
+        autoCreatePr: true,
       });
     });
 
@@ -168,6 +264,7 @@ describe('jiraPollingService', () => {
         description: 'repo:mongodb/test',
         assigneeEmail: null,
         targetRepository: 'mongodb/test',
+        targetRef: 'main',
       });
       mockFindJobRunByTicketKey.mockResolvedValueOnce({
         _id: new ObjectId(),
@@ -200,7 +297,7 @@ describe('jiraPollingService', () => {
         key: 'DEVPROD-456',
         fields: {
           summary: 'Failed issue retry',
-          description: 'repo:mongodb/test',
+          description: 'repo:mongodb/test@main',
           assignee: { emailAddress: 'user@example.com' },
           labels: ['sage-bot'],
         },
@@ -210,9 +307,10 @@ describe('jiraPollingService', () => {
       mockExtractTicketData.mockReturnValueOnce({
         ticketKey: 'DEVPROD-456',
         summary: 'Failed issue retry',
-        description: 'repo:mongodb/test',
+        description: 'repo:mongodb/test@main',
         assigneeEmail: 'user@example.com',
         targetRepository: 'mongodb/test',
+        targetRef: 'main',
       });
       // Existing job is in Failed status - should allow retry
       mockFindJobRunByTicketKey.mockResolvedValueOnce({
@@ -223,11 +321,19 @@ describe('jiraPollingService', () => {
       mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
       mockRemoveLabel.mockResolvedValueOnce(undefined);
       mockCredentialsExist.mockResolvedValueOnce(true);
+      const mockJobId = new ObjectId();
       mockCreateJobRun.mockResolvedValueOnce({
-        _id: new ObjectId(),
+        _id: mockJobId,
         jiraTicketKey: 'DEVPROD-456',
         status: JobRunStatus.Pending,
       });
+      mockLaunchCursorAgent.mockResolvedValueOnce({
+        success: true,
+        agentId: 'bc_retry456',
+        agentUrl: 'https://cursor.com/agents?id=bc_retry456',
+      });
+      mockUpdateJobRun.mockResolvedValueOnce(undefined);
+      mockAddComment.mockResolvedValueOnce(undefined);
 
       const result = await pollJiraTickets();
 
@@ -241,6 +347,7 @@ describe('jiraPollingService', () => {
       // Should process the ticket (remove label and create new job run)
       expect(mockRemoveLabel).toHaveBeenCalledWith('DEVPROD-456', 'sage-bot');
       expect(mockCreateJobRun).toHaveBeenCalled();
+      expect(mockLaunchCursorAgent).toHaveBeenCalled();
     });
 
     it('uses unknown as initiator and fails validation when missing assignee and repo label', async () => {
@@ -261,6 +368,7 @@ describe('jiraPollingService', () => {
         description: null,
         assigneeEmail: null,
         targetRepository: null,
+        targetRef: null,
         labels: ['sage-bot'],
       });
       mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
@@ -272,7 +380,7 @@ describe('jiraPollingService', () => {
         jiraTicketKey: 'DEVPROD-789',
         status: JobRunStatus.Pending,
       });
-      mockUpdateJobRunStatus.mockResolvedValueOnce(undefined);
+      mockUpdateJobRun.mockResolvedValueOnce(undefined);
       mockAddComment.mockResolvedValueOnce(undefined);
 
       const result = await pollJiraTickets();
@@ -311,7 +419,7 @@ describe('jiraPollingService', () => {
         key: 'DEVPROD-002',
         fields: {
           summary: 'Issue 2',
-          description: 'repo:mongodb/test',
+          description: 'repo:mongodb/test@main',
           assignee: { emailAddress: 'user@example.com' },
           labels: ['sage-bot'],
         },
@@ -325,13 +433,15 @@ describe('jiraPollingService', () => {
           description: null,
           assigneeEmail: null,
           targetRepository: null,
+          targetRef: null,
         })
         .mockReturnValueOnce({
           ticketKey: 'DEVPROD-002',
           summary: 'Issue 2',
-          description: 'repo:mongodb/test',
+          description: 'repo:mongodb/test@main',
           assigneeEmail: 'user@example.com',
           targetRepository: 'mongodb/test',
+          targetRef: 'main',
         });
       mockFindJobRunByTicketKey
         .mockResolvedValueOnce(null)
@@ -341,11 +451,19 @@ describe('jiraPollingService', () => {
         .mockResolvedValueOnce('user@example.com');
       mockRemoveLabel.mockResolvedValueOnce(undefined);
       mockCredentialsExist.mockResolvedValueOnce(true);
+      const mockJobId = new ObjectId();
       mockCreateJobRun.mockResolvedValueOnce({
-        _id: new ObjectId(),
+        _id: mockJobId,
         jiraTicketKey: 'DEVPROD-002',
         status: JobRunStatus.Pending,
       });
+      mockLaunchCursorAgent.mockResolvedValueOnce({
+        success: true,
+        agentId: 'bc_002',
+        agentUrl: 'https://cursor.com/agents?id=bc_002',
+      });
+      mockUpdateJobRun.mockResolvedValueOnce(undefined);
+      mockAddComment.mockResolvedValueOnce(undefined);
 
       const result = await pollJiraTickets();
 
@@ -381,7 +499,7 @@ describe('jiraPollingService', () => {
           summary: 'No credentials test',
           description: 'Test description',
           assignee: { emailAddress: 'nocreds@example.com' },
-          labels: ['sage-bot', 'repo:mongodb/test'],
+          labels: ['sage-bot', 'repo:mongodb/test@main'],
         },
       };
 
@@ -392,7 +510,8 @@ describe('jiraPollingService', () => {
         description: 'Test description',
         assigneeEmail: 'nocreds@example.com',
         targetRepository: 'mongodb/test',
-        labels: ['sage-bot', 'repo:mongodb/test'],
+        targetRef: 'main',
+        labels: ['sage-bot', 'repo:mongodb/test@main'],
       });
       mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
       mockFindLabelAddedBy.mockResolvedValueOnce('initiator@example.com');
@@ -405,7 +524,7 @@ describe('jiraPollingService', () => {
       });
       // Assignee does NOT have credentials
       mockCredentialsExist.mockResolvedValueOnce(false);
-      mockUpdateJobRunStatus.mockResolvedValueOnce(undefined);
+      mockUpdateJobRun.mockResolvedValueOnce(undefined);
       mockAddComment.mockResolvedValueOnce(undefined);
 
       const result = await pollJiraTickets();
@@ -428,11 +547,12 @@ describe('jiraPollingService', () => {
       });
 
       // Verify job was marked as failed
-      expect(mockUpdateJobRunStatus).toHaveBeenCalledWith(
-        mockJobId,
-        JobRunStatus.Failed,
-        expect.stringContaining('does not have credentials configured')
-      );
+      expect(mockUpdateJobRun).toHaveBeenCalledWith(mockJobId, {
+        status: JobRunStatus.Failed,
+        errorMessage: expect.stringContaining(
+          'does not have credentials configured'
+        ),
+      });
 
       // Verify comment was posted to Jira
       expect(mockAddComment).toHaveBeenCalledWith(
@@ -442,6 +562,53 @@ describe('jiraPollingService', () => {
       expect(mockAddComment).toHaveBeenCalledWith(
         'DEVPROD-999',
         expect.stringContaining('does not have credentials configured')
+      );
+    });
+
+    it('fails validation when repo is not configured and no inline ref', async () => {
+      const mockIssue = {
+        key: 'DEVPROD-999',
+        fields: {
+          summary: 'Unconfigured repo test',
+          description: 'Test description',
+          assignee: { emailAddress: 'user@example.com' },
+          labels: ['sage-bot', 'repo:unknown/repo'],
+        },
+      };
+
+      mockSearchIssues.mockResolvedValueOnce([mockIssue]);
+      mockExtractTicketData.mockReturnValueOnce({
+        ticketKey: 'DEVPROD-999',
+        summary: 'Unconfigured repo test',
+        description: 'Test description',
+        assigneeEmail: 'user@example.com',
+        targetRepository: 'unknown/repo',
+        targetRef: null, // No inline ref
+        labels: ['sage-bot', 'repo:unknown/repo'],
+      });
+      mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
+      mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
+      mockRemoveLabel.mockResolvedValueOnce(undefined);
+      mockIsRepositoryConfigured.mockReturnValueOnce(false); // Repo not configured
+      const mockJobId = new ObjectId();
+      mockCreateJobRun.mockResolvedValueOnce({
+        _id: mockJobId,
+        jiraTicketKey: 'DEVPROD-999',
+        status: JobRunStatus.Pending,
+      });
+      mockUpdateJobRun.mockResolvedValueOnce(undefined);
+      mockAddComment.mockResolvedValueOnce(undefined);
+
+      const result = await pollJiraTickets();
+
+      expect(result.ticketsSkipped).toBe(1);
+      expect(result.results[0].skipReason).toContain('is not configured');
+      expect(result.results[0].skipReason).toContain('unknown/repo');
+
+      // Verify comment was posted with helpful message
+      expect(mockAddComment).toHaveBeenCalledWith(
+        'DEVPROD-999',
+        expect.stringContaining('is not configured')
       );
     });
   });
@@ -489,6 +656,7 @@ describe('jiraPollingService', () => {
         description: null,
         assigneeEmail: null,
         targetRepository: null,
+        targetRef: null,
         labels: ['sage-bot'],
       });
       mockFindJobRunByTicketKey.mockResolvedValueOnce(null);

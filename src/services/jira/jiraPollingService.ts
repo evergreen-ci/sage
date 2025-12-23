@@ -2,10 +2,15 @@ import { config, validateConfig } from '@/config';
 import {
   createJobRun,
   findJobRunByTicketKey,
-  updateJobRunStatus,
+  updateJobRun,
 } from '@/db/repositories/jobRunsRepository';
 import { credentialsExist } from '@/db/repositories/userCredentialsRepository';
 import { JobRunStatus } from '@/db/types';
+import { launchCursorAgent } from '@/services/cursor';
+import {
+  getDefaultBranch,
+  isRepositoryConfigured,
+} from '@/services/repositories';
 import logger from '@/utils/logger';
 import { jiraClient } from './jiraClient';
 import {
@@ -23,7 +28,8 @@ const ACTIVE_STATUSES = [JobRunStatus.Pending, JobRunStatus.Running];
 /**
  * Validate a ticket before processing
  * Checks:
- * - Has a repo:<org>/<repo> label
+ * - Has a repo:<org>/<repo> label (with optional \@ref)
+ * - If no inline ref, repository must be configured in repositories.yaml
  * - Has an assignee
  * - Assignee has credentials in user_credentials collection
  * @param ticketData - The parsed ticket data to validate
@@ -37,8 +43,17 @@ const validateTicket = async (
   // Check for repo label
   if (!ticketData.targetRepository) {
     errors.push(
-      'Missing repository label. Please add a label in the format: repo:<org>/<repo_name>'
+      'Missing repository label. Please add a label in the format: repo:<org>/<repo_name> or repo:<org>/<repo_name>@<branch>'
     );
+  } else if (!ticketData.targetRef) {
+    // No inline ref provided - check if repo is configured
+    if (!isRepositoryConfigured(ticketData.targetRepository)) {
+      errors.push(
+        `Repository "${ticketData.targetRepository}" is not configured. ` +
+          'Either add it to the repository config or specify a branch inline: ' +
+          `repo:${ticketData.targetRepository}@<branch>`
+      );
+    }
   }
 
   // Check for assignee
@@ -77,6 +92,30 @@ const formatValidationComment = (errors: string[]): string => {
     `{panel}`
   );
 };
+
+/**
+ * Format agent launched success as a Jira comment
+ * @param agentUrl - The URL to the Cursor agent session
+ * @returns Formatted Jira comment string with panel markup
+ */
+const formatAgentLaunchedComment = (agentUrl: string): string =>
+  `{panel:title=Sage Bot Agent Launched|borderColor=#00875A|titleBGColor=#00875A|titleColor=#FFFFFF}\n` +
+  `A Cursor Cloud Agent has been launched to work on this ticket.\n\n` +
+  `*Agent Session:* [View in Cursor|${agentUrl}]\n\n` +
+  `The agent will create a pull request when the implementation is complete.\n` +
+  `{panel}`;
+
+/**
+ * Format agent launch failure as a Jira comment
+ * @param errorMessage - The error message from the launch attempt
+ * @returns Formatted Jira comment string with panel markup
+ */
+const formatAgentLaunchFailedComment = (errorMessage: string): string =>
+  `{panel:title=Sage Bot Agent Launch Failed|borderColor=#DE350B|titleBGColor=#DE350B|titleColor=#FFFFFF}\n` +
+  `Failed to launch Cursor Cloud Agent for this ticket.\n\n` +
+  `*Error:* ${errorMessage}\n\n` +
+  `Please check the configuration and re-add the {{sage-bot}} label to retry.\n` +
+  `{panel}`;
 
 /**
  * Build the JQL query for finding sage-bot labeled tickets
@@ -152,7 +191,10 @@ const processTicket = async (
         errors: validation.errors,
       });
 
-      await updateJobRunStatus(jobRun._id!, JobRunStatus.Failed, errorMessage);
+      await updateJobRun(jobRun._id!, {
+        status: JobRunStatus.Failed,
+        errorMessage,
+      });
 
       const comment = formatValidationComment(validation.errors);
       await jiraClient.addComment(ticketKey, comment);
@@ -164,6 +206,64 @@ const processTicket = async (
         skipReason: errorMessage,
       };
     }
+
+    // Resolve the ref: use inline ref if provided, otherwise get from config
+    const targetRef =
+      ticketData.targetRef || getDefaultBranch(ticketData.targetRepository!)!;
+
+    // Launch Cursor agent for eligible tickets
+    const launchResult = await launchCursorAgent({
+      ticketKey,
+      summary: ticketData.summary,
+      description: ticketData.description,
+      targetRepository: ticketData.targetRepository!,
+      targetRef,
+      assigneeEmail: ticketData.assigneeEmail!,
+      autoCreatePr: true,
+    });
+
+    if (!launchResult.success) {
+      const errorMessage = `Agent launch failed: ${launchResult.error}`;
+
+      logger.error(`Failed to launch agent for ticket ${ticketKey}`, {
+        jobRunId: jobRun._id?.toString(),
+        error: launchResult.error,
+      });
+
+      await updateJobRun(jobRun._id!, {
+        status: JobRunStatus.Failed,
+        errorMessage,
+      });
+
+      const comment = formatAgentLaunchFailedComment(
+        launchResult.error || 'Unknown error'
+      );
+      await jiraClient.addComment(ticketKey, comment);
+
+      return {
+        ticketKey,
+        success: false,
+        error: errorMessage,
+      };
+    }
+
+    // Update job run with agent ID and set status to Running
+    await updateJobRun(jobRun._id!, {
+      cursorAgentId: launchResult.agentId!,
+      status: JobRunStatus.Running,
+    });
+
+    // Post success comment with link to agent session
+    if (launchResult.agentUrl) {
+      const comment = formatAgentLaunchedComment(launchResult.agentUrl);
+      await jiraClient.addComment(ticketKey, comment);
+    }
+
+    logger.info(`Successfully launched agent for ticket ${ticketKey}`, {
+      jobRunId: jobRun._id?.toString(),
+      agentId: launchResult.agentId,
+      agentUrl: launchResult.agentUrl,
+    });
 
     return { ticketKey, success: true };
   } catch (error) {

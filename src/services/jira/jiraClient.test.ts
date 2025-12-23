@@ -97,18 +97,40 @@ describe('jiraClient', () => {
   });
 
   describe('parseTargetRepositoryFromLabels', () => {
-    it('extracts repo from labels', () => {
+    it('extracts repo from labels without ref', () => {
       const labels = ['sage-bot', 'repo:mongodb/mongo-tools', 'priority'];
-      expect(jiraClient.parseTargetRepositoryFromLabels(labels)).toBe(
-        'mongodb/mongo-tools'
-      );
+      expect(jiraClient.parseTargetRepositoryFromLabels(labels)).toEqual({
+        repository: 'mongodb/mongo-tools',
+        ref: null,
+      });
+    });
+
+    it('extracts repo and ref from labels with @ref syntax', () => {
+      const labels = [
+        'sage-bot',
+        'repo:mongodb/mongo-tools@develop',
+        'priority',
+      ];
+      expect(jiraClient.parseTargetRepositoryFromLabels(labels)).toEqual({
+        repository: 'mongodb/mongo-tools',
+        ref: 'develop',
+      });
+    });
+
+    it('handles ref with slashes (e.g., feature branches)', () => {
+      const labels = ['repo:org/repo@feature/my-branch'];
+      expect(jiraClient.parseTargetRepositoryFromLabels(labels)).toEqual({
+        repository: 'org/repo',
+        ref: 'feature/my-branch',
+      });
     });
 
     it('handles repo label only', () => {
       const labels = ['repo:org/repo-name'];
-      expect(jiraClient.parseTargetRepositoryFromLabels(labels)).toBe(
-        'org/repo-name'
-      );
+      expect(jiraClient.parseTargetRepositoryFromLabels(labels)).toEqual({
+        repository: 'org/repo-name',
+        ref: null,
+      });
     });
 
     it('returns null for empty labels', () => {
@@ -124,12 +146,26 @@ describe('jiraClient', () => {
     it('handles repos with dots and underscores', () => {
       expect(
         jiraClient.parseTargetRepositoryFromLabels(['repo:my_org/my.repo-name'])
-      ).toBe('my_org/my.repo-name');
+      ).toEqual({
+        repository: 'my_org/my.repo-name',
+        ref: null,
+      });
+    });
+
+    it('handles refs with dots and underscores', () => {
+      expect(
+        jiraClient.parseTargetRepositoryFromLabels([
+          'repo:mongodb/mongo-tools@release_v1.2.3',
+        ])
+      ).toEqual({
+        repository: 'mongodb/mongo-tools',
+        ref: 'release_v1.2.3',
+      });
     });
   });
 
   describe('extractTicketData', () => {
-    it('extracts all fields from issue', () => {
+    it('extracts all fields from issue without inline ref', () => {
       const issue = {
         key: 'PROJ-123',
         fields: {
@@ -148,7 +184,32 @@ describe('jiraClient', () => {
         description: 'Description text',
         assigneeEmail: 'user@example.com',
         targetRepository: 'mongodb/test',
+        targetRef: null,
         labels: ['sage-bot', 'repo:mongodb/test'],
+      });
+    });
+
+    it('extracts all fields from issue with inline ref', () => {
+      const issue = {
+        key: 'PROJ-123',
+        fields: {
+          summary: 'Test summary',
+          description: 'Description text',
+          assignee: { emailAddress: 'user@example.com', displayName: 'User' },
+          labels: ['sage-bot', 'repo:mongodb/test@develop'],
+        },
+      };
+
+      const result = jiraClient.extractTicketData(issue);
+
+      expect(result).toEqual({
+        ticketKey: 'PROJ-123',
+        summary: 'Test summary',
+        description: 'Description text',
+        assigneeEmail: 'user@example.com',
+        targetRepository: 'mongodb/test',
+        targetRef: 'develop',
+        labels: ['sage-bot', 'repo:mongodb/test@develop'],
       });
     });
 
@@ -167,6 +228,7 @@ describe('jiraClient', () => {
 
       expect(result.assigneeEmail).toBeNull();
       expect(result.targetRepository).toBeNull();
+      expect(result.targetRef).toBeNull();
       expect(result.labels).toEqual([]);
     });
   });

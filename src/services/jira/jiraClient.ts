@@ -1,5 +1,6 @@
 import { Version2Client } from 'jira.js';
 import { config } from '@/config';
+import { ParsedRepository } from '@/services/repositories';
 import logger from '@/utils/logger';
 import { JiraIssue, JiraIssueFields, ParsedTicketData } from './types';
 
@@ -124,17 +125,27 @@ class JiraClient {
   };
 
   /**
-   * Parse the target repository from labels
-   * Expects format: repo:<org_name>/<repo_name>
+   * Parse the target repository and optional ref from labels
+   * Supports two formats:
+   * - repo:<org>/<repo> - repository only, ref will be looked up from config
+   * - repo:<org>/<repo>@<ref> - repository with inline ref specification
    * @param labels - Array of label strings
-   * @returns The repository string in format org/repo, or null if not found
+   * @returns ParsedRepository object, or null if no repo label found
    */
-  parseTargetRepositoryFromLabels = (labels: string[]): string | null => {
+  parseTargetRepositoryFromLabels = (
+    labels: string[]
+  ): ParsedRepository | null => {
     for (const label of labels) {
-      // Match repo:<org>/<repo> pattern
-      const match = label.match(/^repo:([a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+)$/);
+      // Match repo:<org>/<repo> or repo:<org>/<repo>@<ref> pattern
+      // Group 1: org/repo, Group 2: optional @ref (without the @)
+      const match = label.match(
+        /^repo:([a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+)(?:@([a-zA-Z0-9_.\-/]+))?$/
+      );
       if (match) {
-        return match[1];
+        return {
+          repository: match[1],
+          ref: match[2] || null,
+        };
       }
     }
     return null;
@@ -147,12 +158,14 @@ class JiraClient {
    */
   extractTicketData = (issue: JiraIssue): ParsedTicketData => {
     const labels = issue.fields.labels || [];
+    const parsed = this.parseTargetRepositoryFromLabels(labels);
     return {
       ticketKey: issue.key,
       summary: issue.fields.summary,
       description: issue.fields.description,
       assigneeEmail: issue.fields.assignee?.emailAddress || null,
-      targetRepository: this.parseTargetRepositoryFromLabels(labels),
+      targetRepository: parsed?.repository ?? null,
+      targetRef: parsed?.ref ?? null,
       labels,
     };
   };
