@@ -1,6 +1,4 @@
-// Use vi.hoisted for mock functions that need setup/verification in tests
-// Import after mocks
-import { jiraClient } from './jiraClient';
+import { jiraClient } from '.';
 
 const {
   mockAddComment,
@@ -93,38 +91,6 @@ describe('jiraClient', () => {
           labels: [{ remove: 'sage-bot' }],
         },
       });
-    });
-  });
-
-  describe('parseTargetRepositoryFromLabels', () => {
-    it('extracts repo from labels', () => {
-      const labels = ['sage-bot', 'repo:mongodb/mongo-tools', 'priority'];
-      expect(jiraClient.parseTargetRepositoryFromLabels(labels)).toBe(
-        'mongodb/mongo-tools'
-      );
-    });
-
-    it('handles repo label only', () => {
-      const labels = ['repo:org/repo-name'];
-      expect(jiraClient.parseTargetRepositoryFromLabels(labels)).toBe(
-        'org/repo-name'
-      );
-    });
-
-    it('returns null for empty labels', () => {
-      expect(jiraClient.parseTargetRepositoryFromLabels([])).toBeNull();
-    });
-
-    it('returns null when no repo label found', () => {
-      expect(
-        jiraClient.parseTargetRepositoryFromLabels(['sage-bot', 'bug'])
-      ).toBeNull();
-    });
-
-    it('handles repos with dots and underscores', () => {
-      expect(
-        jiraClient.parseTargetRepositoryFromLabels(['repo:my_org/my.repo-name'])
-      ).toBe('my_org/my.repo-name');
     });
   });
 

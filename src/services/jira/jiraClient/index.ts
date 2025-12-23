@@ -1,7 +1,9 @@
 import { Version2Client } from 'jira.js';
 import { config } from '@/config';
 import logger from '@/utils/logger';
-import { JiraIssue, JiraIssueFields, ParsedTicketData } from './types';
+import { DEFAULT_ISSUE_FIELDS, MAX_SEARCH_RESULTS } from '../constants';
+import { JiraIssue, JiraIssueFields, ParsedTicketData } from '../types';
+import { parseTargetRepositoryFromLabels } from '../utils/labelUtils';
 
 /**
  * JiraClient provides methods for interacting with the Jira REST API
@@ -31,7 +33,7 @@ class JiraClient {
    */
   searchIssues = async (
     jql: string,
-    fields: string[] = ['summary', 'description', 'assignee', 'labels']
+    fields: string[] = DEFAULT_ISSUE_FIELDS
   ): Promise<JiraIssue[]> => {
     // Note: searchForIssuesUsingJqlPost is deprecated, but we must use it for Jira Server/Data Center compatibility.
     // The newer "Enhanced" endpoint is Jira Cloud-only and returns 404 on Server, so we cannot use it.
@@ -39,7 +41,7 @@ class JiraClient {
     const response = await this.client.issueSearch.searchForIssuesUsingJqlPost({
       jql,
       fields,
-      maxResults: 100,
+      maxResults: MAX_SEARCH_RESULTS,
     });
 
     return (response.issues || []).map(issue => ({
@@ -124,23 +126,6 @@ class JiraClient {
   };
 
   /**
-   * Parse the target repository from labels
-   * Expects format: repo:<org_name>/<repo_name>
-   * @param labels - Array of label strings
-   * @returns The repository string in format org/repo, or null if not found
-   */
-  parseTargetRepositoryFromLabels = (labels: string[]): string | null => {
-    for (const label of labels) {
-      // Match repo:<org>/<repo> pattern
-      const match = label.match(/^repo:([a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+)$/);
-      if (match) {
-        return match[1];
-      }
-    }
-    return null;
-  };
-
-  /**
    * Extract required data from a Jira issue
    * @param issue - The Jira issue to extract data from
    * @returns Parsed ticket data
@@ -152,10 +137,12 @@ class JiraClient {
       summary: issue.fields.summary,
       description: issue.fields.description,
       assigneeEmail: issue.fields.assignee?.emailAddress || null,
-      targetRepository: this.parseTargetRepositoryFromLabels(labels),
+      targetRepository: parseTargetRepositoryFromLabels(labels),
       labels,
     };
   };
 }
 
-export const jiraClient = new JiraClient();
+const jiraClient = new JiraClient();
+
+export { jiraClient, JiraClient };

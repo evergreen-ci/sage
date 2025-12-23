@@ -1,11 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { JobRunStatus } from '@/db/types';
 // Import after mocks are set up
-import {
-  buildJqlQuery,
-  pollJiraTickets,
-  runPollingJob,
-} from './jiraPollingService';
+import { buildJqlQuery, pollJiraTickets, runPollingJob } from '.';
 
 // Use vi.hoisted for mock functions that need setup/verification in tests
 const {
@@ -34,7 +30,7 @@ const {
   mockDisconnect: vi.fn(),
 }));
 
-vi.mock('./jiraClient', () => ({
+vi.mock('../jiraClient', () => ({
   jiraClient: {
     searchIssues: mockSearchIssues,
     removeLabel: mockRemoveLabel,
@@ -94,7 +90,7 @@ describe('jiraPollingService', () => {
         results: [],
       });
       expect(mockSearchIssues).toHaveBeenCalledWith(
-        'labels = "sage-bot" AND project IN ("DEVPROD", "TEST")'
+        'labels = "sage-bot" AND project IN ("DEVPROD", "CLOUDP", "AMP", "DOCSP")'
       );
     });
 

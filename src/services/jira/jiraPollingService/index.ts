@@ -4,79 +4,20 @@ import {
   findJobRunByTicketKey,
   updateJobRunStatus,
 } from '@/db/repositories/jobRunsRepository';
-import { credentialsExist } from '@/db/repositories/userCredentialsRepository';
 import { JobRunStatus } from '@/db/types';
 import logger from '@/utils/logger';
-import { jiraClient } from './jiraClient';
+import { SAGE_BOT_LABEL } from '../constants';
+import { jiraClient } from '../jiraClient';
 import {
   ParsedTicketData,
   PollingResult,
   TicketProcessingResult,
-  ValidationResult,
-} from './types';
-
-const SAGE_BOT_LABEL = 'sage-bot';
+} from '../types';
+import { formatValidationErrorPanel } from '../utils/jiraMarkupUtils';
+import { validateTicket } from '../utils/validationUtils';
 
 /** Statuses that indicate a job is actively being processed */
 const ACTIVE_STATUSES = [JobRunStatus.Pending, JobRunStatus.Running];
-
-/**
- * Validate a ticket before processing
- * Checks:
- * - Has a repo:<org>/<repo> label
- * - Has an assignee
- * - Assignee has credentials in user_credentials collection
- * @param ticketData - The parsed ticket data to validate
- * @returns Validation result with isValid flag and any errors
- */
-const validateTicket = async (
-  ticketData: ParsedTicketData
-): Promise<ValidationResult> => {
-  const errors: string[] = [];
-
-  // Check for repo label
-  if (!ticketData.targetRepository) {
-    errors.push(
-      'Missing repository label. Please add a label in the format: repo:<org>/<repo_name>'
-    );
-  }
-
-  // Check for assignee
-  if (!ticketData.assigneeEmail) {
-    errors.push('No assignee set. Please assign this ticket to a user.');
-  } else {
-    // Check if assignee has credentials
-    const hasCredentials = await credentialsExist(ticketData.assigneeEmail);
-    if (!hasCredentials) {
-      errors.push(
-        `Assignee (${ticketData.assigneeEmail}) does not have credentials configured. ` +
-          'Please register your API key before using sage-bot.'
-      );
-    }
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
-};
-
-/**
- * Format validation errors as a Jira comment
- * Uses border-only styling for dark mode compatibility
- * @param errors - Array of error messages
- * @returns Formatted Jira comment string with panel markup
- */
-const formatValidationComment = (errors: string[]): string => {
-  const errorList = errors.map(e => `* ${e}`).join('\n');
-  return (
-    `{panel:title=Sage Bot Validation Failed|borderColor=#DE350B|titleBGColor=#DE350B|titleColor=#FFFFFF}\n` +
-    `The following issues must be resolved before sage-bot can process this ticket:\n\n` +
-    `${errorList}\n\n` +
-    `Please fix these issues and re-add the {{sage-bot}} label to retry.\n` +
-    `{panel}`
-  );
-};
 
 /**
  * Build the JQL query for finding sage-bot labeled tickets
@@ -154,7 +95,7 @@ const processTicket = async (
 
       await updateJobRunStatus(jobRun._id!, JobRunStatus.Failed, errorMessage);
 
-      const comment = formatValidationComment(validation.errors);
+      const comment = formatValidationErrorPanel(validation.errors);
       await jiraClient.addComment(ticketKey, comment);
 
       return {

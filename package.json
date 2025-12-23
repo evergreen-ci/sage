@@ -11,7 +11,7 @@
     "dev-run": "vite-node --watch src/main.ts",
     "dev:staging": "VERSION=$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown') NODE_ENV=staging dotenv-flow yarn dev-run",
     "dev:prod": "VERSION=$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown') NODE_ENV=production dotenv-flow yarn dev-run",
-    "poll-jira": "vite-node src/services/jira/pollJiraTicketsJob.ts",
+    "poll-jira": "vite-node src/services/jira/jobs/pollJiraTicketsJob.ts",
     "poll-jira:staging": "NODE_ENV=staging dotenv-flow yarn poll-jira",
     "poll-jira:prod": "NODE_ENV=production dotenv-flow yarn poll-jira",
     "deploy:staging": "NODE_ENV=staging dotenv-flow -- sh scripts/deploy.sh",

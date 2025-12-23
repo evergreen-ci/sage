@@ -5,10 +5,10 @@
  */
 
 // Initialize Sentry BEFORE any other imports to ensure proper instrumentation
-import '../../sentry-instrument';
+import '@/utils/sentry-instrument';
 
 import { sentryService } from '@/utils/sentry';
-import { runPollingJob } from './jiraPollingService';
+import { runPollingJob } from '../jiraPollingService';
 
 runPollingJob()
   .catch(error => {
