@@ -2,8 +2,7 @@ import { Version2Client } from 'jira.js';
 import { config } from '@/config';
 import logger from '@/utils/logger';
 import { DEFAULT_ISSUE_FIELDS, MAX_SEARCH_RESULTS } from '../constants';
-import { JiraIssue, JiraIssueFields, ParsedTicketData } from '../types';
-import { parseTargetRepositoryFromLabels } from '../utils/labelUtils';
+import { JiraIssue, JiraIssueFields } from '../types';
 
 /**
  * JiraClient provides methods for interacting with the Jira REST API
@@ -123,23 +122,6 @@ class JiraClient {
       logger.warn(`Failed to get changelog for ${issueKey}`, error);
       return null;
     }
-  };
-
-  /**
-   * Extract required data from a Jira issue
-   * @param issue - The Jira issue to extract data from
-   * @returns Parsed ticket data
-   */
-  extractTicketData = (issue: JiraIssue): ParsedTicketData => {
-    const labels = issue.fields.labels || [];
-    return {
-      ticketKey: issue.key,
-      summary: issue.fields.summary,
-      description: issue.fields.description,
-      assigneeEmail: issue.fields.assignee?.emailAddress || null,
-      targetRepository: parseTargetRepositoryFromLabels(labels),
-      labels,
-    };
   };
 }
 

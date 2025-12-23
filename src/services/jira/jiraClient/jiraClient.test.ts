@@ -94,49 +94,6 @@ describe('jiraClient', () => {
     });
   });
 
-  describe('extractTicketData', () => {
-    it('extracts all fields from issue', () => {
-      const issue = {
-        key: 'PROJ-123',
-        fields: {
-          summary: 'Test summary',
-          description: 'Description text',
-          assignee: { emailAddress: 'user@example.com', displayName: 'User' },
-          labels: ['sage-bot', 'repo:mongodb/test'],
-        },
-      };
-
-      const result = jiraClient.extractTicketData(issue);
-
-      expect(result).toEqual({
-        ticketKey: 'PROJ-123',
-        summary: 'Test summary',
-        description: 'Description text',
-        assigneeEmail: 'user@example.com',
-        targetRepository: 'mongodb/test',
-        labels: ['sage-bot', 'repo:mongodb/test'],
-      });
-    });
-
-    it('handles missing assignee', () => {
-      const issue = {
-        key: 'PROJ-456',
-        fields: {
-          summary: 'No assignee',
-          description: null,
-          assignee: null,
-          labels: [],
-        },
-      };
-
-      const result = jiraClient.extractTicketData(issue);
-
-      expect(result.assigneeEmail).toBeNull();
-      expect(result.targetRepository).toBeNull();
-      expect(result.labels).toEqual([]);
-    });
-  });
-
   describe('addComment', () => {
     it('adds comment to issue using correct API call', async () => {
       mockAddComment.mockResolvedValueOnce(undefined);
