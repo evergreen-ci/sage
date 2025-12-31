@@ -53,6 +53,7 @@ envSecrets:
   BRAINTRUST_API_KEY: parsley-ai-secrets
   HONEYCOMB_API_KEY: parsley-ai-secrets
   SENTRY_AUTH_TOKEN: parsley-ai-secrets
+  VOYAGE_API_KEY: parsley-ai-secrets
 
 serviceAccount:
   enabled: true
