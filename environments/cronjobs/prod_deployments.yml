@@ -4,6 +4,7 @@
 cronJobs:
   - name: sage-bot-jira-polling-job
     schedule: '* * * * *' # Run every minute
+    concurrencyPolicy: Forbid
     command: ['yarn', 'poll-jira:prod']
     resources:
       requests:
