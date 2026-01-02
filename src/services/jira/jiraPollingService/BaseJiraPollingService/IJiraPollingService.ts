@@ -1,4 +1,8 @@
-import { JiraIssue, PollingResult, TicketProcessingResult } from '../types';
+import {
+  JiraIssue,
+  PollingResult,
+  TicketProcessingResult,
+} from '@/services/jira/types';
 
 /**
  * Interface for Jira polling services
