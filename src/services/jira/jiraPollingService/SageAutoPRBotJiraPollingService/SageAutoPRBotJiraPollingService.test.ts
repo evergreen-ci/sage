@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { JobRunStatus } from '@/db/types';
-import { SageAutoPRBotJiraPollingService } from '.';
+import { BaseJiraPollingService } from '../BaseJiraPollingService';
+import { createSageAutoPRBotJiraPollingService } from '.';
 
 // Use vi.hoisted for mock functions that need setup/verification in tests
 const {
@@ -55,7 +56,7 @@ vi.mock('@/db/connection', () => ({
 }));
 
 describe('SageAutoPRBotJiraPollingService', () => {
-  let service: SageAutoPRBotJiraPollingService;
+  let service: BaseJiraPollingService;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -65,7 +66,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
       addComment: mockAddComment,
       findLabelAddedBy: mockFindLabelAddedBy,
     };
-    service = new SageAutoPRBotJiraPollingService(mockJiraClient as any);
+    service = createSageAutoPRBotJiraPollingService(mockJiraClient as any);
   });
 
   describe('poll()', () => {

@@ -1,6 +1,5 @@
 import { JiraClient } from '@/services/jira/jiraClient';
-import { JiraIssue, TicketProcessingResult } from '@/services/jira/types';
-import { BaseJiraPollingService, IJiraPollingService } from '.';
+import { BaseJiraPollingService } from '.';
 
 // Use vi.hoisted for mock functions that need setup/verification in tests
 const { mockConnect, mockDisconnect, mockSearchIssues } = vi.hoisted(() => ({
@@ -20,38 +19,6 @@ vi.mock('@/db/connection', () => ({
   },
 }));
 
-// Mock service implementing IJiraPollingService for testing
-class MockPollingService implements IJiraPollingService {
-  public mockJqlQuery: string;
-  public mockProcessTicketFn: (
-    issue: JiraIssue
-  ) => Promise<TicketProcessingResult>;
-
-  constructor(
-    jqlQuery: string,
-    processTicketFn: (issue: JiraIssue) => Promise<TicketProcessingResult>
-  ) {
-    this.mockJqlQuery = jqlQuery;
-    this.mockProcessTicketFn = processTicketFn;
-  }
-
-  buildJqlQuery(): string {
-    return this.mockJqlQuery;
-  }
-
-  async processTicket(issue: JiraIssue): Promise<TicketProcessingResult> {
-    return this.mockProcessTicketFn(issue);
-  }
-
-  async poll(): Promise<never> {
-    throw new Error('Should not be called in these tests');
-  }
-
-  async runAsJob(): Promise<never> {
-    throw new Error('Should not be called in these tests');
-  }
-}
-
 describe('BaseJiraPollingService', () => {
   let mockJiraClient: JiraClient;
 
@@ -62,19 +29,20 @@ describe('BaseJiraPollingService', () => {
     } as unknown as JiraClient;
   });
 
-  describe('executePolling()', () => {
+  describe('poll()', () => {
     it('executes JQL query and returns empty result when no tickets found', async () => {
       mockSearchIssues.mockResolvedValueOnce([]);
 
-      const service = new MockPollingService('test-jql-query', async () => ({
-        ticketKey: 'TEST-1',
-        success: true,
-      }));
+      const service = new BaseJiraPollingService({
+        jiraClient: mockJiraClient,
+        buildJqlQuery: () => 'test-jql-query',
+        processTicket: async () => ({
+          ticketKey: 'TEST-1',
+          success: true,
+        }),
+      });
 
-      const result = await BaseJiraPollingService.executePolling(
-        service,
-        mockJiraClient
-      );
+      const result = await service.poll();
 
       expect(mockSearchIssues).toHaveBeenCalledWith('test-jql-query');
       expect(result).toEqual({
@@ -115,15 +83,13 @@ describe('BaseJiraPollingService', () => {
         .mockResolvedValueOnce({ ticketKey: 'TEST-1', success: true })
         .mockResolvedValueOnce({ ticketKey: 'TEST-2', success: true });
 
-      const service = new MockPollingService(
-        'test-jql-query',
-        processTicketMock
-      );
+      const service = new BaseJiraPollingService({
+        jiraClient: mockJiraClient,
+        buildJqlQuery: () => 'test-jql-query',
+        processTicket: processTicketMock,
+      });
 
-      const result = await BaseJiraPollingService.executePolling(
-        service,
-        mockJiraClient
-      );
+      const result = await service.poll();
 
       expect(result).toEqual({
         ticketsFound: 2,
@@ -153,17 +119,18 @@ describe('BaseJiraPollingService', () => {
 
       mockSearchIssues.mockResolvedValueOnce(mockIssues);
 
-      const service = new MockPollingService('test-jql-query', async () => ({
-        ticketKey: 'TEST-1',
-        success: true,
-        skipped: true,
-        skipReason: 'Test skip',
-      }));
+      const service = new BaseJiraPollingService({
+        jiraClient: mockJiraClient,
+        buildJqlQuery: () => 'test-jql-query',
+        processTicket: async () => ({
+          ticketKey: 'TEST-1',
+          success: true,
+          skipped: true,
+          skipReason: 'Test skip',
+        }),
+      });
 
-      const result = await BaseJiraPollingService.executePolling(
-        service,
-        mockJiraClient
-      );
+      const result = await service.poll();
 
       expect(result).toEqual({
         ticketsFound: 1,
@@ -214,15 +181,13 @@ describe('BaseJiraPollingService', () => {
         })
         .mockResolvedValueOnce({ ticketKey: 'TEST-2', success: true });
 
-      const service = new MockPollingService(
-        'test-jql-query',
-        processTicketMock
-      );
+      const service = new BaseJiraPollingService({
+        jiraClient: mockJiraClient,
+        buildJqlQuery: () => 'test-jql-query',
+        processTicket: processTicketMock,
+      });
 
-      const result = await BaseJiraPollingService.executePolling(
-        service,
-        mockJiraClient
-      );
+      const result = await service.poll();
 
       expect(result).toEqual({
         ticketsFound: 2,
@@ -244,32 +209,35 @@ describe('BaseJiraPollingService', () => {
     it('throws error when Jira API search fails', async () => {
       mockSearchIssues.mockRejectedValueOnce(new Error('Connection failed'));
 
-      const service = new MockPollingService('test-jql-query', async () => ({
-        ticketKey: 'TEST-1',
-        success: true,
-      }));
+      const service = new BaseJiraPollingService({
+        jiraClient: mockJiraClient,
+        buildJqlQuery: () => 'test-jql-query',
+        processTicket: async () => ({
+          ticketKey: 'TEST-1',
+          success: true,
+        }),
+      });
 
-      await expect(
-        BaseJiraPollingService.executePolling(service, mockJiraClient)
-      ).rejects.toThrow('Connection failed');
+      await expect(service.poll()).rejects.toThrow('Connection failed');
     });
   });
 
-  describe('executeJobWithLifecycle()', () => {
+  describe('runAsJob()', () => {
     it('connects to database, runs polling, and disconnects', async () => {
       mockConnect.mockResolvedValueOnce(undefined);
       mockSearchIssues.mockResolvedValueOnce([]);
       mockDisconnect.mockResolvedValueOnce(undefined);
 
-      const service = new MockPollingService('test-jql-query', async () => ({
-        ticketKey: 'TEST-1',
-        success: true,
-      }));
+      const service = new BaseJiraPollingService({
+        jiraClient: mockJiraClient,
+        buildJqlQuery: () => 'test-jql-query',
+        processTicket: async () => ({
+          ticketKey: 'TEST-1',
+          success: true,
+        }),
+      });
 
-      await BaseJiraPollingService.executeJobWithLifecycle(
-        service,
-        mockJiraClient
-      );
+      await service.runAsJob();
 
       expect(mockConnect).toHaveBeenCalled();
       expect(mockSearchIssues).toHaveBeenCalled();
@@ -281,14 +249,16 @@ describe('BaseJiraPollingService', () => {
       mockSearchIssues.mockRejectedValueOnce(new Error('Polling error'));
       mockDisconnect.mockResolvedValueOnce(undefined);
 
-      const service = new MockPollingService('test-jql-query', async () => ({
-        ticketKey: 'TEST-1',
-        success: true,
-      }));
+      const service = new BaseJiraPollingService({
+        jiraClient: mockJiraClient,
+        buildJqlQuery: () => 'test-jql-query',
+        processTicket: async () => ({
+          ticketKey: 'TEST-1',
+          success: true,
+        }),
+      });
 
-      await expect(
-        BaseJiraPollingService.executeJobWithLifecycle(service, mockJiraClient)
-      ).rejects.toThrow('Polling error');
+      await expect(service.runAsJob()).rejects.toThrow('Polling error');
 
       expect(mockConnect).toHaveBeenCalled();
       expect(mockDisconnect).toHaveBeenCalled();
@@ -311,19 +281,20 @@ describe('BaseJiraPollingService', () => {
       mockSearchIssues.mockResolvedValueOnce(mockIssues);
       mockDisconnect.mockResolvedValueOnce(undefined);
 
-      const service = new MockPollingService('test-jql-query', async () => ({
-        ticketKey: 'TEST-ERR',
-        success: false,
-        error: 'System failure',
-      }));
+      const service = new BaseJiraPollingService({
+        jiraClient: mockJiraClient,
+        buildJqlQuery: () => 'test-jql-query',
+        processTicket: async () => ({
+          ticketKey: 'TEST-ERR',
+          success: false,
+          error: 'System failure',
+        }),
+      });
 
       // Save original exitCode
       const originalExitCode = process.exitCode;
 
-      await BaseJiraPollingService.executeJobWithLifecycle(
-        service,
-        mockJiraClient
-      );
+      await service.runAsJob();
 
       expect(process.exitCode).toBe(1);
       expect(mockDisconnect).toHaveBeenCalled();
@@ -349,21 +320,22 @@ describe('BaseJiraPollingService', () => {
       mockSearchIssues.mockResolvedValueOnce(mockIssues);
       mockDisconnect.mockResolvedValueOnce(undefined);
 
-      const service = new MockPollingService('test-jql-query', async () => ({
-        ticketKey: 'TEST-SKIP',
-        success: true,
-        skipped: true,
-        skipReason: 'Validation failed',
-      }));
+      const service = new BaseJiraPollingService({
+        jiraClient: mockJiraClient,
+        buildJqlQuery: () => 'test-jql-query',
+        processTicket: async () => ({
+          ticketKey: 'TEST-SKIP',
+          success: true,
+          skipped: true,
+          skipReason: 'Validation failed',
+        }),
+      });
 
       // Save original exitCode
       const originalExitCode = process.exitCode;
       process.exitCode = undefined;
 
-      await BaseJiraPollingService.executeJobWithLifecycle(
-        service,
-        mockJiraClient
-      );
+      await service.runAsJob();
 
       // Should not set exit code for validation failures (skipped tickets)
       expect(process.exitCode).toBeUndefined();

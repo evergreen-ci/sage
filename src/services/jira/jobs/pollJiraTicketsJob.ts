@@ -8,13 +8,9 @@
 import '@/sentry-instrument';
 
 import { sentryService } from '@/utils/sentry';
-import { jiraClient } from '../jiraClient';
 import { SageAutoPRBotJiraPollingService } from '../jiraPollingService/SageAutoPRBotJiraPollingService';
 
-const service = new SageAutoPRBotJiraPollingService(jiraClient);
-
-service
-  .runAsJob()
+SageAutoPRBotJiraPollingService.runAsJob()
   .catch(error => {
     console.error('Polling job failed:', error);
     process.exitCode = 1;

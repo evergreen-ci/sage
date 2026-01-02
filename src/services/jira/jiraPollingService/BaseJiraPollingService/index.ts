@@ -1,52 +1,55 @@
 import { validateConfig } from '@/config';
 import { JiraClient } from '@/services/jira/jiraClient';
-import { PollingResult } from '@/services/jira/types';
+import {
+  JiraIssue,
+  PollingResult,
+  TicketProcessingResult,
+} from '@/services/jira/types';
 import logger from '@/utils/logger';
-import { IJiraPollingService } from './IJiraPollingService';
+
+export interface BaseJiraPollingConfig {
+  jiraClient: JiraClient;
+  buildJqlQuery: () => string;
+  processTicket: (issue: JiraIssue) => Promise<TicketProcessingResult>;
+}
 
 /**
  * Base polling service implementation providing reusable workflow logic
  *
- * This class provides static utility methods that implement the generic polling workflow.
- * Services implementing IJiraPollingService can use these methods via composition
- * to avoid duplicating the polling logic.
- *
- * The class uses composition over inheritance - services don't extend this class,
- * they use its static methods while implementing the IJiraPollingService interface.
+ * This class provides a generic polling workflow that can be configured with
+ * specific JQL queries and ticket processing logic.
  *
  * Example usage:
  * ```typescript
- * export class MyPollingService implements IJiraPollingService {
- *   private jiraClient: JiraClient;
+ * const myPollingService = new BaseJiraPollingService({
+ *   jiraClient,
+ *   buildJqlQuery: () => 'project = "PROJ"',
+ *   processTicket: async (issue) => ({ ticketKey: issue.key, success: true })
+ * });
  *
- *   async poll(): Promise<PollingResult> {
- *     return BaseJiraPollingService.executePolling(this, this.jiraClient);
- *   }
- *
- *   async runAsJob(): Promise<void> {
- *     return BaseJiraPollingService.executeJobWithLifecycle(this, this.jiraClient);
- *   }
- * }
+ * await myPollingService.poll();
  * ```
  */
 export class BaseJiraPollingService {
+  private config: BaseJiraPollingConfig;
+
+  constructor(config: BaseJiraPollingConfig) {
+    this.config = config;
+  }
+
   /**
-   * Execute the polling workflow for any service implementing IJiraPollingService
+   * Execute the polling workflow
    *
    * This is a reusable implementation of the polling algorithm that:
-   * - Builds a JQL query via the service's buildJqlQuery() method
+   * - Builds a JQL query via the config's buildJqlQuery() method
    * - Searches for tickets using the JiraClient
    * - Iterates through tickets sequentially (to respect API rate limits)
-   * - Processes each ticket via the service's processTicket() method
+   * - Processes each ticket via the config's processTicket() method
    * - Aggregates results with metrics (found/processed/skipped/errored)
-   * @param service - The polling service that implements IJiraPollingService
-   * @param jiraClient - The Jira client to use for API calls
    * @returns Polling result with counts and individual ticket results
    */
-  static async executePolling(
-    service: IJiraPollingService,
-    jiraClient: JiraClient
-  ): Promise<PollingResult> {
+  async poll(): Promise<PollingResult> {
+    const { buildJqlQuery, jiraClient, processTicket } = this.config;
     const result: PollingResult = {
       ticketsFound: 0,
       ticketsProcessed: 0,
@@ -56,7 +59,7 @@ export class BaseJiraPollingService {
     };
 
     try {
-      const jql = service.buildJqlQuery();
+      const jql = buildJqlQuery();
       logger.debug('Executing JQL query', { jql });
 
       const issues = await jiraClient.searchIssues(jql);
@@ -71,7 +74,7 @@ export class BaseJiraPollingService {
       for (const issue of issues) {
         // Sequential processing is intentional to avoid overwhelming Jira API
         // eslint-disable-next-line no-await-in-loop
-        const processingResult = await service.processTicket(issue);
+        const processingResult = await processTicket(issue);
         result.results.push(processingResult);
 
         if (processingResult.skipped) {
@@ -105,14 +108,9 @@ export class BaseJiraPollingService {
    * - Database connection and disconnection
    * - Calling the polling workflow
    * - Setting appropriate exit codes for errors
-   * @param service - The polling service that implements IJiraPollingService
-   * @param jiraClient - The Jira client to use for API calls
    * @returns Promise that resolves when the job completes
    */
-  static async executeJobWithLifecycle(
-    service: IJiraPollingService,
-    jiraClient: JiraClient
-  ): Promise<void> {
+  async runAsJob(): Promise<void> {
     logger.info('Validating configuration');
     const configErrors = validateConfig();
 
@@ -128,10 +126,7 @@ export class BaseJiraPollingService {
       logger.info('Connecting to database for polling job');
       await db.connect();
 
-      const result = await BaseJiraPollingService.executePolling(
-        service,
-        jiraClient
-      );
+      const result = await this.poll();
 
       // Only exit with error code for system errors, not user validation failures
       if (result.ticketsErrored > 0) {
@@ -146,5 +141,3 @@ export class BaseJiraPollingService {
     }
   }
 }
-
-export type { IJiraPollingService };
