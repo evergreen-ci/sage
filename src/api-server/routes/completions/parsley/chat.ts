@@ -99,10 +99,14 @@ const chatRoute = async (
     });
     if (runResult.status === 'success') {
       requestContext.set('logURL', runResult.result);
-    } else if (runResult.status === 'failed') {
+    } else {
       logger.error('Error in get log file url workflow', {
         requestId: res.locals.requestId,
-        error: runResult.error,
+        status: runResult.status,
+        error:
+          runResult.status === 'failed'
+            ? runResult.error.message
+            : `Non Error Status: ${runResult.status}`,
       });
     }
   }
