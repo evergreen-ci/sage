@@ -41,6 +41,12 @@ export interface Config {
         defaultDeployment: string;
       };
     };
+    voyage: {
+      /** VOYAGE_API_KEY */
+      apiKey: string;
+      /** VOYAGE_DEFAULT_MODEL */
+      defaultModel: string;
+    };
   };
   evergreen: {
     /** EVERGREEN_GRAPHQL_ENDPOINT */
@@ -152,6 +158,10 @@ export const config: Config = {
         apiVersion: 'preview',
         defaultDeployment: getEnvVar('AZURE_OPENAI_DEFAULT_DEPLOYMENT', ''),
       },
+    },
+    voyage: {
+      apiKey: getEnvVar('VOYAGE_API_KEY', ''),
+      defaultModel: getEnvVar('VOYAGE_DEFAULT_MODEL', ''),
     },
   },
   evergreen: {
