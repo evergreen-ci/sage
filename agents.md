@@ -4,9 +4,35 @@ This guide provides comprehensive instructions for implementing agents, tools, w
 
 ## Coding Style Guidelines
 
+**IMPORTANT**: These coding standards apply to ALL TypeScript code in this repository, not just agents/tools/workflows. This includes services, utilities, repositories, and any other modules.
+
+### Function Declarations
+
 - **Use arrow functions** for all function declarations (e.g., `const myFunction = () => {}`)
+- For classes, use arrow function properties for methods (e.g., `myMethod = () => {}`)
+
+### Type Definitions
+
+- **Use Zod schemas** as the source of truth for type definitions
+- Create a `schemas/` directory for Zod schema definitions
+- Create a `types.ts` file that re-exports schemas and infers TypeScript types using `z.infer<typeof schema>`
+- **Do NOT use plain interfaces** - always define schemas first, then infer types
+
+Example structure:
+
+```text
+src/services/myService/
+  schemas/
+    index.ts      # Zod schemas
+  types.ts        # Re-exports schemas + inferred types
+  myService.ts    # Implementation
+  index.ts        # Public exports
+```
+
+### Other Guidelines
+
 - **Avoid superfluous comments** - code should be self-documenting with clear naming
-- **Use TypeScript** for type safety with Zod schemas for validation
+- **Use TypeScript** for type safety throughout
 
 ## Pull Request Guidelines
 
@@ -34,7 +60,7 @@ Example: `DEVPROD-23895: Add user authentication workflow`
 
 ### Prior to pushing code
 
-- Run `yarn format` and `yarn eslint:fix to format the code
+- Run `yarn format` and `yarn eslint:fix` to format the code
 
 ## Table of Contents
 
