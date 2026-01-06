@@ -2,16 +2,22 @@ import { config } from '@/config';
 import {
   createJobRun,
   findJobRunByTicketKey,
-  updateJobRunStatus,
+  updateJobRun,
 } from '@/db/repositories/jobRunsRepository';
 import { JobRunStatus } from '@/db/types';
+import { launchCursorAgent } from '@/services/cursor';
 import {
   JiraClient,
   jiraClient as defaultJiraClient,
 } from '@/services/jira/jiraClient';
 import { JiraIssue, TicketProcessingResult } from '@/services/jira/types';
-import { formatValidationErrorPanel } from '@/services/jira/utils/jiraMarkupUtils';
+import {
+  formatAgentLaunchedPanel,
+  formatAgentLaunchFailedPanel,
+  formatValidationErrorPanel,
+} from '@/services/jira/utils/jiraMarkupUtils';
 import { validateTicket } from '@/services/jira/utils/validationUtils';
+import { getDefaultBranch } from '@/services/repositories';
 import logger from '@/utils/logger';
 import { BaseJiraPollingService } from '../BaseJiraPollingService';
 import { SAGE_BOT_LABEL } from './constants';
@@ -31,6 +37,8 @@ const ACTIVE_STATUSES = [JobRunStatus.Pending, JobRunStatus.Running];
  * 4. Creating a job run in the database
  * 5. Validating the ticket (repo label, assignee, credentials)
  * 6. Posting validation errors to Jira if applicable
+ * 7. Launching a Cursor Cloud Agent for valid tickets
+ * 8. Updating job status and posting agent launch results to Jira
  * @param jiraClient - The Jira client to use for API calls
  * @returns A BaseJiraPollingService instance configured for Sage Auto PR Bot
  */
@@ -105,11 +113,10 @@ export const createSageAutoPRBotJiraPollingService = (
             errors: validation.errors,
           });
 
-          await updateJobRunStatus(
-            jobRun._id!,
-            JobRunStatus.Failed,
-            errorMessage
-          );
+          await updateJobRun(jobRun._id!, {
+            status: JobRunStatus.Failed,
+            errorMessage,
+          });
 
           const comment = formatValidationErrorPanel(validation.errors);
           await jiraClient.addComment(ticketKey, comment);
@@ -121,6 +128,65 @@ export const createSageAutoPRBotJiraPollingService = (
             skipReason: errorMessage,
           };
         }
+
+        // Resolve the ref: use inline ref if provided, otherwise get from config
+        const targetRef =
+          ticketData.targetRef ||
+          getDefaultBranch(ticketData.targetRepository!)!;
+
+        // Launch Cursor agent for eligible tickets
+        const launchResult = await launchCursorAgent({
+          ticketKey,
+          summary: ticketData.summary,
+          description: ticketData.description,
+          targetRepository: ticketData.targetRepository!,
+          targetRef,
+          assigneeEmail: ticketData.assigneeEmail!,
+          autoCreatePr: true,
+        });
+
+        if (!launchResult.success) {
+          const errorMessage = `Agent launch failed: ${launchResult.error}`;
+
+          logger.error(`Failed to launch agent for ticket ${ticketKey}`, {
+            jobRunId: jobRun._id?.toString(),
+            error: launchResult.error,
+          });
+
+          await updateJobRun(jobRun._id!, {
+            status: JobRunStatus.Failed,
+            errorMessage,
+          });
+
+          const comment = formatAgentLaunchFailedPanel(
+            launchResult.error || 'Unknown error'
+          );
+          await jiraClient.addComment(ticketKey, comment);
+
+          return {
+            ticketKey,
+            success: false,
+            error: errorMessage,
+          };
+        }
+
+        // Update job run with agent ID and set status to Running
+        await updateJobRun(jobRun._id!, {
+          cursorAgentId: launchResult.agentId!,
+          status: JobRunStatus.Running,
+        });
+
+        // Post success comment with link to agent session
+        if (launchResult.agentUrl) {
+          const comment = formatAgentLaunchedPanel(launchResult.agentUrl);
+          await jiraClient.addComment(ticketKey, comment);
+        }
+
+        logger.info(`Successfully launched agent for ticket ${ticketKey}`, {
+          jobRunId: jobRun._id?.toString(),
+          agentId: launchResult.agentId,
+          agentUrl: launchResult.agentUrl,
+        });
 
         return { ticketKey, success: true };
       } catch (error) {
