@@ -1,29 +1,8 @@
 import { getDecryptedApiKey } from '@/db/repositories/userCredentialsRepository';
 import logger from '@/utils/logger';
-import {
-  Sdk,
-  type CreateAgentRequest,
-  type Error as CursorError,
-} from './generated';
-import { createClient, createConfig } from './generated/client';
+import { createCursorApiClient, CursorApiClientError } from './cursorApiClient';
+import { type CreateAgentRequest } from './generated';
 import { LaunchAgentInput, LaunchAgentResult } from './types';
-
-/**
- * Creates a configured Cursor SDK instance
- * @param apiKey - The Cursor API key for authentication
- * @returns Configured Sdk instance
- */
-const createCursorSdk = (apiKey: string): Sdk => {
-  const client = createClient(
-    createConfig({
-      baseUrl: 'https://api.cursor.com',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-    })
-  );
-  return new Sdk({ client });
-};
 
 /**
  * Builds the prompt text from ticket data
@@ -162,51 +141,40 @@ export const launchCursorAgent = async (
     },
   };
 
-  // Create SDK with user's API key and launch agent
-  const sdk = createCursorSdk(apiKey);
+  try {
+    // Create client with user's API key and launch agent
+    const client = createCursorApiClient(apiKey);
+    const agentResponse = await client.launchAgent(launchRequest);
 
-  logger.info('Launching Cursor cloud agent', {
-    repository: launchRequest.source.repository,
-    ref: launchRequest.source.ref,
-    autoCreatePr: launchRequest.target?.autoCreatePr,
-  });
+    logger.info(`Cursor agent launched successfully for ticket ${ticketKey}`, {
+      agentId: agentResponse.id,
+      status: agentResponse.status,
+      agentUrl: agentResponse.target?.url,
+    });
 
-  const response = await sdk.createAgent({
-    body: launchRequest,
-    throwOnError: false,
-  });
+    return {
+      success: true,
+      agentId: agentResponse.id,
+      agentUrl: agentResponse.target?.url,
+    };
+  } catch (error) {
+    let errorMessage = 'Failed to launch Cursor agent';
 
-  if (response.error) {
-    const cursorError = response.error as CursorError;
-    const errorMessage =
-      cursorError.error?.message || 'Unknown Cursor API error';
-    const errorCode = cursorError.error?.code;
+    if (error instanceof CursorApiClientError) {
+      errorMessage = `Cursor API error (${error.statusCode}): ${error.message}`;
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
 
     logger.error(`Failed to launch Cursor agent for ticket ${ticketKey}`, {
       error: errorMessage,
-      code: errorCode,
-      statusCode: response.response.status,
       ticketKey,
       targetRepository,
     });
 
     return {
       success: false,
-      error: `Cursor API error (${response.response.status}): ${errorMessage}`,
+      error: errorMessage,
     };
   }
-
-  const agentResponse = response.data;
-
-  logger.info(`Cursor agent launched successfully for ticket ${ticketKey}`, {
-    agentId: agentResponse.id,
-    status: agentResponse.status,
-    agentUrl: agentResponse.target?.url,
-  });
-
-  return {
-    success: true,
-    agentId: agentResponse.id,
-    agentUrl: agentResponse.target?.url,
-  };
 };
