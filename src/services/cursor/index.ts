@@ -1,10 +1,4 @@
 export {
-  CursorApiClient,
-  CursorApiClientError,
-  createCursorApiClient,
-} from './cursorApiClient';
-
-export {
   buildPromptFromTicketData,
   launchCursorAgent,
   normalizeRepositoryUrl,

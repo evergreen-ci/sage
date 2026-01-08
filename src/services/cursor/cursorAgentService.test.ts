@@ -4,26 +4,24 @@ import {
   normalizeRepositoryUrl,
 } from './cursorAgentService';
 
-const { mockGetDecryptedApiKey, mockLaunchAgent } = vi.hoisted(() => ({
+const { mockCreateAgent, mockGetDecryptedApiKey } = vi.hoisted(() => ({
+  mockCreateAgent: vi.fn(),
   mockGetDecryptedApiKey: vi.fn(),
-  mockLaunchAgent: vi.fn(),
 }));
 
 vi.mock('@/db/repositories/userCredentialsRepository', () => ({
   getDecryptedApiKey: mockGetDecryptedApiKey,
 }));
 
-vi.mock('./cursorApiClient', () => ({
-  createCursorApiClient: vi.fn(() => ({
-    launchAgent: mockLaunchAgent,
+vi.mock('./generated/client', () => ({
+  createClient: vi.fn(() => ({})),
+  createConfig: vi.fn((config: unknown) => config),
+}));
+
+vi.mock('./generated', () => ({
+  Sdk: vi.fn().mockImplementation(() => ({
+    createAgent: mockCreateAgent,
   })),
-  CursorApiClientError: class extends Error {
-    statusCode: number;
-    constructor(message: string, statusCode: number) {
-      super(message);
-      this.statusCode = statusCode;
-    }
-  },
 }));
 
 describe('cursorAgentService', () => {
@@ -95,19 +93,23 @@ describe('cursorAgentService', () => {
   describe('launchCursorAgent', () => {
     it('launches agent successfully', async () => {
       mockGetDecryptedApiKey.mockResolvedValueOnce('decrypted-api-key');
-      mockLaunchAgent.mockResolvedValueOnce({
-        id: 'bc_abc123',
-        name: 'Test Agent',
-        status: 'CREATING',
-        source: {
-          repository: 'https://github.com/mongodb/test-repo',
-          ref: 'main',
+      mockCreateAgent.mockResolvedValueOnce({
+        data: {
+          id: 'bc_abc123',
+          name: 'Test Agent',
+          status: 'CREATING',
+          source: {
+            repository: 'https://github.com/mongodb/test-repo',
+            ref: 'main',
+          },
+          target: {
+            url: 'https://cursor.com/agents?id=bc_abc123',
+            branchName: 'cursor/proj-123',
+          },
+          createdAt: '2024-01-15T10:30:00Z',
         },
-        target: {
-          url: 'https://cursor.com/agents?id=bc_abc123',
-          branchName: 'cursor/proj-123',
-        },
-        createdAt: '2024-01-15T10:30:00Z',
+        error: null,
+        response: { status: 201 },
       });
 
       const result = await launchCursorAgent({
@@ -125,17 +127,19 @@ describe('cursorAgentService', () => {
       expect(result.agentUrl).toBe('https://cursor.com/agents?id=bc_abc123');
 
       expect(mockGetDecryptedApiKey).toHaveBeenCalledWith('user@example.com');
-      expect(mockLaunchAgent).toHaveBeenCalledWith(
+      expect(mockCreateAgent).toHaveBeenCalledWith(
         expect.objectContaining({
-          prompt: expect.objectContaining({
-            text: expect.stringContaining('PROJ-123'),
-          }),
-          source: expect.objectContaining({
-            repository: 'https://github.com/mongodb/test-repo',
-            ref: 'main',
-          }),
-          target: expect.objectContaining({
-            autoCreatePr: false,
+          body: expect.objectContaining({
+            prompt: expect.objectContaining({
+              text: expect.stringContaining('PROJ-123'),
+            }),
+            source: expect.objectContaining({
+              repository: 'https://github.com/mongodb/test-repo',
+              ref: 'main',
+            }),
+            target: expect.objectContaining({
+              autoCreatePr: false,
+            }),
           }),
         })
       );
@@ -156,7 +160,7 @@ describe('cursorAgentService', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('No API key found');
-      expect(mockLaunchAgent).not.toHaveBeenCalled();
+      expect(mockCreateAgent).not.toHaveBeenCalled();
     });
 
     it('returns error when no target ref provided', async () => {
@@ -173,12 +177,16 @@ describe('cursorAgentService', () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain('No target ref provided');
       expect(mockGetDecryptedApiKey).not.toHaveBeenCalled();
-      expect(mockLaunchAgent).not.toHaveBeenCalled();
+      expect(mockCreateAgent).not.toHaveBeenCalled();
     });
 
     it('returns error when Cursor API fails', async () => {
       mockGetDecryptedApiKey.mockResolvedValueOnce('decrypted-api-key');
-      mockLaunchAgent.mockRejectedValueOnce(new Error('API rate limited'));
+      mockCreateAgent.mockResolvedValueOnce({
+        data: null,
+        error: { error: { message: 'API rate limited', code: 'RATE_LIMIT' } },
+        response: { status: 429 },
+      });
 
       const result = await launchCursorAgent({
         ticketKey: 'PROJ-123',
@@ -196,18 +204,22 @@ describe('cursorAgentService', () => {
 
     it('normalizes repository URL before launching', async () => {
       mockGetDecryptedApiKey.mockResolvedValueOnce('decrypted-api-key');
-      mockLaunchAgent.mockResolvedValueOnce({
-        id: 'bc_xyz789',
-        name: 'Test Agent',
-        status: 'CREATING',
-        source: {
-          repository: 'https://github.com/org/repo',
-          ref: 'main',
+      mockCreateAgent.mockResolvedValueOnce({
+        data: {
+          id: 'bc_xyz789',
+          name: 'Test Agent',
+          status: 'CREATING',
+          source: {
+            repository: 'https://github.com/org/repo',
+            ref: 'main',
+          },
+          target: {
+            url: 'https://cursor.com/agents?id=bc_xyz789',
+          },
+          createdAt: '2024-01-15T10:30:00Z',
         },
-        target: {
-          url: 'https://cursor.com/agents?id=bc_xyz789',
-        },
-        createdAt: '2024-01-15T10:30:00Z',
+        error: null,
+        response: { status: 201 },
       });
 
       await launchCursorAgent({
@@ -220,10 +232,12 @@ describe('cursorAgentService', () => {
         autoCreatePr: true,
       });
 
-      expect(mockLaunchAgent).toHaveBeenCalledWith(
+      expect(mockCreateAgent).toHaveBeenCalledWith(
         expect.objectContaining({
-          source: expect.objectContaining({
-            repository: 'https://github.com/org/repo', // Should be normalized
+          body: expect.objectContaining({
+            source: expect.objectContaining({
+              repository: 'https://github.com/org/repo', // Should be normalized
+            }),
           }),
         })
       );
