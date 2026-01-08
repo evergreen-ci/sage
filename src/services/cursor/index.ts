@@ -10,31 +10,17 @@ export {
   normalizeRepositoryUrl,
 } from './cursorAgentService';
 
-// Re-export schemas
-export {
-  CursorAgentStatus,
-  cursorAgentResponseSchema,
-  cursorAgentSourceSchema,
-  cursorAgentTargetSchema,
-  cursorApiErrorSchema,
-  cursorPromptImageSchema,
-  cursorPromptSchema,
-  cursorWebhookConfigSchema,
-  launchAgentInputSchema,
-  launchAgentRequestSchema,
-  launchAgentResultSchema,
-} from './schemas';
+// Re-export internal schemas
+export { launchAgentInputSchema, launchAgentResultSchema } from './schemas';
 
-// Re-export types
+// Re-export internal types
+export type { LaunchAgentInput, LaunchAgentResult } from './types';
+
+// Re-export generated Cursor API types
 export type {
-  CursorAgentResponse,
-  CursorAgentSource,
-  CursorAgentTarget,
-  CursorApiError,
-  CursorPrompt,
-  CursorPromptImage,
-  CursorWebhookConfig,
-  LaunchAgentInput,
-  LaunchAgentRequest,
-  LaunchAgentResult,
-} from './types';
+  CreateAgentRequest,
+  CreateAgentResponse,
+  Error as CursorApiError,
+  GetAgentResponse,
+  ListAgentsResponse,
+} from './generated';

@@ -1,9 +1,18 @@
 import { CursorApiClient, CursorApiClientError } from './cursorApiClient';
-import { CursorAgentStatus } from './schemas';
 
-// Mock global fetch
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
+// Mock the SDK's createAgent method
+const mockCreateAgent = vi.fn();
+
+vi.mock('./generated/client', () => ({
+  createClient: vi.fn(() => ({})),
+  createConfig: vi.fn((config: unknown) => config),
+}));
+
+vi.mock('./generated', () => ({
+  Sdk: vi.fn().mockImplementation(() => ({
+    createAgent: mockCreateAgent,
+  })),
+}));
 
 describe('CursorApiClient', () => {
   let client: CursorApiClient;
@@ -15,26 +24,18 @@ describe('CursorApiClient', () => {
   });
 
   describe('constructor', () => {
-    it('uses default base URL', () => {
+    it('creates client instance', () => {
       const defaultClient = new CursorApiClient(testApiKey);
       expect(defaultClient).toBeDefined();
-    });
-
-    it('accepts custom base URL', () => {
-      const customClient = new CursorApiClient(
-        testApiKey,
-        'https://custom.api.com'
-      );
-      expect(customClient).toBeDefined();
     });
   });
 
   describe('launchAgent', () => {
-    it('sends correct request to launch an agent', async () => {
+    it('returns agent response on success', async () => {
       const mockResponse = {
         id: 'bc_abc123',
         name: 'Test Agent',
-        status: CursorAgentStatus.Creating,
+        status: 'CREATING' as const,
         source: {
           repository: 'https://github.com/test-org/test-repo',
           ref: 'main',
@@ -49,9 +50,10 @@ describe('CursorApiClient', () => {
         createdAt: '2024-01-15T10:30:00Z',
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
+      mockCreateAgent.mockResolvedValueOnce({
+        data: mockResponse,
+        error: null,
+        response: { status: 201 },
       });
 
       const result = await client.launchAgent({
@@ -65,57 +67,16 @@ describe('CursorApiClient', () => {
         },
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.cursor.com/v0/agents',
-        expect.objectContaining({
-          method: 'POST',
-          headers: expect.objectContaining({
-            Authorization: expect.stringMatching(/^Basic /),
-            'Content-Type': 'application/json',
-          }),
-          body: expect.any(String),
-        })
-      );
-
-      const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
-      expect(callBody.prompt.text).toBe('Test prompt');
-      expect(callBody.source.repository).toBe(
-        'https://github.com/test-org/test-repo'
-      );
-
       expect(result.id).toBe('bc_abc123');
-      expect(result.status).toBe(CursorAgentStatus.Creating);
+      expect(result.status).toBe('CREATING');
       expect(result.target?.url).toBe('https://cursor.com/agents?id=bc_abc123');
     });
 
-    it('uses Basic auth with API key and empty password', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            id: 'bc_123',
-            status: CursorAgentStatus.Creating,
-            source: { repository: 'https://github.com/org/repo' },
-            createdAt: '2024-01-15T10:30:00Z',
-          }),
-      });
-
-      await client.launchAgent({
-        prompt: { text: 'Test' },
-        source: { repository: 'https://github.com/org/repo' },
-      });
-
-      const authHeader = mockFetch.mock.calls[0][1].headers.Authorization;
-      const expectedAuth = Buffer.from(`${testApiKey}:`).toString('base64');
-      expect(authHeader).toBe(`Basic ${expectedAuth}`);
-    });
-
     it('throws CursorApiClientError on API failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        statusText: 'Unauthorized',
-        text: () => Promise.resolve('{"error": "Invalid API key"}'),
+      mockCreateAgent.mockResolvedValueOnce({
+        data: null,
+        error: { error: { message: 'Invalid API key', code: 'UNAUTHORIZED' } },
+        response: { status: 401 },
       });
 
       await expect(
@@ -127,11 +88,12 @@ describe('CursorApiClient', () => {
     });
 
     it('includes status code in error', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 403,
-        statusText: 'Forbidden',
-        text: () => Promise.resolve('{"error": "Insufficient permissions"}'),
+      mockCreateAgent.mockResolvedValueOnce({
+        data: null,
+        error: {
+          error: { message: 'Insufficient permissions', code: 'FORBIDDEN' },
+        },
+        response: { status: 403 },
       });
 
       try {
@@ -145,6 +107,29 @@ describe('CursorApiClient', () => {
         expect((error as CursorApiClientError).statusCode).toBe(403);
         expect((error as CursorApiClientError).message).toBe(
           'Insufficient permissions'
+        );
+        expect((error as CursorApiClientError).code).toBe('FORBIDDEN');
+      }
+    });
+
+    it('handles error response without message', async () => {
+      mockCreateAgent.mockResolvedValueOnce({
+        data: null,
+        error: {},
+        response: { status: 500 },
+      });
+
+      try {
+        await client.launchAgent({
+          prompt: { text: 'Test' },
+          source: { repository: 'https://github.com/org/repo' },
+        });
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(CursorApiClientError);
+        expect((error as CursorApiClientError).statusCode).toBe(500);
+        expect((error as CursorApiClientError).message).toBe(
+          'Unknown Cursor API error'
         );
       }
     });

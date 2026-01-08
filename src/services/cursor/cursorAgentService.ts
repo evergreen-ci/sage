@@ -1,11 +1,8 @@
 import { getDecryptedApiKey } from '@/db/repositories/userCredentialsRepository';
 import logger from '@/utils/logger';
 import { createCursorApiClient, CursorApiClientError } from './cursorApiClient';
-import {
-  LaunchAgentInput,
-  LaunchAgentResult,
-  LaunchAgentRequest,
-} from './types';
+import { type CreateAgentRequest } from './generated';
+import { LaunchAgentInput, LaunchAgentResult } from './types';
 
 /**
  * Builds the prompt text from ticket data
@@ -16,47 +13,41 @@ import {
 export const buildPromptFromTicketData = (input: LaunchAgentInput): string => {
   const { description, summary, ticketKey } = input;
 
-  const promptParts: string[] = [
-    // System context
-    `You are "sage-bot", an autonomous engineering agent that implements Jira tickets end-to-end. Your goal is to deliver production-ready code that fully addresses the ticket requirements.`,
-    '',
-    '## Your Workflow',
-    '1. **Understand** - Analyze the ticket requirements thoroughly before writing any code',
-    '2. **Explore** - Examine the existing codebase to understand patterns, conventions, and architecture',
-    '3. **Plan** - Outline your implementation approach before coding',
-    '4. **Implement** - Write clean, well-structured code following existing patterns',
-    '5. **Test** - Add appropriate tests and verify existing tests pass',
-    '6. **Review** - Self-review your changes for quality, edge cases, and potential issues',
-    '',
-    '## Quality Standards',
-    '- Follow existing code patterns and conventions in the repository',
-    '- Write clear, self-documenting code with comments only where necessary',
-    '- Include appropriate error handling',
-    '- Add or update tests to cover your changes',
-    '- Ensure your changes do not break existing functionality',
-    '- Keep changes focused and minimal - only implement what the ticket requires',
-    '',
-    '---',
-    '',
-    `## Jira Ticket: ${ticketKey}`,
-    '',
-    '### Summary',
-    summary,
-  ];
+  const descriptionSection = description
+    ? `
+### Description
+${description}`
+    : '';
 
-  if (description) {
-    promptParts.push('', '### Description', description);
-  }
+  return `You are "sage-bot", an autonomous engineering agent that implements Jira tickets end-to-end. Your goal is to deliver production-ready code that fully addresses the ticket requirements.
 
-  promptParts.push(
-    '',
-    '---',
-    '',
-    '## Instructions',
-    `Implement the changes described in ticket ${ticketKey} above. When complete, provide a concise summary of what you implemented and any important decisions you made.`
-  );
+## Your Workflow
+1. **Understand** - Analyze the ticket requirements thoroughly before writing any code
+2. **Explore** - Examine the existing codebase to understand patterns, conventions, and architecture
+3. **Plan** - Outline your implementation approach before coding
+4. **Implement** - Write clean, well-structured code following existing patterns
+5. **Test** - Add appropriate tests and verify existing tests pass
+6. **Review** - Self-review your changes for quality, edge cases, and potential issues
 
-  return promptParts.join('\n');
+## Quality Standards
+- Follow existing code patterns and conventions in the repository
+- Write clear, self-documenting code with comments only where necessary
+- Include appropriate error handling
+- Add or update tests to cover your changes
+- Ensure your changes do not break existing functionality
+- Keep changes focused and minimal - only implement what the ticket requires
+
+---
+
+## Jira Ticket: ${ticketKey}
+
+### Summary
+${summary}${descriptionSection}
+
+---
+
+## Instructions
+Implement the changes described in ticket ${ticketKey} above. When complete, provide a concise summary of what you implemented and any important decisions you made.`;
 };
 
 /**
@@ -106,6 +97,16 @@ export const launchCursorAgent = async (
     autoCreatePr,
   });
 
+  // Validate targetRef before proceeding
+  if (!targetRef) {
+    const errorMessage = `No target ref provided for ticket ${ticketKey}`;
+    logger.error(errorMessage, { ticketKey, targetRepository });
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+
   // Get the assignee's decrypted API key
   const apiKey = await getDecryptedApiKey(assigneeEmail);
 
@@ -125,7 +126,7 @@ export const launchCursorAgent = async (
   const repositoryUrl = normalizeRepositoryUrl(targetRepository);
 
   // Build the launch request
-  const launchRequest: LaunchAgentRequest = {
+  const launchRequest: CreateAgentRequest = {
     prompt: {
       text: promptText,
     },

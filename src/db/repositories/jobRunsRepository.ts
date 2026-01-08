@@ -106,7 +106,14 @@ export const updateJobRun = async (
   );
 
   if (result) {
-    logger.info(`Updated job run ${objectId.toString()}`, updates);
+    const updatedFieldNames = Object.keys(updates);
+    logger.info(
+      `Updated job run ${objectId.toString()} with fields: ${updatedFieldNames.join(', ')}`,
+      {
+        jobRunId: objectId.toString(),
+        updates,
+      }
+    );
   }
 
   return result;

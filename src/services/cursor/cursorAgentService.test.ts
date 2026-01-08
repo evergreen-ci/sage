@@ -3,7 +3,6 @@ import {
   launchCursorAgent,
   normalizeRepositoryUrl,
 } from './cursorAgentService';
-import { CursorAgentStatus } from './schemas';
 
 const { mockGetDecryptedApiKey, mockLaunchAgent } = vi.hoisted(() => ({
   mockGetDecryptedApiKey: vi.fn(),
@@ -98,7 +97,8 @@ describe('cursorAgentService', () => {
       mockGetDecryptedApiKey.mockResolvedValueOnce('decrypted-api-key');
       mockLaunchAgent.mockResolvedValueOnce({
         id: 'bc_abc123',
-        status: CursorAgentStatus.Creating,
+        name: 'Test Agent',
+        status: 'CREATING',
         source: {
           repository: 'https://github.com/mongodb/test-repo',
           ref: 'main',
@@ -159,6 +159,23 @@ describe('cursorAgentService', () => {
       expect(mockLaunchAgent).not.toHaveBeenCalled();
     });
 
+    it('returns error when no target ref provided', async () => {
+      const result = await launchCursorAgent({
+        ticketKey: 'PROJ-123',
+        summary: 'Add feature',
+        description: null,
+        targetRepository: 'mongodb/test-repo',
+        targetRef: '', // Empty target ref
+        assigneeEmail: 'user@example.com',
+        autoCreatePr: false,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('No target ref provided');
+      expect(mockGetDecryptedApiKey).not.toHaveBeenCalled();
+      expect(mockLaunchAgent).not.toHaveBeenCalled();
+    });
+
     it('returns error when Cursor API fails', async () => {
       mockGetDecryptedApiKey.mockResolvedValueOnce('decrypted-api-key');
       mockLaunchAgent.mockRejectedValueOnce(new Error('API rate limited'));
@@ -181,10 +198,14 @@ describe('cursorAgentService', () => {
       mockGetDecryptedApiKey.mockResolvedValueOnce('decrypted-api-key');
       mockLaunchAgent.mockResolvedValueOnce({
         id: 'bc_xyz789',
-        status: CursorAgentStatus.Creating,
+        name: 'Test Agent',
+        status: 'CREATING',
         source: {
           repository: 'https://github.com/org/repo',
           ref: 'main',
+        },
+        target: {
+          url: 'https://cursor.com/agents?id=bc_xyz789',
         },
         createdAt: '2024-01-15T10:30:00Z',
       });

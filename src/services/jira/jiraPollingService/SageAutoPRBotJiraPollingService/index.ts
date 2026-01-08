@@ -130,9 +130,38 @@ export const createSageAutoPRBotJiraPollingService = (
         }
 
         // Resolve the ref: use inline ref if provided, otherwise get from config
-        const targetRef =
-          ticketData.targetRef ||
-          getDefaultBranch(ticketData.targetRepository!)!;
+        let { targetRef } = ticketData;
+        if (!targetRef) {
+          const defaultBranch = getDefaultBranch(ticketData.targetRepository!);
+
+          if (!defaultBranch) {
+            const errorMessage = `No default branch configured for repository ${ticketData.targetRepository}`;
+
+            logger.error(
+              `Failed to determine default branch for ticket ${ticketKey}`,
+              {
+                jobRunId: jobRun._id?.toString(),
+                targetRepository: ticketData.targetRepository,
+              }
+            );
+
+            await updateJobRun(jobRun._id!, {
+              status: JobRunStatus.Failed,
+              errorMessage,
+            });
+
+            const comment = formatAgentLaunchFailedPanel(errorMessage);
+            await jiraClient.addComment(ticketKey, comment);
+
+            return {
+              ticketKey,
+              success: false,
+              error: errorMessage,
+            };
+          }
+
+          targetRef = defaultBranch;
+        }
 
         // Launch Cursor agent for eligible tickets
         const launchResult = await launchCursorAgent({
@@ -170,9 +199,36 @@ export const createSageAutoPRBotJiraPollingService = (
           };
         }
 
+        // Ensure agentId is present when launch succeeded
+        if (!launchResult.agentId) {
+          const errorMessage =
+            'Agent launch reported success but did not return an agentId';
+
+          logger.error(
+            `Agent launch returned no agentId for ticket ${ticketKey}`,
+            {
+              jobRunId: jobRun._id?.toString(),
+            }
+          );
+
+          await updateJobRun(jobRun._id!, {
+            status: JobRunStatus.Failed,
+            errorMessage,
+          });
+
+          const comment = formatAgentLaunchFailedPanel(errorMessage);
+          await jiraClient.addComment(ticketKey, comment);
+
+          return {
+            ticketKey,
+            success: false,
+            error: errorMessage,
+          };
+        }
+
         // Update job run with agent ID and set status to Running
         await updateJobRun(jobRun._id!, {
-          cursorAgentId: launchResult.agentId!,
+          cursorAgentId: launchResult.agentId,
           status: JobRunStatus.Running,
         });
 
