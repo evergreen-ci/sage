@@ -28,7 +28,10 @@ const globalIgnores = {
     'vitest.config.ts',
     'tsconfig.json',
     'graphql.config.ts',
+    'openapi-ts.config.ts',
     'evergreen/**',
+    'scripts/**',
+    'src/services/cursor/generated/**',
   ],
 };
 

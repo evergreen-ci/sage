@@ -37,6 +37,7 @@ buildvariants:
     tasks:
       - name: compile
       - name: lint
+      - name: check-generated-cursor-client
       - name: test
       - name: e2e
       - name: check-mastra-dev-startup
@@ -63,6 +64,9 @@ tasks:
   - name: lint
     commands:
       - func: yarn-lint
+  - name: check-generated-cursor-client
+    commands:
+      - func: check-generated-cursor-client
   - name: test
     commands:
       - func: yarn-test
@@ -326,6 +330,15 @@ functions:
       script: |
         ${PREPARE_SHELL}
         yarn eslint:strict
+
+  check-generated-cursor-client:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        ./scripts/check-generated-cursor-client.sh
 
   yarn-start:
     command: shell.exec

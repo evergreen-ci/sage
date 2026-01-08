@@ -62,40 +62,41 @@ export const createJobRun = async (
 };
 
 /**
- * Updates a job run's status and related fields
- * Handles all status transitions: running, completed, failed, cancelled
+ * Fields that can be updated on a job run
+ */
+export type JobRunUpdate = Partial<
+  Pick<JobRun, 'status' | 'cursorAgentId' | 'errorMessage'>
+>;
+
+/**
+ * Updates a job run with the provided fields
+ * Handles status transitions with appropriate timestamps (startedAt, completedAt)
  * @param id - The job run ID (string or ObjectId)
- * @param status - The new status to set
- * @param errorMessage - Optional error message for failed status
+ * @param updates - The fields to update
  * @returns The updated job run document, or null if not found
  */
-export const updateJobRunStatus = async (
+export const updateJobRun = async (
   id: string | ObjectId,
-  status: JobRunStatus,
-  errorMessage?: string
+  updates: JobRunUpdate
 ): Promise<JobRun | null> => {
   const collection = getCollection<JobRun>(COLLECTION_NAME);
   const objectId = typeof id === 'string' ? new ObjectId(id) : id;
   const now = new Date();
 
   const updateFields: Partial<JobRun> = {
-    status,
+    ...updates,
     updatedAt: now,
   };
 
   // Set appropriate timestamps based on status
-  if (status === JobRunStatus.Running) {
+  if (updates.status === JobRunStatus.Running) {
     updateFields.startedAt = now;
   } else if (
-    status === JobRunStatus.Completed ||
-    status === JobRunStatus.Failed ||
-    status === JobRunStatus.Cancelled
+    updates.status === JobRunStatus.Completed ||
+    updates.status === JobRunStatus.Failed ||
+    updates.status === JobRunStatus.Cancelled
   ) {
     updateFields.completedAt = now;
-  }
-
-  if (errorMessage) {
-    updateFields.errorMessage = errorMessage;
   }
 
   const result = await collection.findOneAndUpdate(
@@ -105,7 +106,14 @@ export const updateJobRunStatus = async (
   );
 
   if (result) {
-    logger.info(`Updated job run ${objectId.toString()} to status ${status}`);
+    const updatedFieldNames = Object.keys(updates);
+    logger.info(
+      `Updated job run ${objectId.toString()} with fields: ${updatedFieldNames.join(', ')}`,
+      {
+        jobRunId: objectId.toString(),
+        updates,
+      }
+    );
   }
 
   return result;

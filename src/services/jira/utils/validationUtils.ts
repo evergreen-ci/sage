@@ -1,8 +1,12 @@
 import { credentialsExist } from '@/db/repositories/userCredentialsRepository';
+import { isRepositoryConfigured } from '@/services/repositories';
 import { ParsedTicketData, ValidationResult } from '../types';
 
 /**
- * Validate that a ticket has a repository label
+ * Validate that a ticket has a repository label and proper ref configuration
+ * Checks:
+ * - Has a repo:<org>/<repo> label (with optional `@ref`)
+ * - If no inline ref, repository must be configured in repositories.yaml
  * @param ticketData - The parsed ticket data to validate
  * @returns Error message if invalid, null if valid
  */
@@ -10,8 +14,19 @@ export const validateRepositoryLabel = (
   ticketData: ParsedTicketData
 ): string | null => {
   if (!ticketData.targetRepository) {
-    return 'Missing repository label. Please add a label in the format: repo:<org>/<repo_name>';
+    return 'Missing repository label. Please add a label in the format: repo:<org>/<repo_name> or repo:<org>/<repo_name>@<branch>';
   }
+
+  if (!ticketData.targetRef) {
+    if (!isRepositoryConfigured(ticketData.targetRepository)) {
+      return (
+        `Repository "${ticketData.targetRepository}" is not configured. ` +
+        'Either add it to the repository config or specify a branch inline: ' +
+        `repo:${ticketData.targetRepository}@<branch>`
+      );
+    }
+  }
+
   return null;
 };
 

@@ -1,3 +1,7 @@
 # Run lint-staged on staged files
 echo "Running lint-staged checks..."
 npx lint-staged
+
+# Check if generated Cursor client is in sync with OpenAPI spec
+echo "Checking generated Cursor API client..."
+./scripts/check-generated-cursor-client.sh
