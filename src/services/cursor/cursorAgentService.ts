@@ -107,7 +107,6 @@ export const launchCursorAgent = async (
     };
   }
 
-
   // Get the assignee's decrypted API key
   const apiKey = await getDecryptedApiKey(assigneeEmail);
 
