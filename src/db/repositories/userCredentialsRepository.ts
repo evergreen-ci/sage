@@ -65,12 +65,15 @@ export const upsertUserCredentials = async (
   const now = new Date();
 
   const encryptedApiKey = encrypt(input.cursorApiKey);
+  // Store last 4 characters of the key for display purposes
+  const keyLastFour = input.cursorApiKey.slice(-4);
 
   const result = await collection.findOneAndUpdate(
     { email: normalizedEmail },
     {
       $set: {
         cursorApiKey: encryptedApiKey,
+        keyLastFour,
         updatedAt: now,
       },
       $setOnInsert: {
