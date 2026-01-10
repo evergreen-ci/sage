@@ -64,7 +64,7 @@ const getTaskTestsInputSchema = z.object({
   pageNum: z.number().optional(),
   limitNum: z.number().optional(),
   statusList: z.array(StatusEnum).default([]).optional(),
-  groupId: z.string().optional(),
+  groupId: z.string().optional().nullable(),
   sort: z.array(TestSortOptionsSchema).optional(),
   testName: z.string().optional(),
 });

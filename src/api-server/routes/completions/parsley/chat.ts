@@ -1,4 +1,4 @@
-import { toAISdkStream } from '@mastra/ai-sdk';
+import { toAISdkFormat } from '@mastra/ai-sdk';
 import { AgentMemoryOption } from '@mastra/core/agent';
 import { trace } from '@opentelemetry/api';
 import {
@@ -99,10 +99,14 @@ const chatRoute = async (
     });
     if (runResult.status === 'success') {
       requestContext.set('logURL', runResult.result);
-    } else if (runResult.status === 'failed') {
+    } else {
       logger.error('Error in get log file url workflow', {
         requestId: res.locals.requestId,
-        error: runResult.error,
+        status: runResult.status,
+        error:
+          runResult.status === 'failed'
+            ? runResult.error.message
+            : `Non Error Status: ${runResult.status}`,
       });
     }
   }
@@ -198,7 +202,7 @@ const chatRoute = async (
     pipeUIMessageStreamToResponse({
       response: res,
       stream: createAISdkStreamWithMetadata(
-        toAISdkStream(stream, { from: 'agent' })!,
+        toAISdkFormat(stream, { from: 'agent' })!,
         {
           spanId: stream.traceId,
         }
