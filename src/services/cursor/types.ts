@@ -1,15 +1,25 @@
-import { z } from 'zod';
-import { launchAgentInputSchema, launchAgentResultSchema } from './schemas';
-
-// Re-export internal schemas
-export { launchAgentInputSchema, launchAgentResultSchema } from './schemas';
+/**
+ * Input to launch a Cursor agent from ticket data
+ * This is our internal type for passing ticket data to the launch function
+ */
+export interface LaunchAgentInput {
+  ticketKey: string;
+  summary: string;
+  description: string | null;
+  targetRepository: string;
+  /** Branch/ref to use - either from inline label or from config lookup */
+  targetRef: string;
+  assigneeEmail: string;
+  autoCreatePr?: boolean;
+}
 
 /**
- * TypeScript type for input to launch a Cursor agent from ticket data
+ * Result of launching a Cursor agent
+ * This is our internal type for the launch result
  */
-export type LaunchAgentInput = z.infer<typeof launchAgentInputSchema>;
-
-/**
- * TypeScript type for the result of launching a Cursor agent
- */
-export type LaunchAgentResult = z.infer<typeof launchAgentResultSchema>;
+export interface LaunchAgentResult {
+  success: boolean;
+  agentId?: string;
+  agentUrl?: string;
+  error?: string;
+}

@@ -10,9 +10,6 @@ export {
   normalizeRepositoryUrl,
 } from './cursorAgentService';
 
-// Re-export internal schemas
-export { launchAgentInputSchema, launchAgentResultSchema } from './schemas';
-
 // Re-export internal types
 export type { LaunchAgentInput, LaunchAgentResult } from './types';
 
@@ -23,4 +20,4 @@ export type {
   Error as CursorApiError,
   GetAgentResponse,
   ListAgentsResponse,
-} from './generated';
+} from '@/generated/cursor-api';

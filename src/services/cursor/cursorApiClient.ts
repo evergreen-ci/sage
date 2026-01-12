@@ -1,11 +1,11 @@
-import logger from '@/utils/logger';
 import {
   Sdk,
   type CreateAgentRequest,
   type CreateAgentResponse,
   type Error as CursorError,
-} from './generated';
-import { createClient, createConfig } from './generated/client';
+} from '@/generated/cursor-api';
+import { createClient, createConfig } from '@/generated/cursor-api/client';
+import logger from '@/utils/logger';
 
 /**
  * Error class for Cursor API errors

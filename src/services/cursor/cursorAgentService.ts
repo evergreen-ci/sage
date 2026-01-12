@@ -1,7 +1,7 @@
 import { getDecryptedApiKey } from '@/db/repositories/userCredentialsRepository';
+import { type CreateAgentRequest } from '@/generated/cursor-api';
 import logger from '@/utils/logger';
 import { createCursorApiClient, CursorApiClientError } from './cursorApiClient';
-import { type CreateAgentRequest } from './generated';
 import { LaunchAgentInput, LaunchAgentResult } from './types';
 
 /**

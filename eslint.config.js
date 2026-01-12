@@ -31,7 +31,7 @@ const globalIgnores = {
     'openapi-ts.config.ts',
     'evergreen/**',
     'scripts/**',
-    'src/services/cursor/generated/**',
+    'src/generated/**',
   ],
 };
 

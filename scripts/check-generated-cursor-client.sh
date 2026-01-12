@@ -8,7 +8,7 @@ echo "Regenerating Cursor API client from OpenAPI spec..."
 yarn generate-cursor-client
 
 echo "Checking for changes in generated files..."
-if ! git diff --exit-code src/services/cursor/generated/; then
+if ! git diff --exit-code src/generated/cursor-api/; then
   echo ""
   echo "ERROR: The generated Cursor API client is out of sync with the OpenAPI spec."
   echo ""
