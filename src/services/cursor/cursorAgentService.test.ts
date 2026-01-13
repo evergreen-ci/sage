@@ -155,7 +155,7 @@ describe('cursorAgentService', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('No API key found');
+      expect(result.error).toContain('No Cursor API key found');
       expect(mockLaunchAgent).not.toHaveBeenCalled();
     });
 
