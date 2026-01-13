@@ -95,7 +95,7 @@ describe('POST /pr-bot/user/cursor-key', () => {
       .send({});
 
     expect(response.status).toBe(400);
-    expect(response.body.error).toBe('Invalid request body');
+    expect(response.body.message).toBe('Invalid request body');
   });
 
   it('should return 400 for empty API key', async () => {
@@ -105,7 +105,63 @@ describe('POST /pr-bot/user/cursor-key', () => {
       .send({ apiKey: '' });
 
     expect(response.status).toBe(400);
-    expect(response.body.error).toBe('Invalid request body');
+    expect(response.body.message).toBe('Invalid request body');
+  });
+});
+
+describe('GET /pr-bot/user/cursor-key', () => {
+  afterEach(async () => {
+    await cleanupTestData();
+  });
+
+  it('should return hasKey: false when no key exists', async () => {
+    const response = await request(app)
+      .get('/pr-bot/user/cursor-key')
+      .set('x-kanopy-internal-authorization', authHeader);
+
+    expect(response.status).toBe(200);
+    expect(response.body.hasKey).toBe(false);
+    expect(response.body.keyLastFour).toBeUndefined();
+  });
+
+  it('should return key info when a key exists', async () => {
+    // First create a key
+    await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set('x-kanopy-internal-authorization', authHeader)
+      .send({ apiKey: 'cursor_api_key_abcd' });
+
+    const response = await request(app)
+      .get('/pr-bot/user/cursor-key')
+      .set('x-kanopy-internal-authorization', authHeader);
+
+    expect(response.status).toBe(200);
+    expect(response.body.hasKey).toBe(true);
+    expect(response.body.keyLastFour).toBe('abcd');
+    expect(response.body.createdAt).toBeDefined();
+    expect(response.body.updatedAt).toBeDefined();
+  });
+
+  it('should return updated info after key update', async () => {
+    // Create initial key
+    await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set('x-kanopy-internal-authorization', authHeader)
+      .send({ apiKey: 'first_key_1111' });
+
+    // Update the key
+    await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set('x-kanopy-internal-authorization', authHeader)
+      .send({ apiKey: 'second_key_2222' });
+
+    const response = await request(app)
+      .get('/pr-bot/user/cursor-key')
+      .set('x-kanopy-internal-authorization', authHeader);
+
+    expect(response.status).toBe(200);
+    expect(response.body.hasKey).toBe(true);
+    expect(response.body.keyLastFour).toBe('2222');
   });
 });
 
@@ -150,6 +206,6 @@ describe('DELETE /pr-bot/user/cursor-key', () => {
       .set('x-kanopy-internal-authorization', authHeader);
 
     expect(response.status).toBe(404);
-    expect(response.body.error).toBe('No API key found');
+    expect(response.body.message).toBe('No API key found');
   });
 });
