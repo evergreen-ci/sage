@@ -111,7 +111,7 @@ export const launchCursorAgent = async (
   const apiKey = await getDecryptedApiKey(assigneeEmail);
 
   if (!apiKey) {
-    const errorMessage = `No API key found for assignee: ${assigneeEmail}`;
+    const errorMessage = `No Cursor API key found for assignee: ${assigneeEmail}`;
     logger.error(errorMessage, { ticketKey, assigneeEmail });
     return {
       success: false,
