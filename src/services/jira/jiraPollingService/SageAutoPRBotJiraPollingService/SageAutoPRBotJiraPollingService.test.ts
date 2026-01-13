@@ -12,9 +12,12 @@ const {
   mockDisconnect,
   mockFindJobRunByTicketKey,
   mockFindLabelAddedBy,
+  mockGetDefaultBranch,
+  mockIsRepositoryConfigured,
+  mockLaunchCursorAgent,
   mockRemoveLabel,
   mockSearchIssues,
-  mockUpdateJobRunStatus,
+  mockUpdateJobRun,
 } = vi.hoisted(() => ({
   mockSearchIssues: vi.fn(),
   mockRemoveLabel: vi.fn(),
@@ -23,9 +26,12 @@ const {
   mockFindJobRunByTicketKey: vi.fn(),
   mockCredentialsExist: vi.fn(),
   mockAddComment: vi.fn(),
-  mockUpdateJobRunStatus: vi.fn(),
+  mockUpdateJobRun: vi.fn(),
   mockConnect: vi.fn(),
   mockDisconnect: vi.fn(),
+  mockLaunchCursorAgent: vi.fn(),
+  mockGetDefaultBranch: vi.fn(),
+  mockIsRepositoryConfigured: vi.fn(),
 }));
 
 vi.mock('@/services/jira/jiraClient', () => ({
@@ -41,7 +47,7 @@ vi.mock('@/services/jira/jiraClient', () => ({
 vi.mock('@/db/repositories/jobRunsRepository', () => ({
   createJobRun: mockCreateJobRun,
   findJobRunByTicketKey: mockFindJobRunByTicketKey,
-  updateJobRunStatus: mockUpdateJobRunStatus,
+  updateJobRun: mockUpdateJobRun,
 }));
 
 vi.mock('@/db/repositories/userCredentialsRepository', () => ({
@@ -53,6 +59,15 @@ vi.mock('@/db/connection', () => ({
     connect: mockConnect,
     disconnect: mockDisconnect,
   },
+}));
+
+vi.mock('@/services/cursor', () => ({
+  launchCursorAgent: mockLaunchCursorAgent,
+}));
+
+vi.mock('@/services/repositories', () => ({
+  getDefaultBranch: mockGetDefaultBranch,
+  isRepositoryConfigured: mockIsRepositoryConfigured,
 }));
 
 describe('SageAutoPRBotJiraPollingService', () => {
@@ -67,6 +82,15 @@ describe('SageAutoPRBotJiraPollingService', () => {
       findLabelAddedBy: mockFindLabelAddedBy,
     };
     service = createSageAutoPRBotJiraPollingService(mockJiraClient as any);
+
+    // Default mocks for successful flow
+    mockIsRepositoryConfigured.mockReturnValue(true);
+    mockGetDefaultBranch.mockReturnValue('main');
+    mockLaunchCursorAgent.mockResolvedValue({
+      success: true,
+      agentId: 'agent-123',
+      agentUrl: 'https://cursor.sh/agent/123',
+    });
   });
 
   describe('poll()', () => {
@@ -87,7 +111,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
       );
     });
 
-    it('processes tickets and creates job runs', async () => {
+    it('processes tickets, creates job runs, and launches Cursor agents', async () => {
       const mockIssue = {
         key: 'DEVPROD-123',
         fields: {
@@ -133,6 +157,29 @@ describe('SageAutoPRBotJiraPollingService', () => {
           targetRepository: 'mongodb/mongo-tools',
         },
       });
+
+      // Verify Cursor agent was launched
+      expect(mockLaunchCursorAgent).toHaveBeenCalledWith({
+        ticketKey: 'DEVPROD-123',
+        summary: 'Test issue',
+        description: 'Test description',
+        targetRepository: 'mongodb/mongo-tools',
+        targetRef: 'main',
+        assigneeEmail: 'user@example.com',
+        autoCreatePr: true,
+      });
+
+      // Verify job run was updated with agent ID and status
+      expect(mockUpdateJobRun).toHaveBeenCalledWith(mockJobId, {
+        cursorAgentId: 'agent-123',
+        status: JobRunStatus.Running,
+      });
+
+      // Verify success comment was posted
+      expect(mockAddComment).toHaveBeenCalledWith(
+        'DEVPROD-123',
+        expect.stringContaining('Sage Bot Agent Launched')
+      );
     });
 
     it('skips tickets with active (pending/running) job runs', async () => {
@@ -238,7 +285,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
         jiraTicketKey: 'DEVPROD-789',
         status: JobRunStatus.Pending,
       });
-      mockUpdateJobRunStatus.mockResolvedValueOnce(undefined);
+      mockUpdateJobRun.mockResolvedValueOnce(undefined);
       mockAddComment.mockResolvedValueOnce(undefined);
 
       const result = await service.poll();
@@ -354,7 +401,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
       });
       // Assignee does NOT have credentials
       mockCredentialsExist.mockResolvedValueOnce(false);
-      mockUpdateJobRunStatus.mockResolvedValueOnce(undefined);
+      mockUpdateJobRun.mockResolvedValueOnce(undefined);
       mockAddComment.mockResolvedValueOnce(undefined);
 
       const result = await service.poll();
@@ -377,11 +424,12 @@ describe('SageAutoPRBotJiraPollingService', () => {
       });
 
       // Verify job was marked as failed
-      expect(mockUpdateJobRunStatus).toHaveBeenCalledWith(
-        mockJobId,
-        JobRunStatus.Failed,
-        expect.stringContaining('does not have credentials configured')
-      );
+      expect(mockUpdateJobRun).toHaveBeenCalledWith(mockJobId, {
+        status: JobRunStatus.Failed,
+        errorMessage: expect.stringContaining(
+          'does not have credentials configured'
+        ),
+      });
 
       // Verify comment was posted to Jira
       expect(mockAddComment).toHaveBeenCalledWith(
@@ -392,6 +440,105 @@ describe('SageAutoPRBotJiraPollingService', () => {
         'DEVPROD-999',
         expect.stringContaining('does not have credentials configured')
       );
+    });
+
+    it('handles agent launch failure and posts error comment', async () => {
+      const mockIssue = {
+        key: 'DEVPROD-AGENT-FAIL',
+        fields: {
+          summary: 'Agent launch fail test',
+          description: 'Test description',
+          assignee: {
+            emailAddress: 'user@example.com',
+            displayName: 'Test User',
+          },
+          labels: ['sage-bot', 'repo:mongodb/test'],
+        },
+      };
+
+      mockSearchIssues.mockResolvedValueOnce([mockIssue]);
+      mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
+      mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
+      mockRemoveLabel.mockResolvedValueOnce(undefined);
+      mockCredentialsExist.mockResolvedValueOnce(true);
+      const mockJobId = new ObjectId();
+      mockCreateJobRun.mockResolvedValueOnce({
+        _id: mockJobId,
+        jiraTicketKey: 'DEVPROD-AGENT-FAIL',
+        status: JobRunStatus.Pending,
+      });
+      // Agent launch fails
+      mockLaunchCursorAgent.mockResolvedValueOnce({
+        success: false,
+        error: 'API rate limit exceeded',
+      });
+
+      const result = await service.poll();
+
+      expect(result).toEqual({
+        ticketsFound: 1,
+        ticketsProcessed: 0,
+        ticketsSkipped: 0,
+        ticketsErrored: 1,
+        results: [
+          {
+            ticketKey: 'DEVPROD-AGENT-FAIL',
+            success: false,
+            error: expect.stringContaining('API rate limit exceeded'),
+          },
+        ],
+      });
+
+      // Verify job was marked as failed
+      expect(mockUpdateJobRun).toHaveBeenCalledWith(mockJobId, {
+        status: JobRunStatus.Failed,
+        errorMessage: expect.stringContaining('API rate limit exceeded'),
+      });
+
+      // Verify error comment was posted to Jira
+      expect(mockAddComment).toHaveBeenCalledWith(
+        'DEVPROD-AGENT-FAIL',
+        expect.stringContaining('Sage Bot Agent Launch Failed')
+      );
+    });
+
+    it('uses inline ref from label instead of configured default', async () => {
+      const mockIssue = {
+        key: 'DEVPROD-INLINE-REF',
+        fields: {
+          summary: 'Test with inline ref',
+          description: 'Test description',
+          assignee: {
+            emailAddress: 'user@example.com',
+            displayName: 'Test User',
+          },
+          labels: ['sage-bot', 'repo:mongodb/test@feature-branch'],
+        },
+      };
+
+      mockSearchIssues.mockResolvedValueOnce([mockIssue]);
+      mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
+      mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
+      mockRemoveLabel.mockResolvedValueOnce(undefined);
+      mockCredentialsExist.mockResolvedValueOnce(true);
+      const mockJobId = new ObjectId();
+      mockCreateJobRun.mockResolvedValueOnce({
+        _id: mockJobId,
+        jiraTicketKey: 'DEVPROD-INLINE-REF',
+        status: JobRunStatus.Pending,
+      });
+
+      await service.poll();
+
+      // Verify Cursor agent was launched with inline ref, not default
+      expect(mockLaunchCursorAgent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetRepository: 'mongodb/test',
+          targetRef: 'feature-branch',
+        })
+      );
+      // getDefaultBranch should not be called when inline ref is provided
+      expect(mockGetDefaultBranch).not.toHaveBeenCalled();
     });
   });
 

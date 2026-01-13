@@ -98,3 +98,39 @@ export const inlineCode = (code: string): string => `{{${code}}}`;
  */
 export const formatBulletList = (items: string[]): string =>
   items.map(item => `* ${item}`).join('\n');
+
+/**
+ * Format agent launched success panel
+ * @param agentUrl - The URL to the Cursor agent session
+ * @returns Formatted Jira comment with success panel
+ */
+export const formatAgentLaunchedPanel = (agentUrl: string): string =>
+  formatPanel(
+    {
+      title: 'Sage Bot Agent Launched',
+      borderColor: '#00875A',
+      titleBGColor: '#00875A',
+      titleColor: '#FFFFFF',
+    },
+    `A Cursor Cloud Agent has been launched to work on this ticket.\n\n` +
+      `*Agent Session:* [View in Cursor|${agentUrl}]\n\n` +
+      `The agent will create a pull request when the implementation is complete.`
+  );
+
+/**
+ * Format agent launch failure panel
+ * @param errorMessage - The error message from the launch attempt
+ * @returns Formatted Jira comment with error panel
+ */
+export const formatAgentLaunchFailedPanel = (errorMessage: string): string =>
+  formatPanel(
+    {
+      title: 'Sage Bot Agent Launch Failed',
+      borderColor: '#DE350B',
+      titleBGColor: '#DE350B',
+      titleColor: '#FFFFFF',
+    },
+    `Failed to launch Cursor Cloud Agent for this ticket.\n\n` +
+      `*Error:* ${errorMessage}\n\n` +
+      `Please check the configuration and re-add the {{sage-bot}} label to retry.`
+  );

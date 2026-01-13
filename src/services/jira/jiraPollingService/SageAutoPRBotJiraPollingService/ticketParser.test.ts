@@ -20,6 +20,7 @@ describe('extractTicketData', () => {
       description: 'Description text',
       assigneeEmail: 'user@example.com',
       targetRepository: 'mongodb/test',
+      targetRef: null,
       labels: ['sage-bot', 'repo:mongodb/test'],
     });
   });
@@ -39,6 +40,7 @@ describe('extractTicketData', () => {
 
     expect(result.assigneeEmail).toBeNull();
     expect(result.targetRepository).toBeNull();
+    expect(result.targetRef).toBeNull();
     expect(result.labels).toEqual([]);
   });
 
@@ -57,6 +59,7 @@ describe('extractTicketData', () => {
 
     expect(result.labels).toEqual([]);
     expect(result.targetRepository).toBeNull();
+    expect(result.targetRef).toBeNull();
   });
 
   it('parses target repository from labels', () => {
@@ -73,5 +76,57 @@ describe('extractTicketData', () => {
     const result = extractTicketData(issue);
 
     expect(result.targetRepository).toBe('org/project');
+    expect(result.targetRef).toBeNull();
+  });
+
+  it('parses target repository with inline ref from labels', () => {
+    const issue = {
+      key: 'PROJ-102',
+      fields: {
+        summary: 'Test with ref',
+        description: 'Description',
+        assignee: { emailAddress: 'test@example.com', displayName: 'Test' },
+        labels: ['sage-bot', 'repo:mongodb/mongo-tools@feature-branch'],
+      },
+    };
+
+    const result = extractTicketData(issue);
+
+    expect(result.targetRepository).toBe('mongodb/mongo-tools');
+    expect(result.targetRef).toBe('feature-branch');
+  });
+
+  it('parses ref with slashes (e.g., feature/branch-name)', () => {
+    const issue = {
+      key: 'PROJ-103',
+      fields: {
+        summary: 'Test with nested ref',
+        description: 'Description',
+        assignee: null,
+        labels: ['repo:org/repo@feature/my-branch'],
+      },
+    };
+
+    const result = extractTicketData(issue);
+
+    expect(result.targetRepository).toBe('org/repo');
+    expect(result.targetRef).toBe('feature/my-branch');
+  });
+
+  it('parses ref with dots and dashes', () => {
+    const issue = {
+      key: 'PROJ-104',
+      fields: {
+        summary: 'Test with version-like ref',
+        description: 'Description',
+        assignee: null,
+        labels: ['repo:mongodb/test-repo@v1.2.3-beta'],
+      },
+    };
+
+    const result = extractTicketData(issue);
+
+    expect(result.targetRepository).toBe('mongodb/test-repo');
+    expect(result.targetRef).toBe('v1.2.3-beta');
   });
 });

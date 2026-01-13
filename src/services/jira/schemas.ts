@@ -37,6 +37,8 @@ export const parsedTicketDataSchema = z.object({
   description: z.string().nullable(),
   assigneeEmail: z.string().nullable(),
   targetRepository: z.string().nullable(),
+  /** Branch/ref specified inline in the repo label (e.g., repo:org/repo@branch) */
+  targetRef: z.string().nullable(),
   labels: z.array(z.string()),
 });
 
