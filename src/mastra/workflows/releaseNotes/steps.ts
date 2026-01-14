@@ -10,40 +10,6 @@ import {
 import { WorkflowInputSchema, WorkflowStateSchema } from './schemas';
 
 /**
- * Maximum number of attempts for agent generation retries.
- * This is distinct from workflow-level retries (configured in retryConfig).
- * Workflow retries retry the entire step if it throws an error.
- * Agent generation retries retry the agent call with a stricter prompt if schema validation fails.
- * Note: This retry logic is specifically for schema validation failures where we modify the prompt
- * to be more prescriptive. If schema validation failures are rare, this could be simplified or removed.
- */
-const MAX_AGENT_GENERATION_ATTEMPTS = 3;
-
-/**
- * System prompt used for retry attempts when the agent fails to return valid JSON.
- *
- * This prompt is intentionally more strict and prescriptive than the agent's base
- * instructions. While there is some duplication with the base instructions, this
- * duplication is necessary because:
- * 1. Retry attempts need stricter enforcement after a validation failure
- * 2. The prompt emphasizes critical schema requirements more forcefully
- * 3. It provides explicit guidance on common failure patterns (e.g., using "title"
- *    instead of "text" for items, including empty citations arrays)
- *
- * The base agent instructions provide general guidance, while this retry prompt
- * focuses specifically on ensuring schema compliance when the agent has already
- * failed validation once.
- */
-const RETRY_SYSTEM_PROMPT = `CRITICAL: Return ONLY valid JSON matching this exact schema.
-Do not include any fields outside of "sections".
-Each section must have "title" and "items".
-Each item MUST use "text" (NOT "title") for the item content.
-Only sections use "title" - items always use "text".
-Each item must have "text" and optionally "citations" (non-empty array if present), "subitems", and "links".
-NEVER include "citations": [] - if there are no citations, omit the citations field entirely.
-Remove any top-level fields other than "sections".`;
-
-/**
  * Formats section plans into a prompt string for the agent.
  * This function formats the section planner context into a structured prompt
  * that the release notes agent can use for generation.
@@ -232,16 +198,17 @@ ${requirements.map(line => `- ${line}`).join('\n')}`;
 
 /**
  * Step 3: Generate release notes using the agent
- * Calls the release notes agent with retry logic
+ * Uses Mastra's built-in retry configuration for error handling
  */
 export const generateStep = createStep({
   id: 'generate-release-notes',
-  description: 'Generate release notes using the agent with retry logic',
+  description: 'Generate release notes using the agent',
   inputSchema: z.object({}),
   stateSchema: WorkflowStateSchema,
   outputSchema: z.object({
     structuredOutput: releaseNotesOutputSchema,
   }),
+  retries: 2,
   execute: async ({
     abortSignal,
     mastra: mastraInstance,
@@ -254,71 +221,29 @@ export const generateStep = createStep({
       throw new Error('Formatted prompt not found in state');
     }
 
-    let lastError: Error | undefined;
+    logger.debug('Calling release notes agent');
 
-    for (
-      let attemptIndex = 0;
-      attemptIndex < MAX_AGENT_GENERATION_ATTEMPTS;
-      attemptIndex++
-    ) {
-      try {
-        logger.debug('Calling release notes agent', {
-          attempt: attemptIndex + 1,
-          maxAttempts: MAX_AGENT_GENERATION_ATTEMPTS,
-        });
+    const result = await releaseNotesAgent.generate(state.formattedPrompt, {
+      structuredOutput: {
+        schema: releaseNotesOutputSchema,
+      },
+      abortSignal,
+    });
 
-        // On retry attempts, prepend stricter instructions to the prompt
-        // Note: Mastra's agent.generate() doesn't support a 'system' parameter,
-        // so we prepend the retry instructions to the user message instead
-        const promptForAttempt =
-          attemptIndex === 0
-            ? state.formattedPrompt
-            : `${RETRY_SYSTEM_PROMPT}\n\n---\n\n${state.formattedPrompt}`;
+    tracingContext.currentSpan?.update({
+      metadata: {
+        hasStructuredOutput: !!result.object,
+        hasTextOutput: !!result.text,
+      },
+    });
 
-        // eslint-disable-next-line no-await-in-loop -- Retries must be sequential
-        const result = await releaseNotesAgent.generate(promptForAttempt, {
-          structuredOutput: {
-            schema: releaseNotesOutputSchema,
-          },
-          abortSignal,
-        });
-
-        tracingContext.currentSpan?.update({
-          metadata: {
-            attempt: attemptIndex + 1,
-            hasStructuredOutput: !!result.object,
-            hasTextOutput: !!result.text,
-          },
-        });
-
-        if (!result.object) {
-          throw new Error('Agent did not return structured output');
-        }
-
-        return {
-          structuredOutput: result.object,
-        };
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error));
-
-        if (
-          attemptIndex === MAX_AGENT_GENERATION_ATTEMPTS - 1 ||
-          !lastError.message.includes('does not match the expected schema')
-        ) {
-          throw lastError;
-        }
-
-        logger.warn('Release notes generation failed, retrying', {
-          attempt: attemptIndex + 1,
-          maxAttempts: MAX_AGENT_GENERATION_ATTEMPTS,
-          error: lastError.message,
-        });
-      }
+    if (!result.object) {
+      throw new Error('Agent did not return structured output');
     }
 
-    throw (
-      lastError || new Error('Failed to generate release notes after retries')
-    );
+    return {
+      structuredOutput: result.object,
+    };
   },
 });
 
