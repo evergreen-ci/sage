@@ -57,6 +57,9 @@ const createTracedWorkflow =
     if (response.status === 'tripwire') {
       throw new Error(`Workflow run tripwire: ${response.tripwire}`);
     }
+    if (response.status === 'paused') {
+      throw new Error(`Workflow run paused: ${response}`);
+    }
 
     // Transform response
     const baseResponse = {
