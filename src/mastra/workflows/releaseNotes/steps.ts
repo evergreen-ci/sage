@@ -95,8 +95,7 @@ export const planSectionsStep = createStep({
 
     tracingContext.currentSpan?.update({
       metadata: {
-        issueCount: sectionPlans.issues.length,
-        sectionCount: sectionPlans.sections.length,
+        plannedSections: sectionPlans.sections.map(s => s.title),
         hasSecurityIssues: sectionPlans.hasSecurityIssues,
       },
     });
@@ -121,12 +120,7 @@ export const formatPromptStep = createStep({
   inputSchema: z.object({}),
   stateSchema: WorkflowStateSchema,
   outputSchema: z.object({}),
-  execute: async ({
-    mastra: mastraInstance,
-    setState,
-    state,
-    tracingContext,
-  }) => {
+  execute: async ({ mastra: mastraInstance, setState, state }) => {
     const logger = mastraInstance.getLogger();
 
     if (!state.input || !state.sectionPlans) {
@@ -149,29 +143,22 @@ export const formatPromptStep = createStep({
       metadataLines.push(state.input.customGuidelines.trim());
     }
 
-    const requirements: string[] = [
-      'Return valid JSON that exactly matches the schema provided in your system prompt.',
-      'CRITICAL: Use "text" (NOT "title") for all items and subitems. Only sections use "title" - items always use "text".',
-      'Use the section titles surfaced in the Section Planner. Add new sections only when the data strongly suggests a distinct category.',
-      'Assign each issue to the section that best matches its change; if no section is a perfect fit, choose the closest match and make the rationale clear in the bullet text.',
-      'Summarize each bullet in one or two sentences that highlight user-facing impact.',
-      'Prefer curated copy fields (release_notes, customer_impact, upgrade_notes) when present; otherwise synthesize text from summaries, descriptions, and metadata.',
-      'Do not invent details beyond what appears in the planner.',
-      'Use subitems for supporting context such as grouped vulnerabilities, follow-on tasks, or pull request details.',
-      'Wrap tokens that a user might copy verbatim (versions, package names, CLI commands, file paths, environment variables) in single backticks; avoid multiline code fences.',
-      'When hyperlink guidance is available (for example in metadata or guidelines), populate the links array with { "text", "url" } objects instead of embedding inline markup.',
-      'Keep bullet text plain prose (no markdown, Jira formatting, or decorative prefixes).',
-      'Include a citations array only when at least one Jira issue applies to that bullet; omit the field for structural or grouping bullets, but ensure actionable top-level bullets cite their supporting Jira keys. NEVER include an empty citations array ([]). If there are no citations, omit the citations field entirely.',
-      'Omit the citations property on subitems only when they inherit the citation from their parent bullet.',
-      'Do not create subitems that only point to additional reading (for example, "See the release notes"). Capture URLs via the links array on the relevant bullet instead.',
-    ];
-
-    requirements.push(
-      'If a section plan instructs you to group vulnerabilities, use a parent bullet with subitems for the individual CVEs.'
-    );
-    requirements.push(
-      'For pull requests listed under an issue, prefer subitems that briefly describe the change and cite the parent issue.'
-    );
+    const requirements = `- Return valid JSON that exactly matches the schema provided in your system prompt.
+- CRITICAL: Use "text" (NOT "title") for all items and subitems. Only sections use "title" - items always use "text".
+- Use the section titles surfaced in the Section Planner. Add new sections only when the data strongly suggests a distinct category.
+- Assign each issue to the section that best matches its change; if no section is a perfect fit, choose the closest match and make the rationale clear in the bullet text.
+- Summarize each bullet in one or two sentences that highlight user-facing impact.
+- Prefer curated copy fields (release_notes, customer_impact, upgrade_notes) when present; otherwise synthesize text from summaries, descriptions, and metadata.
+- Do not invent details beyond what appears in the planner.
+- Use subitems for supporting context such as grouped vulnerabilities, follow-on tasks, or pull request details.
+- Wrap tokens that a user might copy verbatim (versions, package names, CLI commands, file paths, environment variables) in single backticks; avoid multiline code fences.
+- When hyperlink guidance is available (for example in metadata or guidelines), populate the links array with { "text", "url" } objects instead of embedding inline markup.
+- Keep bullet text plain prose (no markdown, Jira formatting, or decorative prefixes).
+- Include a citations array only when at least one Jira issue applies to that bullet; omit the field for structural or grouping bullets, but ensure actionable top-level bullets cite their supporting Jira keys. NEVER include an empty citations array ([]). If there are no citations, omit the citations field entirely.
+- Omit the citations property on subitems only when they inherit the citation from their parent bullet.
+- Do not create subitems that only point to additional reading (for example, "See the release notes"). Capture URLs via the links array on the relevant bullet instead.
+- If a section plan instructs you to group vulnerabilities, use a parent bullet with subitems for the individual CVEs.
+- For pull requests listed under an issue, prefer subitems that briefly describe the change and cite the parent issue.`;
 
     const formattedPrompt = `${metadataLines.join('\n')}
 
@@ -179,13 +166,7 @@ export const formatPromptStep = createStep({
 ${sectionPlanner}
 
 # Output Requirements
-${requirements.map(line => `- ${line}`).join('\n')}`;
-
-    tracingContext.currentSpan?.update({
-      metadata: {
-        totalRequirements: requirements.length,
-      },
-    });
+${requirements}`;
 
     setState({
       ...state,

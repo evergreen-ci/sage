@@ -71,6 +71,8 @@ const generateReleaseNotesRoute = async (req: Request, res: Response) => {
           userId: res.locals.userId,
           requestId: res.locals.requestId,
           product: parsedInput.data.product,
+          jiraIssueCount: parsedInput.data.jiraIssues.length,
+          inputSections: parsedInput.data.sections,
         },
       },
     });
