@@ -294,7 +294,9 @@ const deriveDefaultFocus = (title: string): string => {
 
   if (
     normalizedTitle.includes('improvement') ||
+    normalizedTitle.includes('improves') ||
     normalizedTitle.includes('enhancement') ||
+    normalizedTitle.includes('enhances') ||
     normalizedTitle.includes('feature') ||
     normalizedTitle.includes('new') ||
     normalizedTitle.includes('upgrade')
@@ -315,6 +317,7 @@ const deriveDefaultFocus = (title: string): string => {
   if (
     normalizedTitle.includes('security') ||
     normalizedTitle.includes('vulnerability') ||
+    normalizedTitle.includes('vulnerable') ||
     normalizedTitle.includes('cve') ||
     normalizedTitle.includes('compliance') ||
     normalizedTitle.includes('hardening')
@@ -336,7 +339,8 @@ const isSecurityIssue = (
     type.includes('SECURITY') ||
     type.includes('CVE') ||
     summary.includes('cve') ||
-    summary.includes('vulnerab') ||
+    summary.includes('vulnerability') ||
+    summary.includes('vulnerable') ||
     summary.includes('security')
   );
 };
