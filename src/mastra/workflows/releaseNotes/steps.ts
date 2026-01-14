@@ -7,17 +7,15 @@ import {
   validateReleaseNotesCitations,
   type SectionPlannerContext,
 } from '@/mastra/agents/releaseNotesAgent';
-import {
-  WorkflowInputSchema,
-  WorkflowOutputSchema,
-  WorkflowStateSchema,
-} from './schemas';
+import { WorkflowInputSchema, WorkflowStateSchema } from './schemas';
 
 /**
  * Maximum number of attempts for agent generation retries.
  * This is distinct from workflow-level retries (configured in retryConfig).
  * Workflow retries retry the entire step if it throws an error.
- * Agent generation retries retry the agent call if JSON validation fails.
+ * Agent generation retries retry the agent call with a stricter prompt if schema validation fails.
+ * Note: This retry logic is specifically for schema validation failures where we modify the prompt
+ * to be more prescriptive. If schema validation failures are rare, this could be simplified or removed.
  */
 const MAX_AGENT_GENERATION_ATTEMPTS = 3;
 
@@ -36,16 +34,14 @@ const MAX_AGENT_GENERATION_ATTEMPTS = 3;
  * focuses specifically on ensuring schema compliance when the agent has already
  * failed validation once.
  */
-const RETRY_SYSTEM_PROMPT = [
-  'CRITICAL: Return ONLY valid JSON matching this exact schema.',
-  'Do not include any fields outside of "sections".',
-  'Each section must have "title" and "items".',
-  'Each item MUST use "text" (NOT "title") for the item content.',
-  'Only sections use "title" - items always use "text".',
-  'Each item must have "text" and optionally "citations" (non-empty array if present), "subitems", and "links".',
-  'NEVER include "citations": [] - if there are no citations, omit the citations field entirely.',
-  'Remove any top-level fields other than "sections".',
-].join('\n');
+const RETRY_SYSTEM_PROMPT = `CRITICAL: Return ONLY valid JSON matching this exact schema.
+Do not include any fields outside of "sections".
+Each section must have "title" and "items".
+Each item MUST use "text" (NOT "title") for the item content.
+Only sections use "title" - items always use "text".
+Each item must have "text" and optionally "citations" (non-empty array if present), "subitems", and "links".
+NEVER include "citations": [] - if there are no citations, omit the citations field entirely.
+Remove any top-level fields other than "sections".`;
 
 /**
  * Formats section plans into a prompt string for the agent.
@@ -211,17 +207,17 @@ export const formatPromptStep = createStep({
       'For pull requests listed under an issue, prefer subitems that briefly describe the change and cite the parent issue.'
     );
 
-    const formattedPrompt = [
-      metadataLines.join('\n'),
-      '# Section Planner',
-      sectionPlanner,
-      '# Output Requirements',
-      requirements.map(line => `- ${line}`).join('\n'),
-    ].join('\n\n');
+    const formattedPrompt = `${metadataLines.join('\n')}
+
+# Section Planner
+${sectionPlanner}
+
+# Output Requirements
+${requirements.map(line => `- ${line}`).join('\n')}`;
 
     tracingContext.currentSpan?.update({
       metadata: {
-        promptLength: formattedPrompt.length,
+        totalRequirements: requirements.length,
       },
     });
 
@@ -244,7 +240,7 @@ export const generateStep = createStep({
   inputSchema: z.object({}),
   stateSchema: WorkflowStateSchema,
   outputSchema: z.object({
-    rawOutput: z.unknown(),
+    structuredOutput: releaseNotesOutputSchema,
   }),
   execute: async ({
     abortSignal,
@@ -295,8 +291,12 @@ export const generateStep = createStep({
           },
         });
 
+        if (!result.object) {
+          throw new Error('Agent did not return structured output');
+        }
+
         return {
-          rawOutput: result.object || result.text || null,
+          structuredOutput: result.object,
         };
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
@@ -330,29 +330,24 @@ export const validateStep = createStep({
   id: 'validate-output',
   description: 'Validate and normalize the release notes output',
   inputSchema: z.object({
-    rawOutput: z.unknown(),
+    structuredOutput: releaseNotesOutputSchema,
   }),
   stateSchema: WorkflowStateSchema,
-  outputSchema: WorkflowOutputSchema,
+  outputSchema: releaseNotesOutputSchema,
   execute: async ({ inputData, mastra: mastraInstance, tracingContext }) => {
     const logger = mastraInstance.getLogger();
 
-    const { rawOutput } = inputData;
-
-    if (!rawOutput) {
-      throw new Error('Raw output not found');
-    }
+    const { structuredOutput } = inputData;
 
     logger.debug('Validating release notes output');
 
-    // Parse and validate the output using the schema
-    // The agent already returns structured output, so this should be valid
-    const parseResult = releaseNotesOutputSchema.safeParse(rawOutput);
+    // The agent already returns structured output matching the schema
+    const parseResult = releaseNotesOutputSchema.safeParse(structuredOutput);
 
     if (!parseResult.success) {
       logger.error('Release notes output validation failed', {
         errors: parseResult.error.issues,
-        rawOutput: JSON.stringify(rawOutput).substring(0, 500),
+        structuredOutput: JSON.stringify(structuredOutput).substring(0, 500),
       });
       throw new Error(
         `Release notes output validation failed: ${parseResult.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')}`

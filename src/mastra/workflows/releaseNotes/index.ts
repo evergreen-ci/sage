@@ -1,9 +1,9 @@
 import { createWorkflow } from '@mastra/core/workflows';
 import {
-  WorkflowInputSchema,
-  WorkflowOutputSchema,
-  WorkflowStateSchema,
-} from './schemas';
+  releaseNotesInputSchema,
+  releaseNotesOutputSchema,
+} from '@/mastra/agents/releaseNotesAgent';
+import { WorkflowStateSchema } from './schemas';
 import {
   formatPromptStep,
   generateStep,
@@ -15,8 +15,8 @@ export const releaseNotesWorkflow = createWorkflow({
   id: 'release-notes',
   description:
     'Generates structured release notes from Jira issues and pull request metadata. The workflow plans sections, formats the prompt, generates release notes with retry logic, and validates the output.',
-  inputSchema: WorkflowInputSchema,
-  outputSchema: WorkflowOutputSchema,
+  inputSchema: releaseNotesInputSchema,
+  outputSchema: releaseNotesOutputSchema,
   stateSchema: WorkflowStateSchema,
   retryConfig: {
     attempts: 2,

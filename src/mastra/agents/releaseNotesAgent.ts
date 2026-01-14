@@ -293,8 +293,8 @@ const deriveDefaultFocus = (title: string): string => {
   const normalizedTitle = title.toLowerCase();
 
   if (
-    normalizedTitle.includes('improv') ||
-    normalizedTitle.includes('enhanc') ||
+    normalizedTitle.includes('improvement') ||
+    normalizedTitle.includes('enhancement') ||
     normalizedTitle.includes('feature') ||
     normalizedTitle.includes('new') ||
     normalizedTitle.includes('upgrade')
@@ -307,14 +307,14 @@ const deriveDefaultFocus = (title: string): string => {
     normalizedTitle.includes('fix') ||
     normalizedTitle.includes('stability') ||
     normalizedTitle.includes('quality') ||
-    normalizedTitle.includes('reliab')
+    normalizedTitle.includes('reliability')
   ) {
     return 'Resolved defects and quality fixes that restore expected behavior.';
   }
 
   if (
     normalizedTitle.includes('security') ||
-    normalizedTitle.includes('vulner') ||
+    normalizedTitle.includes('vulnerability') ||
     normalizedTitle.includes('cve') ||
     normalizedTitle.includes('compliance') ||
     normalizedTitle.includes('hardening')

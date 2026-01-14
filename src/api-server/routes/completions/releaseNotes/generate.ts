@@ -70,9 +70,7 @@ const generateReleaseNotesRoute = async (req: Request, res: Response) => {
         metadata: {
           userId: res.locals.userId,
           requestId: res.locals.requestId,
-          ...(parsedInput.data.product
-            ? { product: parsedInput.data.product }
-            : {}),
+          product: parsedInput.data.product,
         },
       },
     });
@@ -83,22 +81,15 @@ const generateReleaseNotesRoute = async (req: Request, res: Response) => {
     }
 
     if (runResult.status === 'failed') {
-      const errorMessage =
-        runResult.error instanceof Error
-          ? runResult.error.message
-          : String(runResult.error);
+      const errorMessage = runResult.error.message;
       logger.error('Release notes workflow failed', {
         requestId: res.locals.requestId,
         error: errorMessage,
-        ...(parsedInput.data.product
-          ? { product: parsedInput.data.product }
-          : {}),
+        product: parsedInput.data.product,
       });
       res.status(500).json({
         message: 'Failed to generate release notes',
-        ...(process.env.NODE_ENV !== 'production'
-          ? { details: errorMessage }
-          : {}),
+        details: errorMessage,
       });
       return;
     }
@@ -111,22 +102,14 @@ const generateReleaseNotesRoute = async (req: Request, res: Response) => {
       message: 'Unexpected workflow execution status',
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error('Failed to generate release notes', {
-      error:
-        error instanceof Error
-          ? {
-              message: error.message,
-              stack: error.stack,
-              cause: error.cause,
-            }
-          : String(error),
+      error: errorMessage,
       requestId: res.locals.requestId,
     });
     res.status(500).json({
       message: 'Failed to generate release notes',
-      ...(error instanceof Error && process.env.NODE_ENV !== 'production'
-        ? { details: error.message }
-        : {}),
+      details: errorMessage,
     });
   }
 };
