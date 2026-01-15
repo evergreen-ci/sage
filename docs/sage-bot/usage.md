@@ -19,8 +19,16 @@ Your Jira ticket must include the following:
 
 ### Repository Label Format
 
-The repository label tells Sage Bot which repository to work on:
+The repository label tells Sage Bot which repository to work on.
+The label format:
 
+```
+repo:<repo_org>/<repo_name>@<branch_name>
+```
+
+Branch name is optional.
+
+For example, for the [10gen/mms](https://github.com/10gen/mms) repo:
 - `repo:10gen/mms` - Uses the default branch configured for this repo
 - `repo:10gen/mms@my-feature-branch` - Uses a specific branch
 
