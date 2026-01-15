@@ -11,7 +11,11 @@ Sage Bot automatically generates pull requests from Jira tickets using Cursor's 
 ## Quick Start
 
 1. Complete the [onboarding steps](./onboarding.md) (one-time setup)
-2. Create a Jira ticket with the required fields
+2. Create a Jira ticket with:
+   - **Summary**: Clear title describing the task
+   - **Description**: Detailed implementation requirements
+   - **Assignee**: A user with registered credentials
+   - **Repository label**: `repo:<org>/<repo>` (e.g., `repo:10gen/mms`)
 3. Add the `sage-bot` label to trigger processing
 4. Review the generated PR
 
