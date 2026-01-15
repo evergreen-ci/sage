@@ -15,7 +15,37 @@ Sage Bot automatically generates pull requests from Jira tickets using Cursor's 
 3. Click **Generate new key**
 4. Copy and save your API key securely - you won't be able to see it again
 
-## Step 2: Set Up kanopy-oidc
+## Step 2: Connect Cursor to GitHub
+
+Cursor's cloud agent needs access to your repositories to clone code and push changes. You must install the Cursor GitHub app for any repositories Sage Bot will work on.
+
+### Installation
+
+1. Go to **Integrations** in the [Cursor Dashboard](https://cursor.com/settings)
+2. Click **Connect** next to GitHub
+3. Choose either **All repositories** or **Selected repositories**
+
+To disconnect later, return to the integrations dashboard and click **Disconnect Account**.
+
+### Repository Not Available?
+
+If a desired repository is not available for selection, you'll need to submit an IT request through [Zendesk](https://help-it.mongodb.com/hc/en-us/requests/new?ticket_form_id=11872020855315) to install Cursor's GitHub app in that repository.
+
+### Permissions
+
+The Cursor GitHub app requires these permissions for cloud agent functionality:
+
+| Permission            | Purpose                                          |
+| --------------------- | ------------------------------------------------ |
+| Repository access     | Clone your code and create working branches      |
+| Pull requests         | Create PRs with agent changes for your review    |
+| Issues                | Track bugs and tasks that agents discover or fix |
+| Checks and statuses   | Report on code quality and test results          |
+| Actions and workflows | Monitor CI/CD pipelines and deployment status    |
+
+For more details, see [Cursor's GitHub integration documentation](https://cursor.com/docs/integrations/github).
+
+## Step 3: Set Up kanopy-oidc
 
 To authenticate with Sage, you need to install and configure `kanopy-oidc`.
 
@@ -45,7 +75,7 @@ kanopy-oidc login
 
 This opens your browser for Okta authentication. Once complete, the command outputs your identity token. This token expires after **10 minutes**.
 
-## Step 3: Register Your API Key with Sage
+## Step 4: Register Your API Key with Sage
 
 **You must be connected to the MongoDB VPN for this step.**
 
@@ -86,7 +116,7 @@ curl -X DELETE https://sage.prod.corp.mongodb.com/pr-bot/user/cursor-key \
   -H "X-Kanopy-Authorization: Bearer $(kanopy-oidc login)"
 ```
 
-## Step 4: Create a Jira Ticket
+## Step 5: Create a Jira Ticket
 
 Your Jira ticket must include the following:
 
@@ -115,7 +145,7 @@ Sage Bot currently monitors the following Jira projects:
 
 ### Pre-configured Repositories
 
-Repositories with default branches are configured in [`src/services/repositories/repositories.yaml`](../../src/services/repositories/repositories.yaml).
+Repositories with default branches are configured in [`src/services/repositories/repositories.yaml`](/src/services/repositories/repositories.yaml).
 
 If your repository isn't configured, you have two options:
 
@@ -124,7 +154,7 @@ If your repository isn't configured, you have two options:
 
 Feel free to reach out to the DevProd team if you have questions.
 
-## Step 5: Trigger Sage Bot
+## Step 6: Trigger Sage Bot
 
 To trigger Sage Bot on your ticket:
 
@@ -145,7 +175,7 @@ If a job fails, you can retry by simply adding the `sage-bot` label again.
 
 ### "Assignee does not have credentials configured"
 
-The ticket assignee needs to register their Cursor API key. See [Step 3](#step-3-register-your-api-key-with-sage).
+The ticket assignee needs to register their Cursor API key. See [Step 4](#step-4-register-your-api-key-with-sage).
 
 ### "Missing repository label"
 
