@@ -47,33 +47,7 @@ For more details, see [Cursor's GitHub integration documentation](https://cursor
 
 ## Step 3: Set Up kanopy-oidc
 
-To authenticate with Sage, you need to install and configure `kanopy-oidc`.
-
-### Install kanopy-oidc
-
-Follow the [installation instructions](https://github.com/kanopy-platform/kanopy-oidc/?tab=readme-ov-file#installation) to download and install `kanopy-oidc`.
-
-### Configure kanopy-oidc
-
-Create a configuration file at `$HOME/.kanopy/config.yaml`:
-
-```yaml
----
-domain: corp.mongodb.com
-issuer: dex
-login:
-  connector: oidc
-```
-
-### Test Your Setup
-
-Run the following to authenticate:
-
-```bash
-kanopy-oidc login
-```
-
-This opens your browser for Okta authentication. Once complete, the command outputs your identity token.
+To authenticate with Sage, you need `kanopy-oidc`. Follow the [official installation and configuration instructions](https://github.com/kanopy-platform/kanopy-oidc/?tab=readme-ov-file#installation).
 
 ## Step 4: Register Your API Key with Sage
 
