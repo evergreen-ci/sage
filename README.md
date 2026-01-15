@@ -166,6 +166,29 @@ echo -n '{"sub":"your.email@mongodb.com"}' | base64
 # Use the output as the middle segment: header.PAYLOAD.signature
 ```
 
+### Configuring Cursor API Key for Local Testing
+
+To test the Cursor agent integration locally, you'll need to:
+
+1. **Get a Cursor API Key**: Obtain an API key from the [Cursor Dashboard](https://cursor.com/dashboard?tab=integrations). Navigate to the **API Keys** section and generate a new key.
+
+2. **Add the Key via REST Endpoints**: Use the local API endpoints to store your key:
+   - `POST /pr-bot/user/cursor-key` - Create or update your Cursor API key
+   - `GET /pr-bot/user/cursor-key` - Check if a key is registered
+   - `DELETE /pr-bot/user/cursor-key` - Remove your stored key
+
+   Example:
+   ```bash
+   curl -X POST http://localhost:8080/pr-bot/user/cursor-key \
+     -H "Content-Type: application/json" \
+     -d '{"apiKey": "your-cursor-api-key"}'
+   ```
+
+3. **Encryption Key Configuration**: The API key is encrypted at rest using AES-256-GCM. Ensure the `ENCRYPTION_KEY` environment variable is set in your `.env.local`:
+   - Must be a 32-byte hex string (64 characters)
+   - Generate one with: `openssl rand -hex 32`
+   - A default key is provided in `.env.defaults` for local development only (do not use in production)
+
 ---
 
 ## Docker Builds

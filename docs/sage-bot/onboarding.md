@@ -51,10 +51,6 @@ To authenticate with Sage, you need `kanopy-oidc`. Follow the [official installa
 
 ## Step 4: Register Your API Key with Sage
 
-You can register your Cursor API key either for production use (via API endpoints) or for local testing (via script). Choose the method that fits your needs.
-
-### Option A: Production Setup (API Endpoints)
-
 **You must be connected to the MongoDB VPN for this step.**
 
 Use the following curl command to register your Cursor API key:
@@ -74,7 +70,7 @@ A successful response looks like:
 { "success": true, "keyLastFour": "xxxx" }
 ```
 
-#### Verifying Your Registration
+### Verifying Your Registration
 
 To check if your API key is registered:
 
@@ -83,7 +79,7 @@ curl https://sage.prod.corp.mongodb.com/pr-bot/user/cursor-key \
   -H "X-Kanopy-Authorization: Bearer $(kanopy-oidc login)"
 ```
 
-#### Updating or Removing Your Key
+### Updating or Removing Your Key
 
 To update your key, simply run the POST command again with your new key.
 
@@ -93,58 +89,6 @@ To delete your registered key:
 curl -X DELETE https://sage.prod.corp.mongodb.com/pr-bot/user/cursor-key \
   -H "X-Kanopy-Authorization: Bearer $(kanopy-oidc login)"
 ```
-
-### Option B: Local Testing Setup
-
-For local development and testing, you can add your API key directly to your local MongoDB collection using the `upsert-api-key.ts` script.
-
-#### Required Environment Variables
-
-Ensure these are set in `.env.local`:
-
-- `MONGODB_URI` - MongoDB connection string (default: `mongodb://localhost:27017`)
-- `ENCRYPTION_KEY` - 64-character hex string for AES-256 encryption
-
-The `ENCRYPTION_KEY` must be a 32-byte hex string (64 characters). You can generate one using:
-
-```bash
-openssl rand -hex 32
-```
-
-A default encryption key is provided in `.env.defaults` for local development only.
-
-#### Adding Your API Key
-
-Use the `upsert-api-key.ts` script to add an encrypted key to your local collection:
-
-```bash
-npx tsx scripts/upsert-api-key.ts -e [username]@mongodb.com -k [cursor_api_key]
-```
-
-Replace:
-- `[username]@mongodb.com` with your MongoDB email address
-- `[cursor_api_key]` with your Cursor API key from Step 1
-
-The script will:
-1. Connect to your local MongoDB instance
-2. Encrypt your API key using the `ENCRYPTION_KEY`
-3. Store it in the `user_credentials` collection
-4. Display the last 4 characters of the key for verification
-
-#### Testing the Integration
-
-Once your API key is stored locally, you can test the Cursor agent integration by:
-
-1. Starting the Sage server locally:
-   ```bash
-   yarn dev
-   ```
-
-2. Creating a test Jira ticket with the `sage-bot` label (see [Usage Guide](./usage.md))
-
-3. Verifying that the Cursor agent processes the ticket and creates a PR
-
-For more details on local development, see the [README](../../README.md#testing-the-api-locally).
 
 ## Next Steps
 
