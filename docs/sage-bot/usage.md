@@ -46,7 +46,7 @@ Sage Bot will:
 
 1. Detect the label and begin processing
 2. Remove the `sage-bot` label automatically
-3. Post a comment with a link to the [Cursor cloud agent session](https://cursor.com/agents) (or error details if something went wrong)
+3. Post a comment with a link to the Cursor cloud agent session, or an error message if something went wrong
 4. Open a pull request when the agent completes successfully
 
 ## Retrying Failed Jobs
