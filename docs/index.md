@@ -4,4 +4,4 @@ Welcome to the Sage documentation.
 
 ## Contents
 
-- [Sage Bot](./sage-bot/quick-start.md) - Automatically generate PRs from Jira tickets using AI
+- [Sage Bot](./sage-bot/index.md) - Automatically generate PRs from Jira tickets using AI

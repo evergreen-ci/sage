@@ -24,6 +24,8 @@ Sage Bot currently monitors the following Jira projects:
 - AMP
 - DOCSP
 
+Want to add support for another project? Reach out in [#ask-devprod-evergreen](https://mongodb.enterprise.slack.com/archives/C0V896UV8).
+
 ## Getting Help
 
-If you encounter issues or have questions, check the [troubleshooting guide](./troubleshooting.md) or reach out to the DevProd team.
+If you encounter issues or have questions, check the [troubleshooting guide](./troubleshooting.md) or reach out in [#ask-devprod-evergreen](https://mongodb.enterprise.slack.com/archives/C0V896UV8).

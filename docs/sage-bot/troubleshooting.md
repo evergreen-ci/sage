@@ -47,4 +47,8 @@ A: Only one active job can run per ticket at a time. If a job is already in prog
 
 **Q: How do I know if my ticket is being processed?**
 
-A: Sage Bot removes the `sage-bot` label immediately when it picks up the ticket and posts a comment with the status.
+A: Sage Bot removes the `sage-bot` label immediately when it picks up the ticket and posts a comment with a link to the Cursor agent session.
+
+**Q: Does Sage Bot update the Jira ticket status?**
+
+A: No, Sage Bot only removes the `sage-bot` label and posts comments. Any status transitions depend on your existing Jira automation rules.
