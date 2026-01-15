@@ -7,6 +7,21 @@ import {
 } from '@/db/repositories/userCredentialsRepository';
 import { logger } from '@/utils/logger';
 
+const DEFAULT_EMAIL_DOMAIN = 'mongodb.com';
+
+/**
+ * Normalize a user identifier to a full email address
+ * Kanopy JWT only provides username without domain, but Jira uses full emails
+ * @param userId - The user ID (may be username only or full email)
+ * @returns Full email address
+ */
+const normalizeToEmail = (userId: string): string => {
+  if (userId.includes('@')) {
+    return userId;
+  }
+  return `${userId}@${DEFAULT_EMAIL_DOMAIN}`;
+};
+
 // Response types
 type GetKeyResponse =
   | { hasKey: false }
@@ -33,10 +48,11 @@ export const getCursorKeyRoute = async (
   res: Response<GetKeyResponse | ErrorResponse>
 ) => {
   const userId = res.locals.userId as string;
+  const userEmail = normalizeToEmail(userId);
   const requestId = res.locals.requestId as string;
 
   try {
-    const credentials = await findUserCredentialsByEmail(userId);
+    const credentials = await findUserCredentialsByEmail(userEmail);
 
     if (!credentials) {
       return res.status(200).json({
@@ -53,7 +69,7 @@ export const getCursorKeyRoute = async (
   } catch (error) {
     logger.error('Failed to retrieve Cursor API key status', {
       requestId,
-      userId,
+      userEmail,
       error,
     });
     return res.status(500).json({
@@ -74,6 +90,7 @@ export const upsertCursorKeyRoute = async (
   res: Response<UpsertKeyResponse | ErrorResponse>
 ) => {
   const userId = res.locals.userId as string;
+  const userEmail = normalizeToEmail(userId);
   const requestId = res.locals.requestId as string;
 
   const parseResult = cursorKeySchema.safeParse(req.body);
@@ -93,17 +110,17 @@ export const upsertCursorKeyRoute = async (
   try {
     logger.info('Storing Cursor API key for user', {
       requestId,
-      userId,
+      userEmail,
     });
 
     const result = await upsertUserCredentials({
-      email: userId,
+      email: userEmail,
       cursorApiKey: apiKey,
     });
 
     logger.info('Successfully stored Cursor API key', {
       requestId,
-      userId,
+      userEmail,
       keyLastFour: result.keyLastFour,
     });
 
@@ -114,7 +131,7 @@ export const upsertCursorKeyRoute = async (
   } catch (error) {
     logger.error('Failed to store Cursor API key', {
       requestId,
-      userId,
+      userEmail,
       error,
     });
     return res.status(500).json({
@@ -135,20 +152,21 @@ export const deleteCursorKeyRoute = async (
   res: Response<DeleteKeyResponse | ErrorResponse>
 ) => {
   const userId = res.locals.userId as string;
+  const userEmail = normalizeToEmail(userId);
   const requestId = res.locals.requestId as string;
 
   try {
     logger.info('Deleting Cursor API key for user', {
       requestId,
-      userId,
+      userEmail,
     });
 
-    const deleted = await deleteUserCredentials(userId);
+    const deleted = await deleteUserCredentials(userEmail);
 
     if (!deleted) {
       logger.info('No Cursor API key found to delete', {
         requestId,
-        userId,
+        userEmail,
       });
       return res.status(404).json({
         message: 'No API key found',
@@ -157,7 +175,7 @@ export const deleteCursorKeyRoute = async (
 
     logger.info('Successfully deleted Cursor API key', {
       requestId,
-      userId,
+      userEmail,
     });
 
     return res.status(200).json({
@@ -166,7 +184,7 @@ export const deleteCursorKeyRoute = async (
   } catch (error) {
     logger.error('Failed to delete Cursor API key', {
       requestId,
-      userId,
+      userEmail,
       error,
     });
     return res.status(500).json({
