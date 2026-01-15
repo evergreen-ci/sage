@@ -10,8 +10,8 @@ This guide walks you through the one-time setup to use Sage Bot.
 
 ## Step 1: Generate a Cursor API Key
 
-1. Go to [cursor.com/settings](https://cursor.com/settings)
-2. Navigate to the **API Keys** section
+1. Go to the [Cursor Integrations dashboard](https://cursor.com/dashboard?tab=integrations)
+2. Navigate to the **API Keys** section in the integrations tab
 3. Click **Generate new key**
 4. Copy and save your API key securely - you won't be able to see it again
 
@@ -21,7 +21,7 @@ Cursor's cloud agent needs access to your repositories to clone code and push ch
 
 ### Installation
 
-1. Go to **Integrations** in the [Cursor Dashboard](https://cursor.com/settings)
+1. Go to the [Cursor Integrations dashboard](https://cursor.com/dashboard?tab=integrations)
 2. Click **Connect** next to GitHub
 3. Choose either **All repositories** or **Selected repositories**
 
