@@ -8,11 +8,11 @@ This guide walks you through the one-time setup to use Sage Bot.
 - A Cursor account with API access
 - Access to a supported Jira project (DEVPROD, CLOUDP, AMP, or DOCSP)
 
-## Step 1: Get a Cursor API Key
+## Step 1: Generate a Cursor API Key
 
-1. Go to the [Cursor Dashboard](https://cursor.com/dashboard?tab=integrations)
+1. Go to [cursor.com/settings](https://cursor.com/settings)
 2. Navigate to the **API Keys** section
-3. Click **Generate new key** (or use an existing key)
+3. Click **Generate new key**
 4. Copy and save your API key securely - you won't be able to see it again
 
 ## Step 2: Connect Cursor to GitHub
