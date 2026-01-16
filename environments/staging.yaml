@@ -23,10 +23,10 @@ services:
 
 resources:
   requests:
-    cpu: 4
+    cpu: 1
     memory: 8Gi
   limits:
-    cpu: 8
+    cpu: 2
     memory: 8Gi
 
 # Environment-specific variables
