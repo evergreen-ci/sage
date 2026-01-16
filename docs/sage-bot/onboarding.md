@@ -1,18 +1,31 @@
 # Sage Bot Onboarding Guide
 
 This guide walks you through the one-time setup to use Sage Bot.
+Sage Bot uses [Cursor Cloud Agents](https://cursor.com/docs/cloud-agent) to make pull requests to Github repos based on Jira tickets.
+
+You must provide Sage Bot with a Cursor API Key tied to your Cursor account.
+Sage Bot uses the API key to make requests with the Cursor Agent on your behalf.
 
 ## Prerequisites
 
 - MongoDB VPN access (required for all API calls)
 - A Cursor account with API access
-- Access to a supported Jira project (DEVPROD, CLOUDP, AMP, or DOCSP)
+- Access to a supported Jira project:
+  - DEVPROD
+  - CLOUDP
+  - AMP
+  - DOCSP
+- Github repository with Cursor's Github App installed
+
+### Repository Does Not Have Cursor Github App Installed?
+
+If a desired repository is not available for selection, you'll need to submit an IT request through [Zendesk](https://help-it.mongodb.com/hc/en-us/requests/new?ticket_form_id=11872020855315) to install Cursor's GitHub app in that repository.
 
 ## Step 1: Generate a Cursor API Key
 
-1. Go to [cursor.com/settings](https://cursor.com/settings)
-2. Navigate to the **API Keys** section
-3. Click **Generate new key**
+1. Go to [Cursor Integration settings](https://cursor.com/dashboard?tab=integrations)
+2. Navigate to the **User API Keys** section
+3. Click **New User API key**
 4. Copy and save your API key securely - you won't be able to see it again
 
 ## Step 2: Connect Cursor to GitHub
@@ -26,10 +39,6 @@ Cursor's cloud agent needs access to your repositories to clone code and push ch
 3. Choose either **All repositories** or **Selected repositories**
 
 To disconnect later, return to the integrations dashboard and click **Disconnect Account**.
-
-### Repository Not Available?
-
-If a desired repository is not available for selection, you'll need to submit an IT request through [Zendesk](https://help-it.mongodb.com/hc/en-us/requests/new?ticket_form_id=11872020855315) to install Cursor's GitHub app in that repository.
 
 ### Permissions
 
