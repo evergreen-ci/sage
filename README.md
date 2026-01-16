@@ -184,11 +184,6 @@ To test the Cursor agent integration locally, you'll need to:
      -d '{"apiKey": "your-cursor-api-key"}'
    ```
 
-3. **Encryption Key Configuration**: The API key is encrypted at rest using AES-256-GCM. Ensure the `ENCRYPTION_KEY` environment variable is set in your `.env.local`:
-   - Must be a 32-byte hex string (64 characters)
-   - Generate one with: `openssl rand -hex 32`
-   - A default key is provided in `.env.defaults` for local development only (do not use in production)
-
 ---
 
 ## Docker Builds
