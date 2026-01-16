@@ -14,7 +14,7 @@ Your Jira ticket must include the following:
 | -------------------- | ----------- | ------------------------------------------------------------------- |
 | **Summary**          | Yes         | A clear title describing the task                                   |
 | **Description**      | Recommended | Detailed implementation requirements                                |
-| **Assignee**         | Yes         | Must be set to a user with registered credentials                   |
+| **Assignee**         | Yes         | Must be set to a user with a Cursor API Key registered with Sage Bot. See the [Onboarding guide](./onboarding.md) to register a user with Sage Bot. |
 | **Repository Label** | Yes         | Label in format `repo:<org>/<repo>` or `repo:<org>/<repo>@<branch>` |
 
 ### Repository Label Format
