@@ -5017,6 +5017,83 @@ export type WorkstationSetupCommandInput = {
   directory?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type DistroQueryVariables = Exact<{
+  distroId: Scalars['String']['input'];
+}>;
+
+export type DistroQuery = {
+  __typename?: 'Query';
+  distro?: {
+    __typename?: 'Distro';
+    name: string;
+    imageId: string;
+    arch: Arch;
+    provider: Provider;
+    disabled: boolean;
+  } | null;
+};
+
+export type ImageQueryVariables = Exact<{
+  imageId: Scalars['String']['input'];
+}>;
+
+export type ImageQuery = {
+  __typename?: 'Query';
+  image?: {
+    __typename?: 'Image';
+    id: string;
+    ami: string;
+    lastDeployed: Date;
+    distros: Array<{ __typename?: 'Distro'; name: string; arch: Arch }>;
+    events: {
+      __typename?: 'ImageEventsPayload';
+      count: number;
+      eventLogEntries: Array<{
+        __typename?: 'ImageEvent';
+        timestamp: Date;
+        amiAfter: string;
+        amiBefore?: string | null;
+        entries: Array<{
+          __typename?: 'ImageEventEntry';
+          type: ImageEventType;
+          action: ImageEventEntryAction;
+          name: string;
+          before: string;
+          after: string;
+        }>;
+      }>;
+    };
+    packages: {
+      __typename?: 'ImagePackagesPayload';
+      filteredCount: number;
+      totalCount: number;
+      data: Array<{
+        __typename?: 'Package';
+        name: string;
+        manager: string;
+        version: string;
+      }>;
+    };
+    toolchains: {
+      __typename?: 'ImageToolchainsPayload';
+      filteredCount: number;
+      totalCount: number;
+      data: Array<{
+        __typename?: 'Toolchain';
+        name: string;
+        path: string;
+        version: string;
+      }>;
+    };
+    operatingSystem: {
+      __typename?: 'ImageOperatingSystemPayload';
+      filteredCount: number;
+      totalCount: number;
+      data: Array<{ __typename?: 'OSInfo'; name: string; version: string }>;
+    };
+  } | null;
+};
+
 export type GetTaskQueryVariables = Exact<{
   taskId: Scalars['String']['input'];
   execution?: InputMaybe<Scalars['Int']['input']>;
@@ -5034,6 +5111,7 @@ export type GetTaskQuery = {
     buildVariant: string;
     projectIdentifier?: string | null;
     requester: string;
+    distroId: string;
     baseTask?: { __typename?: 'Task'; id: string } | null;
     versionMetadata: {
       __typename?: 'Version';
@@ -5204,3 +5282,7 @@ export type VersionQuery = {
     } | null;
   };
 };
+
+export type ImagesQueryVariables = Exact<{ [key: string]: never }>;
+
+export type ImagesQuery = { __typename?: 'Query'; images: Array<string> };
