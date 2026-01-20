@@ -2,7 +2,12 @@ import { getDecryptedApiKey } from '@/db/repositories/userCredentialsRepository'
 import { type CreateAgentRequest } from '@/generated/cursor-api';
 import logger from '@/utils/logger';
 import { createCursorApiClient, CursorApiClientError } from './cursorApiClient';
-import { LaunchAgentInput, LaunchAgentResult } from './types';
+import {
+  GetAgentStatusInput,
+  GetAgentStatusResult,
+  LaunchAgentInput,
+  LaunchAgentResult,
+} from './types';
 
 /**
  * Builds the prompt text from ticket data
@@ -170,6 +175,73 @@ export const launchCursorAgent = async (
       error: errorMessage,
       ticketKey,
       targetRepository,
+    });
+
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+};
+
+/**
+ * Gets the current status of a Cursor Cloud Agent
+ * @param input - The agent ID and assignee email (for API key lookup)
+ * @returns Result with current status, PR URL, and summary
+ */
+export const getAgentStatus = async (
+  input: GetAgentStatusInput
+): Promise<GetAgentStatusResult> => {
+  const { agentId, assigneeEmail } = input;
+
+  logger.debug(`Getting status for Cursor agent ${agentId}`, {
+    agentId,
+    assigneeEmail,
+  });
+
+  // Get the assignee's decrypted API key
+  const apiKey = await getDecryptedApiKey(assigneeEmail);
+
+  if (!apiKey) {
+    const errorMessage = `No Cursor API key found for assignee: ${assigneeEmail}`;
+    logger.error(errorMessage, { agentId, assigneeEmail });
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+
+  try {
+    // Create client with user's API key and get agent status
+    const client = createCursorApiClient(apiKey);
+    const agentResponse = await client.getAgent(agentId);
+
+    logger.debug(`Cursor agent status retrieved for ${agentId}`, {
+      agentId: agentResponse.id,
+      status: agentResponse.status,
+      prUrl: agentResponse.target?.prUrl,
+    });
+
+    return {
+      success: true,
+      status: agentResponse.status,
+      prUrl: agentResponse.target?.prUrl,
+      summary: agentResponse.summary,
+      agentUrl: agentResponse.target?.url,
+    };
+  } catch (error) {
+    let errorMessage = 'Failed to get Cursor agent status';
+
+    if (error instanceof CursorApiClientError) {
+      errorMessage = `Cursor API error (${error.statusCode}): ${error.message}`;
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
+    logger.error(`Failed to get status for Cursor agent ${agentId}`, {
+      error: errorMessage,
+      agentId,
+      assigneeEmail,
     });
 
     return {
