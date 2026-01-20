@@ -47,8 +47,8 @@ export interface PollingResult {
  *
  * This service:
  * 1. Finds all job runs with status 'Running'
- * 2. Checks each job against TTL (marks as FailedTimeout if exceeded)
- * 3. Polls Cursor API for current agent status
+ * 2. Polls Cursor API for current agent status
+ * 3. If agent is still running, checks TTL (marks as FailedTimeout if exceeded)
  * 4. Updates job run status based on agent status
  * 5. Posts appropriate notifications to Jira
  */
@@ -84,24 +84,6 @@ export class CursorAgentStatusPollingService {
     const ticketKey = job.jiraTicketKey;
 
     try {
-      // Check if job has timed out
-      if (this.isJobTimedOut(job)) {
-        logger.info(`Job ${jobId} for ticket ${ticketKey} has timed out`, {
-          jobId,
-          ticketKey,
-          startedAt: job.startedAt,
-        });
-
-        await updateJobRun(job._id!, {
-          status: JobRunStatus.FailedTimeout,
-          errorMessage: 'Job exceeded maximum runtime',
-        });
-
-        const comment = formatAgentTimeoutPanel();
-        await this.config.jiraClient.addComment(ticketKey, comment);
-
-        return { jobId, ticketKey, success: true };
-      }
       // This should never happen, but just in case
       if (!job.cursorAgentId || !job.assignee) {
         logger.warn(`Job ${jobId} missing agent metadata`, {
@@ -119,7 +101,8 @@ export class CursorAgentStatusPollingService {
         };
       }
 
-      // Get agent status from Cursor API
+      // Get agent status from Cursor API first
+      // This ensures we capture completed agents even if they exceeded TTL
       const statusResult = await getAgentStatus({
         agentId: job.cursorAgentId,
         assigneeEmail: job.assignee,
@@ -141,8 +124,34 @@ export class CursorAgentStatusPollingService {
         };
       }
 
+      const agentStatus = statusResult.status!;
+
+      // Only apply TTL timeout if the agent is still running
+      // This ensures we don't mark completed agents as timed out
+      if (
+        (agentStatus === 'RUNNING' || agentStatus === 'CREATING') &&
+        this.isJobTimedOut(job)
+      ) {
+        logger.info(`Job ${jobId} for ticket ${ticketKey} has timed out`, {
+          jobId,
+          ticketKey,
+          startedAt: job.startedAt,
+          agentStatus,
+        });
+
+        await updateJobRun(job._id!, {
+          status: JobRunStatus.FailedTimeout,
+          errorMessage: 'Job exceeded maximum runtime',
+        });
+
+        const comment = formatAgentTimeoutPanel();
+        await this.config.jiraClient.addComment(ticketKey, comment);
+
+        return { jobId, ticketKey, success: true };
+      }
+
       // Process based on agent status
-      await this.handleAgentStatus(job, statusResult.status!, {
+      await this.handleAgentStatus(job, agentStatus, {
         prUrl: statusResult.prUrl,
         summary: statusResult.summary,
       });
