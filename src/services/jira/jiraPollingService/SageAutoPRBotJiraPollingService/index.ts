@@ -138,7 +138,7 @@ export const createSageAutoPRBotJiraPollingService = (
           if (!defaultBranch) {
             const errorMessage =
               `No default branch configured for repository ${ticketData.targetRepository}. ` +
-              `See the [pre-configured repositories documentation](${SAGE_BOT_DOCS_LINKS.PRE_CONFIGURED_REPOSITORIES}) for more information.`;
+              `See the [pre-configured repositories documentation|${SAGE_BOT_DOCS_LINKS.PRE_CONFIGURED_REPOSITORIES}] for more information.`;
 
             logger.error(
               `Failed to determine default branch for ticket ${ticketKey}`,

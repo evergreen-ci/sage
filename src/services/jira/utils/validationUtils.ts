@@ -17,7 +17,7 @@ export const validateRepositoryLabel = (
   if (!ticketData.targetRepository) {
     return (
       'Missing repository label. Please add a label in the format: repo:<org>/<repo_name> or repo:<org>/<repo_name>@<branch>. ' +
-      `See the [repository label documentation](${SAGE_BOT_DOCS_LINKS.REPOSITORY_LABEL_FORMAT}) for details.`
+      `See the [repository label documentation|${SAGE_BOT_DOCS_LINKS.REPOSITORY_LABEL_FORMAT}] for details.`
     );
   }
 
@@ -27,7 +27,7 @@ export const validateRepositoryLabel = (
         `Repository "${ticketData.targetRepository}" is not configured. ` +
         'Either add it to the repository config or specify a branch inline: ' +
         `repo:${ticketData.targetRepository}@<branch>. ` +
-        `See the [pre-configured repositories documentation](${SAGE_BOT_DOCS_LINKS.PRE_CONFIGURED_REPOSITORIES}) for more information.`
+        `See the [pre-configured repositories documentation|${SAGE_BOT_DOCS_LINKS.PRE_CONFIGURED_REPOSITORIES}] for more information.`
       );
     }
   }
@@ -46,7 +46,7 @@ export const validateAssignee = (
   if (!ticketData.assigneeEmail) {
     return (
       'No assignee set. Please assign this ticket to a user. ' +
-      `See the [usage guide](${SAGE_BOT_DOCS_LINKS.USAGE_GUIDE}) for ticket requirements.`
+      `See the [usage guide|${SAGE_BOT_DOCS_LINKS.USAGE_GUIDE}] for ticket requirements.`
     );
   }
   return null;
@@ -65,7 +65,7 @@ export const validateCredentials = async (
     return (
       `Assignee (${assigneeEmail}) does not have credentials configured. ` +
       `Please register your API key before using sage-bot. ` +
-      `See the [onboarding guide](${SAGE_BOT_DOCS_LINKS.ONBOARDING_CREDENTIALS}) for instructions.`
+      `See the [onboarding guide|${SAGE_BOT_DOCS_LINKS.ONBOARDING_CREDENTIALS}] for instructions.`
     );
   }
   return null;

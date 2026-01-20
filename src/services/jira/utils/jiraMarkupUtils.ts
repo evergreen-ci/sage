@@ -135,5 +135,5 @@ export const formatAgentLaunchFailedPanel = (errorMessage: string): string =>
     `Failed to launch Cursor Cloud Agent for this ticket.\n\n` +
       `*Error:* ${errorMessage}\n\n` +
       `Please check the configuration and re-add the {{sage-bot}} label to retry. ` +
-      `For help resolving this issue, see the [troubleshooting guide](${SAGE_BOT_DOCS_LINKS.TROUBLESHOOTING}).`
+      `For help resolving this issue, see the [troubleshooting guide|${SAGE_BOT_DOCS_LINKS.TROUBLESHOOTING}].`
   );
