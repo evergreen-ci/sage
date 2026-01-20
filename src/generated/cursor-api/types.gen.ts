@@ -40,13 +40,17 @@ export type CreateAgentRequest = {
   model?: string;
   source: {
     /**
-     * The GitHub repository URL
+     * The GitHub repository URL. Required unless prUrl is provided.
      */
-    repository: string;
+    repository?: string;
     /**
      * Git ref (branch/tag) to use as the base branch
      */
     ref?: string;
+    /**
+     * GitHub pull request URL. When provided, the agent works on this PR's repository and branches. Mutually exclusive with repository/ref.
+     */
+    prUrl?: string;
   };
   target?: {
     /**
@@ -65,6 +69,10 @@ export type CreateAgentRequest = {
      * Custom branch name for the agent to create
      */
     branchName?: string;
+    /**
+     * Whether to create a new branch (true) or use the PR's existing head branch (false). Only applies when source.prUrl is provided.
+     */
+    autoBranch?: boolean;
   };
   webhook?: {
     /**
@@ -103,6 +111,10 @@ export type ListAgentsData = {
      * Pagination cursor from the previous response
      */
     cursor?: string;
+    /**
+     * Filter agents by pull request URL
+     */
+    prUrl?: string;
   };
   url: '/v0/agents';
 };
@@ -275,6 +287,10 @@ export type CreateAgentResponses = {
        * URL to view the agent in Cursor Web
        */
       url: string;
+      /**
+       * URL of the pull request, if agent was created from a PR
+       */
+      prUrl?: string;
       /**
        * Whether a pull request will be automatically created
        */
