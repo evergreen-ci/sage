@@ -127,6 +127,47 @@ Removes the `dist/` directory.
 
 ---
 
+## Testing the API Locally
+
+Most API endpoints require authentication via the `x-kanopy-internal-authorization` header. For local development, there are two ways to authenticate requests:
+
+### Option 1: Set the `USER_NAME` Environment Variable (Recommended)
+
+When the `USER_NAME` environment variable is set, the authentication middleware uses it as the user ID, bypassing JWT validation. Add it to your `.env.local`:
+
+```bash
+USER_NAME=your.email@mongodb.com
+```
+
+Then test endpoints with simple curl commands:
+
+```bash
+curl -X POST http://localhost:8080/pr-bot/user/cursor-key \
+  -H "Content-Type: application/json" \
+  -d '{"apiKey": "your-api-key-here"}'
+```
+
+### Option 2: Use a Fake JWT Header
+
+If `USER_NAME` is not set, you can pass a JWT in the `x-kanopy-internal-authorization` header. The middleware only decodes the payload (doesn't verify the signature), so you can construct a test JWT:
+
+```bash
+# JWT payload: {"sub":"test@example.com"}
+curl -X POST http://localhost:8080/pr-bot/user/cursor-key \
+  -H "Content-Type: application/json" \
+  -H "x-kanopy-internal-authorization: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIn0.fake" \
+  -d '{"apiKey": "your-api-key-here"}'
+```
+
+To create a custom test JWT, base64-encode your desired payload:
+
+```bash
+echo -n '{"sub":"your.email@mongodb.com"}' | base64
+# Use the output as the middle segment: header.PAYLOAD.signature
+```
+
+---
+
 ## Docker Builds
 
 - Docker contexts now respect `.dockerignore`, so local `docker build` and `docker buildx` commands skip large directories such as `node_modules/`, `coverage/`, and generated GraphQL schemas. If you need to reference a file that is ignored by default, build with `--no-cache` or temporarily remove the entry.
