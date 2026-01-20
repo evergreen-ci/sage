@@ -11,6 +11,8 @@ repositories:
     defaultBranch: master
   evergreen-ci/sage:
     defaultBranch: main
+  evergreen-ci/evergreen:
+    defaultBranch: main
   evergreen-ci/ui:
     defaultBranch: main
   10gen/iteng-memento:
