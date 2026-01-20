@@ -17,7 +17,7 @@ const monitorConfig = {
     value: '* * * * *',
   },
   checkinMargin: 1, // In minutes. Optional.
-  maxRuntime: 1, // In minutes. Optional.
+  maxRuntime: 5, // In minutes. Allow time for multiple API calls.
   timezone: 'America/New_York', // Optional.
 };
 
