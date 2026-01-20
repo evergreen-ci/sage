@@ -284,9 +284,12 @@ export class CursorAgentStatusPollingService {
         return result;
       }
 
-      // Process jobs sequentially to respect API rate limits
+      // Process jobs sequentially to avoid bursting Cursor/Jira API calls.
+      // Running these in parallel (e.g. via Promise.all) can easily exceed
+      // external rate limits and cause 429/throttling responses, which would
+      // both fail polling and create noisy retries.
       for (const job of runningJobs) {
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- intentional sequential processing
         const processingResult = await this.processJob(job);
         result.results.push(processingResult);
 
