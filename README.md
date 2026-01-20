@@ -131,6 +131,24 @@ Removes the `dist/` directory.
 
 Most API endpoints require authentication via the `x-kanopy-internal-authorization` header. For local development, there are two ways to authenticate requests:
 
+### Configuring Cursor API Key for Local Testing
+
+To test the Cursor agent integration locally, you'll need to:
+
+1. **Get a Cursor API Key**: Obtain an API key from the [Cursor Dashboard](https://cursor.com/dashboard?tab=integrations). Navigate to the **API Keys** section and generate a new key.
+
+2. **Add the Key via REST Endpoints**: Use the local API endpoints to store your key:
+   - `POST /pr-bot/user/cursor-key` - Create or update your Cursor API key
+   - `GET /pr-bot/user/cursor-key` - Check if a key is registered
+   - `DELETE /pr-bot/user/cursor-key` - Remove your stored key
+
+   Example:
+   ```bash
+   curl -X POST http://localhost:8080/pr-bot/user/cursor-key \
+     -H "Content-Type: application/json" \
+     -d '{"apiKey": "your-cursor-api-key"}'
+   ```
+
 ### Option 1: Set the `USER_NAME` Environment Variable (Recommended)
 
 When the `USER_NAME` environment variable is set, the authentication middleware uses it as the user ID, bypassing JWT validation. Add it to your `.env.local`:
@@ -165,24 +183,6 @@ To create a custom test JWT, base64-encode your desired payload:
 echo -n '{"sub":"your.email@mongodb.com"}' | base64
 # Use the output as the middle segment: header.PAYLOAD.signature
 ```
-
-### Configuring Cursor API Key for Local Testing
-
-To test the Cursor agent integration locally, you'll need to:
-
-1. **Get a Cursor API Key**: Obtain an API key from the [Cursor Dashboard](https://cursor.com/dashboard?tab=integrations). Navigate to the **API Keys** section and generate a new key.
-
-2. **Add the Key via REST Endpoints**: Use the local API endpoints to store your key:
-   - `POST /pr-bot/user/cursor-key` - Create or update your Cursor API key
-   - `GET /pr-bot/user/cursor-key` - Check if a key is registered
-   - `DELETE /pr-bot/user/cursor-key` - Remove your stored key
-
-   Example:
-   ```bash
-   curl -X POST http://localhost:8080/pr-bot/user/cursor-key \
-     -H "Content-Type: application/json" \
-     -d '{"apiKey": "your-cursor-api-key"}'
-   ```
 
 ---
 
