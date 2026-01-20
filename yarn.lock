@@ -1623,23 +1623,23 @@
   dependencies:
     "@lukeed/csprng" "^1.1.0"
 
-"@mastra/ai-sdk@^1.0.0-beta.14":
-  version "1.0.0-beta.14"
-  resolved "https://registry.yarnpkg.com/@mastra/ai-sdk/-/ai-sdk-1.0.0-beta.14.tgz#15532d84d27dbb60275bf1775ec99d64cb6a6e39"
-  integrity sha512-KlQv3cVzzzNMfiJGjFQFF5xgeAnczEKuY/thdGomkisTlDva1a3jbGZahGj3nCTvBowlP32UFJU4rUcDoBzdcg==
+"@mastra/ai-sdk@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@mastra/ai-sdk/-/ai-sdk-1.0.2.tgz#c6ba08926df410b273d890bb0e8f9758d7ae0104"
+  integrity sha512-XGHZ/DKMA8SK07adKjJ0tyLGu27saoL/I0oPcYCLesi72EPtBlm4eRVz3ra2TViGe6gJh3umbl8XjeVcLy+j0w==
 
-"@mastra/braintrust@^1.0.0-beta.12":
-  version "1.0.0-beta.12"
-  resolved "https://registry.yarnpkg.com/@mastra/braintrust/-/braintrust-1.0.0-beta.12.tgz#16dc5ecb9699dd831ee37dd3a6d08f7968de320f"
-  integrity sha512-EI2pYLZ2kyIfgXOFy62I1LnfWF3ySKj5gPBlejzw9BeOCU7dzHA/rkBr4pw26n4egTiFjxdNYwvkYLN/QTeZmg==
+"@mastra/braintrust@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@mastra/braintrust/-/braintrust-1.0.0.tgz#89e7c471c56711227be30c1bc797e7ee9b92c40a"
+  integrity sha512-p8xH1u29v0iQt7kOGX085NtOY9gqNr8ira2Ezm0IaRznIEbU8zv7jMNijeWzrnGe5w8q6llqF7pcpiCfFoJalw==
   dependencies:
-    "@mastra/observability" "1.0.0-beta.10"
+    "@mastra/observability" "1.0.0"
     braintrust "^1.1.0"
 
-"@mastra/core@^1.0.0-beta.21":
-  version "1.0.0-beta.21"
-  resolved "https://registry.yarnpkg.com/@mastra/core/-/core-1.0.0-beta.21.tgz#a9a22147caf20243d1ec34a27f0d1fe6e1b33435"
-  integrity sha512-JSZkquAuHleyOUBPTHr1BUu+KQOju7K3ovl2oFCO99oQ3DStszp/gxz4Z6qcU52Xt7O6nzjZjIpcAKdQ6Yjw1A==
+"@mastra/core@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@mastra/core/-/core-1.0.4.tgz#c056835d60167894201bef1ae1d82258d0451948"
+  integrity sha512-kBSlYoUD3zjwvVMxFVneNHe0+cLKvXs1rZTGeRUHQdwVYo7guMXFu/qnsxizSGd+eNz976Ph81LixmqK2Ca7dA==
   dependencies:
     "@a2a-js/sdk" "~0.2.4"
     "@ai-sdk/provider-utils-v5" "npm:@ai-sdk/provider-utils@3.0.12"
@@ -1649,7 +1649,7 @@
     "@ai-sdk/ui-utils-v5" "npm:@ai-sdk/ui-utils@1.2.11"
     "@isaacs/ttlcache" "^1.4.1"
     "@lukeed/uuid" "^2.0.1"
-    "@mastra/schema-compat" "1.0.0-beta.6"
+    "@mastra/schema-compat" "1.0.0"
     "@modelcontextprotocol/sdk" "^1.17.5"
     "@sindresorhus/slugify" "^2.2.1"
     dotenv "^17.2.3"
@@ -1693,6 +1693,14 @@
     tinyglobby "^0.2.15"
     typescript-paths "^1.5.1"
 
+"@mastra/loggers@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@mastra/loggers/-/loggers-1.0.0.tgz#0c42f95f921f67eced65cd6a3c44c59815e511b1"
+  integrity sha512-uIbFMXIt4z4uyZKTRSlUDXy+1kz3YTfe955qylBBvGdGy2AelOIaDqpR1KRxogfVew+eBX/nVZ67u3pVTYK1vA==
+  dependencies:
+    pino "^10.1.0"
+    pino-pretty "^13.0.0"
+
 "@mastra/loggers@^1.0.0-beta.4":
   version "1.0.0-beta.4"
   resolved "https://registry.yarnpkg.com/@mastra/loggers/-/loggers-1.0.0-beta.4.tgz#40a3c8cdd4b85f3abb5de21560097f28109384fc"
@@ -1701,37 +1709,37 @@
     pino "^10.1.0"
     pino-pretty "^13.0.0"
 
-"@mastra/memory@^1.0.0-beta.12":
-  version "1.0.0-beta.12"
-  resolved "https://registry.yarnpkg.com/@mastra/memory/-/memory-1.0.0-beta.12.tgz#234c7ada63ec5e24394d3e9236b8afbd02929a54"
-  integrity sha512-BCL1u+mJnWgRbZdJRDntj4UcmRyTfjCb2qct/olgbFBl1nYYhuld6aK8dQgYS1QcGTOxDD/SIogs76BMfa0uyQ==
+"@mastra/memory@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@mastra/memory/-/memory-1.0.0.tgz#112e23838067072ec2d5fc86f49611cde8ff3fbc"
+  integrity sha512-4PHLkKusqUHNTi0WWS84E3Y+DhUHZGay26LOOKht/JwFUY5hwatKCeMfLHW3/aPX6xJSoQYwGN2eNnWo3nLZcg==
   dependencies:
-    "@mastra/schema-compat" "1.0.0-beta.6"
+    "@mastra/schema-compat" "1.0.0"
     async-mutex "^0.5.0"
     js-tiktoken "^1.0.21"
     json-schema "^0.4.0"
     lru-cache "^11.2.2"
     xxhash-wasm "^1.1.0"
 
-"@mastra/mongodb@^1.0.0-beta.11":
-  version "1.0.0-beta.11"
-  resolved "https://registry.yarnpkg.com/@mastra/mongodb/-/mongodb-1.0.0-beta.11.tgz#7440b386dc5035694b924286e4d2f7cf67c03aa6"
-  integrity sha512-gVhCaPGg5bXv8O35jAMxzXZVXpbTzjuT+46tHviTjlFdJu/1T1d0DHjBn3vU1MSZCNzdRDuMUCwGYrVj/5dX3A==
+"@mastra/mongodb@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@mastra/mongodb/-/mongodb-1.0.0.tgz#d88f73f5241f313f3bcf8f332656cffaa15cc52a"
+  integrity sha512-NLTV3WUhL1BFMjVkk0Av/7ADqZkKiHpvmvhiZnPgvyVnLxNNzXFKtISxnnOwG2QZG6g9H8Qs/75CAzwpTebLgw==
   dependencies:
     "@types/mongodb" "^4.0.7"
     cloudflare "^4.5.0"
     mongodb "^7.0.0"
     uuid "^13.0.0"
 
-"@mastra/observability@1.0.0-beta.10", "@mastra/observability@^1.0.0-beta.5":
-  version "1.0.0-beta.10"
-  resolved "https://registry.yarnpkg.com/@mastra/observability/-/observability-1.0.0-beta.10.tgz#47131328521bebe1d41398e779f5008de2e77fda"
-  integrity sha512-uaVEupKgLYiiOtx5xASl4zPqEaqqkbI6dzwMUP05RaaMXTHqvD3X5+uVyrtL04PgXjVv1GNxPw9UxMYFUDGutg==
+"@mastra/observability@1.0.0", "@mastra/observability@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@mastra/observability/-/observability-1.0.0.tgz#9d5e1b6c44122866790447cb86f2af38a4ee5dad"
+  integrity sha512-Xi/TCxNPjbRjVVmmMylYwvJCg5ootzoKwWyR7xC+ZrcnhY8Bv+R77eEmFFiWny9tPB1/R1qbUSGf6JkOgLpgLw==
 
-"@mastra/rag@^2.0.0-beta.6":
-  version "2.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@mastra/rag/-/rag-2.0.0-beta.6.tgz#7bb48f06bbe6ef1c62f6404de57b0ccd54974e66"
-  integrity sha512-DR2JbEgNXTBVBBmj1RcrKSyn9rSY5+a2ASJgwrIXRK7EkNdFKlEOotn/Wcr7It84iLbwIu8tSYIBS5FkiI0Bjg==
+"@mastra/rag@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@mastra/rag/-/rag-2.0.0.tgz#3a540e52ac92edc89941ec1a8ed2e81b4729eff6"
+  integrity sha512-onHn6VDscXWfwiKdXIiWtrp1tW1f9zhshDpq5vxWMY40yMvMF3tV4b4HBxNY5yjEbshTy3sNe52MYBxBPjXjEg==
   dependencies:
     "@paralleldrive/cuid2" "^2.3.1"
     big.js "^7.0.1"
@@ -1740,10 +1748,10 @@
     pathe "^2.0.3"
     zeroentropy "0.1.0-alpha.6"
 
-"@mastra/schema-compat@1.0.0-beta.6":
-  version "1.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@mastra/schema-compat/-/schema-compat-1.0.0-beta.6.tgz#13302c04f8f0186dc0dd198627c9bf8d200fddd3"
-  integrity sha512-9PfpTMpxHnqhqfNTaEFM7MZwxtahVg8NAhkP4sbMQCHcc6fjnJawg4E7kv6cIz3XZTtXsUO7bA8twQrDgoD2Uw==
+"@mastra/schema-compat@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@mastra/schema-compat/-/schema-compat-1.0.0.tgz#4c6dc934875f3fb50300d1343872a848d207ac0b"
+  integrity sha512-jR5QsibhCO3lh2Vv3hNifd5XaKFnOV7ecduZyNxNg21Fw1+59ozpHkNtUAmDQW88uwvx/qHu1dKN/XtOhwWeyw==
   dependencies:
     json-schema-to-zod "^2.7.0"
     zod-from-json-schema "^0.5.0"
@@ -1757,10 +1765,12 @@
   dependencies:
     hono "^4.11.3"
 
-"@mastra/server@^1.0.0-beta.21":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@mastra/server/-/server-1.0.3.tgz#669814a21554d15b913eea757aa30f9208669eac"
-  integrity sha512-VfzmaHbbsMFdOkqn3iH6CwByreIPRHXHcn0YZG32W4OUJ2oNl2AplFSDA1Fxn2dLJy+KYWuM8NUnRxXvhOJSbQ==
+"@mastra/server@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@mastra/server/-/server-1.0.4.tgz#4e698275dc02419a2c311864ab34870b94b0570d"
+  integrity sha512-4ELGQzAGNvBKOPRWQHMfLKhIAS5hGQ9DFUqTIbExDsGAy0sr46pTjV8n2FcNOVp/BphEMRWU/IcDXWe2QQHBXw==
+  dependencies:
+    hono "^4.11.3"
 
 "@modelcontextprotocol/sdk@^1.17.5":
   version "1.25.1"
@@ -4662,6 +4672,37 @@ braintrust@^1.1.0:
     uuid "^9.0.1"
     zod "^3.25.34"
     zod-to-json-schema "^3.22.5"
+
+braintrust@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/braintrust/-/braintrust-2.0.2.tgz#7f2383c448f2d76d2346d2e8f0a7854a036d3323"
+  integrity sha512-TOfdi2acpDnne3Pcew/shbwda0SKQvjTsGprr0gLWloaeYehhOPyrsWmwKsRNXOJa01D0czTGyetWpUbcH+euw==
+  dependencies:
+    "@ai-sdk/provider" "^1.1.3"
+    "@next/env" "^14.2.3"
+    "@types/nunjucks" "^3.2.6"
+    "@vercel/functions" "^1.0.2"
+    argparse "^2.0.1"
+    boxen "^8.0.1"
+    chalk "^4.1.2"
+    cli-progress "^3.12.0"
+    cli-table3 "^0.6.5"
+    cors "^2.8.5"
+    dotenv "^16.4.5"
+    esbuild "^0.27.0"
+    eventsource-parser "^1.1.2"
+    express "^4.21.2"
+    graceful-fs "^4.2.11"
+    http-errors "^2.0.0"
+    minimatch "^9.0.3"
+    mustache "^4.2.0"
+    nunjucks "^3.2.4"
+    pluralize "^8.0.0"
+    simple-git "^3.21.0"
+    source-map "^0.7.4"
+    termi-link "^1.0.1"
+    uuid "^9.0.1"
+    zod-to-json-schema "^3.25.0"
 
 browserslist@^4.24.0:
   version "4.25.3"
