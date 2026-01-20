@@ -10,12 +10,12 @@ Before using Sage Bot, you must complete the [onboarding steps](./onboarding.md)
 
 Your Jira ticket must include the following:
 
-| Field                | Required    | Description                                                         |
-| -------------------- | ----------- | ------------------------------------------------------------------- |
-| **Summary**          | Yes         | A clear title describing the task                                   |
-| **Description**      | Recommended | Detailed implementation requirements                                |
+| Field                | Required    | Description                                                                                                                                         |
+| -------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Summary**          | Yes         | A clear title describing the task                                                                                                                   |
+| **Description**      | Recommended | Detailed implementation requirements                                                                                                                |
 | **Assignee**         | Yes         | Must be set to a user with a Cursor API Key registered with Sage Bot. See the [Onboarding guide](./onboarding.md) to register a user with Sage Bot. |
-| **Repository Label** | Yes         | Label in format `repo:<org>/<repo>` or `repo:<org>/<repo>@<branch>` |
+| **Repository Label** | Yes         | Label in format `repo:<org>/<repo>` or `repo:<org>/<repo>@<branch>`                                                                                 |
 
 ### Repository Label Format
 
@@ -30,6 +30,7 @@ Branch name is optional if you have [configured the repo's default branch](https
 If you have not configured the default branch, you must specify the branch name.
 
 For example, for the [10gen/mms](https://github.com/10gen/mms) repo:
+
 - `repo:10gen/mms` - Uses the default branch configured for this repo
 - `repo:10gen/mms@my-feature-branch` - Uses a specific branch
 

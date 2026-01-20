@@ -3,6 +3,12 @@ import { isRepositoryConfigured } from '@/services/repositories';
 import { ParsedTicketData, ValidationResult } from '../types';
 
 /**
+ * Base URL for Sage Bot documentation on GitHub
+ */
+const DOCS_BASE_URL =
+  'https://github.com/evergreen-ci/sage/blob/main/docs/sage-bot';
+
+/**
  * Validate that a ticket has a repository label and proper ref configuration
  * Checks:
  * - Has a repo:<org>/<repo> label (with optional `@ref`)
@@ -14,7 +20,10 @@ export const validateRepositoryLabel = (
   ticketData: ParsedTicketData
 ): string | null => {
   if (!ticketData.targetRepository) {
-    return 'Missing repository label. Please add a label in the format: repo:<org>/<repo_name> or repo:<org>/<repo_name>@<branch>';
+    return (
+      'Missing repository label. Please add a label in the format: repo:<org>/<repo_name> or repo:<org>/<repo_name>@<branch>. ' +
+      `See the [repository label documentation](${DOCS_BASE_URL}/usage.md#repository-label-format) for details.`
+    );
   }
 
   if (!ticketData.targetRef) {
@@ -22,7 +31,8 @@ export const validateRepositoryLabel = (
       return (
         `Repository "${ticketData.targetRepository}" is not configured. ` +
         'Either add it to the repository config or specify a branch inline: ' +
-        `repo:${ticketData.targetRepository}@<branch>`
+        `repo:${ticketData.targetRepository}@<branch>. ` +
+        `See the [pre-configured repositories documentation](${DOCS_BASE_URL}/usage.md#pre-configured-repositories) for more information.`
       );
     }
   }
@@ -39,7 +49,10 @@ export const validateAssignee = (
   ticketData: ParsedTicketData
 ): string | null => {
   if (!ticketData.assigneeEmail) {
-    return 'No assignee set. Please assign this ticket to a user.';
+    return (
+      'No assignee set. Please assign this ticket to a user. ' +
+      `See the [usage guide](${DOCS_BASE_URL}/usage.md) for ticket requirements.`
+    );
   }
   return null;
 };
@@ -56,7 +69,8 @@ export const validateCredentials = async (
   if (!hasCredentials) {
     return (
       `Assignee (${assigneeEmail}) does not have credentials configured. ` +
-      'Please register your API key before using sage-bot.'
+      `Please register your API key before using sage-bot. ` +
+      `See the [onboarding guide](${DOCS_BASE_URL}/onboarding.md#step-4-register-your-api-key-with-sage) for instructions.`
     );
   }
   return null;
