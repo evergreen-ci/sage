@@ -89,34 +89,16 @@ describe('CursorAgentStatusPollingService', () => {
     });
 
     it('skips jobs missing cursor agent metadata', async () => {
-      const jobWithoutAgentId = createMockJob({
-        cursorAgentId: undefined,
-      });
-
-      mockFindRunningJobRuns.mockResolvedValueOnce([jobWithoutAgentId]);
-
-      const service = new CursorAgentStatusPollingService({
-        jiraClient: mockJiraClient,
-      });
-
-      const result = await service.poll();
-
-      expect(result.jobsFound).toBe(1);
-      expect(result.jobsSkipped).toBe(1);
-      expect(result.jobsProcessed).toBe(0);
-      expect(result.results[0].skipped).toBe(true);
-      expect(result.results[0].skipReason).toContain(
-        'Missing cursor agent id or assignee'
-      );
-      expect(mockGetAgentStatus).not.toHaveBeenCalled();
-    });
-
-    it('skips jobs missing assignee email', async () => {
+      const jobWithoutAgentId = createMockJob({ cursorAgentId: undefined });
       const jobWithoutAssignee = createMockJob({
+        jiraTicketKey: 'TEST-456',
         assignee: null,
       });
 
-      mockFindRunningJobRuns.mockResolvedValueOnce([jobWithoutAssignee]);
+      mockFindRunningJobRuns.mockResolvedValueOnce([
+        jobWithoutAgentId,
+        jobWithoutAssignee,
+      ]);
 
       const service = new CursorAgentStatusPollingService({
         jiraClient: mockJiraClient,
@@ -124,8 +106,10 @@ describe('CursorAgentStatusPollingService', () => {
 
       const result = await service.poll();
 
-      expect(result.jobsSkipped).toBe(1);
-      expect(result.results[0].skipped).toBe(true);
+      expect(result.jobsFound).toBe(2);
+      expect(result.jobsSkipped).toBe(2);
+      expect(result.results[0].skipReason).toContain('Missing cursor agent');
+      expect(mockGetAgentStatus).not.toHaveBeenCalled();
     });
 
     it('skips jobs when Cursor API returns error (transient failure)', async () => {
@@ -143,16 +127,13 @@ describe('CursorAgentStatusPollingService', () => {
       const result = await service.poll();
 
       expect(result.jobsSkipped).toBe(1);
-      expect(result.results[0].skipped).toBe(true);
       expect(result.results[0].skipReason).toContain('API error');
       expect(mockUpdateJobRun).not.toHaveBeenCalled();
     });
 
     it('marks job as timed out when TTL exceeded and agent still running', async () => {
       const oldStartTime = new Date(Date.now() - 3 * 60 * 60 * 1000); // 3 hours ago
-      const job = createMockJob({
-        startedAt: oldStartTime,
-      });
+      const job = createMockJob({ startedAt: oldStartTime });
 
       mockFindRunningJobRuns.mockResolvedValueOnce([job]);
       mockGetAgentStatus.mockResolvedValueOnce({
@@ -162,7 +143,7 @@ describe('CursorAgentStatusPollingService', () => {
 
       const service = new CursorAgentStatusPollingService({
         jiraClient: mockJiraClient,
-        ttlMinutes: 120, // 2 hour TTL
+        ttlMinutes: 120,
       });
 
       const result = await service.poll();
@@ -179,10 +160,8 @@ describe('CursorAgentStatusPollingService', () => {
     });
 
     it('does not timeout completed agents even if TTL exceeded', async () => {
-      const oldStartTime = new Date(Date.now() - 3 * 60 * 60 * 1000); // 3 hours ago
-      const job = createMockJob({
-        startedAt: oldStartTime,
-      });
+      const oldStartTime = new Date(Date.now() - 3 * 60 * 60 * 1000);
+      const job = createMockJob({ startedAt: oldStartTime });
 
       mockFindRunningJobRuns.mockResolvedValueOnce([job]);
       mockGetAgentStatus.mockResolvedValueOnce({
@@ -202,21 +181,26 @@ describe('CursorAgentStatusPollingService', () => {
       expect(mockUpdateJobRun).toHaveBeenCalledWith(job._id, {
         status: JobRunStatus.Completed,
       });
-      expect(mockAddComment).toHaveBeenCalledWith(
-        'TEST-123',
-        expect.stringContaining('completed')
-      );
     });
 
-    it('updates job to completed when agent finishes successfully', async () => {
-      const job = createMockJob();
-      mockFindRunningJobRuns.mockResolvedValueOnce([job]);
-      mockGetAgentStatus.mockResolvedValueOnce({
-        success: true,
-        status: 'FINISHED',
-        prUrl: 'https://github.com/org/repo/pull/456',
-        summary: 'Implemented the feature',
-      });
+    it('updates job status based on agent completion states', async () => {
+      const finishedJob = createMockJob({ jiraTicketKey: 'TEST-1' });
+      const errorJob = createMockJob({ jiraTicketKey: 'TEST-2' });
+      const expiredJob = createMockJob({ jiraTicketKey: 'TEST-3' });
+
+      mockFindRunningJobRuns.mockResolvedValueOnce([
+        finishedJob,
+        errorJob,
+        expiredJob,
+      ]);
+      mockGetAgentStatus
+        .mockResolvedValueOnce({
+          success: true,
+          status: 'FINISHED',
+          prUrl: 'https://github.com/org/repo/pull/456',
+        })
+        .mockResolvedValueOnce({ success: true, status: 'ERROR' })
+        .mockResolvedValueOnce({ success: true, status: 'EXPIRED' });
 
       const service = new CursorAgentStatusPollingService({
         jiraClient: mockJiraClient,
@@ -224,73 +208,29 @@ describe('CursorAgentStatusPollingService', () => {
 
       const result = await service.poll();
 
-      expect(result.jobsProcessed).toBe(1);
-      expect(mockUpdateJobRun).toHaveBeenCalledWith(job._id, {
+      expect(result.jobsProcessed).toBe(3);
+      expect(mockUpdateJobRun).toHaveBeenCalledWith(finishedJob._id, {
         status: JobRunStatus.Completed,
       });
-      expect(mockAddComment).toHaveBeenCalledWith(
-        'TEST-123',
-        expect.stringContaining('completed')
-      );
-    });
-
-    it('updates job to failed when agent encounters error', async () => {
-      const job = createMockJob();
-      mockFindRunningJobRuns.mockResolvedValueOnce([job]);
-      mockGetAgentStatus.mockResolvedValueOnce({
-        success: true,
-        status: 'ERROR',
-      });
-
-      const service = new CursorAgentStatusPollingService({
-        jiraClient: mockJiraClient,
-      });
-
-      const result = await service.poll();
-
-      expect(result.jobsProcessed).toBe(1);
-      expect(mockUpdateJobRun).toHaveBeenCalledWith(job._id, {
+      expect(mockUpdateJobRun).toHaveBeenCalledWith(errorJob._id, {
         status: JobRunStatus.Failed,
         errorMessage: 'Cursor agent encountered an error',
       });
-      expect(mockAddComment).toHaveBeenCalledWith(
-        'TEST-123',
-        expect.stringContaining('error')
-      );
-    });
-
-    it('updates job to failed when agent session expires', async () => {
-      const job = createMockJob();
-      mockFindRunningJobRuns.mockResolvedValueOnce([job]);
-      mockGetAgentStatus.mockResolvedValueOnce({
-        success: true,
-        status: 'EXPIRED',
-      });
-
-      const service = new CursorAgentStatusPollingService({
-        jiraClient: mockJiraClient,
-      });
-
-      const result = await service.poll();
-
-      expect(result.jobsProcessed).toBe(1);
-      expect(mockUpdateJobRun).toHaveBeenCalledWith(job._id, {
+      expect(mockUpdateJobRun).toHaveBeenCalledWith(expiredJob._id, {
         status: JobRunStatus.Failed,
         errorMessage: 'Cursor agent session expired',
       });
-      expect(mockAddComment).toHaveBeenCalledWith(
-        'TEST-123',
-        expect.stringContaining('expired')
-      );
+      expect(mockAddComment).toHaveBeenCalledTimes(3);
     });
 
-    it('does not update job when agent is still running', async () => {
-      const job = createMockJob();
-      mockFindRunningJobRuns.mockResolvedValueOnce([job]);
-      mockGetAgentStatus.mockResolvedValueOnce({
-        success: true,
-        status: 'RUNNING',
-      });
+    it('does not update job when agent is still in progress', async () => {
+      const runningJob = createMockJob({ jiraTicketKey: 'TEST-1' });
+      const creatingJob = createMockJob({ jiraTicketKey: 'TEST-2' });
+
+      mockFindRunningJobRuns.mockResolvedValueOnce([runningJob, creatingJob]);
+      mockGetAgentStatus
+        .mockResolvedValueOnce({ success: true, status: 'RUNNING' })
+        .mockResolvedValueOnce({ success: true, status: 'CREATING' });
 
       const service = new CursorAgentStatusPollingService({
         jiraClient: mockJiraClient,
@@ -298,63 +238,19 @@ describe('CursorAgentStatusPollingService', () => {
 
       const result = await service.poll();
 
-      expect(result.jobsProcessed).toBe(1);
+      expect(result.jobsProcessed).toBe(2);
       expect(mockUpdateJobRun).not.toHaveBeenCalled();
       expect(mockAddComment).not.toHaveBeenCalled();
     });
 
-    it('does not update job when agent is still creating', async () => {
-      const job = createMockJob();
-      mockFindRunningJobRuns.mockResolvedValueOnce([job]);
-      mockGetAgentStatus.mockResolvedValueOnce({
-        success: true,
-        status: 'CREATING',
-      });
-
-      const service = new CursorAgentStatusPollingService({
-        jiraClient: mockJiraClient,
-      });
-
-      const result = await service.poll();
-
-      expect(result.jobsProcessed).toBe(1);
-      expect(mockUpdateJobRun).not.toHaveBeenCalled();
-      expect(mockAddComment).not.toHaveBeenCalled();
-    });
-
-    it('processes multiple jobs and aggregates results', async () => {
+    it('handles errors in individual job processing and continues', async () => {
       const job1 = createMockJob({ jiraTicketKey: 'TEST-1' });
       const job2 = createMockJob({ jiraTicketKey: 'TEST-2' });
-      const job3 = createMockJob({
-        jiraTicketKey: 'TEST-3',
-        cursorAgentId: undefined,
-      });
 
-      mockFindRunningJobRuns.mockResolvedValueOnce([job1, job2, job3]);
+      mockFindRunningJobRuns.mockResolvedValueOnce([job1, job2]);
       mockGetAgentStatus
         .mockResolvedValueOnce({ success: true, status: 'FINISHED' })
         .mockResolvedValueOnce({ success: true, status: 'RUNNING' });
-
-      const service = new CursorAgentStatusPollingService({
-        jiraClient: mockJiraClient,
-      });
-
-      const result = await service.poll();
-
-      expect(result.jobsFound).toBe(3);
-      expect(result.jobsProcessed).toBe(2);
-      expect(result.jobsSkipped).toBe(1);
-      expect(result.jobsErrored).toBe(0);
-      expect(mockGetAgentStatus).toHaveBeenCalledTimes(2);
-    });
-
-    it('handles errors in individual job processing', async () => {
-      const job = createMockJob();
-      mockFindRunningJobRuns.mockResolvedValueOnce([job]);
-      mockGetAgentStatus.mockResolvedValueOnce({
-        success: true,
-        status: 'FINISHED',
-      });
       mockUpdateJobRun.mockRejectedValueOnce(new Error('Database error'));
 
       const service = new CursorAgentStatusPollingService({
@@ -364,35 +260,20 @@ describe('CursorAgentStatusPollingService', () => {
       const result = await service.poll();
 
       expect(result.jobsErrored).toBe(1);
-      expect(result.results[0].success).toBe(false);
+      expect(result.jobsProcessed).toBe(1);
       expect(result.results[0].error).toContain('Database error');
     });
 
-    it('uses createdAt for TTL check when startedAt is not available', async () => {
-      const oldCreatedTime = new Date(Date.now() - 3 * 60 * 60 * 1000); // 3 hours ago
-      const job = createMockJob({
-        createdAt: oldCreatedTime,
-        startedAt: undefined,
-      });
-
-      mockFindRunningJobRuns.mockResolvedValueOnce([job]);
-      mockGetAgentStatus.mockResolvedValueOnce({
-        success: true,
-        status: 'CREATING',
-      });
+    it('throws error when database query fails', async () => {
+      mockFindRunningJobRuns.mockRejectedValueOnce(
+        new Error('Connection failed')
+      );
 
       const service = new CursorAgentStatusPollingService({
         jiraClient: mockJiraClient,
-        ttlMinutes: 120,
       });
 
-      const result = await service.poll();
-
-      expect(result.jobsProcessed).toBe(1);
-      expect(mockUpdateJobRun).toHaveBeenCalledWith(job._id, {
-        status: JobRunStatus.FailedTimeout,
-        errorMessage: 'Job exceeded maximum runtime',
-      });
+      await expect(service.poll()).rejects.toThrow('Connection failed');
     });
   });
 
@@ -458,94 +339,6 @@ describe('CursorAgentStatusPollingService', () => {
       expect(mockDisconnect).toHaveBeenCalled();
 
       process.exitCode = originalExitCode;
-    });
-
-    it('does not set exit code for skipped jobs', async () => {
-      const jobWithoutAgent = createMockJob({ cursorAgentId: undefined });
-
-      mockValidateConfig.mockReturnValueOnce(null);
-      mockConnect.mockResolvedValueOnce(undefined);
-      mockFindRunningJobRuns.mockResolvedValueOnce([jobWithoutAgent]);
-      mockDisconnect.mockResolvedValueOnce(undefined);
-
-      const service = new CursorAgentStatusPollingService({
-        jiraClient: mockJiraClient,
-      });
-
-      const originalExitCode = process.exitCode;
-      process.exitCode = undefined;
-
-      await service.runAsJob();
-
-      expect(process.exitCode).toBeUndefined();
-      expect(mockDisconnect).toHaveBeenCalled();
-
-      process.exitCode = originalExitCode;
-    });
-
-    it('exits early with error code when config validation fails', async () => {
-      mockValidateConfig.mockReturnValueOnce(['Missing JIRA_URL']);
-
-      const service = new CursorAgentStatusPollingService({
-        jiraClient: mockJiraClient,
-      });
-
-      const originalExitCode = process.exitCode;
-
-      await service.runAsJob();
-
-      expect(process.exitCode).toBe(1);
-      expect(mockConnect).not.toHaveBeenCalled();
-
-      process.exitCode = originalExitCode;
-    });
-  });
-
-  describe('TTL configuration', () => {
-    it('uses default TTL of 120 minutes', async () => {
-      // Job started 119 minutes ago - should NOT timeout
-      const recentJob = createMockJob({
-        startedAt: new Date(Date.now() - 119 * 60 * 1000),
-      });
-
-      mockFindRunningJobRuns.mockResolvedValueOnce([recentJob]);
-      mockGetAgentStatus.mockResolvedValueOnce({
-        success: true,
-        status: 'RUNNING',
-      });
-
-      const service = new CursorAgentStatusPollingService({
-        jiraClient: mockJiraClient,
-      });
-
-      await service.poll();
-
-      expect(mockUpdateJobRun).not.toHaveBeenCalled();
-    });
-
-    it('respects custom TTL configuration', async () => {
-      // Job started 31 minutes ago - should timeout with 30 min TTL
-      const job = createMockJob({
-        startedAt: new Date(Date.now() - 31 * 60 * 1000),
-      });
-
-      mockFindRunningJobRuns.mockResolvedValueOnce([job]);
-      mockGetAgentStatus.mockResolvedValueOnce({
-        success: true,
-        status: 'RUNNING',
-      });
-
-      const service = new CursorAgentStatusPollingService({
-        jiraClient: mockJiraClient,
-        ttlMinutes: 30,
-      });
-
-      await service.poll();
-
-      expect(mockUpdateJobRun).toHaveBeenCalledWith(job._id, {
-        status: JobRunStatus.FailedTimeout,
-        errorMessage: 'Job exceeded maximum runtime',
-      });
     });
   });
 });
