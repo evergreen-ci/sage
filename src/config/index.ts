@@ -65,8 +65,6 @@ export interface Config {
     apiKey: string;
     /** OTEL_COLLECTOR_URL */
     otelCollectorURL: string;
-    /** OTEL_LOG_COLLECTOR_URL */
-    otelLogCollectorURL: string;
   };
   braintrust: {
     /** BRAINTRUST_API_KEY */
@@ -98,6 +96,14 @@ export interface Config {
   encryption: {
     /** ENCRYPTION_KEY - 32-byte hex string for AES-256 encryption */
     key: string;
+  };
+  sageBot: {
+    /** JIRA_BASE_URL */
+    jiraBaseUrl: string;
+    /** JIRA_API_TOKEN */
+    jiraApiToken: string;
+    /** SAGE_BOT_SUPPORTED_PROJECTS - comma-separated list of Jira project keys */
+    supportedProjects: string[];
   };
 }
 
@@ -174,7 +180,6 @@ export const config: Config = {
   honeycomb: {
     apiKey: getEnvVar('HONEYCOMB_API_KEY', ''),
     otelCollectorURL: getEnvVar('OTEL_COLLECTOR_URL', ''),
-    otelLogCollectorURL: getEnvVar('OTEL_LOG_COLLECTOR_URL', ''),
   },
   braintrust: {
     apiKey: getEnvVar('BRAINTRUST_API_KEY', ''),
@@ -194,6 +199,14 @@ export const config: Config = {
   },
   encryption: {
     key: getEnvVar('ENCRYPTION_KEY', ''),
+  },
+  sageBot: {
+    jiraBaseUrl: getEnvVar('JIRA_BASE_URL', 'https://jira.mongodb.org'),
+    jiraApiToken: getEnvVar('JIRA_API_TOKEN', ''),
+    supportedProjects: getEnvVar('SAGE_BOT_SUPPORTED_PROJECTS', '')
+      .split(',')
+      .map(p => p.trim())
+      .filter(p => p.length > 0),
   },
 };
 
@@ -222,6 +235,9 @@ export const validateConfig = (): string[] | undefined => {
     'EVERGREEN_API_USER',
     'EVERGREEN_API_KEY',
     'ENCRYPTION_KEY',
+    'SAGE_BOT_SUPPORTED_PROJECTS',
+    'JIRA_BASE_URL',
+    'JIRA_API_TOKEN',
   ];
 
   const errors: string[] = [];

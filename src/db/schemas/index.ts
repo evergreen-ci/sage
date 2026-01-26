@@ -70,6 +70,8 @@ export const userCredentialsSchema = z.object({
   email: z.email(),
   /** Encrypted Cursor API key for the user */
   cursorApiKey: z.string().min(1),
+  /** Last 4 characters of the original API key (for display purposes) */
+  keyLastFour: z.string().length(4),
   /** Timestamp when the credentials were created */
   createdAt: z.date(),
   /** Timestamp when the credentials were last updated */
