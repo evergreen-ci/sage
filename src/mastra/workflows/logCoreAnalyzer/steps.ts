@@ -294,9 +294,16 @@ export const refineStep = createStep({
 
     const updated = response.updated ?? false;
     let newSummary = existingSummary;
+    const newLineReferences = response.lineReferences ?? [];
+
     if (updated) {
       newSummary = response.summary ?? existingSummary;
     }
+
+    const accumulatedLineReferences = [
+      ...state.accumulatedLineReferences,
+      ...newLineReferences,
+    ];
 
     tracingContext.currentSpan?.update({
       metadata: {
@@ -311,6 +318,7 @@ export const refineStep = createStep({
       ...state,
       idx: idx + 1,
       analysisContext,
+      accumulatedLineReferences,
     });
     return {
       summary: newSummary,
@@ -355,8 +363,12 @@ export const finalizeStep = createStep({
     logger.debug('Finalize step complete', {
       markdownLength: result.markdown.length,
       summaryLength: result.summary.length,
+      lineReferencesLength: state.accumulatedLineReferences.length,
     });
 
-    return result;
+    return {
+      ...result,
+      lineReferences: state.accumulatedLineReferences,
+    };
   },
 });

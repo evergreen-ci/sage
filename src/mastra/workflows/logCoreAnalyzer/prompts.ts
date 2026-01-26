@@ -119,7 +119,14 @@ New chunk:
 """${chunk}"""
 
 Return JSON:
-{ "updated": <bool>, "summary": "<updated or unchanged>" }`;
+{ 
+  "updated": <bool>, 
+  "summary": "<updated or unchanged>",
+  "lineReferences": [
+    { "line": <number>, "context": "Error occurred", "type": "error" },
+    { "line": <number>, "context": "Configuration block", "type": "info" }
+  ]
+}`;
 
 export const USER_MARKDOWN_PROMPT = (
   summary: string,
