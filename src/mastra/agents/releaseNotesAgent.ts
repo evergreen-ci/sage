@@ -58,6 +58,7 @@ const releaseNotesInputSchema = z.object({
     ),
   jiraIssues: z
     .array(jiraIssueSchema)
+    .min(1, 'At least one Jira issue is required.')
     .describe('Array of Jira issues associated with the release'),
   sections: z
     .array(releaseNotesSectionTitleSchema)
