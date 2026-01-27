@@ -50,6 +50,9 @@ importers:
       '@opentelemetry/auto-instrumentations-node':
         specifier: ^0.67.3
         version: 0.67.3(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.5.0(@opentelemetry/api@1.9.0))
+      '@opentelemetry/context-async-hooks':
+        specifier: ^2.5.0
+        version: 2.5.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/core':
         specifier: ^2.3.0
         version: 2.5.0(@opentelemetry/api@1.9.0)
@@ -125,6 +128,12 @@ importers:
       winston:
         specifier: ^3.18.3
         version: 3.19.0
+      winston-transport:
+        specifier: ^4.9.0
+        version: 4.9.0
+      yaml:
+        specifier: ^2.8.2
+        version: 2.8.2
       zod:
         specifier: ^4.1.12
         version: 4.3.6

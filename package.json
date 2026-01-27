@@ -61,6 +61,7 @@
     "@mastra/server": "^1.0.0-beta.13",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/auto-instrumentations-node": "^0.67.3",
+    "@opentelemetry/context-async-hooks": "^2.5.0",
     "@opentelemetry/core": "^2.3.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.209.0",
     "@opentelemetry/resources": "^2.2.0",
@@ -86,6 +87,8 @@
     "query-string": "^9.3.1",
     "uuid": "^13.0.0",
     "winston": "^3.18.3",
+    "winston-transport": "^4.9.0",
+    "yaml": "^2.8.2",
     "zod": "^4.1.12"
   },
   "devDependencies": {
