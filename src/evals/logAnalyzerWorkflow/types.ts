@@ -6,14 +6,22 @@ export type TestInput = {
   analysisContext: string;
 };
 
+export type LineReference = {
+  line: number;
+  description: string;
+  evidence: string;
+};
+
 export type TestResult = {
   markdown: string;
   summary: string;
+  lineReferences: Array<LineReference>;
 };
 
 export type Scores = BaseScores & {
   Factuality: number;
   TechnicalAccuracy: number;
+  CoreErrorLinesPresent: number;
 };
 
 export type TestCase = BaseTestCase<TestInput, TestResult, Scores>;

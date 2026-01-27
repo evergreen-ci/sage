@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+export const LineReferenceSchema = z.object({
+  line: z.number().optional(),
+  description: z.string(),
+  evidence: z.string(),
+});
+
 // This workflow takes either a file path, raw text, or an URL as input, and optional additional instructions
 // and returns a structured analysis report, as well as a concise summary.
 export const WorkflowInputSchema = z.object({
@@ -32,11 +38,13 @@ export const WorkflowInputSchema = z.object({
 export const WorkflowOutputSchema = z.object({
   markdown: z.string(),
   summary: z.string(),
+  lineReferences: z.array(LineReferenceSchema).default([]),
 });
 
 export const RefinementAgentOutputSchema = z.object({
   updated: z.boolean(),
   summary: z.string(),
+  lineReferences: z.array(LineReferenceSchema).optional().default([]),
 });
 
 export const WorkflowStateSchema = z.object({
@@ -44,4 +52,5 @@ export const WorkflowStateSchema = z.object({
   idx: z.number().default(0),
   chunks: z.array(z.object({ text: z.string() })).optional(),
   analysisContext: z.string().optional(),
+  accumulatedLineReferences: z.array(LineReferenceSchema).default([]),
 });
