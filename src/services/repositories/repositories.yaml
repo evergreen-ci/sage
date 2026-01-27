@@ -1,0 +1,28 @@
+# Repository configurations for Cursor Cloud Agents
+# Each repository must be listed here with its default branch,
+# unless the Jira label specifies a ref inline (e.g., repo:org/repo@branch)
+#
+# Format:
+#   <org>/<repo>:
+#     defaultBranch: <branch_name>
+
+repositories:
+  10gen/mms:
+    defaultBranch: master
+  evergreen-ci/sage:
+    defaultBranch: main
+  evergreen-ci/evergreen:
+    defaultBranch: main
+  evergreen-ci/ui:
+    defaultBranch: main
+  10gen/iteng-memento:
+    defaultBranch: main
+  10gen/dsi:
+    defaultBranch: master
+  10gen/signal-processing-service:
+    defaultBranch: master
+  Modernization-Factory/amp-docs:
+    defaultBranch: main
+  10gen/docs-mongodb-internal:
+    defaultBranch: main
+

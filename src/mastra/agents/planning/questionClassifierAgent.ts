@@ -28,7 +28,7 @@ const outputSchema = z.object({
 });
 
 export const questionClassifierAgent = new Agent({
-  id: 'question-classifier-agent',
+  id: 'questionClassifierAgent',
   name: 'Question Classifier Agent',
   description: 'Classifies a user question and decides the next action.',
   instructions: `
@@ -104,10 +104,6 @@ Q: "Did this flake start yesterday? Compare to last passing and show failing tes
 A:
 {"confidence":0.89,"questionClass":"COMBINATION","nextAction":"USE_COMBINATION_ANALYSIS","originalQuestion":"Did this flake start yesterday? Compare to last passing and show failing tests."}
   `,
-  defaultGenerateOptions: {
-    output: outputSchema,
-    temperature: 0,
-  },
   model: gpt41,
 });
 

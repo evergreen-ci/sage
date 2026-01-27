@@ -176,6 +176,34 @@ describe('dataLoader', () => {
         loadFromUrl(TEST_CONSTANTS.TEST_URLS.TIMEOUT)
       ).rejects.toThrow();
     });
+
+    it('should reject malformed URLs with clear error message', async () => {
+      const malformedUrl = 'not-a-valid-url';
+      await expect(loadFromUrl(malformedUrl)).rejects.toThrow(
+        `Invalid URL provided: "${malformedUrl}". Please provide a valid, well-formed URL.`
+      );
+    });
+
+    it('should correctly encode URLs with special characters', async () => {
+      const unencodedUrl = 'http://example.com/path with spaces?query=value';
+      const encodedUrl = encodeURI(unencodedUrl); // or new URL(unencodedUrl).toString() which is what implementation does
+
+      const fetchSpy = vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers(),
+        body: simulateReadableStream({ chunks: [Buffer.from('content')] }),
+      });
+      global.fetch = fetchSpy;
+
+      await loadFromUrl(unencodedUrl);
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.stringMatching(
+          new RegExp(encodedUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+        ),
+        expect.any(Object)
+      );
+    });
   });
 
   describe('loadFromText', () => {

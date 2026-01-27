@@ -65,7 +65,16 @@ export const loadFromUrl = async (url: string): Promise<LoadResult> => {
   );
 
   try {
-    const response = await authenticatedEvergreenFetch(url, {
+    let normalizedUrl: string;
+    try {
+      normalizedUrl = new URL(url).toString();
+    } catch (err) {
+      throw new Error(
+        `Invalid URL provided: "${url}". Please provide a valid, well-formed URL.`
+      );
+    }
+
+    const response = await authenticatedEvergreenFetch(normalizedUrl, {
       signal: controller.signal,
     });
 

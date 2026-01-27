@@ -5,11 +5,12 @@ import cors from 'cors';
 import express, { Application } from 'express';
 import expressListEndpoints from 'express-list-endpoints';
 import { userIdMiddleware } from '@/api-server/middlewares/authentication';
-import { completionsRoute, loginRoute } from '@/api-server/routes';
+import { completionsRoute, loginRoute, userRoute } from '@/api-server/routes';
 import healthRoute from '@/api-server/routes/health';
 import rootRoute from '@/api-server/routes/root';
 import { config } from '@/config';
 import { db } from '@/db/connection';
+import { ensureAllIndexes } from '@/db/repositories';
 import { logger } from '@/utils/logger';
 import {
   requestIdMiddleware,
@@ -72,6 +73,7 @@ class SageServer {
     this.app.get('/health', healthRoute);
     this.app.use('/completions', completionsRoute);
     this.app.use('/login', loginRoute);
+    this.app.use('/pr-bot/user', userRoute);
   }
 
   private setupErrorHandling() {
@@ -96,6 +98,7 @@ class SageServer {
     });
 
     await db.connect();
+    await ensureAllIndexes();
 
     this.startTime = new Date();
 
@@ -200,11 +203,11 @@ class SageServer {
  * This prevents multiple server instances during hot reload.
  * @returns The singleton SageServer instance
  */
-function getSageServer(): SageServer {
+const getSageServer = (): SageServer => {
   if (!globalThis.__SAGE_SERVER_INSTANCE__) {
     globalThis.__SAGE_SERVER_INSTANCE__ = new SageServer();
   }
   return globalThis.__SAGE_SERVER_INSTANCE__;
-}
+};
 
 export default getSageServer();

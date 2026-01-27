@@ -17,6 +17,18 @@ Non-secret variables are tracked in `.env.defaults`, with environment-specific v
 
 Update `.env.local` or `.env.<NODE_ENV>.local` files with secrets for external services. These files are ignored by git. Refer to the team password manager or ask a teammate for credentials.
 
+#### Encryption Key
+
+The `ENCRYPTION_KEY` environment variable is required for encrypting sensitive data (e.g., user API keys) stored in MongoDB. It must be a 32-byte hex string (64 characters) for AES-256 encryption.
+
+**Generating a new key:**
+
+```bash
+openssl rand -hex 32
+```
+
+**Storage:** In deployed environments, the encryption key is stored in Kanopy secrets. A default key is provided in `.env.defaults` for local development.
+
 ### Installation
 
 1. Clone the repository or navigate to the project directory.
@@ -112,6 +124,96 @@ yarn clean
 ```
 
 Removes the `dist/` directory.
+
+---
+
+## Testing the API Locally
+
+Most API endpoints require authentication via the `x-kanopy-internal-authorization` header. For local development, there are two ways to authenticate requests:
+
+### Configuring Cursor API Key for Local Testing
+
+To test the Cursor agent integration locally, you'll need to:
+
+1. **Get a Cursor API Key**: Obtain an API key from the [Cursor Dashboard](https://cursor.com/dashboard?tab=integrations). Navigate to the **API Keys** section and generate a new key.
+
+2. **Add the Key via REST Endpoints**: Use the local API endpoints to store your key:
+   - `POST /pr-bot/user/cursor-key` - Create or update your Cursor API key
+   - `GET /pr-bot/user/cursor-key` - Check if a key is registered
+   - `DELETE /pr-bot/user/cursor-key` - Remove your stored key
+
+   Example:
+   ```bash
+   curl -X POST http://localhost:8080/pr-bot/user/cursor-key \
+     -H "Content-Type: application/json" \
+     -d '{"apiKey": "your-cursor-api-key"}'
+   ```
+
+### Option 1: Set the `USER_NAME` Environment Variable (Recommended)
+
+When the `USER_NAME` environment variable is set, the authentication middleware uses it as the user ID, bypassing JWT validation. Add it to your `.env.local`:
+
+```bash
+USER_NAME=your.email@mongodb.com
+```
+
+Then test endpoints with simple curl commands:
+
+```bash
+curl -X POST http://localhost:8080/pr-bot/user/cursor-key \
+  -H "Content-Type: application/json" \
+  -d '{"apiKey": "your-api-key-here"}'
+```
+
+### Option 2: Use a Fake JWT Header
+
+If `USER_NAME` is not set, you can pass a JWT in the `x-kanopy-internal-authorization` header. The middleware only decodes the payload (doesn't verify the signature), so you can construct a test JWT:
+
+```bash
+# JWT payload: {"sub":"test@example.com"}
+curl -X POST http://localhost:8080/pr-bot/user/cursor-key \
+  -H "Content-Type: application/json" \
+  -H "x-kanopy-internal-authorization: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIn0.fake" \
+  -d '{"apiKey": "your-api-key-here"}'
+```
+
+To create a custom test JWT, base64-encode your desired payload:
+
+```bash
+echo -n '{"sub":"your.email@mongodb.com"}' | base64
+# Use the output as the middle segment: header.PAYLOAD.signature
+```
+
+---
+
+## Docker Builds
+
+- Docker contexts now respect `.dockerignore`, so local `docker build` and `docker buildx` commands skip large directories such as `node_modules/`, `coverage/`, and generated GraphQL schemas. If you need to reference a file that is ignored by default, build with `--no-cache` or temporarily remove the entry.
+
+- The Drone `publish` step uses Kaniko layer caching backed by ECR. Subsequent CI builds reuse previously published layers automatically, so rebuilds after small changes are significantly faster.
+
+### Reusing CI cache locally
+
+You can opt into the same cache when iterating locally with BuildKit:
+
+1. Authenticate against the Sage ECR registry (example):
+
+   ```bash
+   aws ecr get-login-password --region us-east-1 \
+     | docker login --username AWS --password-stdin 795250896452.dkr.ecr.us-east-1.amazonaws.com
+   ```
+
+2. Run `docker buildx build` with the cache image that Drone maintains:
+
+   ```bash
+   docker buildx build \
+     --platform linux/arm64 \
+     --cache-from type=registry,ref=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME}-cache \
+     --cache-to type=registry,ref=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME}-cache,mode=max \
+     -t sage:local .
+   ```
+
+Replace `${DRONE_REPO_NAME}` with your repository name if you are building from a fork (Sage uses `sage`). The `-t sage:local` tag is just a local image label—name it however you like. The `--cache-to` flag updates the shared cache so that your next build—and CI—can reuse the warmed layers.
 
 ---
 

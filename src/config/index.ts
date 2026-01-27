@@ -59,8 +59,6 @@ export interface Config {
     apiKey: string;
     /** OTEL_COLLECTOR_URL */
     otelCollectorURL: string;
-    /** OTEL_LOG_COLLECTOR_URL */
-    otelLogCollectorURL: string;
   };
   braintrust: {
     /** BRAINTRUST_API_KEY */
@@ -88,6 +86,18 @@ export interface Config {
     attachStacktrace: boolean;
     /** SENTRY_CAPTURE_CONSOLE */
     captureConsole: boolean;
+  };
+  encryption: {
+    /** ENCRYPTION_KEY - 32-byte hex string for AES-256 encryption */
+    key: string;
+  };
+  sageBot: {
+    /** JIRA_BASE_URL */
+    jiraBaseUrl: string;
+    /** JIRA_API_TOKEN */
+    jiraApiToken: string;
+    /** SAGE_BOT_SUPPORTED_PROJECTS - comma-separated list of Jira project keys */
+    supportedProjects: string[];
   };
 }
 
@@ -160,7 +170,6 @@ export const config: Config = {
   honeycomb: {
     apiKey: getEnvVar('HONEYCOMB_API_KEY', ''),
     otelCollectorURL: getEnvVar('OTEL_COLLECTOR_URL', ''),
-    otelLogCollectorURL: getEnvVar('OTEL_LOG_COLLECTOR_URL', ''),
   },
   braintrust: {
     apiKey: getEnvVar('BRAINTRUST_API_KEY', ''),
@@ -177,6 +186,17 @@ export const config: Config = {
     debug: getEnvVar('SENTRY_DEBUG', 'false') === 'true',
     attachStacktrace: getEnvVar('SENTRY_ATTACH_STACKTRACE', 'true') === 'true',
     captureConsole: getEnvVar('SENTRY_CAPTURE_CONSOLE', 'false') === 'true',
+  },
+  encryption: {
+    key: getEnvVar('ENCRYPTION_KEY', ''),
+  },
+  sageBot: {
+    jiraBaseUrl: getEnvVar('JIRA_BASE_URL', 'https://jira.mongodb.org'),
+    jiraApiToken: getEnvVar('JIRA_API_TOKEN', ''),
+    supportedProjects: getEnvVar('SAGE_BOT_SUPPORTED_PROJECTS', '')
+      .split(',')
+      .map(p => p.trim())
+      .filter(p => p.length > 0),
   },
 };
 
@@ -204,6 +224,10 @@ export const validateConfig = (): string[] | undefined => {
     'EVERGREEN_GRAPHQL_ENDPOINT',
     'EVERGREEN_API_USER',
     'EVERGREEN_API_KEY',
+    'ENCRYPTION_KEY',
+    'SAGE_BOT_SUPPORTED_PROJECTS',
+    'JIRA_BASE_URL',
+    'JIRA_API_TOKEN',
   ];
 
   const errors: string[] = [];
@@ -215,6 +239,6 @@ export const validateConfig = (): string[] | undefined => {
   return errors.length > 0 ? errors : undefined;
 };
 
-const logPrefixesToOmit = ['[AI Tracing] Event exported'];
+const logPrefixesToOmit = ['[Observability] Event exported'];
 
 export { getEnvVar, logPrefixesToOmit };

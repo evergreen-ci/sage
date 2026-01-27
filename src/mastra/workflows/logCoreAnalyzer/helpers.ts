@@ -1,22 +1,26 @@
 import { Agent } from '@mastra/core/agent';
-import { TracingContext } from '@mastra/core/ai-tracing';
 import { IMastraLogger } from '@mastra/core/logger';
+import { TracingContext } from '@mastra/core/observability';
+import { RequestContext } from '@mastra/core/request-context';
 import { USER_MARKDOWN_PROMPT, USER_CONCISE_SUMMARY_PROMPT } from './prompts';
 
 export const generateMarkdownAndSummary = async ({
   abortSignal,
   agent,
   analysisContext,
+  context,
   logger,
   text,
-  tracingContext,
 }: {
   abortSignal?: AbortSignal;
   agent: Agent;
   analysisContext?: string;
   logger: IMastraLogger;
   text: string;
-  tracingContext: TracingContext;
+  context: {
+    requestContext: RequestContext;
+    tracingContext: TracingContext;
+  };
 }): Promise<{ markdown: string; summary: string }> => {
   logger.debug('Generating markdown report', {
     textLength: text.length,
@@ -26,7 +30,7 @@ export const generateMarkdownAndSummary = async ({
     USER_MARKDOWN_PROMPT(text, analysisContext),
     {
       abortSignal,
-      tracingContext,
+      ...context,
     }
   );
   const markdown = markdownResult.text;
@@ -41,7 +45,7 @@ export const generateMarkdownAndSummary = async ({
     USER_CONCISE_SUMMARY_PROMPT(markdown, analysisContext),
     {
       abortSignal,
-      tracingContext,
+      ...context,
     }
   );
   const summary = summaryResult.text;

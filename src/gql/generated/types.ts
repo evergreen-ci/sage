@@ -29,7 +29,7 @@ export type Scalars = {
   Duration: { input: number; output: number };
   Map: { input: any; output: any };
   StringMap: { input: { [key: string]: any }; output: { [key: string]: any } };
-  Time: { input: Date; output: Date };
+  Time: { input: string; output: string };
 };
 
 export type ApiConfig = {
@@ -3724,7 +3724,6 @@ export type ServiceFlags = {
   jiraNotificationsDisabled?: Maybe<Scalars['Boolean']['output']>;
   jwtTokenForCLIDisabled?: Maybe<Scalars['Boolean']['output']>;
   largeParserProjectsDisabled?: Maybe<Scalars['Boolean']['output']>;
-  legacyUIAdminPageDisabled?: Maybe<Scalars['Boolean']['output']>;
   monitorDisabled?: Maybe<Scalars['Boolean']['output']>;
   podAllocatorDisabled?: Maybe<Scalars['Boolean']['output']>;
   podInitDisabled?: Maybe<Scalars['Boolean']['output']>;
@@ -3763,7 +3762,6 @@ export type ServiceFlagsInput = {
   jiraNotificationsDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   jwtTokenForCLIDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   largeParserProjectsDisabled?: InputMaybe<Scalars['Boolean']['input']>;
-  legacyUIAdminPageDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   monitorDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   podAllocatorDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   podInitDisabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -4116,6 +4114,7 @@ export type Task = {
   patch?: Maybe<Patch>;
   patchNumber?: Maybe<Scalars['Int']['output']>;
   pod?: Maybe<Pod>;
+  predictedTaskCost?: Maybe<TaskCost>;
   priority?: Maybe<Scalars['Int']['output']>;
   project?: Maybe<Project>;
   projectId: Scalars['String']['output'];
@@ -4131,6 +4130,7 @@ export type Task = {
   /** taskLogs returns the tail 100 lines of the task's logs. */
   stepbackInfo?: Maybe<StepbackInfo>;
   tags: Array<Scalars['String']['output']>;
+  taskCost?: Maybe<TaskCost>;
   taskGroup?: Maybe<Scalars['String']['output']>;
   taskGroupMaxHosts?: Maybe<Scalars['Int']['output']>;
   taskLogs: TaskLogs;
@@ -4164,6 +4164,13 @@ export type TaskContainerCreationOpts = {
   memoryMB: Scalars['Int']['output'];
   os: Scalars['String']['output'];
   workingDir: Scalars['String']['output'];
+};
+
+/** TaskCost represents the cost breakdown for a task. */
+export type TaskCost = {
+  __typename?: 'TaskCost';
+  adjustedCost?: Maybe<Scalars['Float']['output']>;
+  onDemandCost?: Maybe<Scalars['Float']['output']>;
 };
 
 /** TaskCountOptions defines the parameters that are used when counting tasks from a Version. */
@@ -4301,7 +4308,6 @@ export type TaskLogLinks = {
   __typename?: 'TaskLogLinks';
   agentLogLink?: Maybe<Scalars['String']['output']>;
   allLogLink?: Maybe<Scalars['String']['output']>;
-  eventLogLink?: Maybe<Scalars['String']['output']>;
   systemLogLink?: Maybe<Scalars['String']['output']>;
   taskLogLink?: Maybe<Scalars['String']['output']>;
 };
@@ -4364,15 +4370,10 @@ export type TaskQueueItem = {
   priority: Scalars['Int']['output'];
   project: Scalars['String']['output'];
   projectIdentifier?: Maybe<Scalars['String']['output']>;
-  requester: TaskQueueItemType;
+  requester: Scalars['String']['output'];
   revision: Scalars['String']['output'];
   version: Scalars['String']['output'];
 };
-
-export enum TaskQueueItemType {
-  Commit = 'COMMIT',
-  Patch = 'PATCH',
-}
 
 export enum TaskSortCategory {
   BaseStatus = 'BASE_STATUS',
@@ -4452,6 +4453,7 @@ export type TestLog = {
   __typename?: 'TestLog';
   lineNum?: Maybe<Scalars['Int']['output']>;
   renderingType?: Maybe<Scalars['String']['output']>;
+  testName?: Maybe<Scalars['String']['output']>;
   url?: Maybe<Scalars['String']['output']>;
   urlParsley?: Maybe<Scalars['String']['output']>;
   urlRaw?: Maybe<Scalars['String']['output']>;
@@ -5174,12 +5176,13 @@ export type TaskHistoryQuery = {
       __typename?: 'Task';
       id: string;
       activated: boolean;
-      createTime?: Date | null;
+      createTime?: string | null;
       displayStatus: string;
       displayName: string;
       execution: number;
       order: number;
       revision?: string | null;
+      buildVariant: string;
       tests: {
         __typename?: 'TaskTestResult';
         testResults: Array<{
@@ -5253,8 +5256,8 @@ export type VersionQuery = {
     id: string;
     activated?: boolean | null;
     author: string;
-    createTime: Date;
-    finishTime?: Date | null;
+    createTime: string;
+    finishTime?: string | null;
     isPatch: boolean;
     message: string;
     order: number;
@@ -5262,7 +5265,7 @@ export type VersionQuery = {
     projectIdentifier: string;
     requester: string;
     revision: string;
-    startTime?: Date | null;
+    startTime?: string | null;
     status: string;
     taskCount?: number | null;
     baseVersion?: { __typename?: 'Version'; id: string } | null;

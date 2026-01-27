@@ -136,7 +136,7 @@ type OutputRow = {
 /**
  * This script is used to load a CSV file into a Braintrust dataset
  */
-async function main() {
+const main = async () => {
   try {
     const rows = await readCSV(csvFilePath);
 
@@ -220,6 +220,6 @@ async function main() {
     console.error('Error:', err);
     process.exit(1);
   }
-}
+};
 
 main();

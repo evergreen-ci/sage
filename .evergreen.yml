@@ -35,8 +35,10 @@ buildvariants:
     modules:
       - evergreen
     tasks:
+      - name: write_and_set_downstream_expansions
       - name: compile
       - name: lint
+      - name: check-generated-cursor-client
       - name: test
       - name: e2e
       - name: check-mastra-dev-startup
@@ -57,12 +59,21 @@ buildvariants:
           - "slack-thread-summarizer-evals"
           - "slack-question-ownership-evals"
 tasks:
+  - name: write_and_set_downstream_expansions
+    commands:
+      - func: write repo name to downstream_expansions.yaml for Pine
+      - command: downstream_expansions.set
+        params:
+          file: downstream_expansions.yaml
   - name: compile
     commands:
       - func: yarn-build
   - name: lint
     commands:
       - func: yarn-lint
+  - name: check-generated-cursor-client
+    commands:
+      - func: check-generated-cursor-client
   - name: test
     commands:
       - func: yarn-test
@@ -145,6 +156,13 @@ tasks:
           xml_file_name: slack_question_ownership_evals.xml
 
 functions:
+  write repo name to downstream_expansions.yaml for Pine:
+    - command: shell.exec
+      params:
+        script: |
+          touch downstream_expansions.yaml
+          echo "pine_repo_name: sage" | tee downstream_expansions.yaml
+
   attach-test-results:
     command: attach.xunit_results
     params:
@@ -326,6 +344,15 @@ functions:
       script: |
         ${PREPARE_SHELL}
         yarn eslint:strict
+
+  check-generated-cursor-client:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        ./scripts/check-generated-cursor-client.sh
 
   yarn-start:
     command: shell.exec

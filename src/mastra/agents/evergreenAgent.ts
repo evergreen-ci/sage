@@ -1,5 +1,4 @@
 import { Agent } from '@mastra/core/agent';
-import { Memory } from '@mastra/memory';
 import { gpt41 } from '@/mastra/models/openAI/gpt41';
 import {
   getTaskTool,
@@ -12,43 +11,9 @@ import {
   listImagesTool,
 } from '@/mastra/tools/evergreen';
 import { createToolFromAgent } from '@/mastra/tools/utils';
-import { memoryStore } from '@/mastra/utils/memory';
-
-const evergreenAgentMemory = new Memory({
-  storage: memoryStore,
-  options: {
-    workingMemory: {
-      // TODO: Memory is scoped to the thread, so we will only recall from the current chat window.
-      scope: 'thread',
-      enabled: true,
-      template: `# Evergreen Task Context
-
-## Current Task
-- Task ID:
-- Task Name:
-- Execution ID:
-- Status:
-- Build Variant:
-- Version:
-- Patch Number:
-- Details:
-
-## Task Details
-- Test Results:
-- Related Files:
-
-## Analysis Notes
-- Key Findings:
-- Potential Issues:
-`,
-    },
-    threads: {
-      generateTitle: false,
-    },
-  },
-});
 
 export const evergreenAgent: Agent = new Agent({
+  id: 'evergreenAgent',
   name: 'evergreenAgent',
   description:
     'Evergreen Agent is a helpful assistant that can help with tasks questions about Evergreen resources',
@@ -82,7 +47,6 @@ You are **Evergreen AI**, a researcher agent providing information and support s
 - If unsure or if the query is outside Evergreen scope, ask for clarification or escalate appropriately.
 `,
   model: gpt41,
-  memory: evergreenAgentMemory,
   tools: {
     getTaskTool,
     getTaskFilesTool,

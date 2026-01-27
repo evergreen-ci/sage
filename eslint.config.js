@@ -28,7 +28,10 @@ const globalIgnores = {
     'vitest.config.ts',
     'tsconfig.json',
     'graphql.config.ts',
+    'openapi-ts.config.ts',
     'evergreen/**',
+    'scripts/**',
+    'src/generated/**',
   ],
 };
 
@@ -70,6 +73,7 @@ const eslintConfig = {
     'default-param-last': ERROR,
     'dot-notation': [ERROR, { allowKeywords: true }],
     eqeqeq: [errorIfStrict, 'always', { null: 'ignore' }],
+    'func-style': [ERROR, 'expression'],
     'no-await-in-loop': ERROR,
     'no-console': OFF,
     'no-debugger': errorIfStrict,
@@ -106,6 +110,18 @@ const eslintConfig = {
     ],
     'prefer-regex-literals': [ERROR, { disallowRedundantWrapping: true }],
     'prefer-template': ERROR,
+    'no-restricted-imports': [
+      ERROR,
+      {
+        patterns: [
+          {
+            group: ['vitest'],
+            message:
+              'Do not import from vitest. vi, describe, it, expect, beforeEach, etc. are available globally.',
+          },
+        ],
+      },
+    ],
     radix: ERROR,
     'spaced-comment': [ERROR, 'always', { markers: ['/'] }], // TODO: This rule is deprecated - fix in DEVPROD-15014.
     yoda: ERROR,
