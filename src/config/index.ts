@@ -105,6 +105,14 @@ export interface Config {
     /** SAGE_BOT_SUPPORTED_PROJECTS - comma-separated list of Jira project keys */
     supportedProjects: string[];
   };
+  questionOwnership: {
+    /** Vector store index name for question ownership embeddings */
+    indexName: string;
+    /** VOYAGE_EMBEDDING_DIMENSION - Dimension of embedding vectors (default: 1024 for voyage-4) */
+    embeddingDimension: number;
+    /** EMBEDDING_SIMILARITY_THRESHOLD - Min similarity score to accept embedding match (default: 0.75) */
+    similarityThreshold: number;
+  };
 }
 
 /**
@@ -208,6 +216,13 @@ export const config: Config = {
       .map(p => p.trim())
       .filter(p => p.length > 0),
   },
+  questionOwnership: {
+    indexName: 'questionOwnership',
+    embeddingDimension: getEnvNumber('VOYAGE_EMBEDDING_DIMENSION', 1024),
+    similarityThreshold: parseFloat(
+      getEnvVar('EMBEDDING_SIMILARITY_THRESHOLD', '0.75')
+    ),
+  },
 };
 
 /**
@@ -238,6 +253,7 @@ export const validateConfig = (): string[] | undefined => {
     'SAGE_BOT_SUPPORTED_PROJECTS',
     'JIRA_BASE_URL',
     'JIRA_API_TOKEN',
+    'VOYAGE_API_KEY',
   ];
 
   const errors: string[] = [];

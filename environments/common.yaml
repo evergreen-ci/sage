@@ -13,6 +13,7 @@ env:
   OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
   SENTRY_DSN: https://3db76f0989faad4c102a8708fba9446f@o4504991346720768.ingest.us.sentry.io/4509905876942849
   SENTRY_ENABLED: true
+  VOYAGE_DEFAULT_MODEL: voyage-4
 
 # Common secrets (references to Kubernetes secrets)
 envSecrets:
