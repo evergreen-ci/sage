@@ -3,18 +3,33 @@ import { z } from 'zod';
 import { vectorStore } from '@/mastra/utils/memory';
 import { generateEmbeddings } from '@/mastra/utils/voyage';
 import { logger } from '@/utils/logger';
-import { QUESTION_OWNERSHIP_INDEX } from './constants';
+import {
+  MAX_BATCH_SIZE,
+  MAX_QUESTION_LENGTH,
+  QUESTION_OWNERSHIP_INDEX,
+} from './constants';
 import type { ErrorResponse, UpsertQuestionOwnershipResponse } from './types';
 
-/** Request body schema */
+/** Schema for a single question-team mapping */
+const questionTeamMappingSchema = z.object({
+  question: z
+    .string()
+    .min(1)
+    .max(MAX_QUESTION_LENGTH)
+    .transform(q => q.trim()),
+  teamName: z.string().min(1),
+  teamId: z.string().min(1),
+});
+
+/** Request body schema with batch size limit */
 const upsertQuestionOwnershipRequestSchema = z.object({
-  mappings: z.array(
-    z.object({
-      question: z.string().min(1),
-      teamName: z.string().min(1),
-      teamId: z.string().min(1),
-    })
-  ),
+  mappings: z
+    .array(questionTeamMappingSchema)
+    .min(1, 'At least one mapping required')
+    .max(
+      MAX_BATCH_SIZE,
+      `Maximum ${MAX_BATCH_SIZE} mappings allowed per request`
+    ),
 });
 
 /**

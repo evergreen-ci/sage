@@ -7,15 +7,20 @@ import { vectorStore } from '@/mastra/utils/memory';
 import { generateEmbedding } from '@/mastra/utils/voyage';
 import { logger } from '@/utils/logger';
 import {
+  MAX_QUESTION_LENGTH,
   QUESTION_OWNERSHIP_INDEX,
   SIMILARITY_THRESHOLD,
   TOP_K_RESULTS,
 } from './constants';
 import type { ErrorResponse, QuestionOwnershipResponse } from './types';
 
-/** Request body schema */
+/** Request body schema with max length validation and trim */
 const questionOwnershipRequestSchema = z.object({
-  question: z.string().min(1),
+  question: z
+    .string()
+    .min(1)
+    .max(MAX_QUESTION_LENGTH)
+    .transform(q => q.trim()),
 });
 
 /**
