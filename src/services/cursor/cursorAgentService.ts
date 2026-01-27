@@ -3,8 +3,8 @@ import { type CreateAgentRequest } from '@/generated/cursor-api';
 import logger from '@/utils/logger';
 import { createCursorApiClient, CursorApiClientError } from './cursorApiClient';
 import {
-  GetAgentStatusInput,
-  GetAgentStatusResult,
+  AgentStatusInput,
+  AgentStatusResult,
   LaunchAgentInput,
   LaunchAgentResult,
 } from './types';
@@ -190,8 +190,8 @@ export const launchCursorAgent = async (
  * @returns Result with current status, PR URL, and summary
  */
 export const getAgentStatus = async (
-  input: GetAgentStatusInput
-): Promise<GetAgentStatusResult> => {
+  input: AgentStatusInput
+): Promise<AgentStatusResult> => {
   const { agentId, assigneeEmail } = input;
 
   logger.debug(`Getting status for Cursor agent ${agentId}`, {

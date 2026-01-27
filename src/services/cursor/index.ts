@@ -14,8 +14,8 @@ export {
 // Re-export internal types
 export type {
   CursorAgentStatus,
-  GetAgentStatusInput,
-  GetAgentStatusResult,
+  AgentStatusInput,
+  AgentStatusResult,
   LaunchAgentInput,
   LaunchAgentResult,
 } from './types';

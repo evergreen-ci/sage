@@ -34,20 +34,12 @@ export type CursorAgentStatus =
   | 'CREATING'
   | 'EXPIRED';
 
-/**
- * Input to get the status of a Cursor agent
- */
-export interface GetAgentStatusInput {
-  /** The Cursor agent ID */
+export interface AgentStatusInput {
   agentId: string;
-  /** Email of the user whose API key should be used */
   assigneeEmail: string;
 }
 
-/**
- * Result of getting a Cursor agent's status
- */
-export interface GetAgentStatusResult {
+export interface AgentStatusResult {
   success: boolean;
   status?: CursorAgentStatus;
   prUrl?: string;
