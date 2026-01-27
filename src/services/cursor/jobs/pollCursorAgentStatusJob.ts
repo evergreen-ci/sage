@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Entry point for the Cursor agent status polling cronjob
  * Run this file directly to poll Cursor API for agent status updates

@@ -49,14 +49,9 @@ export interface GetAgentStatusInput {
  */
 export interface GetAgentStatusResult {
   success: boolean;
-  /** Current status of the agent */
   status?: CursorAgentStatus;
-  /** URL to the pull request (if created) */
   prUrl?: string;
-  /** Summary of the agent's work */
   summary?: string;
-  /** URL to view the agent in Cursor Web */
   agentUrl?: string;
-  /** Error message if the request failed */
   error?: string;
 }

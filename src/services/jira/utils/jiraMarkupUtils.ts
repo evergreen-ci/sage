@@ -169,37 +169,60 @@ export const formatAgentCompletedPanel = (
 /**
  * Format agent error panel
  * @param errorReason - The reason the agent encountered an error
+ * @param agentUrl - Optional URL to the Cursor agent session
  * @returns Formatted Jira comment with error panel
  */
-export const formatAgentFailedPanel = (errorReason: string): string =>
-  formatPanel(
+export const formatAgentFailedPanel = (
+  errorReason: string,
+  agentUrl?: string
+): string => {
+  let content =
+    `The Cursor Cloud Agent encountered an error while working on this ticket.\n\n` +
+    `*Error:* ${errorReason}`;
+
+  if (agentUrl) {
+    content += `\n\n*Agent Session:* [View in Cursor|${agentUrl}]`;
+  }
+
+  content += `\n\nYou may re-add the {{sage-bot}} label to retry.`;
+
+  return formatPanel(
     {
       title: 'Sage Bot Agent Failed',
       borderColor: '#DE350B',
       titleBGColor: '#DE350B',
       titleColor: '#FFFFFF',
     },
-    `The Cursor Cloud Agent encountered an error while working on this ticket.\n\n` +
-      `*Error:* ${errorReason}\n\n` +
-      `You may re-add the {{sage-bot}} label to retry.`
+    content
   );
+};
 
 /**
  * Format agent expired panel
+ * @param agentUrl - Optional URL to the Cursor agent session
  * @returns Formatted Jira comment with warning panel
  */
-export const formatAgentExpiredPanel = (): string =>
-  formatPanel(
+export const formatAgentExpiredPanel = (agentUrl?: string): string => {
+  let content =
+    `The Cursor Cloud Agent session expired before completing work on this ticket.\n\n` +
+    `This can happen if the agent takes too long or encounters issues.`;
+
+  if (agentUrl) {
+    content += `\n\n*Agent Session:* [View in Cursor|${agentUrl}]`;
+  }
+
+  content += `\n\nYou may re-add the {{sage-bot}} label to retry.`;
+
+  return formatPanel(
     {
       title: 'Sage Bot Agent Expired',
       borderColor: '#FF8B00',
       titleBGColor: '#FF8B00',
       titleColor: '#FFFFFF',
     },
-    `The Cursor Cloud Agent session expired before completing work on this ticket.\n\n` +
-      `This can happen if the agent takes too long or encounters issues.\n\n` +
-      `You may re-add the {{sage-bot}} label to retry.`
+    content
   );
+};
 
 /**
  * Format agent timeout panel for jobs that exceeded the TTL

@@ -154,6 +154,7 @@ export class CursorAgentStatusPollingService {
       await this.handleAgentStatus(job, agentStatus, {
         prUrl: statusResult.prUrl,
         summary: statusResult.summary,
+        agentUrl: statusResult.agentUrl,
       });
 
       return { jobId, ticketKey, success: true };
@@ -173,14 +174,15 @@ export class CursorAgentStatusPollingService {
    * Handle agent status and update job run accordingly
    * @param job - The job run to update
    * @param status - The current agent status from Cursor API
-   * @param details - Additional details including PR URL and summary
-   * @param details.prUrl - URL to the pull request (optional)
-   * @param details.summary - Summary of the agent's work (optional)
+   * @param details - Additional details including PR URL, summary, and agent URL
+   * @param details.prUrl - The URL of the PR created by the agent
+   * @param details.summary - The summary of the PR created by the agent
+   * @param details.agentUrl - The URL of the agent's dashboard
    */
   private async handleAgentStatus(
     job: JobRun,
     status: CursorAgentStatus,
-    details: { prUrl?: string; summary?: string }
+    details: { prUrl?: string; summary?: string; agentUrl?: string }
   ): Promise<void> {
     const jobId = job._id?.toString() ?? 'unknown';
     const ticketKey = job.jiraTicketKey;
@@ -230,7 +232,8 @@ export class CursorAgentStatusPollingService {
         });
 
         const errorComment = formatAgentFailedPanel(
-          'The agent encountered an error during execution'
+          'The agent encountered an error during execution',
+          details.agentUrl
         );
         await this.config.jiraClient.addComment(ticketKey, errorComment);
         break;
@@ -247,7 +250,7 @@ export class CursorAgentStatusPollingService {
           errorMessage: 'Cursor agent session expired',
         });
 
-        const expiredComment = formatAgentExpiredPanel();
+        const expiredComment = formatAgentExpiredPanel(details.agentUrl);
         await this.config.jiraClient.addComment(ticketKey, expiredComment);
         break;
       }
