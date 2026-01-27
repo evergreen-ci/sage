@@ -3,6 +3,7 @@ import {
   type CreateAgentRequest,
   type CreateAgentResponse,
   type Error as CursorError,
+  type GetAgentResponse,
 } from '@/generated/cursor-api';
 import { createClient, createConfig } from '@/generated/cursor-api/client';
 import logger from '@/utils/logger';
@@ -83,6 +84,49 @@ export class CursorApiClient {
       agentId: agentResponse.id,
       status: agentResponse.status,
       targetUrl: agentResponse.target?.url,
+    });
+
+    return agentResponse;
+  }
+
+  /**
+   * Get the status of an existing cloud agent
+   * GET /v0/agents/{id}
+   * @param agentId - The unique identifier of the agent
+   * @returns The agent response with current status and details
+   */
+  async getAgent(agentId: string): Promise<GetAgentResponse> {
+    logger.debug('Fetching Cursor agent status', { agentId });
+
+    const response = await this.sdk.getAgent({
+      path: { id: agentId },
+      throwOnError: false,
+    });
+
+    if (response.error) {
+      const cursorError = response.error as CursorError;
+      const errorMessage =
+        cursorError.error?.message || 'Unknown Cursor API error';
+      const errorCode = cursorError.error?.code;
+
+      logger.error(`Cursor API error fetching agent: ${errorMessage}`, {
+        agentId,
+        statusCode: response.response.status,
+        code: errorCode,
+      });
+
+      throw new CursorApiClientError(
+        errorMessage,
+        response.response.status,
+        errorCode
+      );
+    }
+
+    const agentResponse = response.data;
+
+    logger.debug('Cursor agent status retrieved', {
+      agentId: agentResponse.id,
+      status: agentResponse.status,
     });
 
     return agentResponse;

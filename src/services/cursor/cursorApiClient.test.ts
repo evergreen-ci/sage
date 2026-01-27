@@ -1,14 +1,16 @@
 import { CursorApiClient } from './cursorApiClient';
 
 // Hoist mock functions so they're available when vi.mock is hoisted
-const { mockCreateAgent, mockCreateConfig } = vi.hoisted(() => ({
+const { mockCreateAgent, mockCreateConfig, mockGetAgent } = vi.hoisted(() => ({
   mockCreateAgent: vi.fn(),
   mockCreateConfig: vi.fn((config: unknown) => config),
+  mockGetAgent: vi.fn(),
 }));
 
 vi.mock('@/generated/cursor-api', () => ({
   Sdk: vi.fn().mockImplementation(() => ({
     createAgent: mockCreateAgent,
+    getAgent: mockGetAgent,
   })),
 }));
 
@@ -120,6 +122,48 @@ describe('CursorApiClient', () => {
       expect(mockCreateAgent).toHaveBeenCalledWith({
         body: request,
         throwOnError: false,
+      });
+    });
+  });
+
+  describe('getAgent', () => {
+    it('returns agent data on success', async () => {
+      const mockResponse = {
+        id: 'bc_abc123',
+        status: 'FINISHED' as const,
+        target: { prUrl: 'https://github.com/org/repo/pull/123' },
+        summary: 'Completed work',
+      };
+
+      mockGetAgent.mockResolvedValueOnce({
+        data: mockResponse,
+        error: null,
+        response: { status: 200 },
+      });
+
+      const result = await client.getAgent('bc_abc123');
+
+      expect(result).toEqual(mockResponse);
+      expect(mockGetAgent).toHaveBeenCalledWith({
+        path: { id: 'bc_abc123' },
+        throwOnError: false,
+      });
+    });
+
+    it('throws CursorApiClientError on API failure', async () => {
+      mockGetAgent.mockResolvedValueOnce({
+        data: null,
+        error: {
+          error: { message: 'Agent not found', code: 'NOT_FOUND' },
+        },
+        response: { status: 404 },
+      });
+
+      await expect(client.getAgent('bc_invalid')).rejects.toMatchObject({
+        name: 'CursorApiClientError',
+        message: 'Agent not found',
+        statusCode: 404,
+        code: 'NOT_FOUND',
       });
     });
   });

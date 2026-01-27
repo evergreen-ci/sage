@@ -14,6 +14,7 @@ export enum JobRunStatus {
   Running = 'running',
   Completed = 'completed',
   Failed = 'failed',
+  FailedTimeout = 'failed_timeout',
   Cancelled = 'cancelled',
 }
 
