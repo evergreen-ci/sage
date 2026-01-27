@@ -5,7 +5,7 @@
 set -e
 
 echo "Regenerating Cursor API client from OpenAPI spec..."
-yarn generate-cursor-client
+pnpm generate-cursor-client
 
 echo "Checking for changes in generated files..."
 if ! git diff --exit-code src/generated/cursor-api/; then
@@ -13,7 +13,7 @@ if ! git diff --exit-code src/generated/cursor-api/; then
   echo "ERROR: The generated Cursor API client is out of sync with the OpenAPI spec."
   echo ""
   echo "To fix this, run locally:"
-  echo "  yarn generate-cursor-client"
+  echo "  pnpm generate-cursor-client"
   echo ""
   echo "Then commit the updated generated files."
   exit 1
