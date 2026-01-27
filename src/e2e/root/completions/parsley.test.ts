@@ -1,4 +1,3 @@
-import { TABLE_THREADS, TABLE_MESSAGES } from '@mastra/core/storage';
 import request from 'supertest';
 import setupTestAppServer from '@/e2e/setup';
 import { getMessageContent } from '@/e2e/utils';
@@ -13,8 +12,8 @@ const chatEndpoint = '/completions/parsley/conversations/chat';
 afterAll(async () => {
   console.log('Clearing tables');
   try {
-    await memoryStore.clearTable({ tableName: TABLE_THREADS });
-    await memoryStore.clearTable({ tableName: TABLE_MESSAGES });
+    const store = await memoryStore.getStore('memory');
+    store?.dangerouslyClearAll();
     console.log('Tables cleared');
   } catch (error) {
     console.error('Error clearing tables', error);
@@ -47,7 +46,7 @@ describe('POST /completions/parsley/conversations/chat', () => {
     expect(response.status).toBe(200);
     expect(response.text).toBeTruthy();
 
-    const thread = await memoryStore.getThreadById({
+    const thread = await memoryStore.stores?.memory?.getThreadById({
       threadId: id,
     });
     expect(thread).toBeTruthy();

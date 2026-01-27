@@ -1,41 +1,19 @@
-import {
-  WorkflowResult,
-  StepResult,
-  StepsRecord,
-  Step,
-} from '@mastra/core/workflows';
-import { z } from 'zod';
+import { WorkflowResult, Step } from '@mastra/core/workflows';
 
 /**
  * Expects a workflow result to be successful
  * @param wr - The workflow result to expect
  */
-// eslint-disable-next-line func-style -- TypeScript assertion functions with generics must be function declarations, not arrow functions (TS2775)
-export function expectSuccess<
-  TInput extends z.ZodTypeAny,
-  TOutput extends z.ZodTypeAny,
-  TSteps extends Step<string, any, any>[] = Step<string, any, any>[],
->(
-  wr: WorkflowResult<z.ZodObject<any>, TInput, TOutput, TSteps>
-): asserts wr is {
-  status: 'success';
-  result: z.infer<TOutput>;
-  input: z.infer<TInput>;
-  steps: {
-    [K in keyof StepsRecord<TSteps>]: StepsRecord<TSteps>[K]['outputSchema'] extends undefined
-      ? StepResult<unknown, unknown, unknown, unknown>
-      : StepResult<
-          z.infer<NonNullable<StepsRecord<TSteps>[K]['inputSchema']>>,
-          z.infer<NonNullable<StepsRecord<TSteps>[K]['resumeSchema']>>,
-          z.infer<NonNullable<StepsRecord<TSteps>[K]['suspendSchema']>>,
-          z.infer<NonNullable<StepsRecord<TSteps>[K]['outputSchema']>>
-        >;
-  };
-} {
+export const expectSuccess = (
+  wr: WorkflowResult<unknown, unknown, unknown, Step<string, any, any>[]>
+): asserts wr is Extract<
+  WorkflowResult<unknown, unknown, unknown, Step<string, any, any>[]>,
+  { status: 'success' }
+> => {
   expect(wr.status).toBe('success');
   if (wr.status === 'success') {
     expect(wr.result).toBeDefined();
   } else {
     throw new Error('Workflow result is not successful');
   }
-}
+};

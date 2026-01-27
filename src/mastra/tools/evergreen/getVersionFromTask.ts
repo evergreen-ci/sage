@@ -18,6 +18,12 @@ const getVersionFromTaskTool = createTool({
   inputSchema: getVersionFromTaskInputSchema,
   outputSchema: getVersionFromTaskOutputSchema,
   execute: async (inputData, context) => {
+    if (!getTaskTool.execute) {
+      throw new Error('getTaskTool.execute is not defined');
+    }
+    if (!getVersionTool.execute) {
+      throw new Error('getVersionTool.execute is not defined');
+    }
     // Step 1: Fetch task data
     const taskResult = await getTaskTool.execute(inputData, context);
 

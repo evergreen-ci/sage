@@ -30,7 +30,7 @@ export const mastra: Mastra = new Mastra({
           new BraintrustExporter({
             apiKey: config.braintrust.apiKey,
             projectName: config.braintrust.projectName,
-            braintrustLogger,
+            braintrustLogger: braintrustLogger as any,
           }),
         ],
       },
