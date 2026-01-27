@@ -1,1 +1,6 @@
-export { voyageClient, generateEmbedding, generateEmbeddings } from './client';
+export {
+  voyageClient,
+  generateEmbedding,
+  generateEmbeddings,
+  VoyageClientError,
+} from './client';

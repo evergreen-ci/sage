@@ -1,5 +1,4 @@
 import { MongoDBStore, MongoDBVector } from '@mastra/mongodb';
-import { QUESTION_OWNERSHIP_INDEX } from '@/api-server/routes/completions/lumber/constants';
 import { config } from '@/config';
 
 export const memoryStore = new MongoDBStore({
@@ -19,13 +18,14 @@ export const vectorStore = new MongoDBVector({
  * Should be called once during application startup.
  */
 export const ensureVectorIndexes = async (): Promise<void> => {
+  const { embeddingDimension, indexName } = config.questionOwnership;
   const indexes = await vectorStore.listIndexes();
-  if (indexes.includes(QUESTION_OWNERSHIP_INDEX)) {
+  if (indexes.includes(indexName)) {
     return;
   }
 
   await vectorStore.createIndex({
-    indexName: QUESTION_OWNERSHIP_INDEX,
-    dimension: 1024,
+    indexName,
+    dimension: embeddingDimension,
   });
 };
