@@ -1,5 +1,8 @@
 // Prompts for log files analysis
 
+import { z } from 'zod';
+import { LineReferenceSchema } from './schemas';
+
 const MAX_FINAL_SUMMARY_TOKENS = 2048;
 
 const LINE_NUMBER_GUIDANCE = `
@@ -123,8 +126,8 @@ Return JSON:
   "updated": <bool>, 
   "summary": "<updated or unchanged>",
   "lineReferences": [
-    { "line": <number>, "context": "Error occurred", "type": "error" },
-    { "line": <number>, "context": "Configuration block", "type": "info" }
+    { "line": <number>, "evidence": <direct quote from logs>, "description": <brief description of what this means> },
+     ...
   ]
 }`;
 
@@ -151,4 +154,31 @@ Requirements:
 ${CONCISE_SUMMARY_REQUIREMENTS}
 
 Source report:
+"""${markdown}"""`;
+
+export const USER_LINE_REFERENCES_PROMPTS = (
+  markdown: string,
+  existingLineReferences: Array<z.infer<typeof LineReferenceSchema>>,
+  analysisContext?: string
+) =>
+  `Analyze the following markdown report and extract specific line references mentioned in it. 
+${analysisContext ? `\nAnalysis Context:\n${analysisContext}\n` : ''}
+
+${
+  existingLineReferences.length > 0
+    ? `\nExisting line references from previous analysis steps: ${JSON.stringify(existingLineReferences, null, 2)}\nConsider these existing findings and generate a comprehensive, deduplicated final set of line references.`
+    : ''
+}
+
+Return JSON array, no other text:
+[
+  {
+    "line": <number>,
+    "description": <brief description of what was found at this location>,
+    "evidence": <quoted text corresponding to this line reference>
+  }
+  ...
+]
+
+Markdown to analyze:
 """${markdown}"""`;

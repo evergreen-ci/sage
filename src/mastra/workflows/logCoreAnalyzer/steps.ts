@@ -179,6 +179,7 @@ export const singlePassStep = createStep({
         requestContext,
         tracingContext,
       },
+      existingLineReferences: [],
     });
 
     logger.debug('Single-pass analysis complete', {
@@ -186,7 +187,7 @@ export const singlePassStep = createStep({
       summaryLength: result.summary.length,
     });
 
-    return { ...result, lineReferences: [] };
+    return result;
   },
 });
 
@@ -355,6 +356,7 @@ export const finalizeStep = createStep({
         requestContext,
         tracingContext,
       },
+      existingLineReferences: state.accumulatedLineReferences,
     });
 
     logger.debug('Finalize step complete', {
@@ -363,9 +365,6 @@ export const finalizeStep = createStep({
       lineReferencesLength: state.accumulatedLineReferences.length,
     });
 
-    return {
-      ...result,
-      lineReferences: state.accumulatedLineReferences,
-    };
+    return result;
   },
 });

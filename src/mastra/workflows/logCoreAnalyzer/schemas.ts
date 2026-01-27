@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 export const LineReferenceSchema = z.object({
   line: z.number().optional(),
-  context: z.string(),
-  type: z.enum(['error', 'warning', 'info', 'success']),
+  description: z.string(),
+  evidence: z.string(),
 });
 
 // This workflow takes either a file path, raw text, or an URL as input, and optional additional instructions
