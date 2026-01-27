@@ -141,10 +141,7 @@ export const singlePassStep = createStep({
   description: 'Direct analysis and report generation for single-chunk files',
   stateSchema: WorkflowStateSchema,
   inputSchema: z.object({}),
-  outputSchema: z.object({
-    markdown: z.string(),
-    summary: z.string(),
-  }),
+  outputSchema: WorkflowOutputSchema,
   execute: async ({
     abortSignal,
     mastra,
@@ -189,7 +186,7 @@ export const singlePassStep = createStep({
       summaryLength: result.summary.length,
     });
 
-    return result;
+    return { ...result, lineReferences: [] };
   },
 });
 
