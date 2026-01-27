@@ -94,6 +94,7 @@ export const updateJobRun = async (
   } else if (
     updates.status === JobRunStatus.Completed ||
     updates.status === JobRunStatus.Failed ||
+    updates.status === JobRunStatus.FailedTimeout ||
     updates.status === JobRunStatus.Cancelled
   ) {
     updateFields.completedAt = now;
@@ -134,4 +135,18 @@ export const findJobRunByTicketKey = async (
     { jiraTicketKey: ticketKey },
     { sort: { createdAt: -1 } }
   );
+};
+
+/**
+ * Finds all job runs with Running status
+ * Used by the Cursor agent status polling service to check for completed agents
+ * @returns Array of job runs that are currently running
+ */
+export const findRunningJobRuns = async (): Promise<JobRun[]> => {
+  const collection = getCollection<JobRun>(COLLECTION_NAME);
+
+  return collection
+    .find({ status: JobRunStatus.Running })
+    .sort({ startedAt: 1 })
+    .toArray();
 };

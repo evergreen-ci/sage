@@ -19,3 +19,21 @@ cronJobs:
       BRAINTRUST_PARENT: project_name:sage-prod
       BRAINTRUST_PROJECT_NAME: sage-prod
       JIRA_BASE_URL: https://jira.mongodb.org
+
+  - name: cursor-agent-status-polling-job
+    schedule: '* * * * *' # Run every minute
+    concurrencyPolicy: Forbid
+    command: ['yarn', 'poll-cursor-status:prod']
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1
+        memory: 2Gi
+    env:
+      NODE_ENV: production
+      SENTRY_ENVIRONMENT: production
+      BRAINTRUST_PARENT: project_name:sage-prod
+      BRAINTRUST_PROJECT_NAME: sage-prod
+      JIRA_BASE_URL: https://jira.mongodb.org
