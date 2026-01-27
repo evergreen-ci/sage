@@ -87,7 +87,9 @@ export const getCollectionIndexes = async (
 ): Promise<string[]> => {
   const collection = getCollection(collectionName);
   const indexes = await collection.indexes();
-  return indexes.map(idx => idx.name).filter(name => name !== '_id_');
+  return indexes
+    .map(idx => idx.name)
+    .filter((name): name is string => name !== undefined && name !== '_id_');
 };
 
 /**
