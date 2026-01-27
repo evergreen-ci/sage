@@ -6,6 +6,7 @@ import {
 } from '@/db/repositories/jobRunsRepository';
 import { JobRunStatus } from '@/db/types';
 import { launchCursorAgent } from '@/services/cursor';
+import { SAGE_BOT_DOCS_LINKS } from '@/services/jira/constants';
 import {
   JiraClient,
   jiraClient as defaultJiraClient,
@@ -135,7 +136,9 @@ export const createSageAutoPRBotJiraPollingService = (
           const defaultBranch = getDefaultBranch(ticketData.targetRepository!);
 
           if (!defaultBranch) {
-            const errorMessage = `No default branch configured for repository ${ticketData.targetRepository}`;
+            const errorMessage =
+              `No default branch configured for repository ${ticketData.targetRepository}. ` +
+              `See the [pre-configured repositories documentation|${SAGE_BOT_DOCS_LINKS.PRE_CONFIGURED_REPOSITORIES}] for more information.`;
 
             logger.error(
               `Failed to determine default branch for ticket ${ticketKey}`,

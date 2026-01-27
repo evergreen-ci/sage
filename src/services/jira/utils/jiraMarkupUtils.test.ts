@@ -1,4 +1,8 @@
 import {
+  formatAgentCompletedPanel,
+  formatAgentExpiredPanel,
+  formatAgentFailedPanel,
+  formatAgentTimeoutPanel,
   formatBulletList,
   formatInfoPanel,
   formatPanel,
@@ -89,6 +93,62 @@ describe('jiraMarkupUtils', () => {
 
     it('handles single item', () => {
       expect(formatBulletList(['Single'])).toBe('* Single');
+    });
+  });
+
+  describe('formatAgentCompletedPanel', () => {
+    it('formats completed panel with PR URL and summary', () => {
+      const result = formatAgentCompletedPanel(
+        'https://github.com/org/repo/pull/123',
+        'Implemented the feature'
+      );
+
+      expect(result).toContain('Sage Bot Agent Completed');
+      expect(result).toContain('borderColor=#00875A');
+      expect(result).toContain(
+        '[View PR|https://github.com/org/repo/pull/123]'
+      );
+      expect(result).toContain('Implemented the feature');
+    });
+
+    it('formats completed panel without optional fields', () => {
+      const result = formatAgentCompletedPanel();
+
+      expect(result).toContain('Sage Bot Agent Completed');
+      expect(result).toContain('has completed work');
+      expect(result).not.toContain('View PR');
+      expect(result).not.toContain('Summary');
+    });
+  });
+
+  describe('formatAgentFailedPanel', () => {
+    it('formats error panel with reason', () => {
+      const result = formatAgentFailedPanel('API rate limit exceeded');
+
+      expect(result).toContain('Sage Bot Agent Failed');
+      expect(result).toContain('borderColor=#DE350B');
+      expect(result).toContain('API rate limit exceeded');
+      expect(result).toContain('{{sage-bot}}');
+    });
+  });
+
+  describe('formatAgentExpiredPanel', () => {
+    it('formats expired panel with warning colors', () => {
+      const result = formatAgentExpiredPanel();
+
+      expect(result).toContain('Sage Bot Agent Expired');
+      expect(result).toContain('borderColor=#FF8B00');
+      expect(result).toContain('session expired');
+    });
+  });
+
+  describe('formatAgentTimeoutPanel', () => {
+    it('formats timeout panel with warning colors', () => {
+      const result = formatAgentTimeoutPanel();
+
+      expect(result).toContain('Sage Bot Agent Timed Out');
+      expect(result).toContain('borderColor=#FF8B00');
+      expect(result).toContain('timed out');
     });
   });
 });
