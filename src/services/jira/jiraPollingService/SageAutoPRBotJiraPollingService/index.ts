@@ -72,6 +72,11 @@ export const createSageAutoPRBotJiraPollingService = (
               existingStatus: existingJob.status,
             }
           );
+
+          // Remove the label to handle race condition where user's save re-adds it
+          // after the bot initially removed it during the original ticket processing
+          await jiraClient.removeLabel(ticketKey, SAGE_BOT_LABEL);
+
           return {
             ticketKey,
             success: true,
