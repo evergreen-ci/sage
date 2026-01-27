@@ -38,6 +38,20 @@ env:
   SENTRY_ENVIRONMENT: production
   SENTRY_CAPTURE_CONSOLE: true
 
+envSecrets:
+  AZURE_OPENAI_API_KEY: parsley-ai-secrets
+  AZURE_OPENAI_ENDPOINT: parsley-ai-secrets
+  EVERGREEN_API_KEY: parsley-ai-secrets
+  MONGODB_URI: parsley-ai-secrets
+  BRAINTRUST_API_KEY: parsley-ai-secrets
+  HONEYCOMB_API_KEY: parsley-ai-secrets
+  SENTRY_AUTH_TOKEN: parsley-ai-secrets
+  VOYAGE_API_KEY: parsley-ai-secrets
+
+serviceAccount:
+  enabled: true
+
+
 autoscaling:
   minReplicas: 2
   maxReplicas: 5

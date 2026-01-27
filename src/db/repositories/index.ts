@@ -1,3 +1,4 @@
+import { ensureVectorIndexes } from '@/mastra/utils/memory';
 import logger from '@/utils/logger';
 import { ensureIndexes as ensureJobRunIndexes } from './jobRunsRepository';
 import { ensureIndexes as ensureUserCredentialsIndexes } from './userCredentialsRepository';
@@ -12,7 +13,11 @@ export * as userCredentialsRepository from './userCredentialsRepository';
 export const ensureAllIndexes = async (): Promise<void> => {
   logger.info('Creating database indexes...');
 
-  await Promise.all([ensureJobRunIndexes(), ensureUserCredentialsIndexes()]);
+  await Promise.all([
+    ensureJobRunIndexes(),
+    ensureUserCredentialsIndexes(),
+    ensureVectorIndexes(),
+  ]);
 
   logger.info('All database indexes created successfully');
 };
