@@ -114,13 +114,30 @@ interface AuthResult {
  * @returns AuthResult containing the user ID and authentication method
  */
 const getUserIdFromRequest = (req: express.Request): AuthResult => {
-  // Check if request is from Evergreen's service account (via SPIFFE/mTLS identity)
-  if (isEvergreenServiceAccount(req)) {
-    const evergreenUserId = req.headers[EVERGREEN_USER_ID_HEADER] as
-      | string
-      | undefined;
+  // Check for X-Evergreen-User-ID header
+  const evergreenUserId = req.headers[EVERGREEN_USER_ID_HEADER] as
+    | string
+    | undefined;
 
+  // Check if request is from Evergreen's service account (via SPIFFE/mTLS identity)
+  // or if local dev bypass is enabled
+  const isTrustedEvergreenCaller =
+    isEvergreenServiceAccount(req) ||
+    (process.env.TRUST_EVERGREEN_USER_ID_HEADER === 'true' && evergreenUserId);
+
+  if (isTrustedEvergreenCaller) {
     if (evergreenUserId) {
+      // Log warning if using local dev bypass
+      if (
+        !isEvergreenServiceAccount(req) &&
+        process.env.TRUST_EVERGREEN_USER_ID_HEADER === 'true'
+      ) {
+        logger.warn(
+          'Using TRUST_EVERGREEN_USER_ID_HEADER bypass - DO NOT USE IN PRODUCTION',
+          { userId: evergreenUserId }
+        );
+      }
+
       return {
         userId: evergreenUserId,
         authMethod: 'evergreen-service',
@@ -135,10 +152,7 @@ const getUserIdFromRequest = (req: express.Request): AuthResult => {
   }
 
   // Check for X-Evergreen-User-ID header from untrusted caller - reject for security
-  const untrustedEvergreenHeader = req.headers[EVERGREEN_USER_ID_HEADER] as
-    | string
-    | undefined;
-  if (untrustedEvergreenHeader) {
+  if (evergreenUserId) {
     logger.warn('Rejecting X-Evergreen-User-ID header from untrusted caller', {
       header: EVERGREEN_USER_ID_HEADER,
     });
