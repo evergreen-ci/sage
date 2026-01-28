@@ -216,7 +216,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
           },
         ],
       });
-      expect(mockRemoveLabel).not.toHaveBeenCalled();
+      expect(mockRemoveLabel).toHaveBeenCalledWith('DEVPROD-456', 'sage-bot');
       expect(mockCreateJobRun).not.toHaveBeenCalled();
     });
 
