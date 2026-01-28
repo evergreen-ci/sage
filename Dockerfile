@@ -7,12 +7,15 @@ ARG VERSION=unknown
 # Make VERSION available as environment variable for the build process
 ENV VERSION=${VERSION}
 
-COPY package.json yarn.lock ./
-RUN yarn install
+# Install pnpm
+RUN npm install -g pnpm
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY . .
-RUN yarn build
+RUN pnpm build
 
 
 EXPOSE 8080
-CMD ["yarn", "start"]
+CMD ["pnpm", "start"]

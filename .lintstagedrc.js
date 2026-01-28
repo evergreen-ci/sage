@@ -1,6 +1,6 @@
 export default {
   // Run ESLint on TypeScript and JavaScript files
-  '*.{ts,tsx,js,jsx}': ['yarn eslint:strict'],
+  '*.{ts,tsx,js,jsx}': ['pnpm eslint:strict'],
   // Run Prettier formatting check on all supported files
-  '*.{ts,tsx,js,jsx,json,md}': ['yarn format:check'],
+  '*.{ts,tsx,js,jsx,json,md}': ['pnpm format:check'],
 };

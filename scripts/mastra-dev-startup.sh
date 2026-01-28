@@ -26,7 +26,7 @@ check_playground() {
 # Capture server output to a log file and terminal
 log_file=$(mktemp)
 echo "Starting Mastra dev server..."
-timeout 30 yarn mastra:dev 2>&1 | tee "$log_file" &
+timeout 30 pnpm mastra:dev 2>&1 | tee "$log_file" &
 server_pid=$!
 
 # Wait for server to start or timeout
