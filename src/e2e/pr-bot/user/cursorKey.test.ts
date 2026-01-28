@@ -24,9 +24,8 @@ const EVERGREEN_SPIFFE_IDENTITY =
   'spiffe://cluster.local/ns/devprod-evergreen/sa/evergreen-sa';
 
 // Create a valid X-Forwarded-Client-Cert header with SPIFFE URI
-const createXfccHeader = (spiffeUri: string): string => {
-  return `By=spiffe://cluster.local/ns/test/sa/test;Hash=abc123;Subject="";URI=${spiffeUri}`;
-};
+const createXfccHeader = (spiffeUri: string): string =>
+  `By=spiffe://cluster.local/ns/test/sa/test;Hash=abc123;Subject="";URI=${spiffeUri}`;
 
 const cleanupTestData = async () => {
   try {
