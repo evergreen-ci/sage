@@ -29,9 +29,47 @@ src/services/myService/
   index.ts        # Public exports
 ```
 
+### Code Comments
+
+**Do not be overly-verbose with comments.** Code should be self-documenting through clear naming and straightforward logic. Specifically:
+
+- **Do not add comments for obvious type/interface fields** - If a field name clearly conveys its purpose, a comment is unnecessary. For example:
+
+  ```typescript
+  // BAD - These comments add no value
+  export interface AgentStatusResult {
+    success: boolean;
+    /** Current status of the agent */
+    status?: CursorAgentStatus;
+    /** URL to the pull request (if created) */
+    prUrl?: string;
+    /** Summary of the agent's work */
+    summary?: string;
+  }
+
+  // GOOD - Self-documenting field names, no comments needed
+  export interface AgentStatusResult {
+    success: boolean;
+    status?: CursorAgentStatus;
+    prUrl?: string;
+    summary?: string;
+  }
+  ```
+
+- **Do not add comments for clear code flow** - If the steps being taken are obvious from the code itself, comments explaining "what" the code does are redundant
+
+- **Do not add comments for well-named methods/functions** - The function name should describe what it does
+
+**When comments ARE appropriate:**
+
+- **Complex algorithms or business logic** - When the "why" isn't obvious from the code
+- **Non-obvious workarounds** - Explain why a non-intuitive approach was necessary
+- **Linter/documentation requirements** - Where required by tooling (e.g., JSDoc for public APIs)
+- **Confusing or legacy naming** - When you can't change unclear names but need to clarify intent
+- **Regex patterns or magic values** - Explain what they match or represent
+
 ### Other Guidelines
 
-- **Avoid superfluous comments** - code should be self-documenting with clear naming
 - **Use TypeScript** for type safety throughout
 
 ## Pull Request Guidelines
