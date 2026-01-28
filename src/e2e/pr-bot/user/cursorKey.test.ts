@@ -19,6 +19,15 @@ const createAuthHeader = (userId: string): string => {
 
 const authHeader = createAuthHeader(testUserId);
 
+// Evergreen service account SPIFFE identity
+const EVERGREEN_SPIFFE_IDENTITY =
+  'spiffe://cluster.local/ns/devprod-evergreen/sa/evergreen-sa';
+
+// Create a valid X-Forwarded-Client-Cert header with SPIFFE URI
+const createXfccHeader = (spiffeUri: string): string => {
+  return `By=spiffe://cluster.local/ns/test/sa/test;Hash=abc123;Subject="";URI=${spiffeUri}`;
+};
+
 const cleanupTestData = async () => {
   try {
     const collection = getCollection<UserCredentials>('user_credentials');
@@ -207,5 +216,138 @@ describe('DELETE /pr-bot/user/cursor-key', () => {
 
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('No API key found');
+  });
+});
+
+describe('Evergreen service-to-service authentication', () => {
+  const evergreenTestUserId = 'evergreen.test.user';
+
+  afterEach(async () => {
+    // Clean up test data for Evergreen user
+    try {
+      const collection = getCollection<UserCredentials>('user_credentials');
+      await collection.deleteOne({
+        email: `${evergreenTestUserId}@mongodb.com`.toLowerCase(),
+      });
+    } catch {
+      // Ignore cleanup errors
+    }
+  });
+
+  it('should authenticate with X-Evergreen-User-ID header when caller is Evergreen service account', async () => {
+    const apiKey = 'evergreen_service_key_1234';
+
+    const response = await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set(
+        'x-forwarded-client-cert',
+        createXfccHeader(EVERGREEN_SPIFFE_IDENTITY)
+      )
+      .set('x-evergreen-user-id', evergreenTestUserId)
+      .send({ apiKey });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.keyLastFour).toBe('1234');
+
+    // Verify the key was stored for the correct user
+    const collection = getCollection<UserCredentials>('user_credentials');
+    const storedCredentials = await collection.findOne({
+      email: `${evergreenTestUserId}@mongodb.com`.toLowerCase(),
+    });
+    expect(storedCredentials).not.toBeNull();
+  });
+
+  it('should reject X-Evergreen-User-ID header from untrusted caller', async () => {
+    const apiKey = 'malicious_key_5678';
+
+    // Send request without XFCC header (untrusted caller)
+    const response = await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set('x-evergreen-user-id', evergreenTestUserId)
+      .send({ apiKey });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe('No authentication provided');
+  });
+
+  it('should reject X-Evergreen-User-ID header from non-Evergreen service account', async () => {
+    const apiKey = 'malicious_key_5678';
+    const untrustedSpiffeId =
+      'spiffe://cluster.local/ns/other-namespace/sa/other-sa';
+
+    const response = await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set('x-forwarded-client-cert', createXfccHeader(untrustedSpiffeId))
+      .set('x-evergreen-user-id', evergreenTestUserId)
+      .send({ apiKey });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe('No authentication provided');
+  });
+
+  it('should reject Evergreen service account request without X-Evergreen-User-ID header', async () => {
+    const apiKey = 'missing_user_key_9999';
+
+    const response = await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set(
+        'x-forwarded-client-cert',
+        createXfccHeader(EVERGREEN_SPIFFE_IDENTITY)
+      )
+      // Missing x-evergreen-user-id header
+      .send({ apiKey });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe('No authentication provided');
+  });
+
+  it('should allow GET request with Evergreen service-to-service auth', async () => {
+    // First create a key using Evergreen auth
+    await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set(
+        'x-forwarded-client-cert',
+        createXfccHeader(EVERGREEN_SPIFFE_IDENTITY)
+      )
+      .set('x-evergreen-user-id', evergreenTestUserId)
+      .send({ apiKey: 'evergreen_get_test_key' });
+
+    // Then retrieve it
+    const response = await request(app)
+      .get('/pr-bot/user/cursor-key')
+      .set(
+        'x-forwarded-client-cert',
+        createXfccHeader(EVERGREEN_SPIFFE_IDENTITY)
+      )
+      .set('x-evergreen-user-id', evergreenTestUserId);
+
+    expect(response.status).toBe(200);
+    expect(response.body.hasKey).toBe(true);
+    expect(response.body.keyLastFour).toBe('_key');
+  });
+
+  it('should allow DELETE request with Evergreen service-to-service auth', async () => {
+    // First create a key using Evergreen auth
+    await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set(
+        'x-forwarded-client-cert',
+        createXfccHeader(EVERGREEN_SPIFFE_IDENTITY)
+      )
+      .set('x-evergreen-user-id', evergreenTestUserId)
+      .send({ apiKey: 'evergreen_delete_test' });
+
+    // Then delete it
+    const response = await request(app)
+      .delete('/pr-bot/user/cursor-key')
+      .set(
+        'x-forwarded-client-cert',
+        createXfccHeader(EVERGREEN_SPIFFE_IDENTITY)
+      )
+      .set('x-evergreen-user-id', evergreenTestUserId);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
   });
 });
