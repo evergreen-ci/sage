@@ -96,20 +96,30 @@ type ReleaseNotesOutput = {
   sections: ReleaseNotesSection[];
 };
 
-const itemHasRequiredCitations = (item: ReleaseNotesItem): boolean => {
+const itemHasRequiredCitations = (
+  item: ReleaseNotesItem,
+  parentHasCitations = false
+): boolean => {
   const citations =
     item.citations?.map(candidate => candidate.trim()).filter(Boolean) ?? [];
 
-  if (citations.length > 0) {
-    return true;
-  }
+  const hasCitations = citations.length > 0;
+  const canInheritCitations = hasCitations || parentHasCitations;
 
   const subitems = item.subitems ?? [];
+
+  // If this is a leaf item (no subitems)
   if (subitems.length === 0) {
-    return false;
+    // Leaf items need citations (either own or inherited from parent)
+    return canInheritCitations;
   }
 
-  return subitems.every(itemHasRequiredCitations);
+  // This item has subitems - it's a grouping bullet
+  // Grouping bullets are valid if all their subitems are valid
+  // Subitems can inherit citations from this item (if it has citations)
+  return subitems.every(subitem =>
+    itemHasRequiredCitations(subitem, hasCitations)
+  );
 };
 
 export const validateReleaseNotesCitations = (
