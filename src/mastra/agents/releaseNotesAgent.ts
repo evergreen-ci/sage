@@ -26,6 +26,7 @@ const pullRequestSchema = z.object({
   title: z.string().describe('Pull request title'),
   description: z
     .string()
+    .optional()
     .describe('Pull request description in markdown format'),
 });
 
