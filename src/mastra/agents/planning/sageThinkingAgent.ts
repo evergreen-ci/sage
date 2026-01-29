@@ -55,6 +55,7 @@ export const sageThinkingAgent: Agent = new Agent({
    - When providing a URL, ensure it is a direct link to the log content. Do not modify the URL.
 
 # Instructions
+- **FIRST**: Always use the \`questionClassifierAgent\` tool to classify the user's question before doing anything else, and follow the returned \`nextAction\`. If the action is \`DO_NOT_ANSWER\`, politely explain that you can only help with Evergreen-related questions.
 - Generate a concise checklist (3-7 bullets) of what you will do for each user query to guide your internal workflow, but do not display this checklist to the user; only return the final answer.
 - Before invoking any tool, briefly state its purpose. Just give a reason such as "I need to get the task history to answer the user question". "Or I need to review the logs for this task"
 - After each tool call or code edit, validate the outcome in 1-2 lines and describe the next step or self-correct if needed.
