@@ -253,14 +253,25 @@ describe('Evergreen service-to-service authentication', () => {
   it('should reject X-Evergreen-User-ID header from untrusted caller', async () => {
     const apiKey = 'malicious_key_5678';
 
-    // Send request without XFCC header (untrusted caller)
-    const response = await request(app)
-      .post('/pr-bot/user/cursor-key')
-      .set('x-evergreen-user-id', evergreenTestUserId)
-      .send({ apiKey });
+    // Temporarily clear USER_NAME to prevent local dev fallback
+    const originalUserName = process.env.USER_NAME;
+    delete process.env.USER_NAME;
 
-    expect(response.status).toBe(401);
-    expect(response.body.error).toBe('No authentication provided');
+    try {
+      // Send request without Kanopy auth header (untrusted caller)
+      const response = await request(app)
+        .post('/pr-bot/user/cursor-key')
+        .set('x-evergreen-user-id', evergreenTestUserId)
+        .send({ apiKey });
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toBe('No authentication provided');
+    } finally {
+      // Restore USER_NAME
+      if (originalUserName) {
+        process.env.USER_NAME = originalUserName;
+      }
+    }
   });
 
   it('should ignore X-Evergreen-User-ID header from non-Evergreen service account and use Kanopy JWT', async () => {
