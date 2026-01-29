@@ -143,6 +143,7 @@ To test the Cursor agent integration locally, you'll need to:
    - `DELETE /pr-bot/user/cursor-key` - Remove your stored key
 
    Example:
+
    ```bash
    curl -X POST http://localhost:8080/pr-bot/user/cursor-key \
      -H "Content-Type: application/json" \
