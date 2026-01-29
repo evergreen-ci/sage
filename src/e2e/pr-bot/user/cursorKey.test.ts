@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { EVERGREEN_SPIFFE_IDENTITY } from '@/constants/headers';
 import { db } from '@/db/connection';
 import { getCollection } from '@/db/repositories/helpers';
 import { UserCredentials } from '@/db/types';
@@ -19,13 +20,8 @@ const createAuthHeader = (userId: string): string => {
 
 const authHeader = createAuthHeader(testUserId);
 
-// Evergreen service account SPIFFE identity
-const EVERGREEN_SPIFFE_IDENTITY =
-  'spiffe://cluster.local/ns/devprod-evergreen/sa/evergreen-sa';
-
-// Create a valid X-Forwarded-Client-Cert header with SPIFFE URI
-const createXfccHeader = (spiffeUri: string): string =>
-  `By=spiffe://cluster.local/ns/test/sa/test;Hash=abc123;Subject="";URI=${spiffeUri}`;
+// Create a Kanopy auth header for Evergreen service account
+const evergreenServiceAuthHeader = createAuthHeader(EVERGREEN_SPIFFE_IDENTITY);
 
 const cleanupTestData = async () => {
   try {
@@ -238,10 +234,7 @@ describe('Evergreen service-to-service authentication', () => {
 
     const response = await request(app)
       .post('/pr-bot/user/cursor-key')
-      .set(
-        'x-forwarded-client-cert',
-        createXfccHeader(EVERGREEN_SPIFFE_IDENTITY)
-      )
+      .set('x-kanopy-internal-authorization', evergreenServiceAuthHeader)
       .set('x-evergreen-user-id', evergreenTestUserId)
       .send({ apiKey });
 
@@ -270,19 +263,33 @@ describe('Evergreen service-to-service authentication', () => {
     expect(response.body.error).toBe('No authentication provided');
   });
 
-  it('should reject X-Evergreen-User-ID header from non-Evergreen service account', async () => {
-    const apiKey = 'malicious_key_5678';
-    const untrustedSpiffeId =
+  it('should ignore X-Evergreen-User-ID header from non-Evergreen service account and use Kanopy JWT', async () => {
+    const apiKey = 'other_service_key_5678';
+    const otherServiceId =
       'spiffe://cluster.local/ns/other-namespace/sa/other-sa';
+    const otherServiceAuthHeader = createAuthHeader(otherServiceId);
 
     const response = await request(app)
       .post('/pr-bot/user/cursor-key')
-      .set('x-forwarded-client-cert', createXfccHeader(untrustedSpiffeId))
-      .set('x-evergreen-user-id', evergreenTestUserId)
+      .set('x-kanopy-internal-authorization', otherServiceAuthHeader)
+      .set('x-evergreen-user-id', evergreenTestUserId) // This header should be ignored
       .send({ apiKey });
 
-    expect(response.status).toBe(401);
-    expect(response.body.error).toBe('No authentication provided');
+    // Should succeed, authenticated as the other service (not the evergreenTestUserId)
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+
+    // Verify the key was stored for the Kanopy JWT user, not the x-evergreen-user-id
+    const collection = getCollection<UserCredentials>('user_credentials');
+    const storedCredentials = await collection.findOne({
+      email: `${otherServiceId}@mongodb.com`.toLowerCase(),
+    });
+    expect(storedCredentials).not.toBeNull();
+
+    // Clean up
+    await collection.deleteOne({
+      email: `${otherServiceId}@mongodb.com`.toLowerCase(),
+    });
   });
 
   it('should reject Evergreen service account request without X-Evergreen-User-ID header', async () => {
@@ -290,10 +297,7 @@ describe('Evergreen service-to-service authentication', () => {
 
     const response = await request(app)
       .post('/pr-bot/user/cursor-key')
-      .set(
-        'x-forwarded-client-cert',
-        createXfccHeader(EVERGREEN_SPIFFE_IDENTITY)
-      )
+      .set('x-kanopy-internal-authorization', evergreenServiceAuthHeader)
       // Missing x-evergreen-user-id header
       .send({ apiKey });
 
@@ -305,20 +309,14 @@ describe('Evergreen service-to-service authentication', () => {
     // First create a key using Evergreen auth
     await request(app)
       .post('/pr-bot/user/cursor-key')
-      .set(
-        'x-forwarded-client-cert',
-        createXfccHeader(EVERGREEN_SPIFFE_IDENTITY)
-      )
+      .set('x-kanopy-internal-authorization', evergreenServiceAuthHeader)
       .set('x-evergreen-user-id', evergreenTestUserId)
       .send({ apiKey: 'evergreen_get_test_key' });
 
     // Then retrieve it
     const response = await request(app)
       .get('/pr-bot/user/cursor-key')
-      .set(
-        'x-forwarded-client-cert',
-        createXfccHeader(EVERGREEN_SPIFFE_IDENTITY)
-      )
+      .set('x-kanopy-internal-authorization', evergreenServiceAuthHeader)
       .set('x-evergreen-user-id', evergreenTestUserId);
 
     expect(response.status).toBe(200);
@@ -330,20 +328,14 @@ describe('Evergreen service-to-service authentication', () => {
     // First create a key using Evergreen auth
     await request(app)
       .post('/pr-bot/user/cursor-key')
-      .set(
-        'x-forwarded-client-cert',
-        createXfccHeader(EVERGREEN_SPIFFE_IDENTITY)
-      )
+      .set('x-kanopy-internal-authorization', evergreenServiceAuthHeader)
       .set('x-evergreen-user-id', evergreenTestUserId)
       .send({ apiKey: 'evergreen_delete_test' });
 
     // Then delete it
     const response = await request(app)
       .delete('/pr-bot/user/cursor-key')
-      .set(
-        'x-forwarded-client-cert',
-        createXfccHeader(EVERGREEN_SPIFFE_IDENTITY)
-      )
+      .set('x-kanopy-internal-authorization', evergreenServiceAuthHeader)
       .set('x-evergreen-user-id', evergreenTestUserId);
 
     expect(response.status).toBe(200);

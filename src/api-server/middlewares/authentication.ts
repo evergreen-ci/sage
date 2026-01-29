@@ -3,67 +3,13 @@ import express from 'express';
 import {
   KANOPY_AUTH_HEADER,
   EVERGREEN_USER_ID_HEADER,
-  FORWARDED_CLIENT_CERT_HEADER,
+  EVERGREEN_SPIFFE_IDENTITY,
 } from '@/constants/headers';
 import { logger } from '@/utils/logger';
 
 interface KanopyJWTClaims {
   sub: string;
 }
-
-/**
- * The SPIFFE identity of Evergreen's service account.
- * Requests from this identity are trusted to provide the X-Evergreen-User-ID header.
- */
-const EVERGREEN_SPIFFE_IDENTITY =
-  'spiffe://cluster.local/ns/devprod-evergreen/sa/evergreen-sa';
-
-/**
- * Extracts the SPIFFE URI from the X-Forwarded-Client-Cert header.
- * The header format is: By=spiffe://...;Hash=...;Subject=...;URI=spiffe://...
- * @param xfccHeader - The X-Forwarded-Client-Cert header value
- * @returns The SPIFFE URI or null if not found
- */
-const extractSpiffeIdFromXfcc = (xfccHeader: string): string | null => {
-  try {
-    if (!xfccHeader) {
-      return null;
-    }
-
-    // Parse the XFCC header to extract the URI field
-    // The header contains semicolon-separated key=value pairs
-    const parts = xfccHeader.split(';');
-    for (const part of parts) {
-      const trimmed = part.trim();
-      if (trimmed.startsWith('URI=')) {
-        return trimmed.substring(4); // Remove 'URI=' prefix
-      }
-    }
-
-    return null;
-  } catch (error) {
-    logger.error('Failed to extract SPIFFE ID from XFCC header', { error });
-    return null;
-  }
-};
-
-/**
- * Checks if the request is from Evergreen's service account.
- * @param req - The Express request object
- * @returns True if the caller is Evergreen's service account
- */
-const isEvergreenServiceAccount = (req: express.Request): boolean => {
-  const xfccHeader = req.headers[FORWARDED_CLIENT_CERT_HEADER] as
-    | string
-    | undefined;
-
-  if (!xfccHeader) {
-    return false;
-  }
-
-  const spiffeId = extractSpiffeIdFromXfcc(xfccHeader);
-  return spiffeId === EVERGREEN_SPIFFE_IDENTITY;
-};
 
 /**
  * @param authHeader - The authorization header string
@@ -99,6 +45,24 @@ const extractUserIdFromKanopyHeader = (authHeader: string): string | null => {
 };
 
 /**
+ * Checks if the request is from Evergreen's service account.
+ * Verifies by checking if the Kanopy JWT's subject matches Evergreen's SPIFFE identity.
+ * @param req - The Express request object
+ * @returns True if the caller is Evergreen's service account
+ */
+const isEvergreenServiceAccount = (req: express.Request): boolean => {
+  const kanopyAuthHeader = req.headers[KANOPY_AUTH_HEADER] as
+    | string
+    | undefined;
+  if (!kanopyAuthHeader) {
+    return false;
+  }
+
+  const sub = extractUserIdFromKanopyHeader(kanopyAuthHeader);
+  return sub === EVERGREEN_SPIFFE_IDENTITY;
+};
+
+/**
  * Authentication result containing the user ID and the authentication method used.
  */
 interface AuthResult {
@@ -113,31 +77,15 @@ interface AuthResult {
  * @param req - The Express request object
  * @returns AuthResult containing the user ID and authentication method
  */
-const getUserIdFromRequest = (req: express.Request): AuthResult => {
+const getUserFromRequest = (req: express.Request): AuthResult => {
   // Check for X-Evergreen-User-ID header
   const evergreenUserId = req.headers[EVERGREEN_USER_ID_HEADER] as
     | string
     | undefined;
 
-  // Check if request is from Evergreen's service account (via SPIFFE/mTLS identity)
-  // or if local dev bypass is enabled
-  const isTrustedEvergreenCaller =
-    isEvergreenServiceAccount(req) ||
-    (process.env.TRUST_EVERGREEN_USER_ID_HEADER === 'true' && evergreenUserId);
-
-  if (isTrustedEvergreenCaller) {
+  // Check if request is from Evergreen's service account (via Kanopy JWT subject)
+  if (isEvergreenServiceAccount(req)) {
     if (evergreenUserId) {
-      // Log warning if using local dev bypass
-      if (
-        !isEvergreenServiceAccount(req) &&
-        process.env.TRUST_EVERGREEN_USER_ID_HEADER === 'true'
-      ) {
-        logger.warn(
-          'Using TRUST_EVERGREEN_USER_ID_HEADER bypass - DO NOT USE IN PRODUCTION',
-          { userId: evergreenUserId }
-        );
-      }
-
       return {
         userId: evergreenUserId,
         authMethod: 'evergreen-service',
@@ -148,14 +96,6 @@ const getUserIdFromRequest = (req: express.Request): AuthResult => {
     logger.warn(
       'Request from Evergreen service account missing X-Evergreen-User-ID header'
     );
-    return { userId: null, authMethod: null };
-  }
-
-  // Check for X-Evergreen-User-ID header from untrusted caller - reject for security
-  if (evergreenUserId) {
-    logger.warn('Rejecting X-Evergreen-User-ID header from untrusted caller', {
-      header: EVERGREEN_USER_ID_HEADER,
-    });
     return { userId: null, authMethod: null };
   }
 
@@ -192,7 +132,7 @@ export const userIdMiddleware = (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const authResult = getUserIdFromRequest(req);
+  const authResult = getUserFromRequest(req);
   if (!authResult.userId) {
     logger.error('No authentication provided', {
       requestId: res.locals.requestId,

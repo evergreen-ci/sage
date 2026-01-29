@@ -13,15 +13,15 @@ const KANOPY_AUTH_HEADER = 'x-kanopy-internal-authorization';
  */
 const EVERGREEN_USER_ID_HEADER = 'x-evergreen-user-id';
 /**
- * This header contains the SPIFFE identity of the calling service (from Istio/Envoy).
- * Used to verify the caller's identity for service-to-service authentication.
- * Format: By=spiffe://...;Hash=...;Subject=...;URI=spiffe://...
+ * The SPIFFE identity of Evergreen's service account.
+ * Requests from this identity are trusted to provide the X-Evergreen-User-ID header.
  */
-const FORWARDED_CLIENT_CERT_HEADER = 'x-forwarded-client-cert';
+const EVERGREEN_SPIFFE_IDENTITY =
+  'spiffe://cluster.local/ns/devprod-evergreen/sa/evergreen-sa';
 
 export {
   EVERGREEN_USER_HEADER,
   KANOPY_AUTH_HEADER,
   EVERGREEN_USER_ID_HEADER,
-  FORWARDED_CLIENT_CERT_HEADER,
+  EVERGREEN_SPIFFE_IDENTITY,
 };
