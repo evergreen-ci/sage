@@ -23,25 +23,31 @@ The repository label tells Sage Bot which repository to work on.
 The label format:
 
 ```
+repo:<repo_org>/<repo_name>
+```
+
+Or with an optional branch:
+
+```
 repo:<repo_org>/<repo_name>@<branch_name>
 ```
 
-Branch name is optional if you have [configured the repo's default branch](https://github.com/evergreen-ci/sage/blob/main/src/services/repositories/repositories.yaml) for Sage Bot.
-If you have not configured the default branch, you must specify the branch name.
+If you don't specify a branch, Sage Bot uses the repository's default branch (typically `main` or `master`).
 
-For example, for the [10gen/mms](https://github.com/10gen/mms) repo:
+Examples:
 
-- `repo:10gen/mms` - Uses the default branch configured for this repo
+- `repo:10gen/mms` - Uses the repository's default branch
 - `repo:10gen/mms@my-feature-branch` - Uses a specific branch
 
-### Pre-configured Repositories
+### Specifying a Non-Default Branch
 
-Repositories with default branches are configured in [`src/services/repositories/repositories.yaml`](/src/services/repositories/repositories.yaml).
+In most cases, you can simply use `repo:<org>/<repo>` and Sage Bot will use the repository's default branch automatically.
 
-If your repository isn't configured, you have two options:
+If you need to work on a specific branch (e.g., a feature branch or a non-default base branch), specify it inline using the `@branch` syntax:
 
-1. **Specify the branch inline** using the `@branch` syntax (e.g., `repo:myorg/myrepo@main`)
-2. **Add your repository to the config** by opening a PR to update `repositories.yaml` - contributions are welcome!
+```text
+repo:myorg/myrepo@my-branch
+```
 
 Feel free to reach out to the DevProd team if you have questions.
 

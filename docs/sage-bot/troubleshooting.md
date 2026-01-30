@@ -12,13 +12,6 @@ The ticket assignee needs to register their Cursor API key. See the [onboarding 
 
 Add a label in the format `repo:<org>/<repo>` to your ticket. For example: `repo:10gen/mms`.
 
-### "Repository is not configured"
-
-Either:
-
-1. Add your repository to the Sage configuration (contact the DevProd team), or
-2. Specify the branch inline: `repo:<org>/<repo>@<branch>`
-
 ### "No assignee set"
 
 Assign the ticket to a user who has registered their Cursor API key.
@@ -35,7 +28,7 @@ A: Processing time varies based on task complexity. Simple tasks may complete in
 
 **Q: Can I use Sage Bot on any repository?**
 
-A: Currently, Sage Bot supports repositories that are either pre-configured or where you specify the branch inline. The repository must be accessible to the Cursor agent.
+A: Yes, Sage Bot works with any GitHub repository. Simply add a label in the format `repo:<org>/<repo>` and Sage Bot will use the repository's default branch. If you need a specific branch, use `repo:<org>/<repo>@<branch>`. The repository must be accessible to the Cursor agent.
 
 **Q: What happens if my API key expires?**
 

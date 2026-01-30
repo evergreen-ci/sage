@@ -7,8 +7,8 @@ export interface LaunchAgentInput {
   summary: string;
   description: string | null;
   targetRepository: string;
-  /** Branch/ref to use - either from inline label or from config lookup */
-  targetRef: string;
+  /** Optional branch/ref to use. If not provided, Cursor uses the repo's default branch */
+  targetRef?: string;
   assigneeEmail: string;
   autoCreatePr?: boolean;
 }

@@ -97,20 +97,10 @@ export const launchCursorAgent = async (
 
   logger.info(`Launching Cursor agent for ticket ${ticketKey}`, {
     targetRepository,
-    targetRef,
+    targetRef: targetRef ?? '(default branch)',
     assigneeEmail,
     autoCreatePr,
   });
-
-  // Validate targetRef before proceeding
-  if (!targetRef) {
-    const errorMessage = `No target ref provided for ticket ${ticketKey}`;
-    logger.error(errorMessage, { ticketKey, targetRepository });
-    return {
-      success: false,
-      error: errorMessage,
-    };
-  }
 
   // Get the assignee's decrypted API key
   const apiKey = await getDecryptedApiKey(assigneeEmail);
@@ -131,13 +121,14 @@ export const launchCursorAgent = async (
   const repositoryUrl = normalizeRepositoryUrl(targetRepository);
 
   // Build the launch request
+  // Only include ref if explicitly provided; otherwise Cursor uses the repo's default branch
   const launchRequest: CreateAgentRequest = {
     prompt: {
       text: promptText,
     },
     source: {
       repository: repositoryUrl,
-      ref: targetRef,
+      ...(targetRef && { ref: targetRef }),
     },
     target: {
       autoCreatePr: autoCreatePr ?? false,
