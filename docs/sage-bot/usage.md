@@ -39,18 +39,6 @@ Examples:
 - `repo:10gen/mms` - Uses the repository's default branch
 - `repo:10gen/mms@my-feature-branch` - Uses a specific branch
 
-### Specifying a Non-Default Branch
-
-In most cases, you can simply use `repo:<org>/<repo>` and Sage Bot will use the repository's default branch automatically.
-
-If you need to work on a specific branch (e.g., a feature branch or a non-default base branch), specify it inline using the `@branch` syntax:
-
-```text
-repo:myorg/myrepo@my-branch
-```
-
-Feel free to reach out to the DevProd team if you have questions.
-
 ## Triggering Sage Bot
 
 To trigger Sage Bot on your ticket:
