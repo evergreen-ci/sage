@@ -81,7 +81,7 @@
     "gql": "^1.1.2",
     "graphql": "^16.11.0",
     "graphql-tag": "^2.12.6",
-    "jira.js": "^5.2.2",
+    "jira.js": "^5.3.0",
     "mongodb": "^6.18.0",
     "query-string": "^9.3.1",
     "uuid": "^13.0.0",
