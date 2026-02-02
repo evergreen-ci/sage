@@ -1,24 +1,30 @@
 import { decrypt, encrypt } from '@/db/encryption';
+import {
+  EMAIL_UNIQUE_INDEX_NAME,
+  USER_CREDENTIALS_COLLECTION_NAME,
+} from '@/db/repositories/constants';
 import { getCollection } from '@/db/repositories/helpers';
 import { CreateUserCredentialsInput, UserCredentials } from '@/db/types';
 import logger from '@/utils/logger';
-
-const COLLECTION_NAME = 'user_credentials';
 
 /**
  * Ensures indexes are created for the user_credentials collection
  * Should be called once during application startup
  */
 export const ensureIndexes = async (): Promise<void> => {
-  const collection = getCollection<UserCredentials>(COLLECTION_NAME);
+  const collection = getCollection<UserCredentials>(
+    USER_CREDENTIALS_COLLECTION_NAME
+  );
 
   // Create unique index on email for fast lookups and uniqueness constraint
   await collection.createIndex(
     { email: 1 },
-    { unique: true, name: 'email_unique_idx' }
+    { unique: true, name: EMAIL_UNIQUE_INDEX_NAME }
   );
 
-  logger.info(`Indexes created for ${COLLECTION_NAME} collection`);
+  logger.info(
+    `Indexes created for ${USER_CREDENTIALS_COLLECTION_NAME} collection`
+  );
 };
 
 /**
@@ -30,7 +36,9 @@ export const ensureIndexes = async (): Promise<void> => {
 export const findUserCredentialsByEmail = async (
   email: string
 ): Promise<UserCredentials | null> => {
-  const collection = getCollection<UserCredentials>(COLLECTION_NAME);
+  const collection = getCollection<UserCredentials>(
+    USER_CREDENTIALS_COLLECTION_NAME
+  );
   return collection.findOne({ email: email.toLowerCase() });
 };
 
@@ -60,7 +68,9 @@ export const getDecryptedApiKey = async (
 export const upsertUserCredentials = async (
   input: CreateUserCredentialsInput
 ): Promise<UserCredentials> => {
-  const collection = getCollection<UserCredentials>(COLLECTION_NAME);
+  const collection = getCollection<UserCredentials>(
+    USER_CREDENTIALS_COLLECTION_NAME
+  );
   const normalizedEmail = input.email.toLowerCase();
   const now = new Date();
 
@@ -101,7 +111,9 @@ export const upsertUserCredentials = async (
 export const deleteUserCredentials = async (
   email: string
 ): Promise<boolean> => {
-  const collection = getCollection<UserCredentials>(COLLECTION_NAME);
+  const collection = getCollection<UserCredentials>(
+    USER_CREDENTIALS_COLLECTION_NAME
+  );
 
   const result = await collection.deleteOne({ email: email.toLowerCase() });
 
@@ -119,7 +131,9 @@ export const deleteUserCredentials = async (
  * @returns True if credentials exist, false otherwise
  */
 export const credentialsExist = async (email: string): Promise<boolean> => {
-  const collection = getCollection<UserCredentials>(COLLECTION_NAME);
+  const collection = getCollection<UserCredentials>(
+    USER_CREDENTIALS_COLLECTION_NAME
+  );
   const count = await collection.countDocuments({ email: email.toLowerCase() });
   return count > 0;
 };
