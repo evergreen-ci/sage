@@ -2,6 +2,7 @@
 // See existing scorers at https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts.
 
 import { LLMClassifierFromTemplate } from 'autoevals';
+import { LineReference } from './logAnalyzerWorkflow/types';
 import { ScorerFunction, BaseScores } from './types';
 
 /**
@@ -138,4 +139,38 @@ export const TechnicalAccuracy = (args: {
   return technicalAccuracyClassifier({
     output: args.output,
   });
+};
+
+/**
+ * Custom scorer to verify that all core error lines are present in the output.
+ * Returns 1 if all expected core lines are found, 0 otherwise.
+ * The output can include additional lines beyond the expected ones.
+ * @param args - Arguments for line reference evaluation
+ * @param args.output - Actual line references from the agent (can include extra lines)
+ * @param args.expected - Expected core error lines that must all be present
+ * @returns Score result with metadata
+ */
+export const CoreErrorLinesPresent = (args: {
+  output: LineReference[];
+  expected: LineReference[];
+}) => {
+  const expectedLines = args.expected.map(ref => ref.line);
+  const outputLines = args.output.map(ref => ref.line);
+  const missingLines = expectedLines.filter(
+    line => !outputLines.includes(line)
+  );
+  const allCoreErrorsPresent = missingLines.length === 0;
+
+  return {
+    name: 'CoreErrorLinesPresent',
+    score: allCoreErrorsPresent ? 1 : 0,
+    metadata: {
+      allCoreErrorsPresent,
+      expectedLines,
+      outputLines,
+      missingLines,
+      outputCount: outputLines.length,
+      expectedCount: expectedLines.length,
+    },
+  };
 };

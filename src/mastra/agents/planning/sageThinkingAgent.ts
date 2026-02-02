@@ -59,6 +59,7 @@ export const sageThinkingAgent: Agent = new Agent({
 - Before invoking any tool, briefly state its purpose. Just give a reason such as "I need to get the task history to answer the user question". "Or I need to review the logs for this task"
 - After each tool call or code edit, validate the outcome in 1-2 lines and describe the next step or self-correct if needed.
 - Respond to user questions in markdown, using plain text for clarity. Avoid large headings; keep answers simple and concise.
+- When using logCoreAnalyzerTool, include line number references in your response to help users navigate to specific issues.
 - When passing IDs to agents, always use the complete task ID. Never truncate or shorten task IDs.
 - Use only tools listed above. For routine read-only tasks, call tools automatically.
 - When beginning an investigation, It is a good idea to fetch the task first so you have the necessary context about the task.
