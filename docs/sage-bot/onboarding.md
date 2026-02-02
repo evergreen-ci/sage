@@ -54,7 +54,7 @@ The Cursor GitHub app requires these permissions for cloud agent functionality:
 
 For more details, see [Cursor's GitHub integration documentation](https://cursor.com/docs/integrations/github).
 
-## Step 3: Register Your API Key with Sage
+## Step 3: Register Your API Key on Spruce
 
 Register your Cursor API key through Evergreen's settings page:
 
