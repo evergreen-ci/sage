@@ -52,3 +52,15 @@ A: Sage Bot removes the `sage-bot` label immediately when it picks up the ticket
 **Q: Does Sage Bot update the Jira ticket status?**
 
 A: No, Sage Bot only removes the `sage-bot` label and posts comments. Any status transitions depend on your existing Jira automation rules.
+
+**Q: The agent can't compile code, run tests, or install dependencies. How do I fix this?**
+
+A: Your repository likely needs a `.cursor/environment.json` file to configure the cloud agent's environment. This file tells the agent how to set up dependencies, start services, and run commands. See the [optional environment configuration](./onboarding.md#optional-configure-repository-environment) in the onboarding guide.
+
+**Q: The agent produces code that doesn't follow our project conventions or fails CI checks. What should I do?**
+
+A: Configure your repository's environment so the agent can run your formatters, linters, and tests. Add a `.cursor/environment.json` file with your install and build commands. See [Cursor's Cloud Agent Setup documentation](https://cursor.com/docs/cloud-agent#setup) for details.
+
+**Q: The PR title or description doesn't follow our repository's conventions. Why?**
+
+A: This is a [known issue with Cursor Cloud Agents](https://forum.cursor.com/t/agent-mostly-ignores-instructions-about-pr-title-description/144792) where PR title and description rules from repository instructions are not always respected. We are in contact with the Cursor team about enforcing repository directions for PR titles and descriptions. In the meantime, you may need to manually edit the PR title and description to match your conventions.

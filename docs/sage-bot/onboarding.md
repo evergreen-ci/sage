@@ -99,6 +99,23 @@ curl -X DELETE https://sage.prod.corp.mongodb.com/pr-bot/user/cursor-key \
   -H "X-Kanopy-Authorization: Bearer $(kanopy-oidc login)"
 ```
 
+## Optional: Configure Repository Environment
+
+For better results with Sage Bot, your repository can include a `.cursor/environment.json` file that configures the cloud agent environment. This ensures the agent can properly compile code, run formatters, and execute tests.
+
+### Why Configure an Environment?
+
+When Sage Bot runs, it uses Cursor's cloud agent which operates in an isolated Ubuntu-based VM. Without proper configuration, the agent may:
+
+- Fail to install dependencies
+- Be unable to compile or build the project
+- Skip running tests or formatters
+- Produce code that doesn't follow project conventions
+
+### Setting Up environment.json
+
+See [Cursor's Cloud Agent Setup documentation](https://cursor.com/docs/cloud-agent#setup) for instructions on configuring your repository's environment.
+
 ## Next Steps
 
 You're all set! Head over to the [usage guide](./usage.md) to learn how to create Jira tickets and trigger Sage Bot.
