@@ -362,7 +362,7 @@ export const finalizeStep = createStep({
     logger.debug('Finalize step complete', {
       markdownLength: result.markdown.length,
       summaryLength: result.summary.length,
-      lineReferencesLength: state.accumulatedLineReferences.length,
+      lineReferencesLength: result.lineReferences.length,
     });
 
     return result;

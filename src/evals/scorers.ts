@@ -166,12 +166,11 @@ export const CoreErrorLinesPresent = (args: {
     score: allCoreErrorsPresent ? 1 : 0,
     metadata: {
       allCoreErrorsPresent,
-      expectedCoreLines: expectedLines,
+      expectedLines,
       outputLines,
       missingLines,
+      outputCount: outputLines.length,
       expectedCount: expectedLines.length,
-      foundCount: expectedLines.filter(line => outputLines.includes(line))
-        .length,
     },
   };
 };
