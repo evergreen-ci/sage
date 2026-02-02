@@ -64,8 +64,7 @@ export const validateCredentials = async (
   if (!hasCredentials) {
     return (
       `Assignee (${assigneeEmail}) does not have credentials configured. ` +
-      `Please register your API key before using sage-bot. ` +
-      `See the [onboarding guide|${SAGE_BOT_DOCS_LINKS.ONBOARDING_CREDENTIALS}] for instructions.`
+      `Please register your API key in [Sage Bot Settings|${SAGE_BOT_DOCS_LINKS.ONBOARDING_CREDENTIALS}] before using sage-bot.`
     );
   }
   return null;

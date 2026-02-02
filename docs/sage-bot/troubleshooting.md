@@ -6,7 +6,7 @@ Common issues and solutions when using Sage Bot.
 
 ### "Assignee does not have credentials configured"
 
-The ticket assignee needs to register their Cursor API key. See the [onboarding guide](./onboarding.md#step-4-register-your-api-key-with-sage).
+The ticket assignee needs to register their Cursor API key. Go to [Sage Bot Settings](https://spruce.mongodb.com/preferences/sage-bot-settings) to add your API key.
 
 ### "Missing repository label"
 
@@ -23,10 +23,6 @@ Either:
 
 Assign the ticket to a user who has registered their Cursor API key.
 
-### Curl command returns connection error
-
-Ensure you are connected to the MongoDB VPN.
-
 ## FAQ
 
 **Q: How long does Sage Bot take to process a ticket?**
@@ -39,7 +35,7 @@ A: Currently, Sage Bot supports repositories that are either pre-configured or w
 
 **Q: What happens if my API key expires?**
 
-A: You'll need to generate a new key from Cursor and register it again using the POST endpoint.
+A: You'll need to generate a new key from Cursor and update it in [Sage Bot Settings](https://spruce.mongodb.com/preferences/sage-bot-settings).
 
 **Q: Can multiple people trigger Sage Bot on the same ticket?**
 
