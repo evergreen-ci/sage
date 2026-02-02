@@ -1,16 +1,15 @@
 import { ObjectId } from 'mongodb';
+import { JOB_RUNS_COLLECTION_NAME } from '@/db/repositories/constants';
 import { getCollection } from '@/db/repositories/helpers';
 import { JobRun, JobRunStatus, CreateJobRunInput } from '@/db/types';
 import logger from '@/utils/logger';
-
-const COLLECTION_NAME = 'job_runs';
 
 /**
  * Ensures indexes are created for the job_runs collection
  * Should be called once during application startup
  */
 export const ensureIndexes = async (): Promise<void> => {
-  const collection = getCollection<JobRun>(COLLECTION_NAME);
+  const collection = getCollection<JobRun>(JOB_RUNS_COLLECTION_NAME);
 
   // Index for looking up jobs by Jira ticket
   await collection.createIndex(
@@ -27,7 +26,7 @@ export const ensureIndexes = async (): Promise<void> => {
   // Index for status-based queries (e.g., finding pending/running jobs)
   await collection.createIndex({ status: 1 }, { name: 'status_idx' });
 
-  logger.info(`Indexes created for ${COLLECTION_NAME} collection`);
+  logger.info(`Indexes created for ${JOB_RUNS_COLLECTION_NAME} collection`);
 };
 
 /**
@@ -38,7 +37,7 @@ export const ensureIndexes = async (): Promise<void> => {
 export const createJobRun = async (
   input: CreateJobRunInput
 ): Promise<JobRun> => {
-  const collection = getCollection<JobRun>(COLLECTION_NAME);
+  const collection = getCollection<JobRun>(JOB_RUNS_COLLECTION_NAME);
   const now = new Date();
 
   const jobRun: JobRun = {
@@ -79,7 +78,7 @@ export const updateJobRun = async (
   id: string | ObjectId,
   updates: JobRunUpdate
 ): Promise<JobRun | null> => {
-  const collection = getCollection<JobRun>(COLLECTION_NAME);
+  const collection = getCollection<JobRun>(JOB_RUNS_COLLECTION_NAME);
   const objectId = typeof id === 'string' ? new ObjectId(id) : id;
   const now = new Date();
 
@@ -128,7 +127,7 @@ export const updateJobRun = async (
 export const findJobRunByTicketKey = async (
   ticketKey: string
 ): Promise<JobRun | null> => {
-  const collection = getCollection<JobRun>(COLLECTION_NAME);
+  const collection = getCollection<JobRun>(JOB_RUNS_COLLECTION_NAME);
 
   // Find the most recent job run for this ticket (by createdAt descending)
   return collection.findOne(
@@ -143,7 +142,7 @@ export const findJobRunByTicketKey = async (
  * @returns Array of job runs that are currently running
  */
 export const findRunningJobRuns = async (): Promise<JobRun[]> => {
-  const collection = getCollection<JobRun>(COLLECTION_NAME);
+  const collection = getCollection<JobRun>(JOB_RUNS_COLLECTION_NAME);
 
   return collection
     .find({ status: JobRunStatus.Running })

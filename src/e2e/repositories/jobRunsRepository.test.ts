@@ -14,10 +14,9 @@ import {
   dropCollectionIndexes,
   generateTestTicketKey,
   getCollectionIndexes,
+  JOB_RUNS_COLLECTION_NAME,
   TEST_PREFIX,
 } from './helpers';
-
-const COLLECTION_NAME = 'job_runs';
 
 beforeAll(async () => {
   await db.connect();
@@ -35,12 +34,12 @@ afterEach(async () => {
 describe('jobRunsRepository', () => {
   describe('ensureIndexes', () => {
     it('should create all required indexes and be idempotent', async () => {
-      await dropCollectionIndexes(COLLECTION_NAME);
+      await dropCollectionIndexes(JOB_RUNS_COLLECTION_NAME);
 
       await ensureIndexes();
       await ensureIndexes(); // Should not throw on second call
 
-      const indexes = await getCollectionIndexes(COLLECTION_NAME);
+      const indexes = await getCollectionIndexes(JOB_RUNS_COLLECTION_NAME);
       expect(indexes).toContain('jiraTicketKey_idx');
       expect(indexes).toContain('cursorAgentId_idx');
       expect(indexes).toContain('status_idx');

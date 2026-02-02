@@ -13,11 +13,11 @@ import {
   cleanupTestUserCredentials,
   createTestUserCredentialsInput,
   dropCollectionIndexes,
+  EMAIL_UNIQUE_INDEX_NAME,
   generateTestEmail,
   getCollectionIndexes,
+  USER_CREDENTIALS_COLLECTION_NAME,
 } from './helpers';
-
-const COLLECTION_NAME = 'user_credentials';
 
 beforeAll(async () => {
   await db.connect();
@@ -35,15 +35,19 @@ afterEach(async () => {
 describe('userCredentialsRepository', () => {
   describe('ensureIndexes', () => {
     it('should create unique email index and enforce uniqueness', async () => {
-      await dropCollectionIndexes(COLLECTION_NAME);
+      await dropCollectionIndexes(USER_CREDENTIALS_COLLECTION_NAME);
       await ensureIndexes();
 
-      const indexes = await getCollectionIndexes(COLLECTION_NAME);
-      expect(indexes).toContain('email_unique_idx');
+      const indexes = await getCollectionIndexes(
+        USER_CREDENTIALS_COLLECTION_NAME
+      );
+      expect(indexes).toContain(EMAIL_UNIQUE_INDEX_NAME);
 
       // Test uniqueness constraint
       const email = generateTestEmail();
-      const collection = getCollection<UserCredentials>(COLLECTION_NAME);
+      const collection = getCollection<UserCredentials>(
+        USER_CREDENTIALS_COLLECTION_NAME
+      );
       await collection.insertOne({
         email,
         cursorApiKey: 'key1',

@@ -1,8 +1,17 @@
+import {
+  EMAIL_UNIQUE_INDEX_NAME,
+  JOB_RUNS_COLLECTION_NAME,
+  USER_CREDENTIALS_COLLECTION_NAME,
+} from '@/db/repositories/constants';
 import { getCollection } from '@/db/repositories/helpers';
 import { CreateJobRunInput, JobRun, UserCredentials } from '@/db/types';
 
-const JOB_RUNS_COLLECTION = 'job_runs';
-const USER_CREDENTIALS_COLLECTION = 'user_credentials';
+// Re-export constants for test file convenience
+export {
+  EMAIL_UNIQUE_INDEX_NAME,
+  JOB_RUNS_COLLECTION_NAME,
+  USER_CREDENTIALS_COLLECTION_NAME,
+};
 
 /**
  * Test data prefixes for identification and cleanup
@@ -36,7 +45,7 @@ export const generateTestEmail = (suffix?: string): string => {
  * Cleans up all test job runs created during E2E tests
  */
 export const cleanupTestJobRuns = async (): Promise<void> => {
-  const collection = getCollection<JobRun>(JOB_RUNS_COLLECTION);
+  const collection = getCollection<JobRun>(JOB_RUNS_COLLECTION_NAME);
   await collection.deleteMany({
     jiraTicketKey: { $regex: `^${TEST_PREFIX.ticketKey}` },
   });
@@ -47,7 +56,7 @@ export const cleanupTestJobRuns = async (): Promise<void> => {
  */
 export const cleanupTestUserCredentials = async (): Promise<void> => {
   const collection = getCollection<UserCredentials>(
-    USER_CREDENTIALS_COLLECTION
+    USER_CREDENTIALS_COLLECTION_NAME
   );
   await collection.deleteMany({
     email: { $regex: `^${TEST_PREFIX.email}` },
