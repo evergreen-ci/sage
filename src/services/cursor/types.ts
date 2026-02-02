@@ -23,3 +23,27 @@ export interface LaunchAgentResult {
   agentUrl?: string;
   error?: string;
 }
+
+/**
+ * Cursor agent status values from the API
+ */
+export type CursorAgentStatus =
+  | 'RUNNING'
+  | 'FINISHED'
+  | 'ERROR'
+  | 'CREATING'
+  | 'EXPIRED';
+
+export interface AgentStatusInput {
+  agentId: string;
+  assigneeEmail: string;
+}
+
+export interface AgentStatusResult {
+  success: boolean;
+  status?: CursorAgentStatus;
+  prUrl?: string;
+  summary?: string;
+  agentUrl?: string;
+  error?: string;
+}

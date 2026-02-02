@@ -54,50 +54,15 @@ The Cursor GitHub app requires these permissions for cloud agent functionality:
 
 For more details, see [Cursor's GitHub integration documentation](https://cursor.com/docs/integrations/github).
 
-## Step 3: Set Up kanopy-oidc
+## Step 3: Register Your API Key on Spruce
 
-To authenticate with Sage, you need `kanopy-oidc`. Follow the [official installation and configuration instructions](https://github.com/kanopy-platform/kanopy-oidc/?tab=readme-ov-file#installation).
+Register your Cursor API key through Evergreen's settings page:
 
-## Step 4: Register Your API Key with Sage
+1. Go to [Sage Bot Settings](https://spruce.mongodb.com/preferences/sage-bot-settings)
+2. Enter your Cursor API key from Step 1
+3. Click **Save**
 
-**You must be connected to the MongoDB VPN for this step.**
-
-Use the following curl command to register your Cursor API key:
-
-```bash
-curl -X POST https://sage.prod.corp.mongodb.com/pr-bot/user/cursor-key \
-  -H "Content-Type: application/json" \
-  -H "X-Kanopy-Authorization: Bearer $(kanopy-oidc login)" \
-  -d '{"apiKey": "<your-cursor-api-key>"}'
-```
-
-Replace `<your-cursor-api-key>` with the API key from Step 1.
-
-A successful response looks like:
-
-```json
-{ "success": true, "keyLastFour": "xxxx" }
-```
-
-### Verifying Your Registration
-
-To check if your API key is registered:
-
-```bash
-curl https://sage.prod.corp.mongodb.com/pr-bot/user/cursor-key \
-  -H "X-Kanopy-Authorization: Bearer $(kanopy-oidc login)"
-```
-
-### Updating or Removing Your Key
-
-To update your key, simply run the POST command again with your new key.
-
-To delete your registered key:
-
-```bash
-curl -X DELETE https://sage.prod.corp.mongodb.com/pr-bot/user/cursor-key \
-  -H "X-Kanopy-Authorization: Bearer $(kanopy-oidc login)"
-```
+You can return to this page at any time to update or remove your API key.
 
 ## Next Steps
 

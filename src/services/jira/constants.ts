@@ -15,10 +15,16 @@ export const DEFAULT_ISSUE_FIELDS = [
 
 /**
  * Documentation constants for Sage Bot
- * Base URL for Sage Bot documentation on GitHub
+ * Base URL for Sage Bot documentation on Pine
  */
 export const SAGE_BOT_DOCS_BASE_URL =
-  'https://github.com/evergreen-ci/sage/blob/main/docs/sage-bot';
+  'https://docs.devprod.prod.corp.mongodb.com/sage/sage-bot';
+
+/**
+ * Spruce settings page for Sage Bot API key management
+ */
+export const SAGE_BOT_SETTINGS_URL =
+  'https://spruce.mongodb.com/preferences/sage-bot-settings';
 
 /**
  * Documentation link constants
@@ -26,13 +32,13 @@ export const SAGE_BOT_DOCS_BASE_URL =
  */
 export const SAGE_BOT_DOCS_LINKS = {
   /** Link to the usage guide */
-  USAGE_GUIDE: `${SAGE_BOT_DOCS_BASE_URL}/usage.md`,
+  USAGE_GUIDE: `${SAGE_BOT_DOCS_BASE_URL}/usage`,
   /** Link to the repository label format section */
-  REPOSITORY_LABEL_FORMAT: `${SAGE_BOT_DOCS_BASE_URL}/usage.md#repository-label-format`,
+  REPOSITORY_LABEL_FORMAT: `${SAGE_BOT_DOCS_BASE_URL}/usage#repository-label-format`,
   /** Link to the pre-configured repositories section */
-  PRE_CONFIGURED_REPOSITORIES: `${SAGE_BOT_DOCS_BASE_URL}/usage.md#pre-configured-repositories`,
-  /** Link to the onboarding guide credentials section */
-  ONBOARDING_CREDENTIALS: `${SAGE_BOT_DOCS_BASE_URL}/onboarding.md#step-4-register-your-api-key-with-sage`,
+  PRE_CONFIGURED_REPOSITORIES: `${SAGE_BOT_DOCS_BASE_URL}/usage#pre-configured-repositories`,
+  /** Link to the Spruce settings page for API key management */
+  ONBOARDING_CREDENTIALS: SAGE_BOT_SETTINGS_URL,
   /** Link to the troubleshooting guide */
-  TROUBLESHOOTING: `${SAGE_BOT_DOCS_BASE_URL}/troubleshooting.md`,
+  TROUBLESHOOTING: `${SAGE_BOT_DOCS_BASE_URL}/troubleshooting`,
 } as const;
