@@ -12,8 +12,6 @@ const {
   mockDisconnect,
   mockFindJobRunByTicketKey,
   mockFindLabelAddedBy,
-  mockGetDefaultBranch,
-  mockIsRepositoryConfigured,
   mockLaunchCursorAgent,
   mockRemoveLabel,
   mockSearchIssues,
@@ -30,8 +28,6 @@ const {
   mockConnect: vi.fn(),
   mockDisconnect: vi.fn(),
   mockLaunchCursorAgent: vi.fn(),
-  mockGetDefaultBranch: vi.fn(),
-  mockIsRepositoryConfigured: vi.fn(),
 }));
 
 vi.mock('@/services/jira/jiraClient', () => ({
@@ -65,11 +61,6 @@ vi.mock('@/services/cursor', () => ({
   launchCursorAgent: mockLaunchCursorAgent,
 }));
 
-vi.mock('@/services/repositories', () => ({
-  getDefaultBranch: mockGetDefaultBranch,
-  isRepositoryConfigured: mockIsRepositoryConfigured,
-}));
-
 describe('SageAutoPRBotJiraPollingService', () => {
   let service: BaseJiraPollingService;
 
@@ -84,8 +75,6 @@ describe('SageAutoPRBotJiraPollingService', () => {
     service = createSageAutoPRBotJiraPollingService(mockJiraClient as any);
 
     // Default mocks for successful flow
-    mockIsRepositoryConfigured.mockReturnValue(true);
-    mockGetDefaultBranch.mockReturnValue('main');
     mockLaunchCursorAgent.mockResolvedValue({
       success: true,
       agentId: 'agent-123',
@@ -158,13 +147,13 @@ describe('SageAutoPRBotJiraPollingService', () => {
         },
       });
 
-      // Verify Cursor agent was launched
+      // Verify Cursor agent was launched (targetRef is undefined - Cursor uses repo's default branch)
       expect(mockLaunchCursorAgent).toHaveBeenCalledWith({
         ticketKey: 'DEVPROD-123',
         summary: 'Test issue',
         description: 'Test description',
         targetRepository: 'mongodb/mongo-tools',
-        targetRef: 'main',
+        targetRef: undefined,
         assigneeEmail: 'user@example.com',
         autoCreatePr: true,
       });
@@ -530,15 +519,13 @@ describe('SageAutoPRBotJiraPollingService', () => {
 
       await service.poll();
 
-      // Verify Cursor agent was launched with inline ref, not default
+      // Verify Cursor agent was launched with inline ref from the label
       expect(mockLaunchCursorAgent).toHaveBeenCalledWith(
         expect.objectContaining({
           targetRepository: 'mongodb/test',
           targetRef: 'feature-branch',
         })
       );
-      // getDefaultBranch should not be called when inline ref is provided
-      expect(mockGetDefaultBranch).not.toHaveBeenCalled();
     });
   });
 
