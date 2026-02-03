@@ -5,6 +5,28 @@ import { DEFAULT_ISSUE_FIELDS, MAX_SEARCH_RESULTS } from '../constants';
 import { JiraIssue, JiraIssueFields } from '../types';
 
 /**
+ * Response from Jira Dev Status API for pull requests
+ */
+export interface DevStatusPullRequest {
+  id: string;
+  name: string;
+  url: string;
+  status: 'OPEN' | 'MERGED' | 'DECLINED';
+  lastUpdate: string;
+  author: {
+    name: string;
+    avatar: string;
+    url: string;
+  };
+}
+
+export interface DevStatusResponse {
+  detail: Array<{
+    pullRequests: DevStatusPullRequest[];
+  }>;
+}
+
+/**
  * JiraClient provides methods for interacting with the Jira REST API
  * Uses jira.js library with PAT (Personal Access Token) authentication
  * PAT is passed as an OAuth2 bearer token
@@ -120,6 +142,62 @@ class JiraClient {
       return null;
     } catch (error) {
       logger.warn(`Failed to get changelog for ${issueKey}`, error);
+      return null;
+    }
+  };
+
+  /**
+   * Get development status information for an issue from Jira Dev Status API
+   * This includes pull request information from connected GitHub repositories
+   * @param issueKey - The Jira issue key (e.g., 'PROJ-123')
+   * @returns Development status response with pull request information
+   */
+  getDevStatus = async (
+    issueKey: string
+  ): Promise<DevStatusResponse | null> => {
+    try {
+      // First, get the issue ID from the issue key
+      const issue = await this.client.issues.getIssue({
+        issueIdOrKey: issueKey,
+        fields: ['id'],
+      });
+
+      const issueId = issue.id;
+
+      // Call the Dev Status API endpoint
+      // Note: This endpoint is not available in jira.js, so we make a direct HTTP request
+      const baseUrl = config.sageBot.jiraBaseUrl.replace(/\/$/, '');
+      const url = `${baseUrl}/rest/dev-status/1.0/issue/detail?issueId=${issueId}&applicationType=GitHub&dataType=pullrequest`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${config.sageBot.jiraApiToken}`,
+          Accept: 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Issue might not have any development info, or Dev Status API not available
+          logger.debug(
+            `No development status found for issue ${issueKey} (404)`
+          );
+          return null;
+        }
+        throw new Error(
+          `Dev Status API returned ${response.status}: ${response.statusText}`
+        );
+      }
+
+      const data = (await response.json()) as DevStatusResponse;
+      logger.debug(`Retrieved dev status for issue ${issueKey}`, {
+        pullRequestCount: data.detail?.[0]?.pullRequests?.length ?? 0,
+      });
+
+      return data;
+    } catch (error) {
+      logger.warn(`Failed to get dev status for ${issueKey}`, error);
       return null;
     }
   };
