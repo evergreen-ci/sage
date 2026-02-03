@@ -82,7 +82,7 @@ The PR title should follow the format: `JIRA-TICKET: Summary`
 
 Example: `DEVPROD-23895: Add user authentication workflow`
 
-To auto-create a Jira ticket, use `DEVPROD-XXXXX` (literal "XXXXX") in the PR title. GitHub will automatically create a Jira ticket for the change.
+To auto-create a Jira ticket, have the PR title start with `DEVPROD-XXXXX:` (literal "XXXXX" followed by a colon). GitHub will automatically create a Jira ticket for the change.
 
 ### PR Description
 
