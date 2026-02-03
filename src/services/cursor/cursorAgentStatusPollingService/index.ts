@@ -75,6 +75,38 @@ export class CursorAgentStatusPollingService {
   }
 
   /**
+   * Extract PR number and repository from a GitHub PR URL
+   * @param prUrl - The GitHub PR URL (e.g., 'https://github.com/owner/repo/pull/123')
+   * @returns Object with prNumber and repository (owner/repo), or undefined if URL is invalid
+   */
+  private extractPrInfo(prUrl: string): {
+    prNumber: number;
+    repository: string;
+  } | undefined {
+    try {
+      // Match GitHub PR URL pattern: https://github.com/owner/repo/pull/123
+      const match = prUrl.match(
+        /^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)$/
+      );
+      if (match) {
+        const [, owner, repo, prNumberStr] = match;
+        const prNumber = parseInt(prNumberStr, 10);
+        if (!isNaN(prNumber)) {
+          return {
+            prNumber,
+            repository: `${owner}/${repo}`,
+          };
+        }
+      }
+      logger.warn(`Invalid PR URL format: ${prUrl}`);
+      return undefined;
+    } catch (error) {
+      logger.warn(`Failed to extract PR info from URL: ${prUrl}`, error);
+      return undefined;
+    }
+  }
+
+  /**
    * Process a single job run - check status and update accordingly
    * @param job - The job run to process
    * @returns The result of processing the job
@@ -208,8 +240,17 @@ export class CursorAgentStatusPollingService {
           prUrl: details.prUrl,
         });
 
+        // Extract PR information if PR URL is present
+        const prInfo = details.prUrl
+          ? this.extractPrInfo(details.prUrl)
+          : undefined;
+
         await updateJobRun(job._id!, {
           status: JobRunStatus.Completed,
+          prUrl: details.prUrl,
+          prNumber: prInfo?.prNumber,
+          prRepository: prInfo?.repository,
+          prStatus: details.prUrl ? 'open' : undefined,
         });
 
         const completedComment = formatAgentCompletedPanel(

@@ -64,7 +64,18 @@ export const createJobRun = async (
  * Fields that can be updated on a job run
  */
 export type JobRunUpdate = Partial<
-  Pick<JobRun, 'status' | 'cursorAgentId' | 'errorMessage'>
+  Pick<
+    JobRun,
+    | 'status'
+    | 'cursorAgentId'
+    | 'errorMessage'
+    | 'prUrl'
+    | 'prNumber'
+    | 'prRepository'
+    | 'prStatus'
+    | 'prMergedAt'
+    | 'prClosedAt'
+  >
 >;
 
 /**
@@ -147,5 +158,23 @@ export const findRunningJobRuns = async (): Promise<JobRun[]> => {
   return collection
     .find({ status: JobRunStatus.Running })
     .sort({ startedAt: 1 })
+    .toArray();
+};
+
+/**
+ * Finds all completed job runs with open PRs
+ * Used by the PR merge status polling service to check for merged PRs
+ * @returns Array of completed job runs with open PRs
+ */
+export const findCompletedJobRunsWithOpenPRs = async (): Promise<JobRun[]> => {
+  const collection = getCollection<JobRun>(JOB_RUNS_COLLECTION_NAME);
+
+  return collection
+    .find({
+      status: JobRunStatus.Completed,
+      prStatus: 'open',
+      prUrl: { $exists: true, $ne: null },
+    })
+    .sort({ completedAt: 1 })
     .toArray();
 };
