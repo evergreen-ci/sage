@@ -1,5 +1,6 @@
 import { toAISdkStream } from '@mastra/ai-sdk';
 import { AgentMemoryOption } from '@mastra/core/agent';
+import { RequestContext } from '@mastra/core/request-context';
 import { trace } from '@opentelemetry/api';
 import {
   pipeUIMessageStreamToResponse,
@@ -35,7 +36,8 @@ const chatRoute = async (
   const currentSpan = trace.getActiveSpan();
   const spanContext = currentSpan?.spanContext();
   const requestContext = createParsleyRequestContext();
-  requestContext.set(USER_ID, res.locals.userId);
+  const mastraRequestContext = requestContext as RequestContext<unknown>;
+  requestContext.set(USER_ID, res.locals.userId || 'unknown user');
   logger.debug('User context set for request', {
     userId: res.locals.userId,
     requestId: res.locals.requestId,
@@ -59,7 +61,9 @@ const chatRoute = async (
     requestContext.set('logMetadata', messageData.logMetadata);
   }
   if (requestContext.get('logURL') === undefined && messageData.logMetadata) {
-    const logFileUrlWorkflow = mastra.getWorkflowById('resolve-log-file-url');
+    const logFileUrlWorkflow = mastra.getWorkflowById<'resolve-log-file-url'>(
+      'resolve-log-file-url'
+    );
     if (!logFileUrlWorkflow) {
       logger.error('resolve-log-file-url workflow not found', {
         requestId: res.locals.requestId,
@@ -95,7 +99,7 @@ const chatRoute = async (
           requestId: res.locals.requestId,
         },
       },
-      requestContext,
+      requestContext: mastraRequestContext,
     });
     if (runResult.status === 'success') {
       requestContext.set('logURL', runResult.result);
@@ -130,7 +134,7 @@ const chatRoute = async (
     const agent = mastra.getAgent(SAGE_THINKING_AGENT_NAME);
 
     const memory = await agent.getMemory({
-      requestContext,
+      requestContext: mastraRequestContext,
     });
 
     let memoryOptions: AgentMemoryOption = {
@@ -177,7 +181,7 @@ const chatRoute = async (
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
         await agent.stream(validatedMessage, {
-          requestContext,
+          requestContext: mastraRequestContext,
           memory: memoryOptions,
           tracingOptions: {
             metadata: {

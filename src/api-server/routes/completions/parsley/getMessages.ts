@@ -4,7 +4,6 @@ import { Request, Response } from 'express';
 import z from 'zod';
 import { mastra } from '@/mastra';
 import { SAGE_THINKING_AGENT_NAME } from '@/mastra/agents/constants';
-import { createParsleyRequestContext } from '@/mastra/memory/parsley/requestContext';
 import { logger } from '@/utils/logger';
 
 const getMessagesParamsSchema = z.object({
@@ -36,8 +35,6 @@ const getMessagesRoute = async (
 
   const { conversationId } = paramsData;
 
-  const requestContext = createParsleyRequestContext();
-
   try {
     const agent = mastra.getAgent(SAGE_THINKING_AGENT_NAME);
     if (!agent) {
@@ -48,7 +45,7 @@ const getMessagesRoute = async (
       res.status(500).json({ message: 'Agent not found' });
       return;
     }
-    const memory = await agent.getMemory({ requestContext });
+    const memory = await agent.getMemory();
     if (!memory) {
       logger.error('Memory not found', {
         requestId: res.locals.requestId,
