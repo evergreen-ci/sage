@@ -6,26 +6,15 @@ Common issues and solutions when using Sage Bot.
 
 ### "Assignee does not have credentials configured"
 
-The ticket assignee needs to register their Cursor API key. See the [onboarding guide](./onboarding.md#step-4-register-your-api-key-with-sage).
+The ticket assignee needs to register their Cursor API key. Go to [Sage Bot Settings](https://spruce.mongodb.com/preferences/sage-bot-settings) to add your API key.
 
 ### "Missing repository label"
 
 Add a label in the format `repo:<org>/<repo>` to your ticket. For example: `repo:10gen/mms`.
 
-### "Repository is not configured"
-
-Either:
-
-1. Add your repository to the Sage configuration (contact the DevProd team), or
-2. Specify the branch inline: `repo:<org>/<repo>@<branch>`
-
 ### "No assignee set"
 
 Assign the ticket to a user who has registered their Cursor API key.
-
-### Curl command returns connection error
-
-Ensure you are connected to the MongoDB VPN.
 
 ## FAQ
 
@@ -35,11 +24,11 @@ A: Processing time varies based on task complexity. Simple tasks may complete in
 
 **Q: Can I use Sage Bot on any repository?**
 
-A: Currently, Sage Bot supports repositories that are either pre-configured or where you specify the branch inline. The repository must be accessible to the Cursor agent.
+A: Yes, Sage Bot works with any GitHub repository that has the [Cursor GitHub app](https://github.com/apps/cursor) installed. Simply add a label in the format `repo:<org>/<repo>` and Sage Bot will use the repository's default branch. If you need a specific branch, use `repo:<org>/<repo>@<branch>`. See the [Cursor GitHub integration docs](https://cursor.com/docs/integrations/github) for more details. If your repository doesn't have the Cursor GitHub app installed, [submit an IT ticket](https://help-it.mongodb.com/hc/en-us/requests/new?ticket_form_id=11872020855315) and select "Let us know more about your request" → Accounts & Access, "Choose the type of issue or access..." → Service Account, "Please select the category of service account you need." → GitHub → App / OAuth Credentials. Then explain that you need the Cursor GitHub app installed on your repository.
 
 **Q: What happens if my API key expires?**
 
-A: You'll need to generate a new key from Cursor and register it again using the POST endpoint.
+A: You'll need to generate a new key from Cursor and update it in [Sage Bot Settings](https://spruce.mongodb.com/preferences/sage-bot-settings).
 
 **Q: Can multiple people trigger Sage Bot on the same ticket?**
 
@@ -52,3 +41,15 @@ A: Sage Bot removes the `sage-bot` label immediately when it picks up the ticket
 **Q: Does Sage Bot update the Jira ticket status?**
 
 A: No, Sage Bot only removes the `sage-bot` label and posts comments. Any status transitions depend on your existing Jira automation rules.
+
+**Q: The agent can't compile code, run tests, or install dependencies. How do I fix this?**
+
+A: Your repository likely needs a `.cursor/environment.json` file to configure the cloud agent's environment. This file tells the agent how to set up dependencies, start services, and run commands. See the [optional environment configuration](./onboarding.md#optional-configure-repository-environment) in the onboarding guide.
+
+**Q: The agent produces code that doesn't follow our project conventions or fails CI checks. What should I do?**
+
+A: Configure your repository's environment so the agent can run your formatters, linters, and tests. Add a `.cursor/environment.json` file with your install and build commands. See [Cursor's Cloud Agent Setup documentation](https://cursor.com/docs/cloud-agent#setup) for details.
+
+**Q: The PR title or description doesn't follow our repository's conventions. Why?**
+
+A: This is a [known issue with Cursor Cloud Agents](https://forum.cursor.com/t/agent-mostly-ignores-instructions-about-pr-title-description/144792) where PR title and description rules from repository instructions are not always respected. We are in contact with the Cursor team about enforcing repository directions for PR titles and descriptions. In the meantime, you may need to manually edit the PR title and description to match your conventions.
