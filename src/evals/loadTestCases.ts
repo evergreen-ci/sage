@@ -1,5 +1,5 @@
 import { initDataset } from 'braintrust';
-import { PROJECT_NAME } from 'evals/constants';
+import { PROJECT_NAME } from './constants';
 
 /**
  * Loads test cases from the Braintrust dataset. Visit Braintrust to view and create new datasets.
