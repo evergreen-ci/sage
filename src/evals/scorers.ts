@@ -1,7 +1,11 @@
 // https://www.braintrust.dev/docs/guides/experiments/write#define-your-own-scorers
 // See existing scorers at https://github.com/braintrustdata/autoevals/blob/main/js/manifest.ts.
 
-import { LLMClassifierFromTemplate } from 'autoevals';
+import {
+  Faithfulness as FaithfulnessScorer,
+  LLMClassifierFromTemplate,
+} from 'autoevals';
+import { logger } from '@/utils/logger';
 import { LineReference } from './logAnalyzerWorkflow/types';
 import { ScorerFunction, BaseScores } from './types';
 
@@ -139,6 +143,134 @@ export const TechnicalAccuracy = (args: {
   return technicalAccuracyClassifier({
     output: args.output,
   });
+};
+
+/**
+ * Safe wrapper for the Faithfulness scorer that handles JSON parsing errors.
+ * The Faithfulness scorer from autoevals uses an LLM internally and sometimes
+ * returns malformed JSON that causes parsing errors. This wrapper catches those
+ * errors and retries before returning a default score.
+ *
+ * This function wraps the scorer call with error handling and retry logic.
+ * It should be used in the same way as the Faithfulness scorer from autoevals.
+ * @param args - Arguments for faithfulness evaluation
+ * @param args.output - Generated output to evaluate
+ * @param args.context - Source context (e.g., Jira issues) that the output should be faithful to
+ * @param args.input - Input prompt/question (optional)
+ * @param args.maxRetries - Maximum number of retries (default: 1)
+ * @returns Score result with error handling
+ */
+export const SafeFaithfulness = async (args: {
+  output: string;
+  context: string | string[];
+  input?: string;
+  maxRetries?: number;
+}): Promise<{
+  name: string;
+  score: number;
+  metadata?: Record<string, unknown>;
+}> => {
+  const maxRetries = args.maxRetries ?? 1;
+  let lastError: Error | unknown;
+
+  // Check if this is a JSON parsing error (common issue with autoevals LLM-based scorers)
+  // Note: This relies on string matching of error messages, which can be fragile if autoevals
+  // changes its error reporting format. If JSON parsing errors persist after autoevals updates,
+  // this function may need to be updated to match new error message patterns.
+  const isJsonError = (error: unknown): boolean =>
+    error instanceof SyntaxError ||
+    (error instanceof Error &&
+      (error.message.includes('JSON') ||
+        error.message.includes('parse') ||
+        error.message.includes('Unterminated string') ||
+        error.message.includes('Unexpected token')));
+
+  // Helper function to attempt scoring with retry logic
+  const attemptScoring = async (
+    attempt: number
+  ): Promise<{
+    name: string;
+    score: number;
+    metadata?: Record<string, unknown>;
+  }> => {
+    try {
+      // Call the Faithfulness scorer - autoevals will use the global client if initialized
+      // FaithfulnessScorer expects args matching: { output: string; expected?: string; } & RagasArgs
+      // where RagasArgs = { input?: string; context?: string | string[]; model?: string; } & LLMArgs
+      // We construct the args inline without referencing the non-exported RagasArgs type
+      const scorerArgs = {
+        output: args.output,
+        context: args.context,
+        input: args.input,
+      };
+      // FaithfulnessScorer extends Scorer, so it's callable as a function
+      const result = await FaithfulnessScorer(scorerArgs);
+      // Score.score can be null, but our return type requires number
+      // Convert null to 0 to match expected return type
+      return {
+        name: result.name,
+        score: result.score ?? 0,
+        metadata: result.metadata,
+      };
+    } catch (error) {
+      lastError = error;
+
+      // Only retry on JSON parsing errors
+      if (isJsonError(error) && attempt < maxRetries) {
+        // Wait a bit before retrying (exponential backoff)
+        const delayMilliseconds = Math.min(1000 * Math.pow(2, attempt), 5000);
+        await new Promise(resolve => setTimeout(resolve, delayMilliseconds));
+        return attemptScoring(attempt + 1);
+      }
+
+      // If not a JSON error or out of retries, throw to be caught by outer handler
+      throw error;
+    }
+  };
+
+  // Try the scorer with retries
+  try {
+    return await attemptScoring(0);
+  } catch {
+    // Error already captured in lastError, continue to error handling below
+  }
+
+  // Handle the error after all retries exhausted
+  const isJsonErr = isJsonError(lastError);
+
+  if (isJsonErr) {
+    logger.warn(
+      `[SafeFaithfulness] Faithfulness scorer encountered a JSON parsing error after ${maxRetries + 1} attempt(s). This may be due to malformed LLM response from the scorer itself. Returning default score of 0.`,
+      {
+        error:
+          lastError instanceof Error ? lastError.message : String(lastError),
+        inputLength: args.input?.length ?? 0,
+        contextLength:
+          typeof args.context === 'string'
+            ? args.context.length
+            : args.context.reduce((sum, ctx) => sum + ctx.length, 0),
+        outputLength: args.output.length,
+        attempts: maxRetries + 1,
+      }
+    );
+  } else {
+    logger.error(
+      '[SafeFaithfulness] Faithfulness scorer encountered an unexpected error:',
+      lastError instanceof Error ? lastError : new Error(String(lastError))
+    );
+  }
+
+  // Return a default score of 0 with metadata indicating the error
+  return {
+    name: 'Faithfulness',
+    score: 0,
+    metadata: {
+      error: lastError instanceof Error ? lastError.message : String(lastError),
+      error_type: isJsonErr ? 'json_parsing_error' : 'unknown_error',
+      note: `Faithfulness scorer failed after ${maxRetries + 1} attempt(s), defaulting to score of 0`,
+      attempts: maxRetries + 1,
+    },
+  };
 };
 
 /**
