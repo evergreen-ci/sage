@@ -6,7 +6,7 @@ Sage Bot automatically generates pull requests from Jira tickets using Cursor's 
 
 - [Onboarding Guide](./onboarding.md) - Set up your account to use Sage Bot
 - [Usage Guide](./usage.md) - How to create tickets and trigger Sage Bot
-- [Troubleshooting](./troubleshooting.md) - Common issues and FAQ
+- [Troubleshooting](./troubleshooting.md) - Common issues, known limitations, and FAQ
 
 ## Quick Start
 
@@ -29,6 +29,10 @@ Sage Bot currently monitors the following Jira projects:
 - DOCSP
 
 Want to add support for another project? Reach out in [#ask-devprod-evergreen](https://mongodb.enterprise.slack.com/archives/C0V896UV8).
+
+## Compliance
+
+All users are responsible for following the [MongoDB Policy for Use of AI Coding Tools](https://mongodb.docebosaas.com/learn/courses/662/mongodb-policy-for-use-of-ai-coding-tools). Please be aware that certain restrictions are in place for AI being used in the development of certain products. It is your responsibility to use this tool correctly and within the constraints of the policy.
 
 ## Getting Help
 
