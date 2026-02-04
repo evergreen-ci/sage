@@ -11,19 +11,20 @@
     "isolatedModules": true,
 
     "types": ["node", "vitest/globals"],
+    "baseUrl": "./src",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/api-server/*": ["./src/api-server/*"],
-      "@/clients/*": ["./src/clients/*"],
-      "@/config/*": ["./src/config/*"],
-      "@/constants/*": ["./src/constants/*"],
-      "@/db/*": ["./src/db/*"],
-      "@/gql/*": ["./src/gql/*"],
-      "@/mastra": ["./src/mastra/index.ts"],
-      "@/mastra/*": ["./src/mastra/*"],
-      "@/test-utils/*": ["./src/test-utils/*"],
-      "@/types/*": ["./src/types/*"],
-      "@/utils/*": ["./src/utils/*"]
+      "@/*": ["./*"],
+      "@/api-server/*": ["api-server/*"],
+      "@/clients/*": ["clients/*"],
+      "@/config/*": ["config/*"],
+      "@/constants/*": ["constants/*"],
+      "@/db/*": ["db/*"],
+      "@/gql/*": ["gql/*"],
+      "@/mastra": ["mastra/index.ts"],
+      "@/mastra/*": ["mastra/*"],
+      "@/test-utils/*": ["test-utils/*"],
+      "@/types/*": ["types/*"],
+      "@/utils/*": ["utils/*"]
     },
 
     /* Directory Options */
