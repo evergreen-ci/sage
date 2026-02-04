@@ -1,3 +1,5 @@
+import { SAGE_BOT_DOCS_LINKS } from '../constants';
+
 /**
  * Jira markup formatting utilities for comments and panels
  * Uses border-only styling for dark mode compatibility
@@ -132,5 +134,111 @@ export const formatAgentLaunchFailedPanel = (errorMessage: string): string =>
     },
     `Failed to launch Cursor Cloud Agent for this ticket.\n\n` +
       `*Error:* ${errorMessage}\n\n` +
-      `Please check the configuration and re-add the {{sage-bot}} label to retry.`
+      `Please check the configuration and re-add the {{sage-bot}} label to retry. ` +
+      `For help resolving this issue, see the [troubleshooting guide|${SAGE_BOT_DOCS_LINKS.TROUBLESHOOTING}].`
+  );
+
+/**
+ * Format agent completed success panel
+ * @param prUrl - The URL to the pull request (optional)
+ * @param summary - Summary of the agent's work (optional)
+ * @returns Formatted Jira comment with success panel
+ */
+export const formatAgentCompletedPanel = (
+  prUrl?: string,
+  summary?: string
+): string => {
+  let content = `The Cursor Cloud Agent has completed work on this ticket.`;
+
+  if (prUrl) {
+    content += `\n\n*Pull Request:* [View PR|${prUrl}]`;
+  }
+
+  if (summary) {
+    content += `\n\n*Summary:*\n${summary}`;
+  }
+
+  return formatPanel(
+    {
+      title: 'Sage Bot Agent Completed',
+      borderColor: '#00875A',
+      titleBGColor: '#00875A',
+      titleColor: '#FFFFFF',
+    },
+    content
+  );
+};
+
+/**
+ * Format agent error panel
+ * @param errorReason - The reason the agent encountered an error
+ * @param agentUrl - Optional URL to the Cursor agent session
+ * @returns Formatted Jira comment with error panel
+ */
+export const formatAgentFailedPanel = (
+  errorReason: string,
+  agentUrl?: string
+): string => {
+  let content =
+    `The Cursor Cloud Agent encountered an error while working on this ticket.\n\n` +
+    `*Error:* ${errorReason}`;
+
+  if (agentUrl) {
+    content += `\n\n*Agent Session:* [View in Cursor|${agentUrl}]`;
+  }
+
+  content += `\n\nYou may re-add the {{sage-bot}} label to retry.`;
+
+  return formatPanel(
+    {
+      title: 'Sage Bot Agent Failed',
+      borderColor: '#DE350B',
+      titleBGColor: '#DE350B',
+      titleColor: '#FFFFFF',
+    },
+    content
+  );
+};
+
+/**
+ * Format agent expired panel
+ * @param agentUrl - Optional URL to the Cursor agent session
+ * @returns Formatted Jira comment with warning panel
+ */
+export const formatAgentExpiredPanel = (agentUrl?: string): string => {
+  let content =
+    `The Cursor Cloud Agent session expired before completing work on this ticket.\n\n` +
+    `This can happen if the agent takes too long or encounters issues.`;
+
+  if (agentUrl) {
+    content += `\n\n*Agent Session:* [View in Cursor|${agentUrl}]`;
+  }
+
+  content += `\n\nYou may re-add the {{sage-bot}} label to retry.`;
+
+  return formatPanel(
+    {
+      title: 'Sage Bot Agent Expired',
+      borderColor: '#FF8B00',
+      titleBGColor: '#FF8B00',
+      titleColor: '#FFFFFF',
+    },
+    content
+  );
+};
+
+/**
+ * Format agent timeout panel for jobs that exceeded the TTL
+ * @returns Formatted Jira comment with warning panel
+ */
+export const formatAgentTimeoutPanel = (): string =>
+  formatPanel(
+    {
+      title: 'Sage Bot Agent Timed Out',
+      borderColor: '#FF8B00',
+      titleBGColor: '#FF8B00',
+      titleColor: '#FFFFFF',
+    },
+    `The Cursor Cloud Agent did not complete within the expected time limit.\n\n` +
+      `The job has been marked as timed out. You may re-add the {{sage-bot}} label to retry.`
   );

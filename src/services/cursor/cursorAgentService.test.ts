@@ -1,13 +1,17 @@
 import {
   buildPromptFromTicketData,
+  getAgentStatus,
   launchCursorAgent,
   normalizeRepositoryUrl,
 } from './cursorAgentService';
 
-const { mockGetDecryptedApiKey, mockLaunchAgent } = vi.hoisted(() => ({
-  mockGetDecryptedApiKey: vi.fn(),
-  mockLaunchAgent: vi.fn(),
-}));
+const { mockGetAgent, mockGetDecryptedApiKey, mockLaunchAgent } = vi.hoisted(
+  () => ({
+    mockGetAgent: vi.fn(),
+    mockGetDecryptedApiKey: vi.fn(),
+    mockLaunchAgent: vi.fn(),
+  })
+);
 
 vi.mock('@/db/repositories/userCredentialsRepository', () => ({
   getDecryptedApiKey: mockGetDecryptedApiKey,
@@ -15,6 +19,7 @@ vi.mock('@/db/repositories/userCredentialsRepository', () => ({
 
 vi.mock('./cursorApiClient', () => ({
   createCursorApiClient: vi.fn(() => ({
+    getAgent: mockGetAgent,
     launchAgent: mockLaunchAgent,
   })),
   CursorApiClientError: class extends Error {
@@ -159,21 +164,43 @@ describe('cursorAgentService', () => {
       expect(mockLaunchAgent).not.toHaveBeenCalled();
     });
 
-    it('returns error when no target ref provided', async () => {
+    it('launches successfully without target ref (uses default branch)', async () => {
+      mockGetDecryptedApiKey.mockResolvedValueOnce('decrypted-api-key');
+      mockLaunchAgent.mockResolvedValueOnce({
+        id: 'bc_abc123',
+        name: 'Test Agent',
+        status: 'CREATING',
+        source: {
+          repository: 'https://github.com/mongodb/test-repo',
+        },
+        target: {
+          url: 'https://cursor.com/agents?id=bc_abc123',
+        },
+        createdAt: '2024-01-15T10:30:00Z',
+      });
+
       const result = await launchCursorAgent({
         ticketKey: 'PROJ-123',
         summary: 'Add feature',
         description: null,
         targetRepository: 'mongodb/test-repo',
-        targetRef: '', // Empty target ref
+        // No targetRef - Cursor will use the repo's default branch
         assigneeEmail: 'user@example.com',
         autoCreatePr: false,
       });
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('No target ref provided');
-      expect(mockGetDecryptedApiKey).not.toHaveBeenCalled();
-      expect(mockLaunchAgent).not.toHaveBeenCalled();
+      expect(result.success).toBe(true);
+      expect(result.agentId).toBe('bc_abc123');
+      expect(mockGetDecryptedApiKey).toHaveBeenCalledWith('user@example.com');
+      // Verify ref is not included in the request
+      expect(mockLaunchAgent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          source: {
+            repository: 'https://github.com/mongodb/test-repo',
+            // No ref property - Cursor uses repo's default branch
+          },
+        })
+      );
     });
 
     it('returns error when Cursor API fails', async () => {
@@ -227,6 +254,59 @@ describe('cursorAgentService', () => {
           }),
         })
       );
+    });
+  });
+
+  describe('getAgentStatus', () => {
+    it('returns agent status successfully', async () => {
+      mockGetDecryptedApiKey.mockResolvedValueOnce('decrypted-api-key');
+      mockGetAgent.mockResolvedValueOnce({
+        id: 'bc_abc123',
+        status: 'FINISHED',
+        target: {
+          url: 'https://cursor.com/agents?id=bc_abc123',
+          prUrl: 'https://github.com/org/repo/pull/123',
+        },
+        summary: 'Implemented the feature',
+      });
+
+      const result = await getAgentStatus({
+        agentId: 'bc_abc123',
+        assigneeEmail: 'user@example.com',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.status).toBe('FINISHED');
+      expect(result.prUrl).toBe('https://github.com/org/repo/pull/123');
+      expect(result.summary).toBe('Implemented the feature');
+      expect(mockGetDecryptedApiKey).toHaveBeenCalledWith('user@example.com');
+      expect(mockGetAgent).toHaveBeenCalledWith('bc_abc123');
+    });
+
+    it('returns error when no API key found', async () => {
+      mockGetDecryptedApiKey.mockResolvedValueOnce(null);
+
+      const result = await getAgentStatus({
+        agentId: 'bc_abc123',
+        assigneeEmail: 'unknown@example.com',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('No Cursor API key found');
+      expect(mockGetAgent).not.toHaveBeenCalled();
+    });
+
+    it('returns error when Cursor API fails', async () => {
+      mockGetDecryptedApiKey.mockResolvedValueOnce('decrypted-api-key');
+      mockGetAgent.mockRejectedValueOnce(new Error('Agent not found'));
+
+      const result = await getAgentStatus({
+        agentId: 'bc_invalid',
+        assigneeEmail: 'user@example.com',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Agent not found');
     });
   });
 });

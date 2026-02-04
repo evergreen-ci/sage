@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { EVERGREEN_SPIFFE_IDENTITY } from '@/constants/headers';
 import { db } from '@/db/connection';
 import { getCollection } from '@/db/repositories/helpers';
 import { UserCredentials } from '@/db/types';
@@ -18,6 +19,9 @@ const createAuthHeader = (userId: string): string => {
 };
 
 const authHeader = createAuthHeader(testUserId);
+
+// Create a Kanopy auth header for Evergreen service account
+const evergreenServiceAuthHeader = createAuthHeader(EVERGREEN_SPIFFE_IDENTITY);
 
 const cleanupTestData = async () => {
   try {
@@ -207,5 +211,145 @@ describe('DELETE /pr-bot/user/cursor-key', () => {
 
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('No API key found');
+  });
+});
+
+describe('Evergreen service-to-service authentication', () => {
+  const evergreenTestUserId = 'evergreen.test.user';
+
+  afterEach(async () => {
+    // Clean up test data for Evergreen user
+    try {
+      const collection = getCollection<UserCredentials>('user_credentials');
+      await collection.deleteOne({
+        email: `${evergreenTestUserId}@mongodb.com`.toLowerCase(),
+      });
+    } catch {
+      // Ignore cleanup errors
+    }
+  });
+
+  it('should authenticate with X-Evergreen-User-ID header when caller is Evergreen service account', async () => {
+    const apiKey = 'evergreen_service_key_1234';
+
+    const response = await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set('x-kanopy-internal-authorization', evergreenServiceAuthHeader)
+      .set('x-evergreen-user-id', evergreenTestUserId)
+      .send({ apiKey });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.keyLastFour).toBe('1234');
+
+    // Verify the key was stored for the correct user
+    const collection = getCollection<UserCredentials>('user_credentials');
+    const storedCredentials = await collection.findOne({
+      email: `${evergreenTestUserId}@mongodb.com`.toLowerCase(),
+    });
+    expect(storedCredentials).not.toBeNull();
+  });
+
+  it('should reject X-Evergreen-User-ID header from untrusted caller', async () => {
+    const apiKey = 'malicious_key_5678';
+
+    // Temporarily clear USER_NAME to prevent local dev fallback
+    const originalUserName = process.env.USER_NAME;
+    delete process.env.USER_NAME;
+
+    try {
+      // Send request without Kanopy auth header (untrusted caller)
+      const response = await request(app)
+        .post('/pr-bot/user/cursor-key')
+        .set('x-evergreen-user-id', evergreenTestUserId)
+        .send({ apiKey });
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toBe('No authentication provided');
+    } finally {
+      // Restore USER_NAME
+      if (originalUserName) {
+        process.env.USER_NAME = originalUserName;
+      }
+    }
+  });
+
+  it('should ignore X-Evergreen-User-ID header from non-Evergreen service account and use Kanopy JWT', async () => {
+    const apiKey = 'other_service_key_5678';
+    const otherServiceId =
+      'spiffe://cluster.local/ns/other-namespace/sa/other-sa';
+    const otherServiceAuthHeader = createAuthHeader(otherServiceId);
+
+    const response = await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set('x-kanopy-internal-authorization', otherServiceAuthHeader)
+      .set('x-evergreen-user-id', evergreenTestUserId) // This header should be ignored
+      .send({ apiKey });
+
+    // Should succeed, authenticated as the other service (not the evergreenTestUserId)
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+
+    // Verify the key was stored for the Kanopy JWT user, not the x-evergreen-user-id
+    const collection = getCollection<UserCredentials>('user_credentials');
+    const storedCredentials = await collection.findOne({
+      email: `${otherServiceId}@mongodb.com`.toLowerCase(),
+    });
+    expect(storedCredentials).not.toBeNull();
+
+    // Clean up
+    await collection.deleteOne({
+      email: `${otherServiceId}@mongodb.com`.toLowerCase(),
+    });
+  });
+
+  it('should reject Evergreen service account request without X-Evergreen-User-ID header', async () => {
+    const apiKey = 'missing_user_key_9999';
+
+    const response = await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set('x-kanopy-internal-authorization', evergreenServiceAuthHeader)
+      // Missing x-evergreen-user-id header
+      .send({ apiKey });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe('No authentication provided');
+  });
+
+  it('should allow GET request with Evergreen service-to-service auth', async () => {
+    // First create a key using Evergreen auth
+    await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set('x-kanopy-internal-authorization', evergreenServiceAuthHeader)
+      .set('x-evergreen-user-id', evergreenTestUserId)
+      .send({ apiKey: 'evergreen_get_test_key' });
+
+    // Then retrieve it
+    const response = await request(app)
+      .get('/pr-bot/user/cursor-key')
+      .set('x-kanopy-internal-authorization', evergreenServiceAuthHeader)
+      .set('x-evergreen-user-id', evergreenTestUserId);
+
+    expect(response.status).toBe(200);
+    expect(response.body.hasKey).toBe(true);
+    expect(response.body.keyLastFour).toBe('_key');
+  });
+
+  it('should allow DELETE request with Evergreen service-to-service auth', async () => {
+    // First create a key using Evergreen auth
+    await request(app)
+      .post('/pr-bot/user/cursor-key')
+      .set('x-kanopy-internal-authorization', evergreenServiceAuthHeader)
+      .set('x-evergreen-user-id', evergreenTestUserId)
+      .send({ apiKey: 'evergreen_delete_test' });
+
+    // Then delete it
+    const response = await request(app)
+      .delete('/pr-bot/user/cursor-key')
+      .set('x-kanopy-internal-authorization', evergreenServiceAuthHeader)
+      .set('x-evergreen-user-id', evergreenTestUserId);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
   });
 });

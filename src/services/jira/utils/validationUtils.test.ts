@@ -6,24 +6,17 @@ import {
   validateTicket,
 } from './validationUtils';
 
-const { mockCredentialsExist, mockIsRepositoryConfigured } = vi.hoisted(() => ({
+const { mockCredentialsExist } = vi.hoisted(() => ({
   mockCredentialsExist: vi.fn(),
-  mockIsRepositoryConfigured: vi.fn(),
 }));
 
 vi.mock('@/db/repositories/userCredentialsRepository', () => ({
   credentialsExist: mockCredentialsExist,
 }));
 
-vi.mock('@/services/repositories', () => ({
-  isRepositoryConfigured: mockIsRepositoryConfigured,
-}));
-
 describe('validationUtils', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default: repos are configured
-    mockIsRepositoryConfigured.mockReturnValue(true);
   });
 
   describe('validateRepositoryLabel', () => {
@@ -42,9 +35,7 @@ describe('validationUtils', () => {
       expect(error).toContain('Missing repository label');
     });
 
-    it('returns null when repository exists and is configured', () => {
-      mockIsRepositoryConfigured.mockReturnValue(true);
-
+    it('returns null when repository label exists', () => {
       const ticketData: ParsedTicketData = {
         ticketKey: 'TEST-1',
         summary: 'Test',
@@ -57,46 +48,21 @@ describe('validationUtils', () => {
 
       const error = validateRepositoryLabel(ticketData);
       expect(error).toBeNull();
-      expect(mockIsRepositoryConfigured).toHaveBeenCalledWith(
-        'mongodb/mongo-tools'
-      );
     });
 
-    it('returns error when repository is not configured and no inline ref', () => {
-      mockIsRepositoryConfigured.mockReturnValue(false);
-
+    it('returns null when repository label exists with inline ref', () => {
       const ticketData: ParsedTicketData = {
         ticketKey: 'TEST-1',
         summary: 'Test',
         description: null,
         assigneeEmail: 'user@example.com',
-        targetRepository: 'mongodb/unknown-repo',
-        targetRef: null,
-        labels: ['repo:mongodb/unknown-repo'],
-      };
-
-      const error = validateRepositoryLabel(ticketData);
-      expect(error).toContain('is not configured');
-      expect(error).toContain('specify a branch inline');
-    });
-
-    it('returns null when inline ref is provided even if repo not configured', () => {
-      mockIsRepositoryConfigured.mockReturnValue(false);
-
-      const ticketData: ParsedTicketData = {
-        ticketKey: 'TEST-1',
-        summary: 'Test',
-        description: null,
-        assigneeEmail: 'user@example.com',
-        targetRepository: 'mongodb/unknown-repo',
+        targetRepository: 'mongodb/mongo-tools',
         targetRef: 'feature-branch',
-        labels: ['repo:mongodb/unknown-repo@feature-branch'],
+        labels: ['repo:mongodb/mongo-tools@feature-branch'],
       };
 
       const error = validateRepositoryLabel(ticketData);
       expect(error).toBeNull();
-      // Should not check config when inline ref is provided
-      expect(mockIsRepositoryConfigured).not.toHaveBeenCalled();
     });
   });
 
@@ -171,7 +137,6 @@ describe('validationUtils', () => {
 
     it('returns valid when all checks pass', async () => {
       mockCredentialsExist.mockResolvedValueOnce(true);
-      mockIsRepositoryConfigured.mockReturnValue(true);
 
       const ticketData: ParsedTicketData = {
         ticketKey: 'TEST-1',
@@ -210,7 +175,6 @@ describe('validationUtils', () => {
 
     it('includes credentials error when assignee lacks credentials', async () => {
       mockCredentialsExist.mockResolvedValueOnce(false);
-      mockIsRepositoryConfigured.mockReturnValue(true);
 
       const ticketData: ParsedTicketData = {
         ticketKey: 'TEST-1',

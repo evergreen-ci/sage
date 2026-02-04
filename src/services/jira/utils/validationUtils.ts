@@ -1,12 +1,10 @@
 import { credentialsExist } from '@/db/repositories/userCredentialsRepository';
-import { isRepositoryConfigured } from '@/services/repositories';
+import { SAGE_BOT_DOCS_LINKS } from '../constants';
 import { ParsedTicketData, ValidationResult } from '../types';
 
 /**
- * Validate that a ticket has a repository label and proper ref configuration
- * Checks:
- * - Has a repo:<org>/<repo> label (with optional `@ref`)
- * - If no inline ref, repository must be configured in repositories.yaml
+ * Validate that a ticket has a repository label
+ * Checks that a repo:<org>/<repo> label exists (with optional `@ref`)
  * @param ticketData - The parsed ticket data to validate
  * @returns Error message if invalid, null if valid
  */
@@ -14,17 +12,10 @@ export const validateRepositoryLabel = (
   ticketData: ParsedTicketData
 ): string | null => {
   if (!ticketData.targetRepository) {
-    return 'Missing repository label. Please add a label in the format: repo:<org>/<repo_name> or repo:<org>/<repo_name>@<branch>';
-  }
-
-  if (!ticketData.targetRef) {
-    if (!isRepositoryConfigured(ticketData.targetRepository)) {
-      return (
-        `Repository "${ticketData.targetRepository}" is not configured. ` +
-        'Either add it to the repository config or specify a branch inline: ' +
-        `repo:${ticketData.targetRepository}@<branch>`
-      );
-    }
+    return (
+      'Missing repository label. Please add a label in the format: repo:<org>/<repo_name> or repo:<org>/<repo_name>@<branch>. ' +
+      `See the [repository label documentation|${SAGE_BOT_DOCS_LINKS.REPOSITORY_LABEL_FORMAT}] for details.`
+    );
   }
 
   return null;
@@ -39,7 +30,10 @@ export const validateAssignee = (
   ticketData: ParsedTicketData
 ): string | null => {
   if (!ticketData.assigneeEmail) {
-    return 'No assignee set. Please assign this ticket to a user.';
+    return (
+      'No assignee set. Please assign this ticket to a user. ' +
+      `See the [usage guide|${SAGE_BOT_DOCS_LINKS.USAGE_GUIDE}] for ticket requirements.`
+    );
   }
   return null;
 };
@@ -56,7 +50,7 @@ export const validateCredentials = async (
   if (!hasCredentials) {
     return (
       `Assignee (${assigneeEmail}) does not have credentials configured. ` +
-      'Please register your API key before using sage-bot.'
+      `Please register your API key in [Sage Bot Settings|${SAGE_BOT_DOCS_LINKS.ONBOARDING_CREDENTIALS}] before using sage-bot.`
     );
   }
   return null;

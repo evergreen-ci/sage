@@ -141,10 +141,7 @@ export const singlePassStep = createStep({
   description: 'Direct analysis and report generation for single-chunk files',
   stateSchema: WorkflowStateSchema,
   inputSchema: z.object({}),
-  outputSchema: z.object({
-    markdown: z.string(),
-    summary: z.string(),
-  }),
+  outputSchema: WorkflowOutputSchema,
   execute: async ({
     abortSignal,
     mastra,
@@ -182,6 +179,7 @@ export const singlePassStep = createStep({
         requestContext,
         tracingContext,
       },
+      existingLineReferences: [],
     });
 
     logger.debug('Single-pass analysis complete', {
@@ -294,9 +292,16 @@ export const refineStep = createStep({
 
     const updated = response.updated ?? false;
     let newSummary = existingSummary;
+    const newLineReferences = response.lineReferences ?? [];
+
     if (updated) {
       newSummary = response.summary ?? existingSummary;
     }
+
+    const accumulatedLineReferences = [
+      ...state.accumulatedLineReferences,
+      ...newLineReferences,
+    ];
 
     tracingContext.currentSpan?.update({
       metadata: {
@@ -311,6 +316,7 @@ export const refineStep = createStep({
       ...state,
       idx: idx + 1,
       analysisContext,
+      accumulatedLineReferences,
     });
     return {
       summary: newSummary,
@@ -350,11 +356,13 @@ export const finalizeStep = createStep({
         requestContext,
         tracingContext,
       },
+      existingLineReferences: state.accumulatedLineReferences,
     });
 
     logger.debug('Finalize step complete', {
       markdownLength: result.markdown.length,
       summaryLength: result.summary.length,
+      lineReferencesLength: result.lineReferences.length,
     });
 
     return result;

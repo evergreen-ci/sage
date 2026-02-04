@@ -7,8 +7,8 @@ export interface LaunchAgentInput {
   summary: string;
   description: string | null;
   targetRepository: string;
-  /** Branch/ref to use - either from inline label or from config lookup */
-  targetRef: string;
+  /** Optional branch/ref to use. If not provided, Cursor uses the repo's default branch */
+  targetRef?: string;
   assigneeEmail: string;
   autoCreatePr?: boolean;
 }
@@ -20,6 +20,30 @@ export interface LaunchAgentInput {
 export interface LaunchAgentResult {
   success: boolean;
   agentId?: string;
+  agentUrl?: string;
+  error?: string;
+}
+
+/**
+ * Cursor agent status values from the API
+ */
+export type CursorAgentStatus =
+  | 'RUNNING'
+  | 'FINISHED'
+  | 'ERROR'
+  | 'CREATING'
+  | 'EXPIRED';
+
+export interface AgentStatusInput {
+  agentId: string;
+  assigneeEmail: string;
+}
+
+export interface AgentStatusResult {
+  success: boolean;
+  status?: CursorAgentStatus;
+  prUrl?: string;
+  summary?: string;
   agentUrl?: string;
   error?: string;
 }
