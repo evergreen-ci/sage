@@ -16,7 +16,7 @@ PR titles and descriptions may not follow conventions specified in your reposito
 
 Some repositories (MMS specifically) require all merged commits to be signed. The Cursor cloud agent produces unsigned commits, so engineers will need to sign commits before merging.
 
-**Workaround:** Pull down the branch locally and sign the commits. We provide a [utility script](github.com/10gen/mms/blob/master/scripts/utils/sign_pr_commits.sh) to make this easier:
+**Workaround:** Pull down the branch locally and sign the commits. We provide a [utility script](https://github.com/10gen/mms/blob/master/scripts/utils/sign_pr_commits.sh) to make this easier:
 
 ```bash
 ./scripts/utils/sign_pr_commits.sh
