@@ -2,6 +2,26 @@
 
 Common issues and solutions when using Sage Bot.
 
+## Known Issues
+
+These are known limitations we're actively working to resolve.
+
+### PR Titles and Descriptions Not Following Instructions
+
+PR titles and descriptions may not follow conventions specified in your repository's instructions (e.g., `AGENTS.md`, `.cursor/rules`). This is a [known issue with Cursor Cloud Agents](https://forum.cursor.com/t/agent-mostly-ignores-instructions-about-pr-title-description/144792). We are in communication with the Cursor team and they've informed us a fix is coming soon.
+
+**Workaround:** Manually edit PR titles and descriptions if they don't match your conventions.
+
+### Commit Signing
+
+Some repositories (MMS specifically) require all merged commits to be signed. The Cursor cloud agent produces unsigned commits, so engineers will need to sign commits before merging.
+
+**Workaround:** Pull down the branch locally and sign the commits. We provide a [utility script](./scripts/utils/sign_pr_commits.sh) to make this easier:
+
+```bash
+./scripts/utils/sign_pr_commits.sh
+```
+
 ## Error Messages
 
 ### "Assignee does not have credentials configured"
@@ -52,4 +72,4 @@ A: Configure your repository's environment so the agent can run your formatters,
 
 **Q: The PR title or description doesn't follow our repository's conventions. Why?**
 
-A: This is a [known issue with Cursor Cloud Agents](https://forum.cursor.com/t/agent-mostly-ignores-instructions-about-pr-title-description/144792) where PR title and description rules from repository instructions are not always respected. We are in contact with the Cursor team about enforcing repository directions for PR titles and descriptions. In the meantime, you may need to manually edit the PR title and description to match your conventions.
+A: See [Known Issues: PR Titles and Descriptions](#pr-titles-and-descriptions-not-following-instructions).
