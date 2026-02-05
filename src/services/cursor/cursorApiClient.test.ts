@@ -8,10 +8,10 @@ const { mockCreateAgent, mockCreateConfig, mockGetAgent } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/generated/cursor-api', () => ({
-  Sdk: vi.fn().mockImplementation(() => ({
-    createAgent: mockCreateAgent,
-    getAgent: mockGetAgent,
-  })),
+  Sdk: class {
+    createAgent = mockCreateAgent;
+    getAgent = mockGetAgent;
+  },
 }));
 
 vi.mock('@/generated/cursor-api/client', () => ({
