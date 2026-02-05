@@ -3,6 +3,7 @@ import { db } from '@/db/connection';
 import {
   createJobRun,
   ensureIndexes,
+  findCompletedJobRunsWithOpenPRs,
   findJobRunByTicketKey,
   findRunningJobRuns,
   updateJobRun,
@@ -163,6 +164,59 @@ describe('jobRunsRepository', () => {
       expect(testJobs).toHaveLength(2);
       expect(testJobs[0]._id!.toString()).toBe(job1._id!.toString());
       expect(testJobs[1]._id!.toString()).toBe(job2._id!.toString());
+    });
+  });
+
+  describe('findCompletedJobRunsWithOpenPRs', () => {
+    it('should find only completed jobs with open PRs', async () => {
+      const job1 = await createJobRun(createTestJobRunInput());
+      const job2 = await createJobRun(createTestJobRunInput());
+      const job3 = await createJobRun(createTestJobRunInput());
+      const job4 = await createJobRun(createTestJobRunInput());
+
+      // Job 1: Completed with open PR
+      await updateJobRun(job1._id!, {
+        status: JobRunStatus.Completed,
+        prUrl: 'https://github.com/org/repo/pull/1',
+        prStatus: 'open',
+      });
+
+      // Job 2: Completed with merged PR (should not be included)
+      await updateJobRun(job2._id!, {
+        status: JobRunStatus.Completed,
+        prUrl: 'https://github.com/org/repo/pull/2',
+        prStatus: 'merged',
+      });
+
+      // Job 3: Completed without PR (should not be included)
+      await updateJobRun(job3._id!, {
+        status: JobRunStatus.Completed,
+      });
+
+      // Job 4: Running with open PR (should not be included)
+      await updateJobRun(job4._id!, {
+        status: JobRunStatus.Running,
+        prUrl: 'https://github.com/org/repo/pull/4',
+        prStatus: 'open',
+      });
+
+      const result = await findCompletedJobRunsWithOpenPRs();
+      const testJobs = result.filter(job =>
+        job.jiraTicketKey.startsWith(TEST_PREFIX.ticketKey)
+      );
+
+      expect(testJobs).toHaveLength(1);
+      expect(testJobs[0]._id!.toString()).toBe(job1._id!.toString());
+      expect(testJobs[0].prUrl).toBe('https://github.com/org/repo/pull/1');
+      expect(testJobs[0].prStatus).toBe('open');
+    });
+
+    it('should return empty array when no matching jobs found', async () => {
+      const result = await findCompletedJobRunsWithOpenPRs();
+      const testJobs = result.filter(job =>
+        job.jiraTicketKey.startsWith(TEST_PREFIX.ticketKey)
+      );
+      expect(testJobs).toHaveLength(0);
     });
   });
 });
