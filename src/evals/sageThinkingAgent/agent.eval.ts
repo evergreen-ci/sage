@@ -17,6 +17,13 @@ Eval(
       setupRequestContext: input => {
         const requestContext = new RequestContext();
         requestContext.set(USER_ID, input.user);
+        requestContext.set('logMetadata', {
+          projectName: PROJECT_NAME,
+          agentName: SAGE_THINKING_AGENT_NAME,
+          userId: input.user,
+          input: input.content,
+        });
+        requestContext.set('logURL', 'https://test.log');
         return requestContext;
       },
       transformResponse: response => {
