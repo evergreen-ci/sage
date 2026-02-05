@@ -44,7 +44,7 @@ Processing time varies based on task complexity. Simple tasks may complete in a 
 
 ### Can I use Sage Bot on any repository?
 
-Yes, Sage Bot works with any GitHub repository that has the [Cursor GitHub app](https://github.com/apps/cursor) installed. Simply add a label in the format `repo:<org>/<repo>` and Sage Bot will use the repository's default branch. If you need a specific branch, use `repo:<org>/<repo>@<branch>`. See the [Cursor GitHub integration docs](https://cursor.com/docs/integrations/github) for more details. If your repository doesn't have the Cursor GitHub app installed, [submit an IT ticket](https://help-it.mongodb.com/hc/en-us/requests/new?ticket_form_id=11872020855315) and select "Let us know more about your request" → Accounts & Access, "Choose the type of issue or access..." → Service Account, "Please select the category of service account you need." → GitHub → App / OAuth Credentials. Then explain that you need the Cursor GitHub app installed on your repository.
+Yes, Sage Bot works with any GitHub repository that has the [Cursor GitHub app](https://github.com/apps/cursor) installed. Simply add a label in the format `repo:<org>/<repo>` and Sage Bot will use the repository's default branch. If you need a specific branch, use `repo:<org>/<repo>@<branch>`. See the [Cursor GitHub integration docs](https://cursor.com/docs/integrations/github) for more details. If your repository doesn't have the Cursor GitHub app installed, see [Adding GitHub Repos](./adding-github-repos.md) for instructions.
 
 ### What happens if my API key expires?
 
