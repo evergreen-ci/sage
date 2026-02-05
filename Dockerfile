@@ -16,6 +16,10 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm build
 
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nodejs
+USER nodejs
 
 EXPOSE 8080
 CMD ["pnpm", "start"]
