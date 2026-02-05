@@ -13,13 +13,13 @@ const {
 }));
 
 vi.mock('jira.js', () => ({
-  Version2Client: vi.fn().mockImplementation(() => ({
-    issueSearch: {
+  Version2Client: class {
+    issueSearch = {
       searchForIssuesUsingJqlPost: mockSearchForIssuesUsingJqlPost,
-    },
-    issues: { editIssue: mockEditIssue, getIssue: mockGetIssue },
-    issueComments: { addComment: mockAddComment },
-  })),
+    };
+    issues = { editIssue: mockEditIssue, getIssue: mockGetIssue };
+    issueComments = { addComment: mockAddComment };
+  },
 }));
 
 describe('jiraClient', () => {

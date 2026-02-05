@@ -29,6 +29,7 @@ describe('Logger', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('logger.error', () => {
@@ -160,15 +161,20 @@ describe('Logger', () => {
   });
 
   describe('logger.audit', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2023-01-01T00:00:00.000Z'));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('should log audit event with all parameters', () => {
       const action = 'login';
       const resource = 'user';
       const userId = 'user123';
       const metadata = { ip: '192.168.1.1', userAgent: 'Mozilla' };
-
-      // Mock Date.toISOString to return a predictable value
-      const mockDate = new Date('2023-01-01T00:00:00.000Z');
-      vi.spyOn(global, 'Date').mockImplementation(() => mockDate as any);
 
       logger.audit(action, resource, userId, metadata);
 
@@ -186,9 +192,6 @@ describe('Logger', () => {
       const action = 'logout';
       const resource = 'session';
 
-      const mockDate = new Date('2023-01-01T00:00:00.000Z');
-      vi.spyOn(global, 'Date').mockImplementation(() => mockDate as any);
-
       logger.audit(action, resource);
 
       expect(loggerInstance.info).toHaveBeenCalledWith('AUDIT', {
@@ -204,9 +207,6 @@ describe('Logger', () => {
       const resource = 'document';
       const userId = 'admin123';
 
-      const mockDate = new Date('2023-01-01T00:00:00.000Z');
-      vi.spyOn(global, 'Date').mockImplementation(() => mockDate as any);
-
       logger.audit(action, resource, userId);
 
       expect(loggerInstance.info).toHaveBeenCalledWith('AUDIT', {
@@ -219,13 +219,19 @@ describe('Logger', () => {
   });
 
   describe('logger.security', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2023-01-01T00:00:00.000Z'));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('should log security event with all parameters', () => {
       const event = 'Failed login attempt';
       const severity = 'high' as const;
       const details = { ip: '192.168.1.1', attempts: 5 };
-
-      const mockDate = new Date('2023-01-01T00:00:00.000Z');
-      vi.spyOn(global, 'Date').mockImplementation(() => mockDate as any);
 
       logger.security(event, severity, details);
 
@@ -242,9 +248,6 @@ describe('Logger', () => {
       const event = 'Suspicious activity detected';
       const severity = 'medium' as const;
 
-      const mockDate = new Date('2023-01-01T00:00:00.000Z');
-      vi.spyOn(global, 'Date').mockImplementation(() => mockDate as any);
-
       logger.security(event, severity);
 
       expect(loggerInstance.warn).toHaveBeenCalledWith('SECURITY', {
@@ -258,9 +261,6 @@ describe('Logger', () => {
       const event = 'Data breach detected';
       const severity = 'critical' as const;
       const details = { affectedUsers: 1000, dataType: 'personal' };
-
-      const mockDate = new Date('2023-01-01T00:00:00.000Z');
-      vi.spyOn(global, 'Date').mockImplementation(() => mockDate as any);
 
       logger.security(event, severity, details);
 
