@@ -21,6 +21,12 @@ export const SAGE_BOT_DOCS_BASE_URL =
   'https://docs.devprod.prod.corp.mongodb.com/sage/sage-bot';
 
 /**
+ * Spruce settings page for Sage Bot API key management
+ */
+export const SAGE_BOT_SETTINGS_URL =
+  'https://spruce.mongodb.com/preferences/sage-bot-settings';
+
+/**
  * Documentation link constants
  * These links point to specific sections of the Sage Bot documentation
  */
@@ -31,8 +37,8 @@ export const SAGE_BOT_DOCS_LINKS = {
   REPOSITORY_LABEL_FORMAT: `${SAGE_BOT_DOCS_BASE_URL}/usage#repository-label-format`,
   /** Link to the pre-configured repositories section */
   PRE_CONFIGURED_REPOSITORIES: `${SAGE_BOT_DOCS_BASE_URL}/usage#pre-configured-repositories`,
-  /** Link to the onboarding guide credentials section */
-  ONBOARDING_CREDENTIALS: `${SAGE_BOT_DOCS_BASE_URL}/onboarding#step-4-register-your-api-key-with-sage`,
+  /** Link to the Spruce settings page for API key management */
+  ONBOARDING_CREDENTIALS: SAGE_BOT_SETTINGS_URL,
   /** Link to the troubleshooting guide */
   TROUBLESHOOTING: `${SAGE_BOT_DOCS_BASE_URL}/troubleshooting`,
 } as const;
