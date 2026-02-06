@@ -158,7 +158,7 @@ tasks:
           xml_file_name: slack_question_ownership_evals.xml
   - name: release-notes-evals
     commands:
-      - func: yarn-eval
+      - func: pnpm-eval
         vars:
           eval_dir: releaseNotesWorkflow
       - func: attach-braintrust-results
