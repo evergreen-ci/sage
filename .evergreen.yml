@@ -49,6 +49,7 @@ buildvariants:
       - name: sage-thinking-evals
       - name: slack-thread-summarizer-evals
       - name: slack-question-ownership-evals
+      - name: release-notes-evals
     display_tasks:
       - name: evals
         execution_tasks:
@@ -58,6 +59,7 @@ buildvariants:
           - "sage-thinking-evals"
           - "slack-thread-summarizer-evals"
           - "slack-question-ownership-evals"
+          - "release-notes-evals"
 tasks:
   - name: write_and_set_downstream_expansions
     commands:
@@ -154,6 +156,14 @@ tasks:
       - func: attach-braintrust-results
         vars:
           xml_file_name: slack_question_ownership_evals.xml
+  - name: release-notes-evals
+    commands:
+      - func: yarn-eval
+        vars:
+          eval_dir: releaseNotesWorkflow
+      - func: attach-braintrust-results
+        vars:
+          xml_file_name: release_notes_evals.xml
 
 functions:
   write repo name to downstream_expansions.yaml for Pine:

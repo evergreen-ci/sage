@@ -6,7 +6,6 @@ import {
 } from '@/db/repositories/jobRunsRepository';
 import { JobRunStatus } from '@/db/types';
 import { launchCursorAgent } from '@/services/cursor';
-import { SAGE_BOT_DOCS_LINKS } from '@/services/jira/constants';
 import {
   JiraClient,
   jiraClient as defaultJiraClient,
@@ -18,7 +17,6 @@ import {
   formatValidationErrorPanel,
 } from '@/services/jira/utils/jiraMarkupUtils';
 import { validateTicket } from '@/services/jira/utils/validationUtils';
-import { getDefaultBranch } from '@/services/repositories';
 import logger from '@/utils/logger';
 import { BaseJiraPollingService } from '../BaseJiraPollingService';
 import { SAGE_BOT_LABEL } from './constants';
@@ -72,6 +70,18 @@ export const createSageAutoPRBotJiraPollingService = (
               existingStatus: existingJob.status,
             }
           );
+
+          // Remove the label to handle race condition where user's save re-adds it
+          // after the bot initially removed it during the original ticket processing
+          try {
+            await jiraClient.removeLabel(ticketKey, SAGE_BOT_LABEL);
+          } catch (removeLabelError) {
+            logger.warn(
+              `Failed to remove label "${SAGE_BOT_LABEL}" from ticket ${ticketKey} while skipping duplicate job`,
+              removeLabelError
+            );
+          }
+
           return {
             ticketKey,
             success: true,
@@ -130,49 +140,14 @@ export const createSageAutoPRBotJiraPollingService = (
           };
         }
 
-        // Resolve the ref: use inline ref if provided, otherwise get from config
-        let { targetRef } = ticketData;
-        if (!targetRef) {
-          const defaultBranch = getDefaultBranch(ticketData.targetRepository!);
-
-          if (!defaultBranch) {
-            const errorMessage =
-              `No default branch configured for repository ${ticketData.targetRepository}. ` +
-              `See the [pre-configured repositories documentation|${SAGE_BOT_DOCS_LINKS.PRE_CONFIGURED_REPOSITORIES}] for more information.`;
-
-            logger.error(
-              `Failed to determine default branch for ticket ${ticketKey}`,
-              {
-                jobRunId: jobRun._id?.toString(),
-                targetRepository: ticketData.targetRepository,
-              }
-            );
-
-            await updateJobRun(jobRun._id!, {
-              status: JobRunStatus.Failed,
-              errorMessage,
-            });
-
-            const comment = formatAgentLaunchFailedPanel(errorMessage);
-            await jiraClient.addComment(ticketKey, comment);
-
-            return {
-              ticketKey,
-              success: false,
-              error: errorMessage,
-            };
-          }
-
-          targetRef = defaultBranch;
-        }
-
         // Launch Cursor agent for eligible tickets
+        // targetRef is optional - if not provided, Cursor uses the repo's default branch
         const launchResult = await launchCursorAgent({
           ticketKey,
           summary: ticketData.summary,
           description: ticketData.description,
           targetRepository: ticketData.targetRepository!,
-          targetRef,
+          targetRef: ticketData.targetRef ?? undefined,
           assigneeEmail: ticketData.assigneeEmail!,
           autoCreatePr: true,
         });
