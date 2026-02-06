@@ -33,18 +33,19 @@ export const decideAndRunStep = createStep({
   outputSchema: WorkflowOutputSchema,
   stateSchema: WorkflowStateSchema,
   execute: async params => {
-    const { mastra, state } = params;
-    const logger = mastra.getLogger();
+    const { state } = params;
     if (!state.chunks) {
       throw new Error('Chunks are not available');
     }
-    if (state.chunks.length === 1) {
-      logger.debug('Running single-pass step for single chunk');
-      // run the single-pass step directly
-      return singlePassStep.execute(params);
+    const result =
+      state.chunks.length === 1
+        ? await singlePassStep.execute(params)
+        : await iterativeRefinementWorkflow.execute(params);
+
+    if (!result) {
+      throw new Error('Step execution failed to return a result');
     }
-    logger.debug('Running iterative refinement workflow for multiple chunks');
-    // run the iterative workflow
-    return iterativeRefinementWorkflow.execute(params);
+
+    return result;
   },
 });

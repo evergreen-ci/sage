@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { mastra } from '@/mastra';
 import { SLACK_QUESTION_OWNERSHIP_AGENT_NAME } from '@/mastra/agents/constants';
-import { questionOwnershipOutputSchema } from '@/mastra/agents/questionOwnershipAgent';
 import { logger } from '@/utils/logger';
 
 /** Request body schema */
@@ -73,8 +72,7 @@ const questionOwnershipRoute = async (
       question: data.question,
     });
 
-    const generateOptions =
-      await agent.getDefaultOptions<typeof questionOwnershipOutputSchema>();
+    const generateOptions = await agent.getDefaultOptions();
     const result = await agent.generate(data.question, {
       tracingOptions: {
         metadata: {

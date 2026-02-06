@@ -18,7 +18,6 @@ const startRun = async (logMetadata: any) => {
   requestContext.set(USER_ID, 'test_user');
   const run = await getLogFileUrlWorkflow.createRun();
   const wr = await run.start({ inputData: { logMetadata }, requestContext });
-  console.log('wr', wr);
   return wr;
 };
 

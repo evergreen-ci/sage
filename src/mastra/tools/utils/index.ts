@@ -1,4 +1,4 @@
-import type { ValidationError } from '@mastra/core/dist/tools/validation';
+import type { ValidationError } from '@mastra/core/dist/tools/validation.js';
 import { createTool } from '@mastra/core/tools';
 import { z, ZodType } from 'zod';
 
@@ -53,7 +53,7 @@ export const createToolFromAgent = <
  * @returns True if the response is a ValidationError, false otherwise
  */
 export const isValidationError = (
-  response: unknown
+  response: unknown | ValidationError
 ): response is ValidationError => {
   if (!response || typeof response !== 'object') {
     return false;

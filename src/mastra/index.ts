@@ -10,6 +10,7 @@ import { sageThinkingAgent } from './agents/planning/sageThinkingAgent';
 import { questionOwnershipAgent } from './agents/questionOwnershipAgent';
 import { releaseNotesAgent } from './agents/releaseNotesAgent';
 import { slackThreadSummarizerAgent } from './agents/slackThreadSummarizerAgent';
+import { memoryStore } from './utils/memory';
 import * as evergreenWorkflows from './workflows/evergreen';
 import { logCoreAnalyzerWorkflow } from './workflows/logCoreAnalyzer';
 import { releaseNotesWorkflow } from './workflows/releaseNotes';
@@ -33,12 +34,13 @@ export const mastra: Mastra = new Mastra({
           new BraintrustExporter({
             apiKey: config.braintrust.apiKey,
             projectName: config.braintrust.projectName,
-            braintrustLogger,
+            braintrustLogger: braintrustLogger,
           }),
         ],
       },
     },
   }),
+  storage: memoryStore,
   agents: {
     sageThinkingAgent,
     evergreenAgent,
