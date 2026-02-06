@@ -11,7 +11,7 @@ fi
 LOG_DIR="bin"
 LOG_FILE="$LOG_DIR/${EVAL_DIR}_$(date +%Y%m%dT%H%M%S).log"
 
-# Common error strings that show up even if yarn exits 0
+# Common error strings that show up even if pnpm exits 0
 FAIL_PATTERNS=$(
   cat <<'REGEX'
 Failed to compile
@@ -30,19 +30,19 @@ REGEX
 
 mkdir -p "$LOG_DIR"
 
-echo "Running: yarn eval:send_to_braintrust src/evals/$EVAL_DIR"
+echo "Running: pnpm eval:send_to_braintrust src/evals/$EVAL_DIR"
 echo "(logging to $LOG_FILE)"
 
 # Run eval, tee so user sees output AND it goes into log
 set +e
-yarn eval:send_to_braintrust "src/evals/$EVAL_DIR" 2>&1 | tee "$LOG_FILE"
-YARN_EC=${PIPESTATUS[0]}
+pnpm eval:send_to_braintrust "src/evals/$EVAL_DIR" 2>&1 | tee "$LOG_FILE"
+PNPM_EC=${PIPESTATUS[0]}
 set -e
 
-# Hard fail if yarn itself non-zero
-if [[ $YARN_EC -ne 0 ]]; then
-  echo "ERROR: eval command exited with $YARN_EC"
-  exit "$YARN_EC"
+# Hard fail if pnpm itself non-zero
+if [[ $PNPM_EC -ne 0 ]]; then
+  echo "ERROR: eval command exited with $PNPM_EC"
+  exit "$PNPM_EC"
 fi
 
 # Collapse patterns into single regex

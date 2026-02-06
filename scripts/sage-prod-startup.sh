@@ -24,9 +24,9 @@ check_for_success() {
 log_file=$(mktemp)
 echo "Starting Sage prod server..."
 
-yarn build
+pnpm build
 # Use process substitution and capture the actual process PID
-timeout 30 bash -c 'yarn start' 2>&1 | tee "$log_file" &
+timeout 30 bash -c 'pnpm start' 2>&1 | tee "$log_file" &
 server_pid=$!
 
 # Wait for server to start or timeout

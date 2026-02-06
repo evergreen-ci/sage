@@ -2,7 +2,7 @@
 set -e
 
 # Start server
-yarn start &
+pnpm start &
 SERVER_PID=$!
 echo "Started server with PID: $SERVER_PID"
 
