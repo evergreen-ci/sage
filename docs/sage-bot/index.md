@@ -29,6 +29,12 @@ Sage Bot currently monitors the following Jira projects:
 - CLOUDP
 - AMP
 - DOCSP
+- MCP
+- MANAENG
+- BAAS
+- MHOUSE
+- TUNE
+- SLS
 
 Want to add support for another project? See the [Adding Jira Projects guide](./adding-projects.md) for instructions.
 
