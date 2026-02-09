@@ -1,5 +1,4 @@
-import type { ValidationError } from '@mastra/core/dist/tools/validation.js';
-import { createTool } from '@mastra/core/tools';
+import { createTool, type ValidationError } from '@mastra/core/tools';
 import { z, ZodType } from 'zod';
 
 const inputSchema = z.object({

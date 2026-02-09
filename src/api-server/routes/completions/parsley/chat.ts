@@ -36,8 +36,13 @@ const chatRoute = async (
   const currentSpan = trace.getActiveSpan();
   const spanContext = currentSpan?.spanContext();
   const requestContext = createParsleyRequestContext();
-  const mastraRequestContext = requestContext as RequestContext<unknown>;
-  requestContext.set(USER_ID, res.locals.userId || 'unknown user');
+  // userId is guaranteed by userIdMiddleware (returns 401 if missing)
+  requestContext.set(USER_ID, res.locals.userId!);
+  // Mastra APIs (run.start, getMemory) expect RequestContext<unknown>, but our typed context
+  // isn't directly assignable due to generic variance. This cast is safe since RequestContext
+  // is structurally compatible at runtime.
+  const untypedRequestContext =
+    requestContext as unknown as RequestContext<unknown>;
   logger.debug('User context set for request', {
     userId: res.locals.userId,
     requestId: res.locals.requestId,
@@ -99,7 +104,7 @@ const chatRoute = async (
           requestId: res.locals.requestId,
         },
       },
-      requestContext: mastraRequestContext,
+      requestContext: untypedRequestContext,
     });
     if (runResult.status === 'success') {
       requestContext.set('logURL', runResult.result);
@@ -134,7 +139,7 @@ const chatRoute = async (
     const agent = mastra.getAgent(SAGE_THINKING_AGENT_NAME);
 
     const memory = await agent.getMemory({
-      requestContext: mastraRequestContext,
+      requestContext: untypedRequestContext,
     });
 
     let memoryOptions: AgentMemoryOption = {
@@ -181,7 +186,7 @@ const chatRoute = async (
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
         await agent.stream(validatedMessage, {
-          requestContext: mastraRequestContext,
+          requestContext: requestContext,
           memory: memoryOptions,
           tracingOptions: {
             metadata: {

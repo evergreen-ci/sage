@@ -4,14 +4,16 @@ import { USER_ID } from '@/mastra/agents/constants';
 
 export const ParsleyRequestContextSchema = z.object({
   [USER_ID]: z.string(),
-  logMetadata: z.object({
-    task_id: z.string().optional(),
-    execution: z.number().optional(),
-    log_type: z.string().optional(),
-    origin: z.string().optional(),
-    test_id: z.string().optional(),
-  }),
-  logURL: z.string(),
+  logMetadata: z
+    .object({
+      task_id: z.string().optional(),
+      execution: z.number().optional(),
+      log_type: z.string().optional(),
+      origin: z.string().optional(),
+      test_id: z.string().optional(),
+    })
+    .optional(),
+  logURL: z.string().optional(),
 });
 
 /**
