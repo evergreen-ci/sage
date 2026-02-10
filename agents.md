@@ -100,7 +100,7 @@ To auto-create a Jira ticket, have the PR title start with `DEVPROD-XXXXX:` (lit
 
 ### Prior to pushing code
 
-- Run `yarn format` and `yarn eslint:fix` to format the code
+- Run `pnpm format` and `pnpm eslint:fix` to format the code
 
 ## Table of Contents
 
@@ -1197,16 +1197,16 @@ Run evals using the provided scripts:
 
 ```bash
 # Run specific eval by folder path
-yarn eval src/evals/questionClassifierAgent
+pnpm eval src/evals/questionClassifierAgent
 
 # Run log analyzer workflow eval
-yarn eval src/evals/logAnalyzerWorkflow
+pnpm eval src/evals/logAnalyzerWorkflow
 
 # Run sage thinking agent eval
-yarn eval src/evals/sageThinkingAgent
+pnpm eval src/evals/sageThinkingAgent
 
 # Run evergreen agent eval
-yarn eval src/evals/evergreenAgent
+pnpm eval src/evals/evergreenAgent
 ```
 
 The eval command takes the path to the eval folder and will run all `*.eval.ts` files within that directory.
