@@ -328,6 +328,7 @@ functions:
       working_dir: sage
       shell: bash
       script: |
+        ${PREPARE_SHELL}
         yarn mastra:symlink-env
 
   wait-for-evergreen:
