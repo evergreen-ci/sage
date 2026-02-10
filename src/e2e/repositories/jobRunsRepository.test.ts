@@ -177,15 +177,23 @@ describe('jobRunsRepository', () => {
       // Job 1: Completed with open PR
       await updateJobRun(job1._id!, {
         status: JobRunStatus.Completed,
-        prUrl: 'https://github.com/org/repo/pull/1',
-        prStatus: 'open',
+        pr: {
+          url: 'https://github.com/org/repo/pull/1',
+          number: 1,
+          repository: 'org/repo',
+          status: 'open',
+        },
       });
 
       // Job 2: Completed with merged PR (should not be included)
       await updateJobRun(job2._id!, {
         status: JobRunStatus.Completed,
-        prUrl: 'https://github.com/org/repo/pull/2',
-        prStatus: 'merged',
+        pr: {
+          url: 'https://github.com/org/repo/pull/2',
+          number: 2,
+          repository: 'org/repo',
+          status: 'merged',
+        },
       });
 
       // Job 3: Completed without PR (should not be included)
@@ -196,8 +204,12 @@ describe('jobRunsRepository', () => {
       // Job 4: Running with open PR (should not be included)
       await updateJobRun(job4._id!, {
         status: JobRunStatus.Running,
-        prUrl: 'https://github.com/org/repo/pull/4',
-        prStatus: 'open',
+        pr: {
+          url: 'https://github.com/org/repo/pull/4',
+          number: 4,
+          repository: 'org/repo',
+          status: 'open',
+        },
       });
 
       const result = await findCompletedJobRunsWithOpenPRs();
@@ -207,8 +219,8 @@ describe('jobRunsRepository', () => {
 
       expect(testJobs).toHaveLength(1);
       expect(testJobs[0]._id!.toString()).toBe(job1._id!.toString());
-      expect(testJobs[0].prUrl).toBe('https://github.com/org/repo/pull/1');
-      expect(testJobs[0].prStatus).toBe('open');
+      expect(testJobs[0].pr?.url).toBe('https://github.com/org/repo/pull/1');
+      expect(testJobs[0].pr?.status).toBe('open');
     });
 
     it('should return empty array when no matching jobs found', async () => {

@@ -58,7 +58,7 @@ export class PrMergeStatusPollingService {
     const ticketKey = job.jiraTicketKey;
 
     try {
-      if (!job.prUrl) {
+      if (!job.pr?.url) {
         logger.warn(`Job ${jobId} missing PR URL`, {
           jobId,
           ticketKey,
@@ -90,13 +90,13 @@ export class PrMergeStatusPollingService {
       }
 
       // Find matching PR by URL
-      const matchingPr = this.findMatchingPr(devStatus, job.prUrl);
+      const matchingPr = this.findMatchingPr(devStatus, job.pr.url);
 
       if (!matchingPr) {
         logger.debug(`No matching PR found for job ${jobId}`, {
           jobId,
           ticketKey,
-          prUrl: job.prUrl,
+          prUrl: job.pr.url,
         });
         return {
           jobId,
@@ -113,7 +113,7 @@ export class PrMergeStatusPollingService {
         logger.debug(`PR still open for job ${jobId}`, {
           jobId,
           ticketKey,
-          prUrl: job.prUrl,
+          prUrl: job.pr.url,
         });
         return {
           jobId,
@@ -126,28 +126,26 @@ export class PrMergeStatusPollingService {
 
       // PR status has changed - update job run
       const now = new Date();
-      const updateFields: Parameters<typeof updateJobRun>[1] = {
-        prStatus:
-          matchingPr.status === 'MERGED'
-            ? 'merged'
-            : matchingPr.status === 'DECLINED'
-              ? 'closed'
-              : 'open',
+      const statusMap: Record<string, 'merged' | 'closed' | 'open'> = {
+        MERGED: 'merged',
+        DECLINED: 'closed',
       };
+      const newStatus = statusMap[matchingPr.status] ?? 'open';
 
-      if (matchingPr.status === 'MERGED') {
-        updateFields.prMergedAt = now;
-      } else if (matchingPr.status === 'DECLINED') {
-        updateFields.prClosedAt = now;
-      }
-
-      await updateJobRun(job._id!, updateFields);
+      await updateJobRun(job._id!, {
+        pr: {
+          ...job.pr,
+          status: newStatus,
+          mergedAt: matchingPr.status === 'MERGED' ? now : job.pr.mergedAt,
+          closedAt: matchingPr.status === 'DECLINED' ? now : job.pr.closedAt,
+        },
+      });
 
       logger.info(`Updated PR status for job ${jobId}`, {
         jobId,
         ticketKey,
-        prUrl: job.prUrl,
-        newStatus: updateFields.prStatus,
+        prUrl: job.pr.url,
+        newStatus,
       });
 
       return { jobId, ticketKey, success: true };
@@ -174,9 +172,7 @@ export class PrMergeStatusPollingService {
     prUrl: string
   ): DevStatusResponse['detail'][0]['pullRequests'][0] | null {
     // Normalize URLs for comparison (remove trailing slashes, etc.)
-    const normalizeUrl = (url: string): string => {
-      return url.trim().replace(/\/$/, '');
-    };
+    const normalizeUrl = (url: string): string => url.trim().replace(/\/$/, '');
 
     const normalizedPrUrl = normalizeUrl(prUrl);
 
@@ -208,7 +204,9 @@ export class PrMergeStatusPollingService {
       const completedJobs = await findCompletedJobRunsWithOpenPRs();
       result.jobsFound = completedJobs.length;
 
-      logger.info(`Found ${completedJobs.length} completed jobs with open PRs to check`);
+      logger.info(
+        `Found ${completedJobs.length} completed jobs with open PRs to check`
+      );
 
       if (completedJobs.length === 0) {
         return result;

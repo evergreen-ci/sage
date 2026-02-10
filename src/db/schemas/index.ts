@@ -50,18 +50,23 @@ export const jobRunSchema = z.object({
   errorMessage: z.string().optional(),
   /** Additional metadata about the job */
   metadata: z.record(z.string(), z.unknown()).optional(),
-  /** PR URL if a pull request was created */
-  prUrl: z.string().optional(),
-  /** PR number extracted from the PR URL */
-  prNumber: z.number().optional(),
-  /** Repository in owner/repo format */
-  prRepository: z.string().optional(),
-  /** PR status: open, merged, or closed */
-  prStatus: z.enum(['open', 'merged', 'closed']).optional(),
-  /** Timestamp when the PR was merged */
-  prMergedAt: z.date().optional(),
-  /** Timestamp when the PR was closed */
-  prClosedAt: z.date().optional(),
+  /** Pull request information if a PR was created */
+  pr: z
+    .object({
+      /** Full PR URL (e.g., 'https://github.com/owner/repo/pull/123') */
+      url: z.string(),
+      /** PR number extracted from the URL */
+      number: z.number(),
+      /** Repository in owner/repo format */
+      repository: z.string(),
+      /** PR status: open, merged, or closed */
+      status: z.enum(['open', 'merged', 'closed']),
+      /** Timestamp when the PR was merged */
+      mergedAt: z.date().optional(),
+      /** Timestamp when the PR was closed (without merging) */
+      closedAt: z.date().optional(),
+    })
+    .optional(),
 });
 
 /**

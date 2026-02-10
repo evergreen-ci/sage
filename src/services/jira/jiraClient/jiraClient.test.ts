@@ -5,11 +5,13 @@ const {
   mockEditIssue,
   mockGetIssue,
   mockSearchForIssuesUsingJqlPost,
+  mockSendRequest,
 } = vi.hoisted(() => ({
   mockSearchForIssuesUsingJqlPost: vi.fn(),
   mockEditIssue: vi.fn(),
   mockAddComment: vi.fn(),
   mockGetIssue: vi.fn(),
+  mockSendRequest: vi.fn(),
 }));
 
 vi.mock('jira.js', () => ({
@@ -19,6 +21,7 @@ vi.mock('jira.js', () => ({
     },
     issues: { editIssue: mockEditIssue, getIssue: mockGetIssue },
     issueComments: { addComment: mockAddComment },
+    sendRequest: mockSendRequest,
   })),
 }));
 
@@ -199,45 +202,32 @@ describe('jiraClient', () => {
   });
 
   describe('getDevStatus', () => {
-    const mockFetch = vi.fn();
-
-    beforeEach(() => {
-      global.fetch = mockFetch;
-    });
-
-    afterEach(() => {
-      vi.restoreAllMocks();
-    });
-
     it('should fetch dev status from Jira API', async () => {
       // Mock getIssue to return issue ID
       mockGetIssue.mockResolvedValueOnce({
         id: '12345',
       });
 
-      // Mock Dev Status API response
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          detail: [
-            {
-              pullRequests: [
-                {
-                  id: 'pr-1',
-                  name: 'Test PR',
-                  url: 'https://github.com/org/repo/pull/123',
-                  status: 'MERGED',
-                  lastUpdate: '2024-01-01T00:00:00Z',
-                  author: {
-                    name: 'test-user',
-                    avatar: 'https://avatar.url',
-                    url: 'https://github.com/test-user',
-                  },
+      // Mock sendRequest response
+      mockSendRequest.mockResolvedValueOnce({
+        detail: [
+          {
+            pullRequests: [
+              {
+                id: 'pr-1',
+                name: 'Test PR',
+                url: 'https://github.com/org/repo/pull/123',
+                status: 'MERGED',
+                lastUpdate: '2024-01-01T00:00:00Z',
+                author: {
+                  name: 'test-user',
+                  avatar: 'https://avatar.url',
+                  url: 'https://github.com/test-user',
                 },
-              ],
-            },
-          ],
-        }),
+              },
+            ],
+          },
+        ],
       });
 
       const result = await jiraClient.getDevStatus('PROJ-123');
@@ -246,31 +236,24 @@ describe('jiraClient', () => {
         issueIdOrKey: 'PROJ-123',
         fields: ['id'],
       });
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/rest/dev-status/1.0/issue/detail'),
-        expect.objectContaining({
+      expect(mockSendRequest).toHaveBeenCalledWith(
+        {
           method: 'GET',
-          headers: expect.objectContaining({
-            Authorization: expect.stringContaining('Bearer'),
-            Accept: 'application/json',
-          }),
-        })
+          url: '/rest/dev-status/1.0/issue/detail?issueId=12345&applicationType=github&dataType=pullrequest',
+        },
+        undefined
       );
       expect(result).not.toBeNull();
       expect(result!.detail[0].pullRequests).toHaveLength(1);
       expect(result!.detail[0].pullRequests[0].status).toBe('MERGED');
     });
 
-    it('should return null when issue not found (404)', async () => {
+    it('should return null when sendRequest fails', async () => {
       mockGetIssue.mockResolvedValueOnce({
         id: '12345',
       });
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found',
-      });
+      mockSendRequest.mockRejectedValueOnce(new Error('Request failed'));
 
       const result = await jiraClient.getDevStatus('PROJ-123');
 

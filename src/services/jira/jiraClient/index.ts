@@ -164,35 +164,18 @@ class JiraClient {
 
       const issueId = issue.id;
 
-      // Call the Dev Status API endpoint
-      // Note: This endpoint is not available in jira.js, so we make a direct HTTP request
-      const baseUrl = config.sageBot.jiraBaseUrl.replace(/\/$/, '');
-      const url = `${baseUrl}/rest/dev-status/1.0/issue/detail?issueId=${issueId}&applicationType=GitHub&dataType=pullrequest`;
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${config.sageBot.jiraApiToken}`,
-          Accept: 'application/json',
+      // Call the Dev Status API endpoint using the client's sendRequest
+      // Note: This endpoint is not available in jira.js typed methods
+      const data = await this.client.sendRequest<DevStatusResponse>(
+        {
+          method: 'GET',
+          url: `/rest/dev-status/1.0/issue/detail?issueId=${issueId}&applicationType=github&dataType=pullrequest`,
         },
-      });
+        undefined as never
+      );
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          // Issue might not have any development info, or Dev Status API not available
-          logger.debug(
-            `No development status found for issue ${issueKey} (404)`
-          );
-          return null;
-        }
-        throw new Error(
-          `Dev Status API returned ${response.status}: ${response.statusText}`
-        );
-      }
-
-      const data = (await response.json()) as DevStatusResponse;
       logger.debug(`Retrieved dev status for issue ${issueKey}`, {
-        pullRequestCount: data.detail?.[0]?.pullRequests?.length ?? 0,
+        pullRequestCount: data?.detail?.[0]?.pullRequests?.length ?? 0,
       });
 
       return data;

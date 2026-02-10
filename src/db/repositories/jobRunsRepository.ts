@@ -64,18 +64,7 @@ export const createJobRun = async (
  * Fields that can be updated on a job run
  */
 export type JobRunUpdate = Partial<
-  Pick<
-    JobRun,
-    | 'status'
-    | 'cursorAgentId'
-    | 'errorMessage'
-    | 'prUrl'
-    | 'prNumber'
-    | 'prRepository'
-    | 'prStatus'
-    | 'prMergedAt'
-    | 'prClosedAt'
-  >
+  Pick<JobRun, 'status' | 'cursorAgentId' | 'errorMessage' | 'pr'>
 >;
 
 /**
@@ -172,8 +161,8 @@ export const findCompletedJobRunsWithOpenPRs = async (): Promise<JobRun[]> => {
   return collection
     .find({
       status: JobRunStatus.Completed,
-      prStatus: 'open',
-      prUrl: { $exists: true, $ne: null },
+      'pr.status': 'open',
+      'pr.url': { $exists: true, $ne: null },
     })
     .sort({ completedAt: 1 })
     .toArray();

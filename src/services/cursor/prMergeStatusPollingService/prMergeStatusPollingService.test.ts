@@ -55,8 +55,12 @@ describe('PrMergeStatusPollingService', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     completedAt: new Date(),
-    prUrl: 'https://github.com/org/repo/pull/123',
-    prStatus: 'open',
+    pr: {
+      url: 'https://github.com/org/repo/pull/123',
+      number: 123,
+      repository: 'org/repo',
+      status: 'open',
+    },
     ...overrides,
   });
 
@@ -88,10 +92,8 @@ describe('PrMergeStatusPollingService', () => {
     });
 
     it('skips jobs missing PR URL', async () => {
-      const jobWithoutPrUrl = createMockJob({ prUrl: undefined });
-      mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([
-        jobWithoutPrUrl,
-      ]);
+      const jobWithoutPr = createMockJob({ pr: undefined });
+      mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([jobWithoutPr]);
 
       const service = new PrMergeStatusPollingService({
         jiraClient: mockJiraClient,
@@ -224,8 +226,14 @@ describe('PrMergeStatusPollingService', () => {
 
       expect(result.jobsProcessed).toBe(1);
       expect(mockUpdateJobRun).toHaveBeenCalledWith(job._id, {
-        prStatus: 'merged',
-        prMergedAt: expect.any(Date),
+        pr: {
+          url: 'https://github.com/org/repo/pull/123',
+          number: 123,
+          repository: 'org/repo',
+          status: 'merged',
+          mergedAt: expect.any(Date),
+          closedAt: undefined,
+        },
       });
     });
 
@@ -262,14 +270,28 @@ describe('PrMergeStatusPollingService', () => {
 
       expect(result.jobsProcessed).toBe(1);
       expect(mockUpdateJobRun).toHaveBeenCalledWith(job._id, {
-        prStatus: 'closed',
-        prClosedAt: expect.any(Date),
+        pr: {
+          url: 'https://github.com/org/repo/pull/123',
+          number: 123,
+          repository: 'org/repo',
+          status: 'closed',
+          mergedAt: undefined,
+          closedAt: expect.any(Date),
+        },
       });
     });
 
     it('handles errors in individual job processing and continues', async () => {
       const job1 = createMockJob({ jiraTicketKey: 'TEST-1' });
-      const job2 = createMockJob({ jiraTicketKey: 'TEST-2' });
+      const job2 = createMockJob({
+        jiraTicketKey: 'TEST-2',
+        pr: {
+          url: 'https://github.com/org/repo/pull/456',
+          number: 456,
+          repository: 'org/repo',
+          status: 'open',
+        },
+      });
 
       mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([job1, job2]);
       mockGetDevStatus
