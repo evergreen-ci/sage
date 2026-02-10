@@ -48,6 +48,12 @@ const getTaskHistoryByIdTool = createTool({
   outputSchema: getTaskHistoryByIdOutputSchema,
   execute: async (inputData, context) => {
     const { limit, taskId } = inputData;
+    if (!getTaskTool.execute) {
+      throw new Error('getTaskTool.execute is not defined');
+    }
+    if (!getTaskHistoryTool.execute) {
+      throw new Error('getTaskHistoryTool.execute is not defined');
+    }
     // Step 1: Fetch task data
     const taskResult = await getTaskTool.execute(inputData, context);
 

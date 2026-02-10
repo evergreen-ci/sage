@@ -85,13 +85,15 @@ tasks:
       - func: run-make-background
         vars:
           target: local-evergreen
-      - func: symlink
+      - func: symlink-graphql-schema
       - func: pnpm-build
       - func: wait-for-evergreen
       - func: pnpm-e2e
   - name: check-mastra-dev-startup
     commands:
       - func: pnpm-build
+      - func: pnpm-mastra-symlink-env
+      - func: symlink-graphql-schema
       - func: mastra-dev-startup
   - name: check-sage-prod-startup
     commands:
@@ -306,13 +308,22 @@ functions:
             sleep 10
           done
 
-  symlink:
+  symlink-graphql-schema:
     command: shell.exec
     params:
       working_dir: sage
       shell: bash
       script: |
         ln -s ${workdir}/evergreen/graphql/schema ${workdir}/sdlschema
+
+  pnpm-mastra-symlink-env:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        pnpm mastra:symlink-env
 
   wait-for-evergreen:
     command: shell.exec

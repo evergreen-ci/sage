@@ -1,17 +1,20 @@
 import { RequestContext } from '@mastra/core/request-context';
+import { z } from 'zod';
 import { USER_ID } from '@/mastra/agents/constants';
 
-type ParsleyRequestContext = {
-  [USER_ID]?: string;
-  logMetadata?: {
-    task_id?: string;
-    execution?: number;
-    log_type?: string;
-    origin?: string;
-    test_id?: string;
-  };
-  logURL?: string;
-};
+export const ParsleyRequestContextSchema = z.object({
+  [USER_ID]: z.string(),
+  logMetadata: z
+    .object({
+      task_id: z.string().optional(),
+      execution: z.number().optional(),
+      log_type: z.string().optional(),
+      origin: z.string().optional(),
+      test_id: z.string().optional(),
+    })
+    .optional(),
+  logURL: z.string().optional(),
+});
 
 /**
  * Creates a request context for the Parsley chat route.
@@ -19,4 +22,4 @@ type ParsleyRequestContext = {
  * @returns A request context for the Parsley chat route.
  */
 export const createParsleyRequestContext = () =>
-  new RequestContext<ParsleyRequestContext>();
+  new RequestContext<z.infer<typeof ParsleyRequestContextSchema>>();

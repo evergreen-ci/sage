@@ -1,14 +1,9 @@
-import { RequestContext } from '@mastra/core/request-context';
 import { trace } from '@opentelemetry/api';
 import { Request, Response } from 'express';
-import { USER_ID } from '@/mastra/agents/constants';
+import { z } from 'zod';
 import { releaseNotesInputSchema } from '@/mastra/agents/releaseNotesAgent';
 import { releaseNotesWorkflow } from '@/mastra/workflows/releaseNotes';
 import { logger } from '@/utils/logger';
-
-type ReleaseNotesRequestContext = {
-  [USER_ID]?: string;
-};
 
 /**
  * POST /completions/release-notes/generate
@@ -30,24 +25,19 @@ const generateReleaseNotesRoute = async (req: Request, res: Response) => {
   const parsedInput = releaseNotesInputSchema.safeParse(req.body);
 
   if (!parsedInput.success) {
-    const { fieldErrors, formErrors } = parsedInput.error.flatten();
+    const { errors, properties } = z.treeifyError(parsedInput.error);
     logger.warn('Invalid release notes request body', {
       requestId: res.locals.requestId,
-      fieldErrors,
-      formErrors,
+      errors,
+      properties,
     });
     res.status(400).json({
       message: 'Invalid request body',
-      errors: {
-        fieldErrors,
-        formErrors,
-      },
+      errors,
+      properties,
     });
     return;
   }
-
-  const requestContext = new RequestContext<ReleaseNotesRequestContext>();
-  requestContext.set(USER_ID, res.locals.userId);
 
   const currentSpan = trace.getActiveSpan();
   const spanContext = currentSpan?.spanContext();
@@ -59,7 +49,6 @@ const generateReleaseNotesRoute = async (req: Request, res: Response) => {
     // Execute workflow
     const runResult = await run.start({
       inputData: parsedInput.data,
-      requestContext,
       ...(spanContext
         ? {
             traceId: spanContext.traceId,

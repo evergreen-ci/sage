@@ -222,6 +222,16 @@ Replace `${DRONE_REPO_NAME}` with your repository name if you are building from 
 
 The project uses [Mastra](https://mastra.ai/en/docs/overview), a framework for building agentic systems with tools and workflows.
 
+### Environment Symlinks
+
+Mastra's dev server and build process use `dotenv-flow` from `src/mastra/public/` to resolve environment variables. Before running Mastra commands, create the required symlinks:
+
+```bash
+yarn mastra:symlink-env
+```
+
+This symlinks all `.env*` files from the project root into `src/mastra/public/`. The symlinks are git-ignored and only need to be created once per clone.
+
 ### Running the Mastra Dev Server
 
 ```bash
@@ -353,3 +363,69 @@ To deploy to production:
    - **Web UI**: Click `…` > `Promote` on your build's page. Enter "production" in the "Target" field and submit.
 
 **Note**: You must be promoting a Drone build that pushed a commit to `main`.
+
+### Manual Cronjob Execution
+
+In the staging environment, the following cronjobs are disabled from automatic execution to prevent interference with local testing:
+
+- `sage-bot-jira-polling-job` - Polls Jira for new tickets to process
+- `cursor-agent-status-polling-job` - Polls Cursor for agent status updates
+
+These cronjobs can still be manually executed using `kubectl` for testing purposes.
+
+#### Prerequisites
+
+1. Ensure you have `kubectl` installed and configured
+2. Switch to the staging Kubernetes context:
+   ```bash
+   kcs  # or manually: kubectl config use-context <staging-context>
+   ```
+
+All commands below use the `-n devprod-evergreen` flag to specify the namespace. This avoids persisting namespace changes in your kubeconfig.
+
+#### Manually Executing a Cronjob
+
+To manually trigger a cronjob, use `kubectl create job` to create a one-time job from the cronjob:
+
+```bash
+# Execute sage-bot-jira-polling-job
+kubectl create job --from=cronjob/sage-bot-jira-polling-job sage-bot-jira-polling-job-manual-$(date +%s) -n devprod-evergreen
+
+# Execute cursor-agent-status-polling-job
+kubectl create job --from=cronjob/cursor-agent-status-polling-job cursor-agent-status-polling-job-manual-$(date +%s) -n devprod-evergreen
+```
+
+The `$(date +%s)` suffix ensures each manual execution has a unique job name.
+
+#### Monitoring Job Execution
+
+To check the status of a manually created job:
+
+```bash
+# List recent jobs
+kubectl get jobs -n devprod-evergreen
+
+# View job details
+kubectl describe job <job-name> -n devprod-evergreen
+
+# View job logs
+kubectl logs job/<job-name> -n devprod-evergreen
+```
+
+#### Cleaning Up Manual Jobs
+
+After testing, you can delete a specific manual job:
+
+```bash
+kubectl delete job <job-name> -n devprod-evergreen
+```
+
+Or delete all manual jobs for a specific cronjob:
+
+```bash
+# Delete all manual jobs for sage-bot-jira-polling-job
+kubectl get jobs -o name -n devprod-evergreen | grep '^job.batch/sage-bot-jira-polling-job-manual-' | xargs kubectl delete -n devprod-evergreen
+
+# Delete all manual jobs for cursor-agent-status-polling-job
+kubectl get jobs -o name -n devprod-evergreen | grep '^job.batch/cursor-agent-status-polling-job-manual-' | xargs kubectl delete -n devprod-evergreen
+```
