@@ -92,6 +92,8 @@ tasks:
   - name: check-mastra-dev-startup
     commands:
       - func: yarn-build
+      - func: yarn-mastra-symlink-env
+      - func: symlink
       - func: mastra-dev-startup
   - name: check-sage-prod-startup
     commands:
@@ -319,6 +321,14 @@ functions:
       shell: bash
       script: |
         ln -s ${workdir}/evergreen/graphql/schema ${workdir}/sdlschema
+
+  yarn-mastra-symlink-env:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        yarn mastra:symlink-env
 
   wait-for-evergreen:
     command: shell.exec
