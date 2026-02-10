@@ -41,7 +41,7 @@ cronJobs:
       JIRA_BASE_URL: https://jira-staging.corp.mongodb.com
 
   - name: poll-pr-merge-status-job
-    schedule: '0 0 30 2 *' # Disabled - impossible date (Feb 30), retained for manual invocation
+    schedule: '0 0 1 1 *' # Disabled via suspend, runs Jan 1 at midnight if enabled
     suspend: true
     concurrencyPolicy: Forbid
     command: ['yarn', 'poll-pr-merge-status:staging']

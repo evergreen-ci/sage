@@ -39,7 +39,7 @@ cronJobs:
       JIRA_BASE_URL: https://jira.mongodb.org
 
   - name: poll-pr-merge-status-job
-    schedule: '* * * * *' # Run every minute
+    schedule: '*/5 * * * *' # Run every 5 minutes
     concurrencyPolicy: Forbid
     command: ['yarn', 'poll-pr-merge-status:prod']
     resources:
