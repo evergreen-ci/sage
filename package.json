@@ -22,7 +22,7 @@
     "pending-commits:json": "bash scripts/check-pending-commits.sh --json",
     "clean": "rm -rf dist bin node_modules",
     "codegen": "graphql-codegen-esm --config graphql.config.ts",
-    "generate-cursor-client": "openapi-ts",
+    "generate-cursor-client": "bash scripts/patch-cursor-openapi-spec.sh && node_modules/.bin/openapi-ts",
     "e2e": "vitest --project e2e",
     "test": "vitest --project unit",
     "test:ui": "yarn test --ui",
