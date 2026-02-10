@@ -12,7 +12,6 @@ Before submitting a request, you'll need:
 
 - The Jira project key you want to add (e.g., `SERVER`, `CLOUDP`)
 - The project administrator's name for approval (find this at `https://jira.mongodb.org/projects/<PROJECT_KEY>` under Administrators)
-- Approval from a Sage Bot admin: **Austin Hartschen** or **Mohamed Khelif**
 
 ## Step 1: Open the Service Account Change Form
 
@@ -82,9 +81,7 @@ The request requires approval from:
 1. The Jira project administrator you specified
 2. IT Productivity team
 
-## Step 4: Notify Sage Bot Admins
-
-After your IT request is approved, contact a Sage Bot admin (**Austin Hartschen** or **Mohamed Khelif**) to confirm the project has been added and allow them to update the environment variable to enable the new project.
+Once approved, Sage Bot will automatically start monitoring tickets in your project.
 
 ## Need Help?
 
