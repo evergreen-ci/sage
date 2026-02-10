@@ -1,6 +1,6 @@
 import { Factuality } from 'autoevals';
 import { Eval } from 'braintrust';
-import z from 'zod';
+import { z } from 'zod';
 import { ReporterName, PROJECT_NAME } from '@/evals/constants';
 import { CoreErrorLinesPresent, TechnicalAccuracy } from '@/evals/scorers';
 import { tracedWorkflowEval } from '@/evals/utils/tracedWorkflow';

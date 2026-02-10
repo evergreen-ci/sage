@@ -85,7 +85,7 @@ tasks:
       - func: run-make-background
         vars:
           target: local-evergreen
-      - func: symlink
+      - func: symlink-graphql-schema
       - func: yarn-build
       - func: wait-for-evergreen
       - func: yarn-e2e
@@ -93,7 +93,7 @@ tasks:
     commands:
       - func: yarn-build
       - func: yarn-mastra-symlink-env
-      - func: symlink
+      - func: symlink-graphql-schema
       - func: mastra-dev-startup
   - name: check-sage-prod-startup
     commands:
@@ -314,7 +314,7 @@ functions:
           npm install -g yarn
           npm install -g env-cmd
 
-  symlink:
+  symlink-graphql-schema:
     command: shell.exec
     params:
       working_dir: sage

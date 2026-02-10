@@ -18,10 +18,10 @@ Eval(
         const requestContext = new RequestContext();
         requestContext.set(USER_ID, input.user);
         requestContext.set('logMetadata', {
-          projectName: PROJECT_NAME,
-          agentName: SAGE_THINKING_AGENT_NAME,
-          userId: input.user,
-          input: input.content,
+          task_id: 'test_task_id',
+          execution: 0,
+          log_type: 'EVERGREEN_TASK_LOGS',
+          origin: 'agent',
         });
         requestContext.set('logURL', 'https://test.log');
         return requestContext;

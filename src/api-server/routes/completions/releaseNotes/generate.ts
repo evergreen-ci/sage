@@ -1,6 +1,6 @@
 import { trace } from '@opentelemetry/api';
 import { Request, Response } from 'express';
-import z from 'zod';
+import { z } from 'zod';
 import { releaseNotesInputSchema } from '@/mastra/agents/releaseNotesAgent';
 import { releaseNotesWorkflow } from '@/mastra/workflows/releaseNotes';
 import { logger } from '@/utils/logger';

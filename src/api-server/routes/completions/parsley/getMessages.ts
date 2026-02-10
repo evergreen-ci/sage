@@ -1,7 +1,7 @@
 import { convertMessages } from '@mastra/core/agent';
 import { UIMessage } from 'ai';
 import { Request, Response } from 'express';
-import z from 'zod';
+import { z } from 'zod';
 import { mastra } from '@/mastra';
 import { SAGE_THINKING_AGENT_NAME } from '@/mastra/agents/constants';
 import { logger } from '@/utils/logger';

@@ -8,7 +8,7 @@ import {
   validateUIMessages,
 } from 'ai';
 import { Request, Response } from 'express';
-import z from 'zod';
+import { z } from 'zod';
 import { logMetadataSchema } from '@/constants/parsley/logMetadata';
 import { mastra } from '@/mastra';
 import { SAGE_THINKING_AGENT_NAME, USER_ID } from '@/mastra/agents/constants';
