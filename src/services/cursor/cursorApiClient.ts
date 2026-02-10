@@ -62,8 +62,11 @@ export class CursorApiClient {
 
     if (response.error) {
       const cursorError = response.error as CursorError;
+      // Check error.error first (actual API format), then fallback to error.message
       const errorMessage =
-        cursorError.error?.message || 'Unknown Cursor API error';
+        cursorError.error?.error ||
+        cursorError.error?.message ||
+        'Unknown Cursor API error';
       const errorCode = cursorError.error?.code;
 
       logger.error(`Cursor API error: ${errorMessage}`, {
@@ -105,8 +108,11 @@ export class CursorApiClient {
 
     if (response.error) {
       const cursorError = response.error as CursorError;
+      // Check error.error first (actual API format), then fallback to error.message
       const errorMessage =
-        cursorError.error?.message || 'Unknown Cursor API error';
+        cursorError.error?.error ||
+        cursorError.error?.message ||
+        'Unknown Cursor API error';
       const errorCode = cursorError.error?.code;
 
       logger.error(`Cursor API error fetching agent: ${errorMessage}`, {
