@@ -6,11 +6,11 @@
 export const MAX_SEARCH_RESULTS = 100;
 
 /**
- * Default Jira project role used to restrict comment visibility.
- * When set, comments are only visible to users with this project role,
+ * Jira project role used to restrict comment visibility.
+ * Comments are only visible to users with this project role,
  * preventing unintended exposure of internal information on public projects.
  */
-export const DEFAULT_COMMENT_VISIBILITY_ROLE = 'Developers';
+export const COMMENT_VISIBILITY_ROLE = 'Developers';
 
 /** Default fields to retrieve when searching Jira issues */
 export const DEFAULT_ISSUE_FIELDS = [
