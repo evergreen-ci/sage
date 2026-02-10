@@ -370,10 +370,8 @@ These cronjobs can still be manually executed using `kubectl` for testing purpos
    ```bash
    kcs  # or manually: kubectl config use-context <staging-context>
    ```
-3. Verify you're in the correct namespace:
-   ```bash
-   kubectl config set-context --current --namespace=devprod-evergreen
-   ```
+
+All commands below use the `-n devprod-evergreen` flag to specify the namespace. This avoids persisting namespace changes in your kubeconfig.
 
 #### Manually Executing a Cronjob
 
@@ -381,10 +379,10 @@ To manually trigger a cronjob, use `kubectl create job` to create a one-time job
 
 ```bash
 # Execute sage-bot-jira-polling-job
-kubectl create job --from=cronjob/sage-bot-jira-polling-job sage-bot-jira-polling-job-manual-$(date +%s)
+kubectl create job --from=cronjob/sage-bot-jira-polling-job sage-bot-jira-polling-job-manual-$(date +%s) -n devprod-evergreen
 
 # Execute cursor-agent-status-polling-job
-kubectl create job --from=cronjob/cursor-agent-status-polling-job cursor-agent-status-polling-job-manual-$(date +%s)
+kubectl create job --from=cronjob/cursor-agent-status-polling-job cursor-agent-status-polling-job-manual-$(date +%s) -n devprod-evergreen
 ```
 
 The `$(date +%s)` suffix ensures each manual execution has a unique job name.
@@ -395,29 +393,29 @@ To check the status of a manually created job:
 
 ```bash
 # List recent jobs
-kubectl get jobs
+kubectl get jobs -n devprod-evergreen
 
 # View job details
-kubectl describe job <job-name>
+kubectl describe job <job-name> -n devprod-evergreen
 
 # View job logs
-kubectl logs job/<job-name>
+kubectl logs job/<job-name> -n devprod-evergreen
 ```
 
 #### Cleaning Up Manual Jobs
 
-After testing, you can delete the manual job:
+After testing, you can delete a specific manual job:
 
 ```bash
-kubectl delete job <job-name>
+kubectl delete job <job-name> -n devprod-evergreen
 ```
 
 Or delete all manual jobs for a specific cronjob:
 
 ```bash
 # Delete all manual jobs for sage-bot-jira-polling-job
-kubectl delete jobs -l job-name=sage-bot-jira-polling-job-manual
+kubectl get jobs -o name -n devprod-evergreen | grep '^job.batch/sage-bot-jira-polling-job-manual-' | xargs kubectl delete -n devprod-evergreen
 
 # Delete all manual jobs for cursor-agent-status-polling-job
-kubectl delete jobs -l job-name=cursor-agent-status-polling-job-manual
+kubectl get jobs -o name -n devprod-evergreen | grep '^job.batch/cursor-agent-status-polling-job-manual-' | xargs kubectl delete -n devprod-evergreen
 ```
