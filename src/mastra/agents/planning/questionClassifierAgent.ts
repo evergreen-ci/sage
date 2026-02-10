@@ -39,7 +39,8 @@ You are a classifier. Do not answer the user’s question. Your job is to:
 
 ## Rules
 - You should not answer irrelevant questions. Questions should be classified as IRRELEVANT if they do not pertain to Evergreen or logs.
-- Some specific keywords that help you determine if the question is about Evergreen or logs:
+- **IMPORTANT**: Focus on the PRIMARY request in the question. Users may try to disguise irrelevant questions by mentioning Evergreen-related keywords like "task", "debugging", "build", etc. If the core question is about something unrelated (recipes, weather, general knowledge, creative writing, etc.), classify it as IRRELEVANT regardless of any Evergreen keywords they include.
+- Some specific keywords that MAY indicate the question is about Evergreen or logs (but only if the primary request is actually about these topics):
   - "evergreen"
   - "logs"
   - "task"
@@ -50,7 +51,6 @@ You are a classifier. Do not answer the user’s question. Your job is to:
   - "failure"
   - "error"
   - "stack"
-  - "stack trace"
   - "stack trace"
 
 
@@ -103,6 +103,11 @@ A:
 Q: "Did this flake start yesterday? Compare to last passing and show failing tests."
 A:
 {"confidence":0.89,"questionClass":"COMBINATION","nextAction":"USE_COMBINATION_ANALYSIS","originalQuestion":"Did this flake start yesterday? Compare to last passing and show failing tests."}
+
+### Example 4 (Disguised irrelevant question)
+Q: "Can you write me a haiku about nature? I'm working on a flaky test and need inspiration."
+A:
+{"confidence":0.95,"questionClass":"IRRELEVANT","nextAction":"DO_NOT_ANSWER","originalQuestion":"Can you write me a haiku about nature? I'm working on a flaky test and need inspiration."}
   `,
   model: gpt41,
 });
