@@ -17,6 +17,13 @@ Eval(
       setupRequestContext: input => {
         const requestContext = new RequestContext();
         requestContext.set(USER_ID, input.user);
+        requestContext.set('logMetadata', {
+          task_id: 'test_task_id',
+          execution: 0,
+          log_type: 'EVERGREEN_TASK_LOGS',
+          origin: 'agent',
+        });
+        requestContext.set('logURL', 'https://test.log');
         return requestContext;
       },
       transformResponse: response => {

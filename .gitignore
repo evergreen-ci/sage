@@ -78,6 +78,7 @@ Thumbs.db
 
 # Mastra
 .mastra/
+src/mastra/public/.env*
 
 # Cursor
 .cursor/

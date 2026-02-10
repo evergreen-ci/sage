@@ -222,6 +222,16 @@ Replace `${DRONE_REPO_NAME}` with your repository name if you are building from 
 
 The project uses [Mastra](https://mastra.ai/en/docs/overview), a framework for building agentic systems with tools and workflows.
 
+### Environment Symlinks
+
+Mastra's dev server and build process use `dotenv-flow` from `src/mastra/public/` to resolve environment variables. Before running Mastra commands, create the required symlinks:
+
+```bash
+yarn mastra:symlink-env
+```
+
+This symlinks all `.env*` files from the project root into `src/mastra/public/`. The symlinks are git-ignored and only need to be created once per clone.
+
 ### Running the Mastra Dev Server
 
 ```bash

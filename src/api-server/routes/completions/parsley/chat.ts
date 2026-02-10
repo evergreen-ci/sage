@@ -1,5 +1,6 @@
 import { toAISdkStream } from '@mastra/ai-sdk';
 import { AgentMemoryOption } from '@mastra/core/agent';
+import { RequestContext } from '@mastra/core/request-context';
 import { trace } from '@opentelemetry/api';
 import {
   pipeUIMessageStreamToResponse,
@@ -7,7 +8,7 @@ import {
   validateUIMessages,
 } from 'ai';
 import { Request, Response } from 'express';
-import z from 'zod';
+import { z } from 'zod';
 import { logMetadataSchema } from '@/constants/parsley/logMetadata';
 import { mastra } from '@/mastra';
 import { SAGE_THINKING_AGENT_NAME, USER_ID } from '@/mastra/agents/constants';
@@ -35,7 +36,13 @@ const chatRoute = async (
   const currentSpan = trace.getActiveSpan();
   const spanContext = currentSpan?.spanContext();
   const requestContext = createParsleyRequestContext();
-  requestContext.set(USER_ID, res.locals.userId);
+  // userId is guaranteed by userIdMiddleware (returns 401 if missing)
+  requestContext.set(USER_ID, res.locals.userId!);
+  // Mastra APIs (run.start, getMemory) expect RequestContext<unknown>, but our typed context
+  // isn't directly assignable due to generic variance. This cast is safe since RequestContext
+  // is structurally compatible at runtime.
+  const untypedRequestContext =
+    requestContext as unknown as RequestContext<unknown>;
   logger.debug('User context set for request', {
     userId: res.locals.userId,
     requestId: res.locals.requestId,
@@ -59,7 +66,9 @@ const chatRoute = async (
     requestContext.set('logMetadata', messageData.logMetadata);
   }
   if (requestContext.get('logURL') === undefined && messageData.logMetadata) {
-    const logFileUrlWorkflow = mastra.getWorkflowById('resolve-log-file-url');
+    const logFileUrlWorkflow = mastra.getWorkflowById<'resolve-log-file-url'>(
+      'resolve-log-file-url'
+    );
     if (!logFileUrlWorkflow) {
       logger.error('resolve-log-file-url workflow not found', {
         requestId: res.locals.requestId,
@@ -95,7 +104,7 @@ const chatRoute = async (
           requestId: res.locals.requestId,
         },
       },
-      requestContext,
+      requestContext: untypedRequestContext,
     });
     if (runResult.status === 'success') {
       requestContext.set('logURL', runResult.result);
@@ -130,7 +139,7 @@ const chatRoute = async (
     const agent = mastra.getAgent(SAGE_THINKING_AGENT_NAME);
 
     const memory = await agent.getMemory({
-      requestContext,
+      requestContext: untypedRequestContext,
     });
 
     let memoryOptions: AgentMemoryOption = {
@@ -177,7 +186,7 @@ const chatRoute = async (
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
         await agent.stream(validatedMessage, {
-          requestContext,
+          requestContext: requestContext,
           memory: memoryOptions,
           tracingOptions: {
             metadata: {

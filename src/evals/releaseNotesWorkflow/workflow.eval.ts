@@ -1,5 +1,5 @@
 import { Eval, initDataset } from 'braintrust';
-import z from 'zod';
+import { z } from 'zod';
 import { ReporterName, PROJECT_NAME } from '@/evals/constants';
 import { SafeFaithfulness, TechnicalAccuracy } from '@/evals/scorers';
 import { tracedWorkflowEval } from '@/evals/utils/tracedWorkflow';

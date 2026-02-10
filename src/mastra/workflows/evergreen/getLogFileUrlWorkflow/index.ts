@@ -76,7 +76,9 @@ const fetchTestResultsForTestLog = createStep({
     logMetadata: logMetadataSchema,
   }),
   outputSchema: z.object({
-    testResults: getTaskTestsTool.outputSchema,
+    testResults: getTaskTestsTool.outputSchema
+      ? z.nullable(getTaskTestsTool.outputSchema)
+      : z.null(),
     testId: z.string(),
     groupId: z.string().optional(),
   }),
@@ -87,6 +89,9 @@ const fetchTestResultsForTestLog = createStep({
       throw new Error('Expected test log metadata but received a non-test log');
     }
 
+    if (!getTaskTestsTool.execute) {
+      throw new Error('getTaskTestsTool.execute is not defined');
+    }
     const testResults = await getTaskTestsTool.execute(
       {
         id: logMetadata.task_id,
@@ -116,7 +121,9 @@ const deriveTestLogUrl = createStep({
   outputSchema: z.string(),
   execute: async ({ inputData }) => {
     const { testId, testResults } = inputData;
-
+    if (!testResults) {
+      throw new Error('Test results are not available');
+    }
     const results = testResults.task?.tests?.testResults ?? [];
     const match = results.find(tr => {
       if (!tr) return false;
@@ -208,11 +215,7 @@ const resolveLogFileUrl = createWorkflow({
   .then(chooseLogUrl)
   .commit();
 
-export const resolveLogFileUrlTool = createTool<
-  'resolveLogFileUrlTool',
-  typeof resolveLogFileUrl.inputSchema,
-  typeof resolveLogFileUrl.outputSchema
->({
+export const resolveLogFileUrlTool = createTool({
   id: 'resolveLogFileUrlTool',
   description:
     'Resolve a log file URL from Evergreen log metadata. Ensure you have the task ID before using this tool.',
