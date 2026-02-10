@@ -7,7 +7,7 @@
  * and handles the streaming responses properly.
  *
  * Usage:
- * yarn chat-with-staging
+ * pnpm chat-with-staging
  */
 
 import { execSync } from 'child_process';

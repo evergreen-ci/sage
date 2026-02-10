@@ -5,7 +5,7 @@ cronJobs:
   - name: sage-bot-jira-polling-job
     schedule: '* * * * *' # Run every minute
     concurrencyPolicy: Forbid
-    command: ['yarn', 'poll-jira:prod']
+    command: ['pnpm', 'poll-jira:prod']
     resources:
       requests:
         cpu: 500m
@@ -23,7 +23,7 @@ cronJobs:
   - name: cursor-agent-status-polling-job
     schedule: '* * * * *' # Run every minute
     concurrencyPolicy: Forbid
-    command: ['yarn', 'poll-cursor-status:prod']
+    command: ['pnpm', 'poll-cursor-status:prod']
     resources:
       requests:
         cpu: 500m
