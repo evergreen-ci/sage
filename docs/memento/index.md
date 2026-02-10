@@ -57,7 +57,7 @@ Analyzes a Slack thread capture and returns structured ticket data.
 
 ```json
 {
-  "slackThreadCapture": "Slack thread from #ask-devprod-evergreen\nhttps://mongodb.slack.com/archives/...\n\n[~john.doe@mongodb.com] 10:30 AM\nI noticed the github_pr_number expansion returns unexpected values for merge queue items...\n\n[~jane.smith@mongodb.com] 10:45 AM\nThat looks like a bug in the expansion logic..."
+  "slackThreadCapture": "Slack thread from #ask-devprod\nhttps://mongodb.slack.com/archives/...\n\n[~john.doe@mongodb.com] 10:30 AM\nI noticed the github_pr_number expansion returns unexpected values for merge queue items...\n\n[~jane.smith@mongodb.com] 10:45 AM\nThat looks like a bug in the expansion logic..."
 }
 ```
 
@@ -91,4 +91,4 @@ The agent performs pure text analysis without external tool calls. It relies on 
 
 ## Getting Help
 
-If you have questions or encounter issues, reach out in the [#ask-devprod-evergreen](https://mongodb.slack.com/archives/C01PS2CKECQ) Slack channel.
+If you have questions or encounter issues, reach out in the [#ask-devprod](https://mongodb.enterprise.slack.com/archives/C69UXN1CP) Slack channel.

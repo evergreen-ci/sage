@@ -123,4 +123,4 @@ Parsley AI maintains persistent conversation memory:
 
 ## Getting Help
 
-If you have questions or encounter issues, reach out in the [#ask-devprod-evergreen](https://mongodb.slack.com/archives/C01PS2CKECQ) Slack channel.
+If you have questions or encounter issues, reach out in the [#ask-devprod](https://mongodb.enterprise.slack.com/archives/C69UXN1CP) Slack channel.
