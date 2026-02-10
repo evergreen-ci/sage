@@ -1,7 +1,7 @@
-import express from 'express';
+import express, { type IRouter } from 'express';
 import summarizeThreadRoute from './summarizeThread';
 
-const mementoRouter = express.Router();
+const mementoRouter: IRouter = express.Router();
 
 mementoRouter.post('/summarize-thread', summarizeThreadRoute);
 

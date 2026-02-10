@@ -1,11 +1,11 @@
-import express from 'express';
+import express, { type IRouter } from 'express';
 import {
   getCursorKeyRoute,
   upsertCursorKeyRoute,
   deleteCursorKeyRoute,
 } from './cursorKey';
 
-const userRouter = express.Router();
+const userRouter: IRouter = express.Router();
 
 userRouter.get('/cursor-key', getCursorKeyRoute);
 userRouter.post('/cursor-key', upsertCursorKeyRoute);
