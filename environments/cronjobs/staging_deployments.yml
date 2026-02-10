@@ -39,3 +39,22 @@ cronJobs:
       BRAINTRUST_PARENT: project_name:sage-staging
       BRAINTRUST_PROJECT_NAME: sage-staging
       JIRA_BASE_URL: https://jira-staging.corp.mongodb.com
+
+  - name: poll-pr-merge-status-job
+    schedule: '0 0 30 2 *' # Disabled - impossible date (Feb 30), retained for manual invocation
+    suspend: true
+    concurrencyPolicy: Forbid
+    command: ['yarn', 'poll-pr-merge-status:staging']
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1
+        memory: 2Gi
+    env:
+      NODE_ENV: staging
+      SENTRY_ENVIRONMENT: staging
+      BRAINTRUST_PARENT: project_name:sage-staging
+      BRAINTRUST_PROJECT_NAME: sage-staging
+      JIRA_BASE_URL: https://jira-staging.corp.mongodb.com
