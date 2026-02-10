@@ -103,6 +103,7 @@ class SageServer {
     this.startTime = new Date();
 
     this.serverInstance = this.app.listen(config.port, () => {
+      console.log('hello, world');
       logger.info(`🚀 Sage server is running on port ${config.port}`);
       const routes = expressListEndpoints(this.app);
       logger.info('Available routes:');
