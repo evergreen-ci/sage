@@ -98,6 +98,8 @@ export interface Config {
     jiraApiToken: string;
     /** SAGE_BOT_SUPPORTED_PROJECTS - comma-separated list of Jira project keys */
     supportedProjects: string[];
+    /** JIRA_COMMENT_VISIBILITY_ROLE - Jira project role to restrict comment visibility (defaults to "Developers") */
+    jiraCommentVisibilityRole: string;
   };
 }
 
@@ -197,6 +199,10 @@ export const config: Config = {
       .split(',')
       .map(p => p.trim())
       .filter(p => p.length > 0),
+    jiraCommentVisibilityRole: getEnvVar(
+      'JIRA_COMMENT_VISIBILITY_ROLE',
+      'Developers'
+    ),
   },
 };
 

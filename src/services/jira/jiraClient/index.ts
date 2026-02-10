@@ -1,7 +1,11 @@
 import { Version2Client } from 'jira.js';
 import { config } from '@/config';
 import logger from '@/utils/logger';
-import { DEFAULT_ISSUE_FIELDS, MAX_SEARCH_RESULTS } from '../constants';
+import {
+  DEFAULT_COMMENT_VISIBILITY_ROLE,
+  DEFAULT_ISSUE_FIELDS,
+  MAX_SEARCH_RESULTS,
+} from '../constants';
 import { JiraIssue, JiraIssueFields } from '../types';
 
 /**
@@ -69,17 +73,30 @@ class JiraClient {
   };
 
   /**
-   * Add a comment to an issue
+   * Add a comment to an issue.
+   * Comments default to private visibility (restricted to a Jira project role)
+   * to prevent unintended exposure of internal information on public projects.
+   * The role is configurable via the JIRA_COMMENT_VISIBILITY_ROLE env var.
    * @param issueKey - The Jira issue key
    * @param commentText - The comment text to add
    */
   addComment = async (issueKey: string, commentText: string): Promise<void> => {
+    const visibilityRole =
+      config.sageBot.jiraCommentVisibilityRole ||
+      DEFAULT_COMMENT_VISIBILITY_ROLE;
+
     await this.client.issueComments.addComment({
       issueIdOrKey: issueKey,
       comment: commentText,
+      visibility: {
+        type: 'role',
+        value: visibilityRole,
+      },
     });
 
-    logger.info(`Added comment to issue ${issueKey}`);
+    logger.info(
+      `Added comment to issue ${issueKey} (visibility: role=${visibilityRole})`
+    );
   };
 
   /**

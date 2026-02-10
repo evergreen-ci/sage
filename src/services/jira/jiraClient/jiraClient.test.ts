@@ -95,7 +95,7 @@ describe('jiraClient', () => {
   });
 
   describe('addComment', () => {
-    it('adds comment to issue using correct API call', async () => {
+    it('adds comment to issue with private visibility by default', async () => {
       mockAddComment.mockResolvedValueOnce(undefined);
 
       await jiraClient.addComment('PROJ-123', 'This is a test comment');
@@ -103,6 +103,10 @@ describe('jiraClient', () => {
       expect(mockAddComment).toHaveBeenCalledWith({
         issueIdOrKey: 'PROJ-123',
         comment: 'This is a test comment',
+        visibility: {
+          type: 'role',
+          value: 'Developers',
+        },
       });
     });
   });
