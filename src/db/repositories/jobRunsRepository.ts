@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { JOB_RUNS_COLLECTION_NAME } from '@/db/repositories/constants';
 import { getCollection } from '@/db/repositories/helpers';
-import { JobRun, JobRunStatus, CreateJobRunInput } from '@/db/types';
+import { JobRun, JobRunStatus, PrStatus, CreateJobRunInput } from '@/db/types';
 import logger from '@/utils/logger';
 
 /**
@@ -161,7 +161,7 @@ export const findCompletedJobRunsWithOpenPRs = async (): Promise<JobRun[]> => {
   return collection
     .find({
       status: JobRunStatus.Completed,
-      'pr.status': 'open',
+      'pr.status': PrStatus.Open,
       'pr.url': { $exists: true, $ne: null },
     })
     .sort({ completedAt: 1 })

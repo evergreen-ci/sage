@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { JobRun, JobRunStatus } from '@/db/types';
+import { JobRun, JobRunStatus, PrStatus } from '@/db/types';
 import { JiraClient } from '@/services/jira/jiraClient';
 import { PrMergeStatusPollingService } from '.';
 
@@ -59,7 +59,7 @@ describe('PrMergeStatusPollingService', () => {
       url: 'https://github.com/org/repo/pull/123',
       number: 123,
       repository: 'org/repo',
-      status: 'open',
+      status: PrStatus.Open,
     },
     ...overrides,
   });
@@ -230,9 +230,8 @@ describe('PrMergeStatusPollingService', () => {
           url: 'https://github.com/org/repo/pull/123',
           number: 123,
           repository: 'org/repo',
-          status: 'merged',
-          mergedAt: expect.any(Date),
-          closedAt: undefined,
+          status: 'MERGED',
+          lastUpdate: expect.any(Date),
         },
       });
     });
@@ -274,9 +273,8 @@ describe('PrMergeStatusPollingService', () => {
           url: 'https://github.com/org/repo/pull/123',
           number: 123,
           repository: 'org/repo',
-          status: 'closed',
-          mergedAt: undefined,
-          closedAt: expect.any(Date),
+          status: 'DECLINED',
+          lastUpdate: expect.any(Date),
         },
       });
     });
@@ -289,7 +287,7 @@ describe('PrMergeStatusPollingService', () => {
           url: 'https://github.com/org/repo/pull/456',
           number: 456,
           repository: 'org/repo',
-          status: 'open',
+          status: PrStatus.Open,
         },
       });
 

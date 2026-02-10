@@ -184,7 +184,7 @@ describe('CursorAgentStatusPollingService', () => {
           url: 'https://github.com/org/repo/pull/123',
           number: 123,
           repository: 'org/repo',
-          status: 'open',
+          status: 'OPEN',
         },
       });
     });
@@ -221,7 +221,7 @@ describe('CursorAgentStatusPollingService', () => {
           url: 'https://github.com/org/repo/pull/456',
           number: 456,
           repository: 'org/repo',
-          status: 'open',
+          status: 'OPEN',
         },
       });
       expect(mockUpdateJobRun).toHaveBeenCalledWith(errorJob._id, {

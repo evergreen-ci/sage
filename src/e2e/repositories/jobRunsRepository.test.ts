@@ -8,7 +8,7 @@ import {
   findRunningJobRuns,
   updateJobRun,
 } from '@/db/repositories/jobRunsRepository';
-import { JobRunStatus } from '@/db/types';
+import { JobRunStatus, PrStatus } from '@/db/types';
 import {
   cleanupTestJobRuns,
   createTestJobRunInput,
@@ -181,7 +181,7 @@ describe('jobRunsRepository', () => {
           url: 'https://github.com/org/repo/pull/1',
           number: 1,
           repository: 'org/repo',
-          status: 'open',
+          status: PrStatus.Open,
         },
       });
 
@@ -192,7 +192,7 @@ describe('jobRunsRepository', () => {
           url: 'https://github.com/org/repo/pull/2',
           number: 2,
           repository: 'org/repo',
-          status: 'merged',
+          status: PrStatus.Merged,
         },
       });
 
@@ -208,7 +208,7 @@ describe('jobRunsRepository', () => {
           url: 'https://github.com/org/repo/pull/4',
           number: 4,
           repository: 'org/repo',
-          status: 'open',
+          status: PrStatus.Open,
         },
       });
 
@@ -220,7 +220,7 @@ describe('jobRunsRepository', () => {
       expect(testJobs).toHaveLength(1);
       expect(testJobs[0]._id!.toString()).toBe(job1._id!.toString());
       expect(testJobs[0].pr?.url).toBe('https://github.com/org/repo/pull/1');
-      expect(testJobs[0].pr?.status).toBe('open');
+      expect(testJobs[0].pr?.status).toBe(PrStatus.Open);
     });
 
     it('should return empty array when no matching jobs found', async () => {

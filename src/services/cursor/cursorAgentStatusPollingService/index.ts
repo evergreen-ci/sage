@@ -3,7 +3,7 @@ import {
   findRunningJobRuns,
   updateJobRun,
 } from '@/db/repositories/jobRunsRepository';
-import { JobRun, JobRunStatus } from '@/db/types';
+import { JobRun, JobRunStatus, PrStatus } from '@/db/types';
 import { getAgentStatus, CursorAgentStatus } from '@/services/cursor';
 import {
   JiraClient,
@@ -255,7 +255,7 @@ export class CursorAgentStatusPollingService {
                   url: details.prUrl,
                   number: prInfo.prNumber,
                   repository: prInfo.repository,
-                  status: 'open',
+                  status: PrStatus.Open,
                 }
               : undefined,
         });

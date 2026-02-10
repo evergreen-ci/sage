@@ -24,6 +24,15 @@ export enum JobRunStatus {
 export const jobRunStatusSchema = z.enum(JobRunStatus);
 
 /**
+ * PR status values from Jira Dev Status API
+ */
+export enum PrStatus {
+  Open = 'OPEN',
+  Merged = 'MERGED',
+  Declined = 'DECLINED',
+}
+
+/**
  * Zod schema for JobRun documents stored in MongoDB
  */
 export const jobRunSchema = z.object({
@@ -59,12 +68,10 @@ export const jobRunSchema = z.object({
       number: z.number(),
       /** Repository in owner/repo format */
       repository: z.string(),
-      /** PR status: open, merged, or closed */
-      status: z.enum(['open', 'merged', 'closed']),
-      /** Timestamp when the PR was merged */
-      mergedAt: z.date().optional(),
-      /** Timestamp when the PR was closed (without merging) */
-      closedAt: z.date().optional(),
+      /** PR status from Jira Dev Status API */
+      status: z.enum(PrStatus),
+      /** Last update timestamp from Jira Dev Status API (indicates when PR was merged/declined if not OPEN) */
+      lastUpdate: z.date().optional(),
     })
     .optional(),
 });

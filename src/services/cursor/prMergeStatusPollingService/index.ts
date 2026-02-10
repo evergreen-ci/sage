@@ -3,7 +3,7 @@ import {
   findCompletedJobRunsWithOpenPRs,
   updateJobRun,
 } from '@/db/repositories/jobRunsRepository';
-import { JobRun } from '@/db/types';
+import { JobRun, PrStatus } from '@/db/types';
 import {
   JiraClient,
   jiraClient as defaultJiraClient,
@@ -108,7 +108,7 @@ export class PrMergeStatusPollingService {
       }
 
       // Check if PR status has changed
-      if (matchingPr.status === 'OPEN') {
+      if (matchingPr.status === PrStatus.Open) {
         // Still open, no update needed
         logger.debug(`PR still open for job ${jobId}`, {
           jobId,
@@ -124,20 +124,12 @@ export class PrMergeStatusPollingService {
         };
       }
 
-      // PR status has changed - update job run
-      const now = new Date();
-      const statusMap: Record<string, 'merged' | 'closed' | 'open'> = {
-        MERGED: 'merged',
-        DECLINED: 'closed',
-      };
-      const newStatus = statusMap[matchingPr.status] ?? 'open';
-
+      // PR status has changed - update job run with status and lastUpdate from Jira
       await updateJobRun(job._id!, {
         pr: {
           ...job.pr,
-          status: newStatus,
-          mergedAt: matchingPr.status === 'MERGED' ? now : job.pr.mergedAt,
-          closedAt: matchingPr.status === 'DECLINED' ? now : job.pr.closedAt,
+          status: matchingPr.status as PrStatus.Merged | PrStatus.Declined,
+          lastUpdate: new Date(matchingPr.lastUpdate),
         },
       });
 
@@ -145,7 +137,7 @@ export class PrMergeStatusPollingService {
         jobId,
         ticketKey,
         prUrl: job.pr.url,
-        newStatus,
+        status: matchingPr.status,
       });
 
       return { jobId, ticketKey, success: true };
