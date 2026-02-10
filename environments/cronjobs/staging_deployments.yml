@@ -3,7 +3,8 @@
 
 cronJobs:
   - name: sage-bot-jira-polling-job
-    schedule: '* * * * *' # Run every minute
+    schedule: '* * * * *' # Original schedule (every minute) - disabled via suspend: true
+    suspend: true # Disable automatic execution - set to false to re-enable
     concurrencyPolicy: Forbid
     command: ['yarn', 'poll-jira:staging']
     resources:
@@ -21,7 +22,8 @@ cronJobs:
       JIRA_BASE_URL: https://jira-staging.corp.mongodb.com
 
   - name: cursor-agent-status-polling-job
-    schedule: '* * * * *' # Run every minute
+    schedule: '* * * * *' # Original schedule (every minute) - disabled via suspend: true
+    suspend: true # Disable automatic execution - set to false to re-enable
     concurrencyPolicy: Forbid
     command: ['yarn', 'poll-cursor-status:staging']
     resources:
