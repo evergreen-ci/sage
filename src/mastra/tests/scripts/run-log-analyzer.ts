@@ -12,39 +12,46 @@ import { analyzeWorkflowSteps } from './analyze-workflow-steps';
 // yarn run-analyzer --batch <directory>
 // yarn run-analyzer --context "specific analysis instructions" <file-path>
 // yarn run-analyzer --batch <directory> --context "what to look for"
+// yarn run-analyzer --compare <file-path>  (runs both core and prefilter workflows in parallel)
 
 // Configuration for report output
 const REPORTS_DIR = 'tmp/reports';
 const REPORT_PREFIX = 'report';
 
+const WORKFLOW_CORE = 'logCoreAnalyzerWorkflow';
+const WORKFLOW_PREFILTER = 'logPrefilterAnalyzerWorkflow';
+
 /**
- * Runs the log analyzer workflow on a single file
+ * Runs a log analyzer workflow on a single file
  * @param filePath - Path to the file to analyze
  * @param index - Current file index (for progress display)
  * @param total - Total number of files being processed
  * @param analysisContext - Optional context for analysis
+ * @param workflowName - Which workflow to run (defaults to core analyzer)
  * @returns Test result object with analysis details
  */
 const runTest = async (
   filePath: string,
   index: number,
   total: number,
-  analysisContext?: string
+  analysisContext?: string,
+  workflowName: string = WORKFLOW_CORE
 ) => {
   const absolutePath = path.resolve(filePath);
   const stats = fs.statSync(absolutePath);
   const fileSize = stats.size;
   const fileName = path.basename(absolutePath);
+  const label = workflowName === WORKFLOW_PREFILTER ? '[prefilter]' : '[core]';
 
   // Show file info at start
-  console.log(`\n[${index}/${total}] Processing: ${fileName}`);
-  console.log(`      Path: ${absolutePath}`);
-  console.log(`      Size: ${formatFileSize(fileSize)}`);
-  process.stdout.write(`      Status: Analyzing...`);
+  console.log(`\n${label} [${index}/${total}] Processing: ${fileName}`);
+  console.log(`${label}       Path: ${absolutePath}`);
+  console.log(`${label}       Size: ${formatFileSize(fileSize)}`);
+  process.stdout.write(`${label}       Status: Analyzing...`);
 
   const startTime = Date.now();
 
-  const run = await mastra.getWorkflow('logCoreAnalyzerWorkflow').createRun();
+  const run = await mastra.getWorkflow(workflowName).createRun();
 
   const result = await run.start({
     inputData: {
@@ -75,7 +82,9 @@ const runTest = async (
       .toISOString()
       .replace(/[:.]/g, '-')
       .slice(0, -5);
-    const filename = `${REPORT_PREFIX}-${timestamp}.md`;
+    const workflowTag =
+      workflowName === WORKFLOW_PREFILTER ? 'prefilter' : 'core';
+    const filename = `${REPORT_PREFIX}-${workflowTag}-${timestamp}.md`;
     reportPath = path.join(reportsDir, filename);
 
     // Save markdown file
@@ -84,18 +93,18 @@ const runTest = async (
 
   // Update status line with result
   process.stdout.write(
-    `\r      Status: ${result.status === 'success' ? '✅ Complete' : '❌ Failed'} (${(duration / 1000).toFixed(1)}s)\n`
+    `\r${label}       Status: ${result.status === 'success' ? '✅ Complete' : '❌ Failed'} (${(duration / 1000).toFixed(1)}s)\n`
   );
 
   // Show concise summary (first line only)
   if (successResult?.summary) {
     const firstLine = successResult.summary.split('\n')[0].trim();
-    console.log(`      Summary: ${firstLine}`);
+    console.log(`${label}       Summary: ${firstLine}`);
   }
 
   // Show report path if saved
   if (reportPath) {
-    console.log(`      Report: ${reportPath}`);
+    console.log(`${label}       Report: ${reportPath}`);
   }
 
   return {
@@ -109,6 +118,7 @@ const runTest = async (
     steps: result.steps,
     stepAnalysis,
     analysisContext,
+    workflowName,
   };
 };
 
@@ -125,9 +135,6 @@ const formatFileSize = (bytes: number): string => {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)}GB`;
 };
 
-/**
- *
- */
 const main = async () => {
   const args = process.argv.slice(2);
 
@@ -140,20 +147,29 @@ const main = async () => {
     console.error(
       '   or: yarn run-analyzer --batch <directory> --context "what to look for"'
     );
+    console.error(
+      '   or: yarn run-analyzer --compare <file-path>  (A/B test core vs prefilter)'
+    );
     process.exit(1);
   }
 
   const results = [];
   const startTime = Date.now();
 
-  // Parse arguments for context flag
+  // Parse arguments for flags
   let analysisContext: string | undefined;
+  let compareMode = false;
   const filteredArgs = [...args];
+
+  const compareIndex = filteredArgs.indexOf('--compare');
+  if (compareIndex !== -1) {
+    compareMode = true;
+    filteredArgs.splice(compareIndex, 1);
+  }
 
   const contextIndex = filteredArgs.indexOf('--context');
   if (contextIndex !== -1 && contextIndex < filteredArgs.length - 1) {
     analysisContext = filteredArgs[contextIndex + 1];
-    // Remove --context and its value from args
     filteredArgs.splice(contextIndex, 2);
     console.log(`📝 Using analysis context: "${analysisContext}"\n`);
   }
@@ -168,7 +184,7 @@ const main = async () => {
         .readdirSync(dir)
         .filter(f => {
           const fullPath = path.join(dir, f);
-          return fs.statSync(fullPath).isFile(); // Accept all files, not just specific extensions
+          return fs.statSync(fullPath).isFile();
         })
         .map(f => path.join(dir, f));
       filesToProcess = files;
@@ -178,24 +194,56 @@ const main = async () => {
       filesToProcess = filteredArgs;
     }
 
-    console.log(
-      `\n🔬 Analyzing ${filesToProcess.length} file${filesToProcess.length > 1 ? 's' : ''}\n`
-    );
+    if (compareMode) {
+      console.log(
+        `\n🔬 A/B COMPARE: Running both core and prefilter analyzers on ${filesToProcess.length} file${filesToProcess.length > 1 ? 's' : ''}\n`
+      );
+    } else {
+      console.log(
+        `\n🔬 Analyzing ${filesToProcess.length} file${filesToProcess.length > 1 ? 's' : ''}\n`
+      );
+    }
     console.log('─'.repeat(60));
 
     let i = 0;
     for (const filePath of filesToProcess) {
       i += 1;
-      // Sequential processing is intentional to avoid overwhelming the system
-      // and to display accurate progress information
-      // eslint-disable-next-line no-await-in-loop
-      const result = await runTest(
-        filePath,
-        i,
-        filesToProcess.length,
-        analysisContext
-      );
-      results.push(result);
+
+      if (compareMode) {
+        // Run both workflows in parallel on the same file
+        console.log(
+          `\n--- File ${i}/${filesToProcess.length}: ${path.basename(filePath)} ---`
+        );
+        // eslint-disable-next-line no-await-in-loop
+        const [coreResult, prefilterResult] = await Promise.all([
+          runTest(
+            filePath,
+            i,
+            filesToProcess.length,
+            analysisContext,
+            WORKFLOW_CORE
+          ),
+          runTest(
+            filePath,
+            i,
+            filesToProcess.length,
+            analysisContext,
+            WORKFLOW_PREFILTER
+          ),
+        ]);
+        results.push(coreResult, prefilterResult);
+      } else {
+        // Sequential processing is intentional to avoid overwhelming the system
+        // and to display accurate progress information
+        // eslint-disable-next-line no-await-in-loop
+        const result = await runTest(
+          filePath,
+          i,
+          filesToProcess.length,
+          analysisContext
+        );
+        results.push(result);
+      }
     }
 
     // Print summary
@@ -293,6 +341,59 @@ const main = async () => {
       }
     }
 
+    // Compare mode summary
+    if (compareMode) {
+      const coreResults = results.filter(r => r.workflowName === WORKFLOW_CORE);
+      const prefilterResults = results.filter(
+        r => r.workflowName === WORKFLOW_PREFILTER
+      );
+
+      console.log(`\n${'═'.repeat(60)}`);
+      console.log('⚖️  A/B COMPARISON');
+      console.log('─'.repeat(60));
+
+      const coreSuccesses = coreResults.filter(
+        r => r.status === 'success'
+      ).length;
+      const prefilterSuccesses = prefilterResults.filter(
+        r => r.status === 'success'
+      ).length;
+      const coreTotalTime = coreResults.reduce((s, r) => s + r.duration, 0);
+      const prefilterTotalTime = prefilterResults.reduce(
+        (s, r) => s + r.duration,
+        0
+      );
+
+      console.log(`\n   Core Analyzer:`);
+      console.log(`     Success: ${coreSuccesses}/${coreResults.length}`);
+      console.log(`     Total time: ${(coreTotalTime / 1000).toFixed(1)}s`);
+      if (coreResults.length > 0) {
+        console.log(
+          `     Avg time: ${(coreTotalTime / coreResults.length / 1000).toFixed(1)}s`
+        );
+      }
+
+      console.log(`\n   Prefilter Analyzer:`);
+      console.log(
+        `     Success: ${prefilterSuccesses}/${prefilterResults.length}`
+      );
+      console.log(
+        `     Total time: ${(prefilterTotalTime / 1000).toFixed(1)}s`
+      );
+      if (prefilterResults.length > 0) {
+        console.log(
+          `     Avg time: ${(prefilterTotalTime / prefilterResults.length / 1000).toFixed(1)}s`
+        );
+      }
+
+      if (coreTotalTime > 0 && prefilterTotalTime > 0) {
+        const speedup = coreTotalTime / prefilterTotalTime;
+        const faster = speedup > 1 ? 'Prefilter' : 'Core';
+        const ratio = speedup > 1 ? speedup : 1 / speedup;
+        console.log(`\n   Winner: ${faster} was ${ratio.toFixed(2)}x faster`);
+      }
+    }
+
     // Save detailed results to JSON
     if (results.length > 0) {
       // Create tmp directory if it doesn't exist
@@ -334,8 +435,13 @@ const main = async () => {
     for (const r of results) {
       const statusIcon = r.status === 'success' ? '✅' : '❌';
       const statusText = r.status === 'success' ? 'Success' : 'Failed';
+      let workflowLabel = '';
+      if (compareMode) {
+        workflowLabel =
+          r.workflowName === WORKFLOW_PREFILTER ? ' [prefilter]' : ' [core]';
+      }
 
-      console.log(`\n  ${statusIcon} ${r.file}`);
+      console.log(`\n  ${statusIcon} ${r.file}${workflowLabel}`);
       console.log(`     Status: ${statusText}`);
       console.log(
         `     Size: ${formatFileSize(r.fileSize)} | Time: ${(r.duration / 1000).toFixed(1)}s`
