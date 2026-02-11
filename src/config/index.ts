@@ -96,8 +96,6 @@ export interface Config {
     jiraBaseUrl: string;
     /** JIRA_API_TOKEN */
     jiraApiToken: string;
-    /** SAGE_BOT_SUPPORTED_PROJECTS - comma-separated list of Jira project keys */
-    supportedProjects: string[];
   };
 }
 
@@ -193,10 +191,6 @@ export const config: Config = {
   sageBot: {
     jiraBaseUrl: getEnvVar('JIRA_BASE_URL', 'https://jira.mongodb.org'),
     jiraApiToken: getEnvVar('JIRA_API_TOKEN', ''),
-    supportedProjects: getEnvVar('SAGE_BOT_SUPPORTED_PROJECTS', '')
-      .split(',')
-      .map(p => p.trim())
-      .filter(p => p.length > 0),
   },
 };
 
@@ -225,7 +219,6 @@ export const validateConfig = (): string[] | undefined => {
     'EVERGREEN_API_USER',
     'EVERGREEN_API_KEY',
     'ENCRYPTION_KEY',
-    'SAGE_BOT_SUPPORTED_PROJECTS',
     'JIRA_BASE_URL',
     'JIRA_API_TOKEN',
   ];

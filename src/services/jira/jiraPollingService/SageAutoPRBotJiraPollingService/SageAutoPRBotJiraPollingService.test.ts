@@ -95,9 +95,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
         ticketsErrored: 0,
         results: [],
       });
-      expect(mockSearchIssues).toHaveBeenCalledWith(
-        'labels = "sage-bot" AND project IN ("DEVPROD", "CLOUDP", "AMP", "DOCSP")'
-      );
+      expect(mockSearchIssues).toHaveBeenCalledWith('labels = "sage-bot"');
     });
 
     it('processes tickets, creates job runs, and launches Cursor agents', async () => {
