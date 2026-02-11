@@ -10,14 +10,8 @@ Sage Bot uses the API key to make requests with the Cursor Agent on your behalf.
 
 - MongoDB VPN access (required for all API calls)
 - A Cursor account with API access
-- Access to a [supported Jira project](./index.md#supported-projects):
-  - DEVPROD
-  - CLOUDP
-  - AMP
-  - DOCSP
-  - Need another project? See [Adding Jira Projects](./adding-projects.md)
-- Github repository with Cursor's Github App installed
-  - Need to add a repository? See [Adding GitHub Repos](./adding-github-repos.md)
+- Access to a [supported Jira project](./index.md#supported-projects) (need another project? See [Adding Jira Projects](./adding-projects.md))
+- Github repository with Cursor's Github App installed (need to add a repository? See [Adding GitHub Repos](./adding-github-repos.md))
 
 ## Step 1: Generate a Cursor API Key
 
