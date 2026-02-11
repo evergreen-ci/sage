@@ -54,10 +54,12 @@ describe('CursorApiClient', () => {
 
   describe('launchAgent', () => {
     it('throws CursorApiClientError with status code, message, and error code on API failure', async () => {
+      // Actual API format: { error: string, code?: string }
       mockCreateAgent.mockResolvedValueOnce({
         data: null,
         error: {
-          error: { error: 'Insufficient permissions', code: 'FORBIDDEN' },
+          error: 'Insufficient permissions',
+          code: 'FORBIDDEN',
         },
         response: { status: 403 },
       });
@@ -76,6 +78,7 @@ describe('CursorApiClient', () => {
     });
 
     it('falls back to error.message when error.error is not present (backwards compatibility)', async () => {
+      // Spec format: { error: { message?: string, code?: string } }
       mockCreateAgent.mockResolvedValueOnce({
         data: null,
         error: {
@@ -173,10 +176,12 @@ describe('CursorApiClient', () => {
     });
 
     it('throws CursorApiClientError on API failure', async () => {
+      // Actual API format: { error: string, code?: string }
       mockGetAgent.mockResolvedValueOnce({
         data: null,
         error: {
-          error: { error: 'Agent not found', code: 'NOT_FOUND' },
+          error: 'Agent not found',
+          code: 'NOT_FOUND',
         },
         response: { status: 404 },
       });

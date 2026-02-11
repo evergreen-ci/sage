@@ -89,10 +89,6 @@ export type CreateAgentRequest = {
 export type Error = {
   error?: {
     /**
-     * Human-readable error message (actual API format)
-     */
-    error?: string;
-    /**
      * Human-readable error message
      */
     message?: string;
