@@ -6,15 +6,15 @@ This project uses [Husky](https://typicode.github.io/husky/) to manage Git hooks
 
 The pre-commit hook runs the following checks on staged files:
 
-1. **TypeScript Compilation Check** (`yarn tsc --noEmit`)
+1. **TypeScript Compilation Check** (`pnpm tsc --noEmit`)
    - Ensures all TypeScript code compiles without errors
    - Uses `--noEmit` flag to only check compilation without generating output files
 
-2. **ESLint Strict Check** (`yarn eslint:strict`)
+2. **ESLint Strict Check** (`pnpm eslint:strict`)
    - Runs ESLint with strict mode enabled (`STRICT=1`)
    - Enforces stricter linting rules that are treated as errors instead of warnings
 
-3. **Prettier Format Check** (`yarn format:check`)
+3. **Prettier Format Check** (`pnpm format:check`)
    - Ensures code is properly formatted according to Prettier rules
 
 ## How it works
@@ -30,13 +30,13 @@ You can manually run the same checks:
 
 ```bash
 # Run TypeScript compilation check
-yarn tsc --noEmit
+pnpm tsc --noEmit
 
 # Run ESLint strict check
-yarn eslint:strict
+pnpm eslint:strict
 
 # Run Prettier format check
-yarn format:check
+pnpm format:check
 
 # Run lint-staged manually (same as pre-commit hook)
 npx lint-staged
@@ -57,7 +57,7 @@ git commit --no-verify -m "Emergency commit message"
 When a new developer clones the repository, the pre-commit hooks will be automatically installed when they run:
 
 ```bash
-yarn install
+pnpm install
 ```
 
 This is because the `prepare` script in `package.json` runs `husky`, which sets up the Git hooks.
@@ -66,9 +66,9 @@ This is because the `prepare` script in `package.json` runs `husky`, which sets 
 
 If the pre-commit hook is failing:
 
-1. Run `yarn tsc --noEmit` to check for TypeScript errors
-2. Run `yarn eslint:strict` to check for linting errors
-3. Run `yarn format:check` to check for formatting issues
+1. Run `pnpm tsc --noEmit` to check for TypeScript errors
+2. Run `pnpm eslint:strict` to check for linting errors
+3. Run `pnpm format:check` to check for formatting issues
 4. Fix any issues found
 5. Try committing again
 

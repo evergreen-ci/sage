@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import z from 'zod';
+import { z } from 'zod';
 import { config } from '@/config';
 import { braintrustLogger } from '@/mastra';
 import { resolveRowIdByTraceId } from '@/utils/braintrust';

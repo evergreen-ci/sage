@@ -23,14 +23,22 @@ Sage Bot automatically generates pull requests from Jira tickets using Cursor's 
 
 ## Supported Projects
 
-Sage Bot currently monitors the following Jira projects:
+Sage Bot monitors all Jira projects where the Sage Bot service account has the required permissions (browse, edit, and comment). Currently supported projects:
 
-- DEVPROD
-- CLOUDP
 - AMP
+- BAAS
+- CLOUDP
+- CRMSUP
+- CSHARP
+- DEVPROD
 - DOCSP
+- MANAENG
+- MCP
+- MHOUSE
+- SLS
+- TUNE
 
-Want to add support for another project? See the [Adding Jira Projects guide](./adding-projects.md) for instructions.
+Need to add support for your project? See the [Adding Jira Projects guide](./adding-projects.md) for instructions.
 
 ## Compliance
 

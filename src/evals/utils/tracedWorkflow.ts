@@ -1,5 +1,5 @@
 import { RequestContext } from '@mastra/core/request-context';
-import z from 'zod';
+import { z } from 'zod';
 import { WorkflowEvalOutput } from '@/evals/types';
 import { mastra } from '@/mastra';
 
@@ -56,6 +56,9 @@ const createTracedWorkflow =
     }
     if (response.status === 'tripwire') {
       throw new Error(`Workflow run tripwire: ${response.tripwire}`);
+    }
+    if (response.status === 'paused') {
+      throw new Error(`Workflow run paused: ${JSON.stringify(response)}`);
     }
 
     // Transform response

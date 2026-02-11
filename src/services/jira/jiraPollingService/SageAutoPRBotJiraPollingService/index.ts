@@ -1,4 +1,3 @@
-import { config } from '@/config';
 import {
   createJobRun,
   findJobRunByTicketKey,
@@ -46,11 +45,7 @@ export const createSageAutoPRBotJiraPollingService = (
 ): BaseJiraPollingService =>
   new BaseJiraPollingService({
     jiraClient,
-    buildJqlQuery: () => {
-      const projects = config.sageBot.supportedProjects;
-      const projectList = projects.map(p => `"${p}"`).join(', ');
-      return `labels = "${SAGE_BOT_LABEL}" AND project IN (${projectList})`;
-    },
+    buildJqlQuery: () => `labels = "${SAGE_BOT_LABEL}"`,
     processTicket: async (
       issue: JiraIssue
     ): Promise<TicketProcessingResult> => {

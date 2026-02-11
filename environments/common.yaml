@@ -23,7 +23,6 @@ envSecrets:
   BRAINTRUST_API_KEY: parsley-ai-secrets
   HONEYCOMB_API_KEY: parsley-ai-secrets
   SENTRY_AUTH_TOKEN: parsley-ai-secrets
-  SAGE_BOT_SUPPORTED_PROJECTS: parsley-ai-secrets
   ENCRYPTION_KEY: parsley-ai-secrets
   JIRA_API_TOKEN: parsley-ai-secrets
 

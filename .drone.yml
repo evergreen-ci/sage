@@ -88,7 +88,7 @@ steps:
     image: public.ecr.aws/kanopy/drone-helm:v3
     settings:
       chart: mongodb/web-app
-      chart_version: 4.31.0
+      chart_version: 4.34.3
       add_repos: [mongodb=https://10gen.github.io/helm-charts]
       namespace: devprod-evergreen
       release: sage
@@ -129,7 +129,7 @@ steps:
     image: public.ecr.aws/kanopy/drone-helm:v3
     settings:
       chart: mongodb/web-app
-      chart_version: 4.31.0
+      chart_version: 4.34.3
       add_repos: [mongodb=https://10gen.github.io/helm-charts]
       namespace: devprod-evergreen
       release: sage

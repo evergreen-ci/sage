@@ -100,7 +100,7 @@ To auto-create a Jira ticket, have the PR title start with `DEVPROD-XXXXX:` (lit
 
 ### Prior to pushing code
 
-- Run `yarn format` and `yarn eslint:fix` to format the code
+- Run `pnpm format` and `pnpm eslint:fix` to format the code
 
 ## Table of Contents
 
@@ -215,12 +215,43 @@ export const myAgent: Agent = new Agent({
 });
 ```
 
+### Agent with RequestContext Schema Validation
+
+Agents can declare a `requestContextSchema` to validate the request context passed to them at runtime. This uses a Zod schema and enables typed access to context values in the `instructions` function.
+
+See [sageThinkingAgent.ts:27](src/mastra/agents/planning/sageThinkingAgent.ts#L27):
+
+```typescript
+import { Agent } from '@mastra/core/agent';
+import { z } from 'zod';
+import { ParsleyRequestContextSchema } from '@/mastra/memory/parsley/requestContext';
+
+export const myAgent: Agent = new Agent({
+  name: 'myAgent',
+  description: 'Agent with validated request context',
+  requestContextSchema: ParsleyRequestContextSchema,
+  instructions: ({ requestContext }) => `
+    You are an assistant.
+
+    <CONTEXT>
+    ${JSON.stringify(requestContext.toJSON(), null, 2)}
+    </CONTEXT>
+  `,
+  model: gpt41,
+});
+```
+
+The `requestContextSchema` property accepts a Zod schema that defines the shape of the expected request context. When set, Mastra validates the context before passing it to the agent and provides typed access in the `instructions` callback.
+
 ### Registering Agents
 
 Add your agent to [src/mastra/index.ts:58-63](src/mastra/index.ts#L58-L63):
 
 ```typescript
+import { memoryStore } from './utils/memory';
+
 export const mastra: Mastra = new Mastra({
+  storage: memoryStore,
   agents: {
     sageThinkingAgent,
     evergreenAgent,
@@ -231,7 +262,7 @@ export const mastra: Mastra = new Mastra({
 });
 ```
 
-**Important**: The field name you use here (e.g., `sageThinkingAgent`, `myAgent`) is what you'll use to reference the agent throughout your codebase with `mastra.getAgent('sageThinkingAgent')`. This is the agent's registration name, not the `id` property defined in the Agent constructor.
+**Important**: The `storage` property provides the persistence backend used by Mastra for memory and workflow state. The field name you use here (e.g., `sageThinkingAgent`, `myAgent`) is what you'll use to reference the agent throughout your codebase with `mastra.getAgent('sageThinkingAgent')`. This is the agent's registration name, not the `id` property defined in the Agent constructor.
 
 ---
 
@@ -242,7 +273,7 @@ Tools are reusable functions that agents can call to perform specific actions.
 ### Basic Tool Structure
 
 ```typescript
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
 const myToolInputSchema = z.object({
@@ -341,6 +372,17 @@ export const askMyAgentTool = createToolFromAgent(
 This allows one agent to invoke another agent as a tool.
 
 **Important**: When referencing agents by name (e.g., in `createToolFromAgent` or `mastra.getAgent()`), use the **field name** from the mastra config, not the agent's `id` field. For example, use `'sageThinkingAgent'` as shown in [src/mastra/index.ts:59](src/mastra/index.ts#L59), not `'sage-thinking-agent'`.
+
+### Calling Tool Execute Directly
+
+When calling a tool's `execute` method directly from another tool or workflow step, the `execute` property may be `undefined` in the type system. Always guard against this:
+
+```typescript
+if (!getTaskTool.execute) {
+  throw new Error('getTaskTool.execute is not defined');
+}
+const taskResult = await getTaskTool.execute(inputData, context);
+```
 
 ---
 
@@ -519,6 +561,7 @@ See [chat.ts:31-218](src/api-server/routes/completions/parsley/chat.ts#L31-L218)
 
 ```typescript
 import { toAISdkFormat } from '@mastra/ai-sdk';
+import { RequestContext } from '@mastra/core/request-context';
 import { pipeUIMessageStreamToResponse, validateUIMessages } from 'ai';
 import { Request, Response } from 'express';
 import { trace } from '@opentelemetry/api';
@@ -541,7 +584,12 @@ const myRoute = async (req: Request, res: Response) => {
   const spanContext = currentSpan?.spanContext();
 
   const requestContext = createParsleyRequestContext();
-  requestContext.set(USER_ID, res.locals.userId);
+  requestContext.set(USER_ID, res.locals.userId!);
+  // Mastra APIs (run.start, getMemory) expect RequestContext<unknown>, but our typed context
+  // isn't directly assignable due to generic variance. This cast is safe since RequestContext
+  // is structurally compatible at runtime.
+  const untypedRequestContext =
+    requestContext as unknown as RequestContext<unknown>;
 
   const { data, error, success } = inputSchema.safeParse(req.body);
   if (!success) {
@@ -553,7 +601,9 @@ const myRoute = async (req: Request, res: Response) => {
   if (data.metadata) {
     requestContext.set('metadata', data.metadata);
 
-    const workflow = mastra.getWorkflowById('my-preprocessing-workflow');
+    const workflow = mastra.getWorkflowById<'my-preprocessing-workflow'>(
+      'my-preprocessing-workflow'
+    );
     const run = await workflow.createRun({});
     const runResult = await run.start({
       inputData: { metadata: data.metadata },
@@ -569,7 +619,7 @@ const myRoute = async (req: Request, res: Response) => {
           requestId: res.locals.requestId,
         },
       },
-      requestContext,
+      requestContext: untypedRequestContext,
     });
 
     if (runResult.status === 'success') {
@@ -578,7 +628,9 @@ const myRoute = async (req: Request, res: Response) => {
   }
 
   const agent = mastra.getAgent('myAgent');
-  const memory = await agent.getMemory({ requestContext });
+  const memory = await agent.getMemory({
+    requestContext: untypedRequestContext,
+  });
 
   let memoryOptions = {
     thread: { id: 'undefined' },
@@ -659,7 +711,7 @@ const myWorkflowRoute = async (req: Request, res: Response) => {
   }
 
   try {
-    const workflow = mastra.getWorkflowById('my-workflow');
+    const workflow = mastra.getWorkflowById<'my-workflow'>('my-workflow');
     const run = await workflow.createRun({});
 
     const runResult = await run.start({
@@ -716,15 +768,18 @@ type MyType = z.infer<typeof mySchema>;
 RequestContext is used to pass metadata between components:
 
 ```typescript
-import { RequestContext } from '@mastra/core/runtime-context';
+import { RequestContext } from '@mastra/core/request-context';
+import { z } from 'zod';
 import { USER_ID } from '@/mastra/agents/constants';
 
-type TypeForRequestContext = {
-  [USER_ID]?: string;
-  customKey?: string;
-};
+const MyRequestContextSchema = z.object({
+  [USER_ID]: z.string(),
+  customKey: z.string().optional(),
+});
 
-const requestContext = new RequestContext<TypeForRequestContext>();
+const requestContext = new RequestContext<
+  z.infer<typeof MyRequestContextSchema>
+>();
 requestContext.set(USER_ID, userId);
 requestContext.set('customKey', customValue);
 
@@ -794,6 +849,23 @@ if (!thread) {
 }
 ```
 
+**Note**: The `memoryStore` export automatically uses `InMemoryStore` when `BRAINTRUST_EVAL=true` (during eval runs) and `MongoDBStore` otherwise. This ensures evals don't depend on or pollute the production database:
+
+```typescript
+import { InMemoryStore } from '@mastra/core/storage';
+import { MongoDBStore } from '@mastra/mongodb';
+
+const isEval = process.env.BRAINTRUST_EVAL === 'true';
+
+export const memoryStore = isEval
+  ? new InMemoryStore({ id: 'memoryStore' })
+  : new MongoDBStore({
+      id: 'memoryStore',
+      dbName: config.db.dbName,
+      url: config.db.mongodbUri,
+    });
+```
+
 ### 5. Composition Patterns
 
 **Agents can use:**
@@ -825,10 +897,13 @@ import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 
 // Tools
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 
 // Workflows
 import { createWorkflow, createStep } from '@mastra/core/workflows';
+
+// RequestContext
+import { RequestContext } from '@mastra/core/request-context';
 
 // Schemas
 import { z } from 'zod';
@@ -1122,16 +1197,16 @@ Run evals using the provided scripts:
 
 ```bash
 # Run specific eval by folder path
-yarn eval src/evals/questionClassifierAgent
+pnpm eval src/evals/questionClassifierAgent
 
 # Run log analyzer workflow eval
-yarn eval src/evals/logAnalyzerWorkflow
+pnpm eval src/evals/logAnalyzerWorkflow
 
 # Run sage thinking agent eval
-yarn eval src/evals/sageThinkingAgent
+pnpm eval src/evals/sageThinkingAgent
 
 # Run evergreen agent eval
-yarn eval src/evals/evergreenAgent
+pnpm eval src/evals/evergreenAgent
 ```
 
 The eval command takes the path to the eval folder and will run all `*.eval.ts` files within that directory.
@@ -1156,7 +1231,7 @@ task: tracedAgentEval<TestInput, TestResult>({
 });
 ```
 
-**tracedWorkflowEval**: Wraps workflow execution with tracing
+**tracedWorkflowEval**: Wraps workflow execution with tracing. Handles `success`, `failed`, `tripwire`, and `paused` workflow statuses.
 
 ```typescript
 import { tracedWorkflowEval } from '@/evals/utils/tracedWorkflow';

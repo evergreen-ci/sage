@@ -1,6 +1,6 @@
 import { trace } from '@opentelemetry/api';
 import { Request, Response } from 'express';
-import z from 'zod';
+import { z } from 'zod';
 import { mastra } from '@/mastra';
 import { SLACK_THREAD_SUMMARIZER_AGENT_NAME } from '@/mastra/agents/constants';
 import {

@@ -9,9 +9,9 @@ import { createParsleyRequestContext } from '@/mastra/memory/parsley/requestCont
  * Test script for the sageThinkingAgent - THIS MATCHES STAGING BEHAVIOR
  *
  * Usage:
- * yarn test-thinking-agent --interactive                          # Interactive chat mode
- * yarn test-thinking-agent --question "What failed?"              # Single question
- * yarn test-thinking-agent --task "task_id" --question "Status?"  # With task context
+ * pnpm test-thinking-agent --interactive                          # Interactive chat mode
+ * pnpm test-thinking-agent --question "What failed?"              # Single question
+ * pnpm test-thinking-agent --task "task_id" --question "Status?"  # With task context
  */
 const testThinkingAgent = async () => {
   const args = process.argv.slice(2);
@@ -36,11 +36,6 @@ const testThinkingAgent = async () => {
     logMetadata.execution = parseInt(args[executionIndex + 1]!, 10);
   }
 
-  const buildIndex = args.indexOf('--build');
-  if (buildIndex !== -1 && args[buildIndex + 1]) {
-    logMetadata.build_id = args[buildIndex + 1];
-  }
-
   const versionIndex = args.indexOf('--version');
   if (versionIndex !== -1 && args[versionIndex + 1]) {
     logMetadata.version_id = args[versionIndex + 1];
@@ -62,7 +57,7 @@ const testThinkingAgent = async () => {
     const agent = mastra.getAgent('sageThinkingAgent');
 
     // Create a new conversation thread
-    const memory = await agent.getMemory({ requestContext });
+    const memory = await agent.getMemory();
     const thread = await memory?.createThread({
       metadata: requestContext.toJSON(),
       resourceId: 'test_local',
