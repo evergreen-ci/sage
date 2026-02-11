@@ -6,7 +6,7 @@ REPO_NAME="sage"
 NAMESPACE="devprod-evergreen"
 RELEASE_NAME="sage"
 HELM_CHART="mongodb/web-app"
-CHART_VERSION="4.31.0"
+CHART_VERSION="4.34.3"
 K8S_API_SERVER="https://api.staging.corp.mongodb.com"
 STAGING_HOST="sage.devprod-evergreen.staging.corp.mongodb.com"
 GIT_SHA=$(git rev-parse --short=7 HEAD)
