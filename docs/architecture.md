@@ -4,103 +4,125 @@ Sage is an AI agent orchestrator built on the [Mastra framework](https://mastra.
 
 ## High-Level Architecture
 
-```
-                          ┌─────────────────────────────────────────────┐
-                          │              Client Applications            │
-                          │                                             │
-                          │  Parsley UI    Slack    Jira    Release     │
-                          │  (Log Viewer)          (sage-bot) Consumers │
-                          └──────┬──────────┬────────┬─────────┬───────┘
-                                 │          │        │         │
-                                 ▼          ▼        ▼         ▼
-┌────────────────────────────────────────────────────────────────────────────┐
-│                        Express.js API Server                               │
-│                                                                            │
-│  Middleware: requestId → userId → sentryContext → httpLogging → cors        │
-│                                                                            │
-│  ┌──────────────┐ ┌──────────────┐ ┌────────────┐ ┌────────────────────┐  │
-│  │   /completions│ │ /completions │ │/completions│ │ /completions       │  │
-│  │   /parsley/*  │ │ /memento/*   │ │ /lumber/*  │ │ /release-notes/*   │  │
-│  │   (SSE stream)│ │              │ │            │ │                    │  │
-│  └──────┬───────┘ └──────┬───────┘ └─────┬──────┘ └────────┬──────────┘  │
-│         │                │               │                  │             │
-│  ┌──────────────────┐  ┌────────────────────────────────────────────┐     │
-│  │ /pr-bot/user/*   │  │ /health    /login                         │     │
-│  │ (Cursor key CRUD)│  │                                            │     │
-│  └──────────────────┘  └────────────────────────────────────────────┘     │
-└────────────┬──────────────┬───────────────┬──────────────────┬────────────┘
-             │              │               │                  │
-             ▼              ▼               ▼                  ▼
-┌────────────────────────────────────────────────────────────────────────────┐
-│                          Mastra Framework                                  │
-│                                                                            │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                        Agents (Azure OpenAI GPT-4.1)                │   │
-│  │                                                                     │   │
-│  │  ┌─────────────────────┐   ┌──────────────────────────────────┐    │   │
-│  │  │  SageThinkingAgent  │──▶│  QuestionClassifierAgent         │    │   │
-│  │  │  (Parsley AI)       │   │  (EVERGREEN|LOG|COMBINATION|     │    │   │
-│  │  │  Main orchestrator  │   │   CAN_ANSWER_ON_OWN|IRRELEVANT)  │    │   │
-│  │  │                     │──▶│──────────────────────────────────│    │   │
-│  │  │                     │   │  EvergreenAgent                  │    │   │
-│  │  └─────────────────────┘   │  (GraphQL data fetching)         │    │   │
-│  │                             └──────────────────────────────────┘    │   │
-│  │  ┌─────────────────────┐   ┌──────────────────────────────────┐    │   │
-│  │  │  QuestionOwnership  │   │  SlackThreadSummarizerAgent      │    │   │
-│  │  │  Agent (Lumber)     │   │  (Memento)                       │    │   │
-│  │  └─────────────────────┘   └──────────────────────────────────┘    │   │
-│  │  ┌─────────────────────┐                                           │   │
-│  │  │  ReleaseNotesAgent  │                                           │   │
-│  │  └─────────────────────┘                                           │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                            │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                           Workflows                                 │   │
-│  │                                                                     │   │
-│  │  logCoreAnalyzerWorkflow     releaseNotesWorkflow                  │   │
-│  │  (load → chunk → analyze)    (plan → format → generate → validate) │   │
-│  │                                                                     │   │
-│  │  getLogFileUrlWorkflow                                              │   │
-│  │  (resolves log file URLs from task metadata)                        │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                            │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                            Tools                                    │   │
-│  │                                                                     │   │
-│  │  Evergreen GraphQL Tools:   Agent-as-Tool Wrappers:                │   │
-│  │    getTask                    askQuestionClassifierAgentTool        │   │
-│  │    getTaskFiles               askEvergreenAgentTool                 │   │
-│  │    getTaskTests                                                     │   │
-│  │    getTaskHistory           Workflow-as-Tool Wrappers:              │   │
-│  │    getTaskHistoryById         logCoreAnalyzerTool                   │   │
-│  │    getVersion                 resolveLogFileUrlTool                 │   │
-│  │    getVersionFromTask                                               │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                            │
-│  ┌────────────────────────┐                                                │
-│  │  Mastra Memory         │   Thread-scoped working memory per             │
-│  │  (@mastra/mongodb)     │   conversation, stored in MongoDB              │
-│  └────────────────────────┘                                                │
-└────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Clients["Client Applications"]
+        ParsleyUI["Parsley UI\n(Log Viewer)"]
+        Slack["Slack"]
+        JiraUI["Jira\n(sage-bot label)"]
+        RelConsumers["Release Notes\nConsumers"]
+        DevProdTeams["DevProd Teams"]
+    end
 
-┌────────────────────────────────────────────────────────────────────────────┐
-│                     Sage-Bot (Automated PR System)                          │
-│                                                                            │
-│  ┌────────────────────┐    ┌───────────────────────────┐                   │
-│  │ Jira Polling        │──▶│ SageAutoPRBot             │                   │
-│  │ Cronjob             │   │ JiraPollingService         │                   │
-│  │                     │   │                            │                   │
-│  │ Polls for tickets   │   │ 1. Check for duplicates    │                   │
-│  │ with "sage-bot"     │   │ 2. Find label initiator    │                   │
-│  │ label               │   │ 3. Remove label            │                   │
-│  └────────────────────┘   │ 4. Validate ticket          │                   │
-│                            │ 5. Launch Cursor agent      │──▶ Cursor Cloud  │
-│  ┌────────────────────┐   │ 6. Post results to Jira     │    API            │
-│  │ Cursor Status       │   └───────────────────────────┘                   │
-│  │ Polling Cronjob     │──▶ Monitors agent execution                       │
-│  │                     │   status and updates job runs                      │
-│  └────────────────────┘                                                    │
-└────────────────────────────────────────────────────────────────────────────┘
+    subgraph API["Express.js API Server"]
+        MW["Middleware\nrequestId → userId → sentryContext → httpLogging → cors"]
+        ParsleyRoute["/completions/parsley/*\n(SSE stream)"]
+        MementoRoute["/completions/memento/*"]
+        LumberRoute["/completions/lumber/*"]
+        ReleaseRoute["/completions/release-notes/*"]
+        UserRoute["/pr-bot/user/*\n(Cursor key CRUD)"]
+        HealthRoute["/health  /login"]
+    end
+
+    subgraph Mastra["Mastra Framework"]
+        subgraph Agents["Agents (Azure OpenAI GPT-4.1)"]
+            SageThinking["SageThinkingAgent\n(Parsley AI)\nMain Orchestrator"]
+            QClassifier["QuestionClassifierAgent"]
+            Evergreen["EvergreenAgent\n(GraphQL data fetching)"]
+            QOwnership["QuestionOwnershipAgent\n(Lumber)"]
+            SlackSum["SlackThreadSummarizerAgent\n(Memento)"]
+            RNAgent["ReleaseNotesAgent"]
+        end
+
+        subgraph Workflows["Workflows"]
+            LogWF["logCoreAnalyzerWorkflow\nload → chunk → analyze"]
+            RNWF["releaseNotesWorkflow\nplan → format → generate → validate"]
+            LogUrlWF["getLogFileUrlWorkflow"]
+        end
+
+        subgraph Tools["Tools"]
+            EGTools["Evergreen GraphQL Tools\ngetTask, getTaskFiles,\ngetTaskTests, getTaskHistory,\ngetVersion, getVersionFromTask"]
+            AgentAsTools["Agent-as-Tool Wrappers\naskQuestionClassifierAgentTool\naskEvergreenAgentTool"]
+            WFAsTools["Workflow-as-Tool Wrappers\nlogCoreAnalyzerTool\nresolveLogFileUrlTool"]
+        end
+
+        Memory["Mastra Memory\n(@mastra/mongodb)\nThread-scoped working memory"]
+    end
+
+    subgraph SageBot["Sage-Bot (Automated PR System)"]
+        JiraPoll["Jira Polling Cronjob"]
+        AutoPR["SageAutoPRBot\nJiraPollingService"]
+        CursorSvc["Cursor Agent Service"]
+        CursorPoll["Cursor Status\nPolling Cronjob"]
+    end
+
+    subgraph Observability["Observability Stack"]
+        Honeycomb["Honeycomb\nOpenTelemetry\ndistributed tracing"]
+        Braintrust["Braintrust\nLLM tracing, eval scoring,\ndynamic prompt mgmt"]
+        Sentry["Sentry\nError tracking,\ntransaction tracing"]
+        Winston["Winston Logger\nStructured JSON\nwith request IDs"]
+    end
+
+    subgraph External["External Services"]
+        AzureOAI["Azure OpenAI\nGPT-4.1 / GPT-4.1-nano"]
+        EvergreenAPI["Evergreen\nGraphQL API"]
+        JiraAPI["Jira REST API"]
+        CursorAPI["Cursor Cloud API"]
+        GitHub["GitHub"]
+        MongoDB[("MongoDB")]
+    end
+
+    %% Client → API
+    ParsleyUI --> ParsleyRoute
+    Slack --> MementoRoute
+    DevProdTeams --> LumberRoute
+    RelConsumers --> ReleaseRoute
+    JiraUI -.->|"label triggers poll"| JiraPoll
+
+    %% API → Agents/Workflows
+    ParsleyRoute --> SageThinking
+    MementoRoute --> SlackSum
+    LumberRoute --> QOwnership
+    ReleaseRoute --> RNWF
+    UserRoute --> MongoDB
+
+    %% SageThinkingAgent orchestration
+    SageThinking --> AgentAsTools
+    AgentAsTools --> QClassifier
+    AgentAsTools --> Evergreen
+    SageThinking --> WFAsTools
+    WFAsTools --> LogWF
+    WFAsTools --> LogUrlWF
+
+    %% Evergreen tools
+    Evergreen --> EGTools
+    EGTools --> EvergreenAPI
+
+    %% Release notes workflow
+    RNWF --> RNAgent
+
+    %% Sage-Bot flow
+    JiraPoll --> AutoPR
+    AutoPR --> JiraAPI
+    AutoPR --> CursorSvc
+    CursorSvc --> CursorAPI
+    CursorAPI --> GitHub
+    CursorPoll --> CursorSvc
+    AutoPR --> MongoDB
+
+    %% Memory
+    SageThinking --> Memory
+    Memory --> MongoDB
+
+    %% AI model
+    Agents --> AzureOAI
+
+    %% Observability (dashed)
+    Mastra -.-> Honeycomb
+    Mastra -.-> Braintrust
+    API -.-> Sentry
+    API -.-> Winston
+    QOwnership -.->|"loadPrompt()"| Braintrust
 ```
 
 ## API Products
@@ -121,27 +143,30 @@ The SageThinkingAgent is the central orchestrator for the Parsley AI chat experi
 
 ### Orchestration Flow
 
-```
-User Question (via Parsley UI)
-    │
-    ▼
-SageThinkingAgent
-    │
-    ├──▶ askQuestionClassifierAgentTool
-    │        │
-    │        ▼
-    │    QuestionClassifierAgent
-    │        │
-    │        ▼
-    │    Classification Result:
-    │      EVERGREEN ──────▶ askEvergreenAgentTool ──▶ EvergreenAgent ──▶ GraphQL API
-    │      LOG ────────────▶ logCoreAnalyzerTool ───▶ logCoreAnalyzerWorkflow
-    │      COMBINATION ────▶ Both of the above
-    │      CAN_ANSWER_ON_OWN ──▶ Direct answer (no tools)
-    │      IRRELEVANT ─────▶ Decline to answer
-    │
-    ▼
-Streamed Response (SSE)
+```mermaid
+flowchart TD
+    User["User Question\n(via Parsley UI)"] --> STA["SageThinkingAgent"]
+    STA --> Classify["askQuestionClassifierAgentTool"]
+    Classify --> QCA["QuestionClassifierAgent"]
+    QCA --> Decision{Classification Result}
+
+    Decision -->|EVERGREEN| EGPath["askEvergreenAgentTool"]
+    EGPath --> EGA["EvergreenAgent"]
+    EGA --> GraphQL["Evergreen GraphQL API"]
+
+    Decision -->|LOG| LogPath["logCoreAnalyzerTool"]
+    LogPath --> LogWF["logCoreAnalyzerWorkflow"]
+
+    Decision -->|COMBINATION| Both["Both Evergreen +\nLog Analysis"]
+
+    Decision -->|CAN_ANSWER_ON_OWN| Direct["Direct answer\n(no tools)"]
+
+    Decision -->|IRRELEVANT| Decline["Decline to answer"]
+
+    GraphQL --> Response["Streamed Response (SSE)"]
+    LogWF --> Response
+    Both --> Response
+    Direct --> Response
 ```
 
 ### Memory
@@ -154,35 +179,34 @@ Sage-Bot is an automated PR generation system that bridges Jira and Cursor Cloud
 
 ### Pipeline
 
-```
-Jira Ticket (labeled "sage-bot")
-    │
-    ▼
-Jira Polling Cronjob (scheduled)
-    │
-    ▼
-SageAutoPRBotJiraPollingService
-    ├── Check for active duplicate jobs
-    ├── Identify who added the label
-    ├── Remove the "sage-bot" label
-    ├── Create job run record in MongoDB
-    ├── Validate ticket:
-    │     - Has a repo label (e.g., "repo:mongodb/mongo")
-    │     - Has an assignee with a stored Cursor API key
-    │
-    ▼ (if valid)
-Cursor Agent Service
-    ├── Build prompt from ticket data (summary, description, key)
-    ├── Launch Cursor Cloud Agent via Cursor API
-    │     - Clones the target GitHub repository
-    │     - Implements the ticket autonomously
-    │     - Auto-creates a PR on GitHub
-    │
-    ▼
-Cursor Status Polling Cronjob (scheduled)
-    ├── Poll agent execution status
-    ├── Update job run record
-    └── Post completion/failure comments to Jira
+```mermaid
+flowchart TD
+    Ticket["Jira Ticket\n(labeled 'sage-bot')"] --> Poll["Jira Polling Cronjob\n(scheduled)"]
+    Poll --> Service["SageAutoPRBotJiraPollingService"]
+
+    Service --> Dup{"Active duplicate\njob exists?"}
+    Dup -->|Yes| Skip["Skip\n(remove label)"]
+    Dup -->|No| Process["Process Ticket"]
+
+    Process --> FindUser["Find who added label"]
+    FindUser --> RemoveLabel["Remove 'sage-bot' label"]
+    RemoveLabel --> CreateJob["Create job run record\nin MongoDB"]
+    CreateJob --> Validate{"Validate ticket"}
+
+    Validate -->|Invalid| PostError["Post validation errors\nto Jira"]
+    Validate -->|Valid| Launch["Cursor Agent Service"]
+
+    Launch --> BuildPrompt["Build prompt from\nticket data"]
+    BuildPrompt --> LaunchAgent["Launch Cursor Cloud Agent\nvia Cursor API"]
+    LaunchAgent --> CursorAgent["Cursor Remote Agent"]
+
+    CursorAgent --> Clone["Clone GitHub repo"]
+    Clone --> Implement["Implement ticket\nautonomously"]
+    Implement --> PR["Auto-create PR\non GitHub"]
+
+    StatusPoll["Cursor Status Polling\nCronjob (scheduled)"] --> CheckStatus["Poll agent status"]
+    CheckStatus --> UpdateJob["Update job run record"]
+    UpdateJob --> Comment["Post completion/failure\ncomment to Jira"]
 ```
 
 ### User Credential Management
@@ -193,28 +217,29 @@ Users store their Cursor API keys via the `/pr-bot/user/cursor-key` endpoints. K
 
 Sage uses a layered observability stack covering tracing, error tracking, eval scoring, and structured logging.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Observability Stack                        │
-│                                                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
-│  │  Honeycomb    │  │  Braintrust   │  │  Sentry           │  │
-│  │              │  │              │  │                  │  │
-│  │  OpenTelemetry│  │  LLM tracing  │  │  Error tracking   │  │
-│  │  distributed  │  │  Eval scoring │  │  Transaction      │  │
-│  │  tracing      │  │  Dynamic      │  │  tracing          │  │
-│  │              │  │  prompt mgmt  │  │  Console capture   │  │
-│  │  Express,     │  │  Experiment   │  │  Unhandled         │  │
-│  │  MongoDB,     │  │  reporting    │  │  rejection         │  │
-│  │  HTTP spans   │  │              │  │  handling          │  │
-│  └──────────────┘  └──────────────┘  └──────────────────┘  │
-│                                                              │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │  Winston Logger                                       │   │
-│  │  Structured JSON logging with request IDs             │   │
-│  │  Custom WinstonMastraLogger for framework integration │   │
-│  └──────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph LR
+    subgraph App["Sage Application"]
+        Express["Express.js\nRoutes"]
+        Agents["Mastra\nAgents"]
+        DB["MongoDB\nQueries"]
+    end
+
+    subgraph Tracing["Distributed Tracing"]
+        OTel["OpenTelemetry SDK\nW3C Trace Context\nAsyncLocalStorage"]
+    end
+
+    Express --> OTel
+    Agents --> OTel
+    DB --> OTel
+
+    OTel -->|"OTLP/HTTP"| Honeycomb["Honeycomb\n- Express spans\n- MongoDB spans\n- Request traces"]
+
+    Agents -->|"BraintrustExporter"| Braintrust["Braintrust\n- LLM call traces\n- Dynamic prompts\n- Eval scores & reports"]
+
+    Express -->|"Error handler"| Sentry["Sentry\n- Unhandled exceptions\n- Transaction sampling (10%)\n- Console capture\n- User context"]
+
+    Express -->|"httpLoggingMiddleware"| Winston["Winston\n- Structured JSON logs\n- Request IDs\n- WinstonMastraLogger"]
 ```
 
 ### Honeycomb (OpenTelemetry)
@@ -255,28 +280,14 @@ Evals report to the Braintrust project `sage-prod` and generate JUnit XML for CI
 
 ## External Services
 
-```
-┌─────────────────────────────────────────────────────┐
-│                  External Services                    │
-│                                                      │
-│  ┌──────────────────┐    ┌───────────────────────┐  │
-│  │ Azure OpenAI      │    │ Evergreen GraphQL API │  │
-│  │ GPT-4.1           │    │ Task, version, test   │  │
-│  │ GPT-4.1-nano      │    │ data queries          │  │
-│  └──────────────────┘    └───────────────────────┘  │
-│                                                      │
-│  ┌──────────────────┐    ┌───────────────────────┐  │
-│  │ Jira REST API     │    │ Cursor Cloud API      │  │
-│  │ Ticket polling,   │    │ Launch/monitor remote  │  │
-│  │ comments, labels  │    │ coding agents          │  │
-│  └──────────────────┘    └───────────────────────┘  │
-│                                                      │
-│  ┌──────────────────┐    ┌───────────────────────┐  │
-│  │ GitHub            │    │ MongoDB               │  │
-│  │ PR creation by    │    │ Conversations, creds, │  │
-│  │ Cursor agents     │    │ job runs, memory      │  │
-│  └──────────────────┘    └───────────────────────┘  │
-└─────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    Sage["Sage"] --> AzureOAI["Azure OpenAI\nGPT-4.1 / GPT-4.1-nano"]
+    Sage --> EvergreenAPI["Evergreen GraphQL API\nTask, version, test data"]
+    Sage --> JiraAPI["Jira REST API\nTicket polling, comments, labels"]
+    Sage --> CursorAPI["Cursor Cloud API\nLaunch/monitor remote agents"]
+    CursorAPI --> GitHub["GitHub\nPR creation by Cursor agents"]
+    Sage --> MongoDB[("MongoDB\nConversations, credentials,\njob runs, memory")]
 ```
 
 ## Data Layer
