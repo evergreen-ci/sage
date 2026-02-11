@@ -52,6 +52,7 @@ helm upgrade --install ${RELEASE_NAME} ${HELM_CHART} \
     --set ingress.enabled=true \
     --set "ingress.hosts[0]=${STAGING_HOST}" \
     --set env.VERSION=${GIT_SHA} \
+    --values environments/common.yaml \
     --values environments/staging.yaml \
     --kube-apiserver ${K8S_API_SERVER} \
     --kube-token ${STAGING_KUBERNETES_TOKEN}
