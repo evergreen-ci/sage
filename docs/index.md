@@ -46,6 +46,7 @@ For implementation details, see [agents.md](../agents.md).
 
 ## Contents
 
+- [Architecture](./architecture.md) - Full system architecture, component diagrams, and observability stack
 - [Sage Bot](./sage-bot/index.md) - Automatically generate PRs from Jira tickets using AI
 - [Parsley AI](./parsley/index.md) - Conversational AI for Evergreen task and log analysis
 - [Memento](./memento/index.md) - Summarize Slack threads into structured Jira ticket data
