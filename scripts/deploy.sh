@@ -6,7 +6,7 @@ REPO_NAME="sage"
 NAMESPACE="devprod-evergreen"
 RELEASE_NAME="sage"
 HELM_CHART="mongodb/web-app"
-CHART_VERSION="4.31.0"
+CHART_VERSION="4.34.3"
 K8S_API_SERVER="https://api.staging.corp.mongodb.com"
 STAGING_HOST="sage.devprod-evergreen.staging.corp.mongodb.com"
 GIT_SHA=$(git rev-parse --short=7 HEAD)
@@ -52,6 +52,7 @@ helm upgrade --install ${RELEASE_NAME} ${HELM_CHART} \
     --set ingress.enabled=true \
     --set "ingress.hosts[0]=${STAGING_HOST}" \
     --set env.VERSION=${GIT_SHA} \
+    --values environments/common.yaml \
     --values environments/staging.yaml \
     --kube-apiserver ${K8S_API_SERVER} \
     --kube-token ${STAGING_KUBERNETES_TOKEN}
