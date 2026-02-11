@@ -10,13 +10,13 @@ Tests the sageThinkingAgent locally.
 
 ```bash
 # Interactive chat mode (simulates UI chatbot)
-yarn test-thinking-agent --interactive
+pnpm test-thinking-agent --interactive
 
 # Single question
-yarn test-thinking-agent --question "What errors occurred in the logs?"
+pnpm test-thinking-agent --question "What errors occurred in the logs?"
 
 # With task context
-yarn test-thinking-agent --task "task_id" --execution 0 --interactive
+pnpm test-thinking-agent --task "task_id" --execution 0 --interactive
 ```
 
 ### chat-with-staging.js
@@ -37,13 +37,13 @@ Tests the log analyzer workflow in isolation.
 
 ```bash
 # Single file
-yarn run-analyzer /path/to/logfile.txt
+pnpm run-analyzer /path/to/logfile.txt
 
 # Multiple files
-yarn run-analyzer file1.log file2.log
+pnpm run-analyzer file1.log file2.log
 
 # With analysis context
-yarn run-analyzer --context "Look for memory leaks" file.log
+pnpm run-analyzer --context "Look for memory leaks" file.log
 ```
 
 ## Architecture

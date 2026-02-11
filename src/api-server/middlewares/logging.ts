@@ -1,5 +1,10 @@
 import { context, trace } from '@opentelemetry/api';
-import { Request, Response, NextFunction } from 'express';
+import {
+  type ErrorRequestHandler,
+  Request,
+  Response,
+  NextFunction,
+} from 'express';
 import expressWinston from 'express-winston';
 import { v4 as uuidv4 } from 'uuid';
 import loggerInstance, { logger } from '@/utils/logger';
@@ -51,22 +56,23 @@ export const httpLoggingMiddleware = expressWinston.logger({
 /**
  * Express-winston middleware for error logging
  */
-export const errorLoggingMiddleware = expressWinston.errorLogger({
-  winstonInstance: loggerInstance,
-  meta: true,
-  msg: 'HTTP Error {{req.method}} {{req.url}} {{res.statusCode}}',
-  dynamicMeta: (req: Request, res: Response) => ({
-    requestId: res.locals.requestId,
-    method: req.method,
-    url: req.url,
-    path: req.path,
-    query: req.query,
-    body: req.body,
-    userAgent: req.get('User-Agent'),
-    ip: req.ip || req.socket.remoteAddress,
-    statusCode: res.statusCode,
-  }),
-});
+export const errorLoggingMiddleware: ErrorRequestHandler =
+  expressWinston.errorLogger({
+    winstonInstance: loggerInstance,
+    meta: true,
+    msg: 'HTTP Error {{req.method}} {{req.url}} {{res.statusCode}}',
+    dynamicMeta: (req: Request, res: Response) => ({
+      requestId: res.locals.requestId,
+      method: req.method,
+      url: req.url,
+      path: req.path,
+      query: req.query,
+      body: req.body,
+      userAgent: req.get('User-Agent'),
+      ip: req.ip || req.socket.remoteAddress,
+      statusCode: res.statusCode,
+    }),
+  });
 
 /**
  * Middleware to log slow requests

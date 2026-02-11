@@ -8,10 +8,10 @@ import { analyzeWorkflowSteps } from './analyze-workflow-steps';
 // Helper script for local development, run log analyzer workflow on one or more log files. Display benchmark data
 // such as file size, processing time, and success/failure status. Saves test data and reports to the file system.
 // Usage:
-// yarn run-analyzer <file-path> [file-path2...]
-// yarn run-analyzer --batch <directory>
-// yarn run-analyzer --context "specific analysis instructions" <file-path>
-// yarn run-analyzer --batch <directory> --context "what to look for"
+// pnpm run-analyzer <file-path> [file-path2...]
+// pnpm run-analyzer --batch <directory>
+// pnpm run-analyzer --context "specific analysis instructions" <file-path>
+// pnpm run-analyzer --batch <directory> --context "what to look for"
 
 // Configuration for report output
 const REPORTS_DIR = 'tmp/reports';
@@ -132,13 +132,13 @@ const main = async () => {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.error('Usage: yarn run-analyzer <file-path> [file-path2...]');
-    console.error('   or: yarn run-analyzer --batch <directory>');
+    console.error('Usage: pnpm run-analyzer <file-path> [file-path2...]');
+    console.error('   or: pnpm run-analyzer --batch <directory>');
     console.error(
-      '   or: yarn run-analyzer --context "analysis instructions" <file-path>'
+      '   or: pnpm run-analyzer --context "analysis instructions" <file-path>'
     );
     console.error(
-      '   or: yarn run-analyzer --batch <directory> --context "what to look for"'
+      '   or: pnpm run-analyzer --batch <directory> --context "what to look for"'
     );
     process.exit(1);
   }

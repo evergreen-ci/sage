@@ -1,6 +1,6 @@
-import express from 'express';
+import express, { type IRouter } from 'express';
 import questionOwnershipRoute from './questionOwnership';
 
-const lumberRouter = express.Router();
+const lumberRouter: IRouter = express.Router();
 lumberRouter.post('/determine-owner', questionOwnershipRoute);
 export default lumberRouter;

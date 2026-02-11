@@ -9,9 +9,9 @@ import { createParsleyRequestContext } from '@/mastra/memory/parsley/requestCont
  * Test script for the sageThinkingAgent - THIS MATCHES STAGING BEHAVIOR
  *
  * Usage:
- * yarn test-thinking-agent --interactive                          # Interactive chat mode
- * yarn test-thinking-agent --question "What failed?"              # Single question
- * yarn test-thinking-agent --task "task_id" --question "Status?"  # With task context
+ * pnpm test-thinking-agent --interactive                          # Interactive chat mode
+ * pnpm test-thinking-agent --question "What failed?"              # Single question
+ * pnpm test-thinking-agent --task "task_id" --question "Status?"  # With task context
  */
 const testThinkingAgent = async () => {
   const args = process.argv.slice(2);
