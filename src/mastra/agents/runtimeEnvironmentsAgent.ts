@@ -37,13 +37,11 @@ const runtimeEnvironmentsAgentMemory = new Memory({
 - Changes Detected:
 `,
     },
-    threads: {
-      generateTitle: false,
-    },
   },
 });
 
 export const runtimeEnvironmentsAgent: Agent = new Agent({
+  id: 'runtimeEnvironmentsAgent',
   name: 'runtimeEnvironmentsAgent',
   description:
     'Runtime Environments Agent provides information about Evergreen runtime environment images, AMIs, packages, toolchains, and environment changes',

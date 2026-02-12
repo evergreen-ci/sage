@@ -1,4 +1,4 @@
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
 
@@ -67,11 +67,11 @@ export const getImageEventsTool = createTool({
   inputSchema,
   outputSchema,
 
-  execute: async ({ context }) => {
+  execute: async inputData => {
     const rawEvents = await runtimeEnvironmentsClient.getEvents({
-      image: context.image_id,
-      limit: context.limit,
-      page: context.page,
+      image: inputData.image_id,
+      limit: inputData.limit,
+      page: inputData.page,
     });
 
     const events = rawEvents.map(event => {
@@ -98,7 +98,7 @@ export const getImageEventsTool = createTool({
     });
 
     const totalChanges = events.reduce((sum, e) => sum + e.summary.total, 0);
-    const description = `Retrieved ${events.length} change events for ${context.image_id} with ${totalChanges} total changes across all transitions.`;
+    const description = `Retrieved ${events.length} change events for ${inputData.image_id} with ${totalChanges} total changes across all transitions.`;
 
     return {
       events,

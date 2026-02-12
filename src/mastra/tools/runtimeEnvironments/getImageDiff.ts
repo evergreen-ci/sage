@@ -1,4 +1,4 @@
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
 
@@ -52,10 +52,10 @@ export const getImageDiffTool = createTool({
   inputSchema,
   outputSchema,
 
-  execute: async ({ context }) => {
+  execute: async inputData => {
     const changes = await runtimeEnvironmentsClient.getImageDiff(
-      context.before_ami_id,
-      context.after_ami_id
+      inputData.before_ami_id,
+      inputData.after_ami_id
     );
 
     const summary = {

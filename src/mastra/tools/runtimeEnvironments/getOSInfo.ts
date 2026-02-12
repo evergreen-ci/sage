@@ -1,4 +1,4 @@
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
 
@@ -55,12 +55,12 @@ export const getOSInfoTool = createTool({
   inputSchema,
   outputSchema,
 
-  execute: async ({ context }) => {
+  execute: async inputData => {
     const response = await runtimeEnvironmentsClient.getOSInfo({
-      ...(context.name ? { name: context.name } : { id: context.id! }),
-      osName: context.osName,
-      page: context.page,
-      limit: context.limit,
+      ...(inputData.name ? { name: inputData.name } : { id: inputData.id! }),
+      osName: inputData.osName,
+      page: inputData.page,
+      limit: inputData.limit,
     });
 
     return {

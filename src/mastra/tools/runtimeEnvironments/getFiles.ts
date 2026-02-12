@@ -1,4 +1,4 @@
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
 
@@ -62,16 +62,16 @@ export const getFilesTool = createTool({
   inputSchema,
   outputSchema,
 
-  execute: async ({ context }) => {
+  execute: async inputData => {
     const response = await runtimeEnvironmentsClient.getFiles({
-      ...(context.name ? { name: context.name } : { id: context.id! }),
-      fileName: context.fileName,
-      page: context.page,
-      limit: context.limit ?? 50,
+      ...(inputData.name ? { name: inputData.name } : { id: inputData.id! }),
+      fileName: inputData.fileName,
+      page: inputData.page,
+      limit: inputData.limit ?? 50,
     });
 
     const summary = `Found ${response.filtered_count} files${
-      context.fileName ? ` matching "${context.fileName}"` : ''
+      inputData.fileName ? ` matching "${inputData.fileName}"` : ''
     } out of ${response.total_count} total tracked files.`;
 
     return {

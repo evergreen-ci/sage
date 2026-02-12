@@ -1,4 +1,4 @@
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
 
@@ -65,18 +65,18 @@ export const getToolchainsTool = createTool({
   inputSchema,
   outputSchema,
 
-  execute: async ({ context }) => {
+  execute: async inputData => {
     const response = await runtimeEnvironmentsClient.getToolchains({
-      ...(context.name ? { name: context.name } : { id: context.id! }),
-      toolchainName: context.toolchainName,
-      version: context.version,
-      page: context.page,
-      limit: context.limit ?? 50,
+      ...(inputData.name ? { name: inputData.name } : { id: inputData.id! }),
+      toolchainName: inputData.toolchainName,
+      version: inputData.version,
+      page: inputData.page,
+      limit: inputData.limit ?? 50,
     });
 
     const summary = `Found ${response.filtered_count} toolchains${
-      context.toolchainName ? ` matching "${context.toolchainName}"` : ''
-    }${context.version ? ` (version: ${context.version})` : ''} out of ${response.total_count} total toolchains.`;
+      inputData.toolchainName ? ` matching "${inputData.toolchainName}"` : ''
+    }${inputData.version ? ` (version: ${inputData.version})` : ''} out of ${response.total_count} total toolchains.`;
 
     return {
       toolchains: response.data,

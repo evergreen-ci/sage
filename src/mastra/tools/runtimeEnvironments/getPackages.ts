@@ -1,4 +1,4 @@
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
 
@@ -65,18 +65,18 @@ export const getPackagesTool = createTool({
   inputSchema,
   outputSchema,
 
-  execute: async ({ context }) => {
+  execute: async inputData => {
     const response = await runtimeEnvironmentsClient.getPackages({
-      ...(context.name ? { name: context.name } : { id: context.id! }),
-      packageName: context.packageName,
-      manager: context.manager,
-      page: context.page,
-      limit: context.limit ?? 50,
+      ...(inputData.name ? { name: inputData.name } : { id: inputData.id! }),
+      packageName: inputData.packageName,
+      manager: inputData.manager,
+      page: inputData.page,
+      limit: inputData.limit ?? 50,
     });
 
     const summary = `Found ${response.filtered_count} packages${
-      context.packageName ? ` matching "${context.packageName}"` : ''
-    }${context.manager ? ` (manager: ${context.manager})` : ''} out of ${response.total_count} total packages.`;
+      inputData.packageName ? ` matching "${inputData.packageName}"` : ''
+    }${inputData.manager ? ` (manager: ${inputData.manager})` : ''} out of ${response.total_count} total packages.`;
 
     return {
       packages: response.data,

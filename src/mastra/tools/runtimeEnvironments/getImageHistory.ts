@@ -1,4 +1,4 @@
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
 
@@ -48,11 +48,11 @@ export const getImageHistoryTool = createTool({
   inputSchema,
   outputSchema,
 
-  execute: async ({ context }) => {
+  execute: async inputData => {
     const response = await runtimeEnvironmentsClient.getImageHistory(
-      context.image_id,
-      context.page,
-      context.limit ?? 10
+      inputData.image_id,
+      inputData.page,
+      inputData.limit ?? 10
     );
 
     const now = Date.now();
@@ -69,7 +69,7 @@ export const getImageHistoryTool = createTool({
         ? new Date(response.data[0].created_date * 1000).toLocaleDateString()
         : 'unknown';
 
-    const summary = `Found ${response.total_count} historical versions for ${context.image_id}. Most recent: ${history[0]?.ami_id || 'none'} (deployed ${latestDate}).`;
+    const summary = `Found ${response.total_count} historical versions for ${inputData.image_id}. Most recent: ${history[0]?.ami_id || 'none'} (deployed ${latestDate}).`;
 
     return {
       history,
