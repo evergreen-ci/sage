@@ -5,7 +5,6 @@ import logger from '@/utils/logger';
 export class RuntimeEnvironmentsClientError extends Error {
   readonly statusCode?: number;
   readonly responseBody?: unknown;
-  override readonly cause?: unknown;
 
   constructor(
     msg: string,
@@ -15,13 +14,12 @@ export class RuntimeEnvironmentsClientError extends Error {
       cause?: unknown;
     }
   ) {
-    super(msg);
+    super(msg, { cause: opts?.cause });
     this.name = 'RuntimeEnvironmentsClientError';
     if (opts?.statusCode !== undefined) {
       this.statusCode = opts.statusCode;
     }
     this.responseBody = opts?.responseBody;
-    this.cause = opts?.cause;
   }
 }
 
@@ -359,17 +357,37 @@ export class RuntimeEnvironmentsClient {
     beforeAmiId: string,
     afterAmiId: string
   ): Promise<ImageDiffChange[]> {
-    const params = {
-      before_id: beforeAmiId,
-      after_id: afterAmiId,
-      limit: 1000000000, // Get all changes
-    };
+    const allChanges: ImageDiffChange[] = [];
+    let page = 0;
+    const perPage = 1000;
 
-    const response = await this.get<PaginatedResponse<ImageDiffChange>>(
-      '/diff',
-      params
-    );
-    return response.data;
+    for (;;) {
+      const params = {
+        before_id: beforeAmiId,
+        after_id: afterAmiId,
+        page,
+        limit: perPage,
+      };
+
+      // eslint-disable-next-line no-await-in-loop
+      const response = await this.get<PaginatedResponse<ImageDiffChange>>(
+        '/diff',
+        params
+      );
+
+      allChanges.push(...response.data);
+
+      if (
+        allChanges.length >= response.total_count ||
+        response.data.length < perPage
+      ) {
+        break;
+      }
+
+      page += 1;
+    }
+
+    return allChanges;
   }
 
   /**
@@ -412,8 +430,12 @@ export class RuntimeEnvironmentsClient {
         last_deployed: new Date(latest.created_date * 1000).toISOString(),
       };
     } catch (err) {
-      logger.error('Failed to get image info', { imageId, error: err });
-      return null;
+      if (err instanceof RuntimeEnvironmentsClientError) {
+        throw err;
+      }
+      throw new RuntimeEnvironmentsClientError('Failed to get image info', {
+        cause: err,
+      });
     }
   }
 
@@ -423,36 +445,51 @@ export class RuntimeEnvironmentsClient {
    * @returns List of ImageEvent
    */
   async getEvents(options: EventHistoryOptions): Promise<ImageEvent[]> {
-    const history = await this.getImageHistory(
-      options.image,
-      options.page,
-      options.limit + 1 // Get one extra to compare
-    );
+    let historyItems: ImageHistoryInfo[];
 
-    if (history.data.length < 2) {
+    if (options.page && options.page > 0) {
+      // Fetch the last item from the previous page to capture the
+      // transition across the page boundary that would otherwise be missed.
+      const [prevPage, currentPage] = await Promise.all([
+        this.getImageHistory(options.image, options.page - 1, options.limit),
+        this.getImageHistory(options.image, options.page, options.limit + 1),
+      ]);
+      const lastPrevItem = prevPage.data[prevPage.data.length - 1];
+      historyItems = lastPrevItem
+        ? [lastPrevItem, ...currentPage.data]
+        : currentPage.data;
+    } else {
+      const history = await this.getImageHistory(
+        options.image,
+        options.page,
+        options.limit + 1 // Get one extra to compare
+      );
+      historyItems = history.data;
+    }
+
+    if (historyItems.length < 2) {
       return [];
     }
 
-    const events: ImageEvent[] = [];
-
-    // Compare consecutive AMI versions
-    for (let i = 0; i < history.data.length - 1; i++) {
-      const after = history.data[i];
-      const before = history.data[i + 1];
-
-      // eslint-disable-next-line no-await-in-loop
-      const changes = await this.getImageDiff(before.ami_id, after.ami_id);
-      const entries = this.convertDiffToEventEntries(changes);
-
-      events.push({
-        entries,
-        timestamp: new Date(after.created_date * 1000),
-        ami_before: before.ami_id,
-        ami_after: after.ami_id,
-      });
+    // Build consecutive pairs for diff comparison
+    const pairs: { after: ImageHistoryInfo; before: ImageHistoryInfo }[] = [];
+    for (let i = 0; i < historyItems.length - 1; i++) {
+      pairs.push({ after: historyItems[i], before: historyItems[i + 1] });
     }
 
-    return events;
+    // Fetch all diffs concurrently
+    const allChanges = await Promise.all(
+      pairs.map(({ after, before }) =>
+        this.getImageDiff(before.ami_id, after.ami_id)
+      )
+    );
+
+    return allChanges.map((changes, i) => ({
+      entries: this.convertDiffToEventEntries(changes),
+      timestamp: new Date(pairs[i].after.created_date * 1000),
+      ami_before: pairs[i].before.ami_id,
+      ami_after: pairs[i].after.ami_id,
+    }));
   }
 
   /**
@@ -484,9 +521,42 @@ export class RuntimeEnvironmentsClient {
   }
 }
 
+/**
+ * Validate that the base URL is a non-empty absolute http(s) URL.
+ * Throws a clear error if RUNTIME_ENVIRONMENTS_API_URL is missing or invalid.
+ * @param baseUrl - The base URL to validate
+ * @returns The validated base URL
+ */
+const validateBaseUrl = (baseUrl: string): string => {
+  if (!baseUrl || baseUrl.trim() === '') {
+    throw new RuntimeEnvironmentsClientError(
+      'RUNTIME_ENVIRONMENTS_API_URL must be set to a non-empty URL'
+    );
+  }
+
+  try {
+    const parsed = new URL(baseUrl);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      throw new RuntimeEnvironmentsClientError(
+        'RUNTIME_ENVIRONMENTS_API_URL must use http or https'
+      );
+    }
+  } catch (err) {
+    if (err instanceof RuntimeEnvironmentsClientError) {
+      throw err;
+    }
+    throw new RuntimeEnvironmentsClientError(
+      'RUNTIME_ENVIRONMENTS_API_URL must be a valid URL',
+      { cause: err }
+    );
+  }
+
+  return baseUrl;
+};
+
 /** Singleton instance using config */
 const runtimeEnvironmentsClient = new RuntimeEnvironmentsClient(
-  config.runtimeEnvironments.apiURL
+  validateBaseUrl(config.runtimeEnvironments.apiURL)
 );
 
 export default runtimeEnvironmentsClient;

@@ -42,7 +42,7 @@ export const getImageHistoryTool = createTool({
   Example: "When was rhel8 last updated?"
   Example: "Show me the last 5 versions of amazon-linux-2"
 
-  Returns AMI identifiers and deployment timestamps in chronological order.
+  Returns AMI identifiers and deployment timestamps ordered from most recent to oldest.
   Useful for understanding environment changes over time or investigating when issues started.`,
 
   inputSchema,
