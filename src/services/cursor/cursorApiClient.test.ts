@@ -54,10 +54,12 @@ describe('CursorApiClient', () => {
 
   describe('launchAgent', () => {
     it('throws CursorApiClientError with status code, message, and error code on API failure', async () => {
+      // Actual API format: { error: string, code?: string }
       mockCreateAgent.mockResolvedValueOnce({
         data: null,
         error: {
-          error: { message: 'Insufficient permissions', code: 'FORBIDDEN' },
+          error: 'Insufficient permissions',
+          code: 'FORBIDDEN',
         },
         response: { status: 403 },
       });
@@ -72,6 +74,29 @@ describe('CursorApiClient', () => {
         message: 'Insufficient permissions',
         statusCode: 403,
         code: 'FORBIDDEN',
+      });
+    });
+
+    it('falls back to error.message when error.error is not present (backwards compatibility)', async () => {
+      // Spec format: { error: { message?: string, code?: string } }
+      mockCreateAgent.mockResolvedValueOnce({
+        data: null,
+        error: {
+          error: { message: 'Legacy error format', code: 'LEGACY' },
+        },
+        response: { status: 400 },
+      });
+
+      await expect(
+        client.launchAgent({
+          prompt: { text: 'Test' },
+          source: { repository: 'https://github.com/org/repo' },
+        })
+      ).rejects.toMatchObject({
+        name: 'CursorApiClientError',
+        message: 'Legacy error format',
+        statusCode: 400,
+        code: 'LEGACY',
       });
     });
 
@@ -151,10 +176,12 @@ describe('CursorApiClient', () => {
     });
 
     it('throws CursorApiClientError on API failure', async () => {
+      // Actual API format: { error: string, code?: string }
       mockGetAgent.mockResolvedValueOnce({
         data: null,
         error: {
-          error: { message: 'Agent not found', code: 'NOT_FOUND' },
+          error: 'Agent not found',
+          code: 'NOT_FOUND',
         },
         response: { status: 404 },
       });
