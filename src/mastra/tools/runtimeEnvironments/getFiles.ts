@@ -1,11 +1,11 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import logger from '@/utils/logger';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
+import { imageIdentifierSchema, resolveImageIdentifier } from './schemas';
 
-const inputSchema = z
-  .object({
-    name: z.string().optional().describe('Image name (e.g., "ubuntu2204")'),
-    id: z.string().optional().describe('AMI ID (e.g., "ami-12345678")'),
+const inputSchema = imageIdentifierSchema.and(
+  z.object({
     fileName: z
       .string()
       .optional()
@@ -18,12 +18,7 @@ const inputSchema = z
       .optional()
       .describe('Number of results per page (default: 50)'),
   })
-  .refine(data => data.name || data.id, {
-    message: 'Either name or id must be provided',
-  })
-  .refine(data => !(data.name && data.id), {
-    message: 'Cannot provide both name and id',
-  });
+);
 
 const outputSchema = z.object({
   files: z.array(
@@ -63,22 +58,30 @@ export const getFilesTool = createTool({
   outputSchema,
 
   execute: async inputData => {
-    const response = await runtimeEnvironmentsClient.getFiles({
-      ...(inputData.name ? { name: inputData.name } : { id: inputData.id! }),
-      fileName: inputData.fileName,
-      page: inputData.page,
-      limit: inputData.limit ?? 50,
-    });
+    try {
+      const response = await runtimeEnvironmentsClient.getFiles({
+        ...resolveImageIdentifier(inputData),
+        fileName: inputData.fileName,
+        page: inputData.page,
+        limit: inputData.limit ?? 50,
+      });
 
-    const summary = `Found ${response.filtered_count} files${
-      inputData.fileName ? ` matching "${inputData.fileName}"` : ''
-    } out of ${response.total_count} total tracked files.`;
+      const summary = `Found ${response.filtered_count} files${
+        inputData.fileName ? ` matching "${inputData.fileName}"` : ''
+      } out of ${response.total_count} total tracked files.`;
 
-    return {
-      files: response.data,
-      filtered_count: response.filtered_count,
-      total_count: response.total_count,
-      summary,
-    };
+      return {
+        files: response.data,
+        filtered_count: response.filtered_count,
+        total_count: response.total_count,
+        summary,
+      };
+    } catch (error) {
+      logger.error('getFiles tool failed', {
+        input: inputData,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });

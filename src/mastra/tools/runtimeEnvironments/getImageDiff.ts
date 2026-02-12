@@ -1,5 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import logger from '@/utils/logger';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
 
 const inputSchema = z.object({
@@ -53,25 +54,33 @@ export const getImageDiffTool = createTool({
   outputSchema,
 
   execute: async inputData => {
-    const changes = await runtimeEnvironmentsClient.getImageDiff(
-      inputData.before_ami_id,
-      inputData.after_ami_id
-    );
+    try {
+      const changes = await runtimeEnvironmentsClient.getImageDiff(
+        inputData.before_ami_id,
+        inputData.after_ami_id
+      );
 
-    const summary = {
-      total_changes: changes.length,
-      os_changes: changes.filter(c => c.type === 'OS').length,
-      package_changes: changes.filter(c => c.type === 'Packages').length,
-      toolchain_changes: changes.filter(c => c.type === 'Toolchains').length,
-      file_changes: changes.filter(c => c.type === 'Files').length,
-    };
+      const summary = {
+        total_changes: changes.length,
+        os_changes: changes.filter(c => c.type === 'OS').length,
+        package_changes: changes.filter(c => c.type === 'Packages').length,
+        toolchain_changes: changes.filter(c => c.type === 'Toolchains').length,
+        file_changes: changes.filter(c => c.type === 'Files').length,
+      };
 
-    const description = `Found ${summary.total_changes} total changes: ${summary.os_changes} OS changes, ${summary.package_changes} package changes, ${summary.toolchain_changes} toolchain changes, and ${summary.file_changes} file changes.`;
+      const description = `Found ${summary.total_changes} total changes: ${summary.os_changes} OS changes, ${summary.package_changes} package changes, ${summary.toolchain_changes} toolchain changes, and ${summary.file_changes} file changes.`;
 
-    return {
-      changes,
-      summary,
-      description,
-    };
+      return {
+        changes,
+        summary,
+        description,
+      };
+    } catch (error) {
+      logger.error('getImageDiff tool failed', {
+        input: inputData,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });

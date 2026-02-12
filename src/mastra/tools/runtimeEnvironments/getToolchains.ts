@@ -1,11 +1,11 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import logger from '@/utils/logger';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
+import { imageIdentifierSchema, resolveImageIdentifier } from './schemas';
 
-const inputSchema = z
-  .object({
-    name: z.string().optional().describe('Image name (e.g., "ubuntu2204")'),
-    id: z.string().optional().describe('AMI ID (e.g., "ami-12345678")'),
+const inputSchema = imageIdentifierSchema.and(
+  z.object({
     toolchainName: z
       .string()
       .optional()
@@ -22,12 +22,7 @@ const inputSchema = z
       .optional()
       .describe('Number of results per page (default: 50)'),
   })
-  .refine(data => data.name || data.id, {
-    message: 'Either name or id must be provided',
-  })
-  .refine(data => !(data.name && data.id), {
-    message: 'Cannot provide both name and id',
-  });
+);
 
 const outputSchema = z.object({
   toolchains: z.array(
@@ -66,23 +61,31 @@ export const getToolchainsTool = createTool({
   outputSchema,
 
   execute: async inputData => {
-    const response = await runtimeEnvironmentsClient.getToolchains({
-      ...(inputData.name ? { name: inputData.name } : { id: inputData.id! }),
-      toolchainName: inputData.toolchainName,
-      version: inputData.version,
-      page: inputData.page,
-      limit: inputData.limit ?? 50,
-    });
+    try {
+      const response = await runtimeEnvironmentsClient.getToolchains({
+        ...resolveImageIdentifier(inputData),
+        toolchainName: inputData.toolchainName,
+        version: inputData.version,
+        page: inputData.page,
+        limit: inputData.limit ?? 50,
+      });
 
-    const summary = `Found ${response.filtered_count} toolchains${
-      inputData.toolchainName ? ` matching "${inputData.toolchainName}"` : ''
-    }${inputData.version ? ` (version: ${inputData.version})` : ''} out of ${response.total_count} total toolchains.`;
+      const summary = `Found ${response.filtered_count} toolchains${
+        inputData.toolchainName ? ` matching "${inputData.toolchainName}"` : ''
+      }${inputData.version ? ` (version: ${inputData.version})` : ''} out of ${response.total_count} total toolchains.`;
 
-    return {
-      toolchains: response.data,
-      filtered_count: response.filtered_count,
-      total_count: response.total_count,
-      summary,
-    };
+      return {
+        toolchains: response.data,
+        filtered_count: response.filtered_count,
+        total_count: response.total_count,
+        summary,
+      };
+    } catch (error) {
+      logger.error('getToolchains tool failed', {
+        input: inputData,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });

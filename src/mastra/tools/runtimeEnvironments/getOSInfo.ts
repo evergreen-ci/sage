@@ -1,11 +1,11 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import logger from '@/utils/logger';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
+import { imageIdentifierSchema, resolveImageIdentifier } from './schemas';
 
-const inputSchema = z
-  .object({
-    name: z.string().optional().describe('Image name (e.g., "ubuntu2204")'),
-    id: z.string().optional().describe('AMI ID (e.g., "ami-12345678")'),
+const inputSchema = imageIdentifierSchema.and(
+  z.object({
     osName: z
       .string()
       .optional()
@@ -16,12 +16,7 @@ const inputSchema = z
       .optional()
       .describe('Number of results per page (default: all)'),
   })
-  .refine(data => data.name || data.id, {
-    message: 'Either name or id must be provided',
-  })
-  .refine(data => !(data.name && data.id), {
-    message: 'Cannot provide both name and id',
-  });
+);
 
 const outputSchema = z.object({
   os_info: z.array(
@@ -56,17 +51,25 @@ export const getOSInfoTool = createTool({
   outputSchema,
 
   execute: async inputData => {
-    const response = await runtimeEnvironmentsClient.getOSInfo({
-      ...(inputData.name ? { name: inputData.name } : { id: inputData.id! }),
-      osName: inputData.osName,
-      page: inputData.page,
-      limit: inputData.limit,
-    });
+    try {
+      const response = await runtimeEnvironmentsClient.getOSInfo({
+        ...resolveImageIdentifier(inputData),
+        osName: inputData.osName,
+        page: inputData.page,
+        limit: inputData.limit,
+      });
 
-    return {
-      os_info: response.data,
-      filtered_count: response.filtered_count,
-      total_count: response.total_count,
-    };
+      return {
+        os_info: response.data,
+        filtered_count: response.filtered_count,
+        total_count: response.total_count,
+      };
+    } catch (error) {
+      logger.error('getOSInfo tool failed', {
+        input: inputData,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });

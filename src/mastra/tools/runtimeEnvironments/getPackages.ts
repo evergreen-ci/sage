@@ -1,11 +1,11 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import logger from '@/utils/logger';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
+import { imageIdentifierSchema, resolveImageIdentifier } from './schemas';
 
-const inputSchema = z
-  .object({
-    name: z.string().optional().describe('Image name (e.g., "ubuntu2204")'),
-    id: z.string().optional().describe('AMI ID (e.g., "ami-12345678")'),
+const inputSchema = imageIdentifierSchema.and(
+  z.object({
     packageName: z
       .string()
       .optional()
@@ -22,12 +22,7 @@ const inputSchema = z
       .optional()
       .describe('Number of results per page (default: 50)'),
   })
-  .refine(data => data.name || data.id, {
-    message: 'Either name or id must be provided',
-  })
-  .refine(data => !(data.name && data.id), {
-    message: 'Cannot provide both name and id',
-  });
+);
 
 const outputSchema = z.object({
   packages: z.array(
@@ -66,23 +61,31 @@ export const getPackagesTool = createTool({
   outputSchema,
 
   execute: async inputData => {
-    const response = await runtimeEnvironmentsClient.getPackages({
-      ...(inputData.name ? { name: inputData.name } : { id: inputData.id! }),
-      packageName: inputData.packageName,
-      manager: inputData.manager,
-      page: inputData.page,
-      limit: inputData.limit ?? 50,
-    });
+    try {
+      const response = await runtimeEnvironmentsClient.getPackages({
+        ...resolveImageIdentifier(inputData),
+        packageName: inputData.packageName,
+        manager: inputData.manager,
+        page: inputData.page,
+        limit: inputData.limit ?? 50,
+      });
 
-    const summary = `Found ${response.filtered_count} packages${
-      inputData.packageName ? ` matching "${inputData.packageName}"` : ''
-    }${inputData.manager ? ` (manager: ${inputData.manager})` : ''} out of ${response.total_count} total packages.`;
+      const summary = `Found ${response.filtered_count} packages${
+        inputData.packageName ? ` matching "${inputData.packageName}"` : ''
+      }${inputData.manager ? ` (manager: ${inputData.manager})` : ''} out of ${response.total_count} total packages.`;
 
-    return {
-      packages: response.data,
-      filtered_count: response.filtered_count,
-      total_count: response.total_count,
-      summary,
-    };
+      return {
+        packages: response.data,
+        filtered_count: response.filtered_count,
+        total_count: response.total_count,
+        summary,
+      };
+    } catch (error) {
+      logger.error('getPackages tool failed', {
+        input: inputData,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });

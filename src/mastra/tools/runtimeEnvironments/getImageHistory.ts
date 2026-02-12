@@ -1,5 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import logger from '@/utils/logger';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
 
 const inputSchema = z.object({
@@ -49,32 +50,40 @@ export const getImageHistoryTool = createTool({
   outputSchema,
 
   execute: async inputData => {
-    const response = await runtimeEnvironmentsClient.getImageHistory(
-      inputData.image_id,
-      inputData.page,
-      inputData.limit ?? 10
-    );
+    try {
+      const response = await runtimeEnvironmentsClient.getImageHistory(
+        inputData.image_id,
+        inputData.page,
+        inputData.limit ?? 10
+      );
 
-    const now = Date.now();
-    const history = response.data.map(item => ({
-      ami_id: item.ami_id,
-      created_date: new Date(item.created_date * 1000).toISOString(),
-      days_ago: Math.floor(
-        (now - item.created_date * 1000) / (1000 * 60 * 60 * 24)
-      ),
-    }));
+      const now = Date.now();
+      const history = response.data.map(item => ({
+        ami_id: item.ami_id,
+        created_date: new Date(item.created_date * 1000).toISOString(),
+        days_ago: Math.floor(
+          (now - item.created_date * 1000) / (1000 * 60 * 60 * 24)
+        ),
+      }));
 
-    const latestDate =
-      history.length > 0
-        ? new Date(response.data[0].created_date * 1000).toLocaleDateString()
-        : 'unknown';
+      const latestDate =
+        history.length > 0
+          ? new Date(response.data[0].created_date * 1000).toLocaleDateString()
+          : 'unknown';
 
-    const summary = `Found ${response.total_count} historical versions for ${inputData.image_id}. Most recent: ${history[0]?.ami_id || 'none'} (deployed ${latestDate}).`;
+      const summary = `Found ${response.total_count} historical versions for ${inputData.image_id}. Most recent: ${history[0]?.ami_id || 'none'} (deployed ${latestDate}).`;
 
-    return {
-      history,
-      total_count: response.total_count,
-      summary,
-    };
+      return {
+        history,
+        total_count: response.total_count,
+        summary,
+      };
+    } catch (error) {
+      logger.error('getImageHistory tool failed', {
+        input: inputData,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });

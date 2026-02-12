@@ -1,5 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import logger from '@/utils/logger';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
 
 const outputSchema = z.object({
@@ -25,11 +26,18 @@ export const getImageNamesTool = createTool({
   outputSchema,
 
   execute: async () => {
-    const images = await runtimeEnvironmentsClient.getImageNames();
+    try {
+      const images = await runtimeEnvironmentsClient.getImageNames();
 
-    return {
-      images,
-      count: images.length,
-    };
+      return {
+        images,
+        count: images.length,
+      };
+    } catch (error) {
+      logger.error('getImageNames tool failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });

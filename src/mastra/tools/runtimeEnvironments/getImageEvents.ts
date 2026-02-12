@@ -1,5 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import logger from '@/utils/logger';
 import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
 
 const inputSchema = z.object({
@@ -68,41 +69,49 @@ export const getImageEventsTool = createTool({
   outputSchema,
 
   execute: async inputData => {
-    const rawEvents = await runtimeEnvironmentsClient.getEvents({
-      image: inputData.image_id,
-      limit: inputData.limit,
-      page: inputData.page,
-    });
+    try {
+      const rawEvents = await runtimeEnvironmentsClient.getEvents({
+        image: inputData.image_id,
+        limit: inputData.limit,
+        page: inputData.page,
+      });
 
-    const events = rawEvents.map(event => {
-      const summary = {
-        total: event.entries.length,
-        added: event.entries.filter(e => e.action === 'ADDED').length,
-        updated: event.entries.filter(e => e.action === 'UPDATED').length,
-        deleted: event.entries.filter(e => e.action === 'DELETED').length,
-      };
+      const events = rawEvents.map(event => {
+        const summary = {
+          total: event.entries.length,
+          added: event.entries.filter(e => e.action === 'ADDED').length,
+          updated: event.entries.filter(e => e.action === 'UPDATED').length,
+          deleted: event.entries.filter(e => e.action === 'DELETED').length,
+        };
+
+        return {
+          timestamp: event.timestamp.toISOString(),
+          ami_before: event.ami_before,
+          ami_after: event.ami_after,
+          changes: event.entries.map(entry => ({
+            name: entry.name,
+            before: entry.before,
+            after: entry.after,
+            type: entry.type,
+            action: entry.action,
+          })),
+          summary,
+        };
+      });
+
+      const totalChanges = events.reduce((sum, e) => sum + e.summary.total, 0);
+      const description = `Retrieved ${events.length} change events for ${inputData.image_id} with ${totalChanges} total changes across all transitions.`;
 
       return {
-        timestamp: event.timestamp.toISOString(),
-        ami_before: event.ami_before,
-        ami_after: event.ami_after,
-        changes: event.entries.map(entry => ({
-          name: entry.name,
-          before: entry.before,
-          after: entry.after,
-          type: entry.type,
-          action: entry.action,
-        })),
-        summary,
+        events,
+        description,
       };
-    });
-
-    const totalChanges = events.reduce((sum, e) => sum + e.summary.total, 0);
-    const description = `Retrieved ${events.length} change events for ${inputData.image_id} with ${totalChanges} total changes across all transitions.`;
-
-    return {
-      events,
-      description,
-    };
+    } catch (error) {
+      logger.error('getImageEvents tool failed', {
+        input: inputData,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });
