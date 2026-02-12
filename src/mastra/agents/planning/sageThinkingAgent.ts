@@ -1,8 +1,8 @@
 import { Agent } from '@mastra/core/agent';
-import { RuntimeContext } from '@mastra/core/runtime-context';
 import { Memory } from '@mastra/memory';
 import { askEvergreenAgentTool } from '@/mastra/agents/evergreenAgent';
 import { askRuntimeEnvironmentsAgentTool } from '@/mastra/agents/runtimeEnvironmentsAgent';
+import { ParsleyRequestContextSchema } from '@/mastra/memory/parsley/requestContext';
 import { gpt41 } from '@/mastra/models/openAI/gpt41';
 import { memoryStore } from '@/mastra/utils/memory';
 import { resolveLogFileUrlTool } from '@/mastra/workflows/evergreen/getLogFileUrlWorkflow';
@@ -16,18 +16,17 @@ const sageThinkingAgentMemory = new Memory({
       enabled: true,
       scope: 'thread',
     },
-    threads: {
-      generateTitle: false,
-    },
   },
 });
 
 export const sageThinkingAgent: Agent = new Agent({
+  id: 'sageThinkingAgent',
   name: 'Sage Thinking Agent',
   description:
     'A agent that thinks about the user question and decides the next action.',
   memory: sageThinkingAgentMemory,
-  instructions: ({ runtimeContext }) => `
+  requestContextSchema: ParsleyRequestContextSchema,
+  instructions: ({ requestContext }) => `
 # Role and Objective
 - Serve as Parsley AI, a senior software engineer with expertise in the Evergreen platform, capable of thoroughly analyzing user questions and determining effective responses.
 
@@ -74,6 +73,7 @@ export const sageThinkingAgent: Agent = new Agent({
 - Before invoking any tool, briefly state its purpose. Just give a reason such as "I need to get the task history to answer the user question". "Or I need to review the logs for this task"
 - After each tool call or code edit, validate the outcome in 1-2 lines and describe the next step or self-correct if needed.
 - Respond to user questions in markdown, using plain text for clarity. Avoid large headings; keep answers simple and concise.
+- When using logCoreAnalyzerTool, include line number references in your response to help users navigate to specific issues.
 - When passing IDs to agents, always use the complete task ID. Never truncate or shorten task IDs.
 - Use only tools listed above. For routine read-only tasks, call tools automatically.
 - When beginning an investigation, It is a good idea to fetch the task first so you have the necessary context about the task.
@@ -83,11 +83,11 @@ export const sageThinkingAgent: Agent = new Agent({
 - If you need to make follow-up corrections or acquire additional data, it is acceptable to ask the evergreenAgent for more information or assistance. Do not make up values or task IDs under any circumstances.
 
   <ADDITIONAL_CONTEXT>
-  ${stringifyRuntimeContext(runtimeContext)}
+  ${JSON.stringify(requestContext.toJSON(), null, 2)}
   </ADDITIONAL_CONTEXT>
   `,
   model: gpt41,
-  defaultVNextStreamOptions: {
+  defaultOptions: {
     maxSteps: 10,
   },
   tools: {
@@ -98,8 +98,3 @@ export const sageThinkingAgent: Agent = new Agent({
     resolveLogFileUrlTool,
   },
 });
-
-const stringifyRuntimeContext = (runtimeContext: RuntimeContext) => {
-  const context = runtimeContext.toJSON();
-  return JSON.stringify(context, null, 2);
-};

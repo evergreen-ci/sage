@@ -11,9 +11,8 @@ export const requestContextStorage = new AsyncLocalStorage<RequestContext>();
  * Get the current request context
  * @returns The current request context or undefined if not in a context
  */
-export function getRequestContext(): RequestContext | undefined {
-  return requestContextStorage.getStore();
-}
+export const getRequestContext = (): RequestContext | undefined =>
+  requestContextStorage.getStore();
 
 /**
  * Set the request context for the current async execution
@@ -21,9 +20,7 @@ export function getRequestContext(): RequestContext | undefined {
  * @param fn - The function to run with the context
  * @returns The result of the function
  */
-export function runWithRequestContext<T>(
+export const runWithRequestContext = <T>(
   context: RequestContext,
   fn: () => T
-): T {
-  return requestContextStorage.run(context, fn);
-}
+): T => requestContextStorage.run(context, fn);

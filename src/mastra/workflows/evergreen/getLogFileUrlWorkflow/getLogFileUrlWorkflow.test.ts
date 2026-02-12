@@ -1,4 +1,4 @@
-import { RuntimeContext } from '@mastra/core/runtime-context';
+import { RequestContext } from '@mastra/core/request-context';
 import { z } from 'zod';
 import { USER_ID } from '@/mastra/agents/constants';
 import { expectSuccess } from '@/test-utils/workflow-helpers';
@@ -14,11 +14,10 @@ vi.mock('../../../tools/evergreen', () => ({
 }));
 
 const startRun = async (logMetadata: any) => {
-  const runtimeContext = new RuntimeContext();
-  runtimeContext.set(USER_ID, 'test_user');
-  const run = await getLogFileUrlWorkflow.createRunAsync({});
-  const wr = await run.start({ inputData: { logMetadata }, runtimeContext });
-  console.log('wr', wr);
+  const requestContext = new RequestContext();
+  requestContext.set(USER_ID, 'test_user');
+  const run = await getLogFileUrlWorkflow.createRun();
+  const wr = await run.start({ inputData: { logMetadata }, requestContext });
   return wr;
 };
 
@@ -169,7 +168,6 @@ describe('getLogFileUrlWorkflow', () => {
       // execution and fileName missing
     };
 
-    const wr = await startRun(invalid);
-    expect(wr.status).toBe('failed');
+    await expect(startRun(invalid)).rejects.toThrow();
   });
 });

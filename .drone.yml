@@ -6,7 +6,7 @@ clone:
   depth: 50
 
 platform:
-  arch: amd64
+  arch: arm64
 
 trigger:
   branch:
@@ -26,6 +26,11 @@ steps:
       tags:
         - git-${DRONE_COMMIT_SHA:0:7}
         - latest
+      build_args:
+        - VERSION=${DRONE_COMMIT_SHA:0:7}
+      enable_cache: true
+      cache_repo: devprod-evergreen/${DRONE_REPO_NAME}
+      cache_ttl: 168
       access_key:
         from_secret: ecr_access_key
       secret_key:
@@ -78,17 +83,17 @@ steps:
         - promote
       target:
         - production
-  
+
   - name: deploy-staging
     image: public.ecr.aws/kanopy/drone-helm:v3
     settings:
       chart: mongodb/web-app
-      chart_version: 4.31.0
+      chart_version: 4.34.3
       add_repos: [mongodb=https://10gen.github.io/helm-charts]
       namespace: devprod-evergreen
       release: sage
       values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=sage.devprod-evergreen.staging.corp.mongodb.com,env.VERSION=${DRONE_COMMIT_SHA:0:7}
-      values_files: ["environments/staging.yaml"]
+      values_files: ['environments/common.yaml', 'environments/staging.yaml']
       api_server: https://api.staging.corp.mongodb.com
       kubernetes_token:
         from_secret: staging_kubernetes_token
@@ -99,20 +104,65 @@ steps:
       target:
         - staging
 
+  - name: deploy-cronjobs-staging
+    image: public.ecr.aws/kanopy/drone-helm:v3
+    settings:
+      chart: mongodb/cronjobs
+      chart_version: 1.22.0
+      add_repos: [mongodb=https://10gen.github.io/helm-charts]
+      namespace: devprod-evergreen
+      release: sage-cronjobs
+      values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME}
+      values_files:
+        - environments/cronjobs/common.yaml
+        - environments/cronjobs/staging_deployments.yml
+      api_server: https://api.staging.corp.mongodb.com
+      kubernetes_token:
+        from_secret: staging_kubernetes_token
+    when:
+      event:
+        - promote
+      target:
+        - staging
+
   - name: deploy-prod
     image: public.ecr.aws/kanopy/drone-helm:v3
     settings:
       chart: mongodb/web-app
-      chart_version: 4.31.0
+      chart_version: 4.34.3
       add_repos: [mongodb=https://10gen.github.io/helm-charts]
       namespace: devprod-evergreen
       release: sage
       values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=sage.devprod-evergreen.prod.corp.mongodb.com,env.VERSION=${DRONE_COMMIT_SHA:0:7}
-      values_files: ["environments/prod.yaml"]
+      values_files: ['environments/common.yaml', 'environments/prod.yaml']
       api_server: https://api.prod.corp.mongodb.com
       kubernetes_token:
         from_secret: prod_kubernetes_token
       wait_for_upgrade: true
+      timeout: 10m
+    when:
+      branch:
+        - main
+      event:
+        - promote
+      target:
+        - production
+
+  - name: deploy-cronjobs-prod
+    image: public.ecr.aws/kanopy/drone-helm:v3
+    settings:
+      chart: mongodb/cronjobs
+      chart_version: 1.22.0
+      add_repos: [mongodb=https://10gen.github.io/helm-charts]
+      namespace: devprod-evergreen
+      release: sage-cronjobs
+      values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME}
+      values_files:
+        - environments/cronjobs/common.yaml
+        - environments/cronjobs/prod_deployments.yml
+      api_server: https://api.prod.corp.mongodb.com
+      kubernetes_token:
+        from_secret: prod_kubernetes_token
     when:
       branch:
         - main

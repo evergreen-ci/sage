@@ -1,5 +1,6 @@
-import { toAISdkFormat } from '@mastra/ai-sdk';
+import { toAISdkStream } from '@mastra/ai-sdk';
 import { AgentMemoryOption } from '@mastra/core/agent';
+import { RequestContext } from '@mastra/core/request-context';
 import { trace } from '@opentelemetry/api';
 import {
   pipeUIMessageStreamToResponse,
@@ -7,11 +8,11 @@ import {
   validateUIMessages,
 } from 'ai';
 import { Request, Response } from 'express';
-import z from 'zod';
+import { z } from 'zod';
 import { logMetadataSchema } from '@/constants/parsley/logMetadata';
 import { mastra } from '@/mastra';
 import { SAGE_THINKING_AGENT_NAME, USER_ID } from '@/mastra/agents/constants';
-import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
+import { createParsleyRequestContext } from '@/mastra/memory/parsley/requestContext';
 import { runWithRequestContext } from '@/mastra/utils/requestContext';
 import { createAISdkStreamWithMetadata } from '@/utils/ai';
 import { logger } from '@/utils/logger';
@@ -34,8 +35,14 @@ const chatRoute = async (
 ) => {
   const currentSpan = trace.getActiveSpan();
   const spanContext = currentSpan?.spanContext();
-  const runtimeContext = createParsleyRuntimeContext();
-  runtimeContext.set(USER_ID, res.locals.userId);
+  const requestContext = createParsleyRequestContext();
+  // userId is guaranteed by userIdMiddleware (returns 401 if missing)
+  requestContext.set(USER_ID, res.locals.userId!);
+  // Mastra APIs (run.start, getMemory) expect RequestContext<unknown>, but our typed context
+  // isn't directly assignable due to generic variance. This cast is safe since RequestContext
+  // is structurally compatible at runtime.
+  const untypedRequestContext =
+    requestContext as unknown as RequestContext<unknown>;
   logger.debug('User context set for request', {
     userId: res.locals.userId,
     requestId: res.locals.requestId,
@@ -56,10 +63,12 @@ const chatRoute = async (
     return;
   }
   if (messageData.logMetadata) {
-    runtimeContext.set('logMetadata', messageData.logMetadata);
+    requestContext.set('logMetadata', messageData.logMetadata);
   }
-  if (runtimeContext.get('logURL') === undefined && messageData.logMetadata) {
-    const logFileUrlWorkflow = mastra.getWorkflowById('resolve-log-file-url');
+  if (requestContext.get('logURL') === undefined && messageData.logMetadata) {
+    const logFileUrlWorkflow = mastra.getWorkflowById<'resolve-log-file-url'>(
+      'resolve-log-file-url'
+    );
     if (!logFileUrlWorkflow) {
       logger.error('resolve-log-file-url workflow not found', {
         requestId: res.locals.requestId,
@@ -69,7 +78,7 @@ const chatRoute = async (
         .json({ message: 'resolve-log-file-url workflow not found' });
       return;
     }
-    const run = await logFileUrlWorkflow.createRunAsync({});
+    const run = await logFileUrlWorkflow.createRun({});
     if (!run) {
       logger.error('Failed to create log file url workflow run', {
         requestId: res.locals.requestId,
@@ -95,10 +104,10 @@ const chatRoute = async (
           requestId: res.locals.requestId,
         },
       },
-      runtimeContext,
+      requestContext: untypedRequestContext,
     });
     if (runResult.status === 'success') {
-      runtimeContext.set('logURL', runResult.result);
+      requestContext.set('logURL', runResult.result);
     } else if (runResult.status === 'failed') {
       logger.error('Error in get log file url workflow', {
         requestId: res.locals.requestId,
@@ -130,7 +139,7 @@ const chatRoute = async (
     const agent = mastra.getAgent(SAGE_THINKING_AGENT_NAME);
 
     const memory = await agent.getMemory({
-      runtimeContext,
+      requestContext: untypedRequestContext,
     });
 
     let memoryOptions: AgentMemoryOption = {
@@ -155,7 +164,7 @@ const chatRoute = async (
       };
     } else {
       const newThread = await memory?.createThread({
-        metadata: runtimeContext.toJSON(),
+        metadata: requestContext.toJSON(),
         resourceId: 'parsley_completions',
         threadId: conversationId,
       });
@@ -177,7 +186,7 @@ const chatRoute = async (
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
         await agent.stream(validatedMessage, {
-          runtimeContext,
+          requestContext: requestContext,
           memory: memoryOptions,
           tracingOptions: {
             metadata: {
@@ -198,7 +207,7 @@ const chatRoute = async (
     pipeUIMessageStreamToResponse({
       response: res,
       stream: createAISdkStreamWithMetadata(
-        toAISdkFormat(stream, { from: 'agent' })!,
+        toAISdkStream(stream, { from: 'agent' })!,
         {
           spanId: stream.traceId,
         }

@@ -16,7 +16,7 @@ const healthRoute = async (req: Request, res: Response) => {
     return;
   }
 
-  const agents = mastra.getAgents();
+  const agents = mastra.listAgents();
   if (!agents || Object.keys(agents).length === 0) {
     res.status(500).json({
       status: 'error',
@@ -71,7 +71,6 @@ const healthRoute = async (req: Request, res: Response) => {
       enabled: sentryService.isInitialized(),
     },
     otelConfig: {
-      logCollectorURL: config.honeycomb.otelLogCollectorURL,
       traceCollectorURL: config.honeycomb.otelCollectorURL,
     },
   });

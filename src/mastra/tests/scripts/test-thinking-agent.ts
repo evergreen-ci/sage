@@ -3,15 +3,15 @@
 import readline from 'readline';
 import { mastra } from '@/mastra';
 import { USER_ID } from '@/mastra/agents/constants';
-import { createParsleyRuntimeContext } from '@/mastra/memory/parsley/runtimeContext';
+import { createParsleyRequestContext } from '@/mastra/memory/parsley/requestContext';
 
 /**
  * Test script for the sageThinkingAgent - THIS MATCHES STAGING BEHAVIOR
  *
  * Usage:
- * yarn test-thinking-agent --interactive                          # Interactive chat mode
- * yarn test-thinking-agent --question "What failed?"              # Single question
- * yarn test-thinking-agent --task "task_id" --question "Status?"  # With task context
+ * pnpm test-thinking-agent --interactive                          # Interactive chat mode
+ * pnpm test-thinking-agent --question "What failed?"              # Single question
+ * pnpm test-thinking-agent --task "task_id" --question "Status?"  # With task context
  */
 const testThinkingAgent = async () => {
   const args = process.argv.slice(2);
@@ -36,11 +36,6 @@ const testThinkingAgent = async () => {
     logMetadata.execution = parseInt(args[executionIndex + 1]!, 10);
   }
 
-  const buildIndex = args.indexOf('--build');
-  if (buildIndex !== -1 && args[buildIndex + 1]) {
-    logMetadata.build_id = args[buildIndex + 1];
-  }
-
   const versionIndex = args.indexOf('--version');
   if (versionIndex !== -1 && args[versionIndex + 1]) {
     logMetadata.version_id = args[versionIndex + 1];
@@ -53,18 +48,18 @@ const testThinkingAgent = async () => {
   console.log('─'.repeat(60));
 
   try {
-    // Create runtime context
-    const runtimeContext = createParsleyRuntimeContext();
-    runtimeContext.set(USER_ID, process.env.USER_NAME || 'test_user');
-    runtimeContext.set('logMetadata', logMetadata);
+    // Create request context
+    const requestContext = createParsleyRequestContext();
+    requestContext.set(USER_ID, process.env.USER_NAME || 'test_user');
+    requestContext.set('logMetadata', logMetadata);
 
     // Get the thinking agent
     const agent = mastra.getAgent('sageThinkingAgent');
 
     // Create a new conversation thread
-    const memory = await agent.getMemory({ runtimeContext });
+    const memory = await agent.getMemory();
     const thread = await memory?.createThread({
-      metadata: runtimeContext.toJSON(),
+      metadata: requestContext.toJSON(),
       resourceId: 'test_local',
       threadId: `test-${Date.now()}`,
     });
@@ -78,7 +73,7 @@ const testThinkingAgent = async () => {
       console.log('🤖 Sage: ');
 
       const streamOptions: any = {
-        runtimeContext,
+        requestContext,
       };
 
       if (thread) {

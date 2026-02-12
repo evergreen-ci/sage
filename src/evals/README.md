@@ -6,7 +6,7 @@ Evals are stored in the `src/evals` folder.
 
 ## How to Run Evals
 
-To run the eval tests, do `yarn eval src/evals/<eval_folder_name>` from the root Sage directory. Note that this will only run the tests locally on your computer as it uses the `--no-send-logs` flag, which prevents forwarding any results to Braintrust.
+To run the eval tests, do `pnpm eval src/evals/<eval_folder_name>` from the root Sage directory. Note that this will only run the tests locally on your computer as it uses the `--no-send-logs` flag, which prevents forwarding any results to Braintrust.
 
 Additional requirements:
 
@@ -25,10 +25,10 @@ Datasets can be created directly in Braintrust or by using the `load-dataset-int
 For large datasets, you can load a CSV file into Braintrust with the following command:
 
 ```bash
-yarn load-dataset-into-braintrust <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>
+pnpm load-dataset-into-braintrust <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>
 
 # Dry run mode (validates CSV without inserting)
-yarn load-dataset-into-braintrust --dry-run <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>
+pnpm load-dataset-into-braintrust --dry-run <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>
 ```
 
 This script reads a CSV of arbitrary format and creates (or updates) a Braintrust dataset.
@@ -96,7 +96,7 @@ Notes:
 For the text input dataset example, you would run:
 
 ```bash
-yarn load-dataset-into-braintrust data.csv ./dataset-files my-text-dataset my-project prompt expected
+pnpm load-dataset-into-braintrust data.csv ./dataset-files my-text-dataset my-project prompt expected
 ```
 
 - `data.csv`: Your CSV file with text inputs
@@ -111,7 +111,7 @@ yarn load-dataset-into-braintrust data.csv ./dataset-files my-text-dataset my-pr
 For the file input dataset example, you would run:
 
 ```bash
-yarn load-dataset-into-braintrust data.csv ./document-files my-file-dataset my-project file_name expected
+pnpm load-dataset-into-braintrust data.csv ./document-files my-file-dataset my-project file_name expected
 ```
 
 - `data.csv`: Your CSV file with file names

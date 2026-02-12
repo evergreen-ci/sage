@@ -9,6 +9,7 @@ import loggerInstance from './setup';
 export class WinstonMastraLogger extends MastraLogger {
   constructor(options?: { name?: string; level?: LogLevel }) {
     super(options);
+    console.log(`Logger level initialized to ${loggerInstance.level}`);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

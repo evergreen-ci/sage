@@ -1,13 +1,26 @@
 // Prompts for log files analysis
 
+import { z } from 'zod';
+import { LineReferenceSchema } from './schemas';
+
 const MAX_FINAL_SUMMARY_TOKENS = 2048;
+
+const LINE_NUMBER_GUIDANCE = `
+IMPORTANT: The text includes line numbers in the format [L: <number>]. When referencing specific content:
+- ONLY cite line numbers that actually appear in the text you're analyzing.
+- When citing a line, include a brief quote of the actual content to prove it exists.
+- If you're unsure about a line number, describe the issue WITHOUT citing a line. It's better to be vague than wrong.
+- NEVER guess, approximate, or invent line numbers.
+`;
 
 // Agent Instructions
 export const INITIAL_ANALYZER_INSTRUCTIONS = `You are a senior engineer performing initial analysis of technical text (logs, code, configs, telemetry, build output).
 
+${LINE_NUMBER_GUIDANCE}
+
 Focus on:
 - Understanding the overall structure and format of the content
-- Detecting and emphasizing **failures, error codes, and abnormal terminations**
+- Detecting and emphasizing **failures, error codes, and abnormal terminations** (with accurate line citations when available)
 - Identifying key patterns, sections, and data types
 - Establishing context and technical domain
 - Preserving critical facts, identifiers, timestamps, and error codes
@@ -16,6 +29,9 @@ Focus on:
 
 export const REFINEMENT_AGENT_INSTRUCTIONS = `You are a technical analyst updating existing summaries with new information.
 You always respond as compact JSON matching the provided schema.
+
+${LINE_NUMBER_GUIDANCE}
+
 - Merge new facts into the existing summary efficiently.
 - Collapse repeated patterns; prefer timelines for events.
 - If the new chunk adds nothing material, set "updated": false.
@@ -25,7 +41,9 @@ You always respond as compact JSON matching the provided schema.
 
 export const REPORT_FORMATTER_INSTRUCTIONS = `You are a senior engineer creating technical reports and summaries.
 You respond ONLY with the requested format - no JSON wrapper, no additional fields.
-Focus on clarity, precision, and appropriate formatting for the requested output type.`;
+Focus on clarity, precision, and appropriate formatting for the requested output type.
+
+${LINE_NUMBER_GUIDANCE}`;
 
 // Formatting Requirements
 const CONCISE_SUMMARY_REQUIREMENTS = `- 3-4 lines maximum
@@ -50,8 +68,9 @@ const MARKDOWN_REPORT_FORMAT = `Use the following structure with proper Markdown
 
 ## Anomalies / Errors
 ### Error 1 Title
+- **Location:** Line X (only if line number was explicitly cited in source material)
 - **Description:** ...
-- **Evidence:** ...
+- **Evidence:** ... (include brief quote if referencing a specific line)
 - **Likely Cause:** ...
 
 ## Metrics / Counts
@@ -63,6 +82,11 @@ const MARKDOWN_REPORT_FORMAT = `Use the following structure with proper Markdown
 - [ ] Action item 1
 - [ ] Action item 2
 
+When referencing specific lines:
+- Only include line numbers that were explicitly mentioned in the source material
+- Format as "Line X" or "Lines X-Y"
+- Include a brief quote from the actual line content when citing
+
 Format with proper Markdown: use **bold** for emphasis, \`code\` for technical terms, and tables where appropriate.`;
 
 // Prompt Functions
@@ -71,12 +95,14 @@ export const USER_INITIAL_PROMPT = (chunk: string, analysisContext?: string) =>
 Identify the type of content (logs, code, config, telemetry, etc.) and key patterns.
 ${analysisContext ? `\nAnalysis Context:\n${analysisContext}\nUse this context to guide your analysis, focusing on relevant aspects and answering any specific questions.\n` : ''}
 
+${LINE_NUMBER_GUIDANCE}
+
 Chunk:
 """${chunk}"""
 
 Return:
-"<concise but comprehensive summary>"
-If this appears to be a build/test log, state clearly whether it succeeded or failed and summarize the root cause of failure if identifiable.`;
+"<concise but comprehensive summary, with accurate line citations when available>"
+If this appears to be a build/test log, state clearly whether it succeeded or failed and summarize the root cause of failure with line numbers if identifiable.`;
 
 export const USER_REFINE = (
   existing: string,
@@ -87,6 +113,8 @@ export const USER_REFINE = (
 If the chunk adds nothing substantive, return {"updated": false, "summary": "<unchanged>"}.
 ${analysisContext ? `\nAnalysis Context:\n${analysisContext}\nKeep this context in mind while refining the summary.\n` : ''}
 
+${LINE_NUMBER_GUIDANCE}
+
 Existing summary:
 """${existing}"""
 
@@ -94,7 +122,14 @@ New chunk:
 """${chunk}"""
 
 Return JSON:
-{ "updated": <bool>, "summary": "<updated or unchanged>" }`;
+{ 
+  "updated": <bool>, 
+  "summary": "<updated or unchanged>",
+  "lineReferences": [
+    { "line": <number>, "evidence": <direct quote from logs>, "description": <brief description of what this means> },
+     ...
+  ]
+}`;
 
 export const USER_MARKDOWN_PROMPT = (
   summary: string,
@@ -119,4 +154,31 @@ Requirements:
 ${CONCISE_SUMMARY_REQUIREMENTS}
 
 Source report:
+"""${markdown}"""`;
+
+export const USER_LINE_REFERENCES_PROMPTS = (
+  markdown: string,
+  existingLineReferences: Array<z.infer<typeof LineReferenceSchema>>,
+  analysisContext?: string
+) =>
+  `Analyze the following markdown report and extract specific line references mentioned in it. 
+${analysisContext ? `\nAnalysis Context:\n${analysisContext}\n` : ''}
+
+${
+  existingLineReferences.length > 0
+    ? `\nExisting line references from previous analysis steps: ${JSON.stringify(existingLineReferences, null, 2)}\nConsider these existing findings and generate a comprehensive, deduplicated final set of line references.`
+    : ''
+}
+
+Return JSON array, no other text:
+[
+  {
+    "line": <number>,
+    "description": <brief description of what was found at this location>,
+    "evidence": <quoted text corresponding to this line reference>
+  }
+  ...
+]
+
+Markdown to analyze:
 """${markdown}"""`;

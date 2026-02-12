@@ -1,5 +1,5 @@
-import { TestUser } from 'evals/constants';
-import { BaseTestCase, BaseScores } from 'evals/types';
+import { TestUser } from '@/evals/constants';
+import { BaseTestCase, BaseScores } from '@/evals/types';
 
 export type TestInput = {
   content: string;

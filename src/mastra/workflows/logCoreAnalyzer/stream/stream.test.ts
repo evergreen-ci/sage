@@ -5,7 +5,7 @@ const createReadableStream = (chunks: string[]) => {
   const encoder = new TextEncoder();
   const encodedChunks = chunks.map(chunk => encoder.encode(chunk));
   const readableStream = new ReadableStream({
-    start(controller) {
+    start: controller => {
       encodedChunks.forEach(chunk => controller.enqueue(chunk));
       controller.close();
     },

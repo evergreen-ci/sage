@@ -64,7 +64,7 @@ if (
           ]
         : []),
     ],
-    beforeSendLog(log) {
+    beforeSendLog: log => {
       if (logPrefixesToOmit.some(prefix => log.message.startsWith(prefix))) {
         return null;
       }

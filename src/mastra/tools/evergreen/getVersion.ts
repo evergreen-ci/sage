@@ -48,31 +48,44 @@ const getVersionInputSchema = z.object({
 const getVersionOutputSchema = z.object({
   version: z.object({
     id: z.string(),
-    activated: z.boolean(),
+    activated: z.boolean().nullable().optional(),
     author: z.string(),
-    createTime: z.date(),
-    finishTime: z.date().optional(),
+    createTime: z.string(),
+    finishTime: z.string().nullable().optional(),
     isPatch: z.boolean(),
     message: z.string(),
     order: z.number(),
     project: z.string(),
     projectIdentifier: z.string(),
-    repo: z.string(),
     requester: z.string(),
     revision: z.string(),
-    startTime: z.date().optional(),
+    startTime: z.string().nullable().optional(),
     status: z.string(),
-    taskCount: z.number().optional(),
-    baseVersion: z.object({
-      id: z.string(),
-    }),
-    patch: z.object({
-      id: z.string(),
-      alias: z.string(),
-      patchNumber: z.number(),
-    }),
+    taskCount: z.number().nullable().optional(),
+    baseVersion: z
+      .object({
+        id: z.string(),
+      })
+      .nullable()
+      .optional(),
+    patch: z
+      .object({
+        id: z.string(),
+        alias: z.string().nullable().optional(),
+        patchNumber: z.number(),
+      })
+      .nullable()
+      .optional(),
+    previousVersion: z
+      .object({
+        id: z.string(),
+        revision: z.string(),
+      })
+      .nullable()
+      .optional(),
   }),
 });
+
 const getVersionTool = createGraphQLTool<VersionQuery, VersionQueryVariables>({
   id: 'getVersion',
   description:

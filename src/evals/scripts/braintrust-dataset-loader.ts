@@ -10,7 +10,7 @@
  * - Dependencies: braintrust, csv-parse (and whatever this file imports)
  *
  * Usage
- *   BRAINTRUST_API_KEY=your_api_key yarn load-dataset-into-braintrust [--dry-run] <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>
+ *   BRAINTRUST_API_KEY=your_api_key pnpm load-dataset-into-braintrust [--dry-run] <csv-file-path> <path-to-dataset-folder> <dataset-name> <project-name> <input_column_name> <expected_column_name>
  *
  * Args
  *   [--dry-run]              Optional flag to simulate dataset insertion without actually inserting
@@ -136,7 +136,7 @@ type OutputRow = {
 /**
  * This script is used to load a CSV file into a Braintrust dataset
  */
-async function main() {
+const main = async () => {
   try {
     const rows = await readCSV(csvFilePath);
 
@@ -220,6 +220,6 @@ async function main() {
     console.error('Error:', err);
     process.exit(1);
   }
-}
+};
 
 main();

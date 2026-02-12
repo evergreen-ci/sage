@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/node';
 import winston from 'winston';
 import Transport from 'winston-transport';
 import { config } from '@/config';
+import SentryIssueTransport from '@/utils/sentry/sentryIssueTransport';
 
 // Define log format for production (JSON)
 const productionFormat = winston.format.combine(
@@ -77,6 +78,7 @@ const transports: winston.transport[] = [consoleTransport];
 // Add Sentry transport if enabled and configured
 if (config.sentry.enabled && config.sentry.dsn) {
   transports.push(new SentryWinstonTransport());
+  transports.push(new SentryIssueTransport());
 }
 
 /**

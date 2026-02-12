@@ -24,7 +24,7 @@ export const resolveRowIdByTraceId = async (
   const query = `
 from: project_logs('${projectId}')
 select: id
-filter: (root_span_id = '${traceId}' AND span_parents = ['${traceId}']) or root_span_id = '${traceId}'
+filter: metadata."mastra-trace-id" = '${traceId}'
 sort: created desc
 limit: 1
 `;

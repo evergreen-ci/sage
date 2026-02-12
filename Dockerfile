@@ -1,20 +1,25 @@
 # Stage 1: Build (default platform)
-FROM node:22-alpine AS builder
+FROM node:22-alpine
 WORKDIR /app
 
-COPY package.json yarn.lock ./
-RUN yarn install
+# Accept VERSION as a build argument (will be provided by CI/CD)
+ARG VERSION=unknown
+# Make VERSION available as environment variable for the build process
+ENV VERSION=${VERSION}
+
+# Install pnpm
+RUN npm install -g pnpm
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY . .
-RUN yarn build
+RUN pnpm build
 
-
-# Stage 2: Runtime (amd64 only)
-FROM --platform=linux/amd64 node:22-alpine AS runner
-WORKDIR /app
-
-# Copy only built artifacts and node_modules from builder
-COPY --from=builder /app /app
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nodejs
+USER nodejs
 
 EXPOSE 8080
-CMD ["yarn", "start"]
+CMD ["pnpm", "start"]

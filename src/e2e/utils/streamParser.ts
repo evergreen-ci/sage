@@ -13,7 +13,7 @@ interface StreamMessage {
  * @param chunk - Raw chunk string from the stream
  * @returns Array of parsed messages
  */
-export function parseStreamData(chunk: string): StreamMessage[] {
+export const parseStreamData = (chunk: string): StreamMessage[] => {
   const lines = chunk.split('\n');
   const messages: StreamMessage[] = [];
 
@@ -34,7 +34,7 @@ export function parseStreamData(chunk: string): StreamMessage[] {
   }
 
   return messages;
-}
+};
 
 /**
  * Extracts the spanId from a streaming response
@@ -42,10 +42,10 @@ export function parseStreamData(chunk: string): StreamMessage[] {
  * @param debug - Enable debug logging to see all message types
  * @returns The spanId if found, undefined otherwise
  */
-export function extractSpanIdFromStream(
+export const extractSpanIdFromStream = (
   responseText: string,
   debug = false
-): string | undefined {
+): string | undefined => {
   const messages = parseStreamData(responseText);
 
   if (debug) {
@@ -86,4 +86,4 @@ export function extractSpanIdFromStream(
   }
 
   return undefined;
-}
+};

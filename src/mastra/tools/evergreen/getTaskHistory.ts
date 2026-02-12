@@ -24,6 +24,7 @@ const GET_TASK_HISTORY = gql`
         execution
         order
         revision
+        buildVariant
         tests(opts: { statuses: ["fail", "silentfail"] }) {
           testResults {
             id
@@ -48,13 +49,13 @@ const GET_TASK_HISTORY = gql`
 const getTaskHistoryInputSchema = z.object({
   options: z.object({
     buildVariant: z.string(),
-    date: z.date().optional(), // Accepts ISO string or Date
+    date: z.string().optional(), // Accepts ISO string or Date
     limit: z.number().optional(),
     projectIdentifier: z.string(),
     taskName: z.string(),
     cursorParams: z.object({
       cursorId: z.string(),
-      direction: z.nativeEnum(TaskHistoryDirection),
+      direction: z.enum(TaskHistoryDirection),
       includeCursor: z.boolean(),
     }),
   }),

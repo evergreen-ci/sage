@@ -1,4 +1,4 @@
-import { createTool } from '@mastra/core';
+import { createTool } from '@mastra/core/tools';
 import { createWorkflow } from '@mastra/core/workflows';
 import {
   WorkflowInputSchema,
@@ -27,34 +27,19 @@ export const logCoreAnalyzerWorkflow = createWorkflow({
   .then(decideAndRunStep)
   .commit();
 
-export const logCoreAnalyzerTool: ReturnType<
-  typeof createTool<
-    typeof logCoreAnalyzerWorkflow.inputSchema,
-    typeof logCoreAnalyzerWorkflow.outputSchema
-  >
-> = createTool({
+export const logCoreAnalyzerTool = createTool({
   id: 'logCoreAnalyzerTool',
   description:
     logCoreAnalyzerWorkflow.description ||
     'Analyzes log files and text content',
   inputSchema: logCoreAnalyzerWorkflow.inputSchema,
   outputSchema: logCoreAnalyzerWorkflow.outputSchema,
-  execute: async ({
-    context,
-    resourceId,
-    runId,
-    runtimeContext,
-    tracingContext,
-  }) => {
-    const run = await logCoreAnalyzerWorkflow.createRunAsync({
-      resourceId,
-      runId,
-    });
+  execute: async (inputData, context) => {
+    const run = await logCoreAnalyzerWorkflow.createRun({});
 
     const runResult = await run.start({
-      inputData: context,
-      runtimeContext,
-      tracingContext,
+      inputData,
+      ...context,
     });
     if (runResult.status === 'success') {
       return runResult.result;

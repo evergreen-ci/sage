@@ -15,7 +15,7 @@ pre:
   - func: assume-ec2-role
   - func: get-project
   - func: setup-node
-  - func: yarn-install
+  - func: pnpm-install
 post:
   - func: assume-ec2-role
   - func: attach-mongod-logs
@@ -35,8 +35,10 @@ buildvariants:
     modules:
       - evergreen
     tasks:
+      - name: write_and_set_downstream_expansions
       - name: compile
       - name: lint
+      - name: check-generated-cursor-client
       - name: test
       - name: e2e
       - name: check-mastra-dev-startup
@@ -45,6 +47,9 @@ buildvariants:
       - name: question-classifier-evals
       - name: log-analyzer-workflow-evals
       - name: sage-thinking-evals
+      - name: slack-thread-summarizer-evals
+      - name: slack-question-ownership-evals
+      - name: release-notes-evals
     display_tasks:
       - name: evals
         execution_tasks:
@@ -52,34 +57,48 @@ buildvariants:
           - "question-classifier-evals"
           - "log-analyzer-workflow-evals"
           - "sage-thinking-evals"
+          - "slack-thread-summarizer-evals"
+          - "slack-question-ownership-evals"
+          - "release-notes-evals"
 tasks:
+  - name: write_and_set_downstream_expansions
+    commands:
+      - func: write repo name to downstream_expansions.yaml for Pine
+      - command: downstream_expansions.set
+        params:
+          file: downstream_expansions.yaml
   - name: compile
     commands:
-      - func: yarn-build
+      - func: pnpm-build
   - name: lint
     commands:
-      - func: yarn-lint
+      - func: pnpm-lint
+  - name: check-generated-cursor-client
+    commands:
+      - func: check-generated-cursor-client
   - name: test
     commands:
-      - func: yarn-test
+      - func: pnpm-test
   - name: e2e
     commands:
       - func: setup-mongodb
       - func: run-make-background
         vars:
           target: local-evergreen
-      - func: symlink
-      - func: yarn-build
+      - func: symlink-graphql-schema
+      - func: pnpm-build
       - func: wait-for-evergreen
-      - func: yarn-e2e
+      - func: pnpm-e2e
   - name: check-mastra-dev-startup
     commands:
-      - func: yarn-build
+      - func: pnpm-build
+      - func: pnpm-mastra-symlink-env
+      - func: symlink-graphql-schema
       - func: mastra-dev-startup
   - name: check-sage-prod-startup
     commands:
       - func: setup-mongodb
-      - func: yarn-build
+      - func: pnpm-build
       - func: sage-prod-startup
   - name: evergreen-evals
     commands:
@@ -88,7 +107,7 @@ tasks:
         vars:
           target: local-evergreen
       - func: wait-for-evergreen
-      - func: yarn-eval
+      - func: pnpm-eval
         vars:
           eval_dir: evergreenAgent
       - func: attach-braintrust-results
@@ -96,7 +115,7 @@ tasks:
           xml_file_name: evergreen_evals.xml
   - name: question-classifier-evals
     commands:
-      - func: yarn-eval
+      - func: pnpm-eval
         vars:
           eval_dir: questionClassifierAgent
       - func: attach-braintrust-results
@@ -104,7 +123,7 @@ tasks:
           xml_file_name: question_classifier_evals.xml
   - name: log-analyzer-workflow-evals
     commands:
-      - func: yarn-eval
+      - func: pnpm-eval
         vars:
           eval_dir: logAnalyzerWorkflow
       - func: attach-braintrust-results
@@ -117,14 +136,45 @@ tasks:
         vars:
           target: local-evergreen
       - func: wait-for-evergreen
-      - func: yarn-eval
+      - func: pnpm-eval
         vars:
           eval_dir: sageThinkingAgent
       - func: attach-braintrust-results
         vars:
           xml_file_name: sage_thinking_evals.xml
+  - name: slack-thread-summarizer-evals
+    commands:
+      - func: pnpm-eval
+        vars:
+          eval_dir: slackThreadSummarizerAgent
+      - func: attach-braintrust-results
+        vars:
+          xml_file_name: slack_thread_summarizer_evals.xml
+  - name: slack-question-ownership-evals
+    commands:
+      - func: pnpm-eval
+        vars:
+          eval_dir: questionOwnershipAgent
+      - func: attach-braintrust-results
+        vars:
+          xml_file_name: slack_question_ownership_evals.xml
+  - name: release-notes-evals
+    commands:
+      - func: pnpm-eval
+        vars:
+          eval_dir: releaseNotesWorkflow
+      - func: attach-braintrust-results
+        vars:
+          xml_file_name: release_notes_evals.xml
 
 functions:
+  write repo name to downstream_expansions.yaml for Pine:
+    - command: shell.exec
+      params:
+        script: |
+          touch downstream_expansions.yaml
+          echo "pine_repo_name: sage" | tee downstream_expansions.yaml
+
   attach-test-results:
     command: attach.xunit_results
     params:
@@ -246,31 +296,34 @@ functions:
         script: |
           ${PREPARE_SHELL}
 
-          # Fetch NVM and install it into this task's .nvm directory
-          # Once downloaded, source nvm and install yarn
-          git clone https://github.com/nvm-sh/nvm.git "$NVM_DIR"
-          cd "$NVM_DIR"
-          git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          cd -
+          # Install pnpm via standalone script
+          curl -fsSL https://get.pnpm.io/install.sh | env PNPM_HOME="$PNPM_HOME" SHELL="$(which bash)" bash -
 
-          # Retry the download for Node in case it flakes.
+          # pnpm env manages Node.js versions directly.
+          # Retry the Node.js installation in case it flakes.
           for i in {1..5}; do
-            nvm install --no-progress --default ${node_version}
+            pnpm env use --global ${node_version}
             [[ $? -eq 0 ]] && break
             echo "Attempt $i of 5 to install Node failed"
             sleep 10
           done
-          npm install -g yarn
-          npm install -g env-cmd
 
-  symlink:
+  symlink-graphql-schema:
     command: shell.exec
     params:
       working_dir: sage
       shell: bash
       script: |
         ln -s ${workdir}/evergreen/graphql/schema ${workdir}/sdlschema
+
+  pnpm-mastra-symlink-env:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        pnpm mastra:symlink-env
 
   wait-for-evergreen:
     command: shell.exec
@@ -280,43 +333,52 @@ functions:
       working_dir: sage
       script: ./scripts/wait-for-evergreen.sh
 
-  yarn-build:
+  pnpm-build:
     command: shell.exec
     params:
       working_dir: sage
       shell: bash
       script: |
         ${PREPARE_SHELL}
-        yarn build
+        pnpm build
 
-  yarn-install:
+  pnpm-install:
     command: shell.exec
     params:
       working_dir: sage
       shell: bash
       script: |
         ${PREPARE_SHELL}
-        yarn install
+        pnpm install --frozen-lockfile
   
-  yarn-lint:
+  pnpm-lint:
     command: shell.exec
     params:
       working_dir: sage
       shell: bash
       script: |
         ${PREPARE_SHELL}
-        yarn eslint:strict
+        pnpm eslint:strict
 
-  yarn-start:
+  check-generated-cursor-client:
     command: shell.exec
     params:
       working_dir: sage
       shell: bash
       script: |
         ${PREPARE_SHELL}
-        yarn start
+        ./scripts/check-generated-cursor-client.sh
 
-  yarn-e2e:
+  pnpm-start:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        pnpm start
+
+  pnpm-e2e:
     command: shell.exec
     params:
       env:
@@ -328,18 +390,18 @@ functions:
       shell: bash
       script: |
         ${PREPARE_SHELL}
-        yarn e2e
+        pnpm e2e
 
-  yarn-test:
+  pnpm-test:
     command: shell.exec
     params:
       working_dir: sage
       shell: bash
       script: |
         ${PREPARE_SHELL}
-        yarn test
+        pnpm test
 
-  yarn-eval:
+  pnpm-eval:
     command: shell.exec
     params:
       working_dir: sage

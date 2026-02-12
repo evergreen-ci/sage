@@ -6,7 +6,7 @@ REPO_NAME="sage"
 NAMESPACE="devprod-evergreen"
 RELEASE_NAME="sage"
 HELM_CHART="mongodb/web-app"
-CHART_VERSION="4.31.0"
+CHART_VERSION="4.34.3"
 K8S_API_SERVER="https://api.staging.corp.mongodb.com"
 STAGING_HOST="sage.devprod-evergreen.staging.corp.mongodb.com"
 GIT_SHA=$(git rev-parse --short=7 HEAD)
@@ -26,7 +26,7 @@ AWS_ACCESS_KEY_ID=$ECR_ACCESS_KEY AWS_SECRET_ACCESS_KEY=$ECR_SECRET_KEY \
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${REGISTRY}
 
 echo "Building Docker image..."
-docker build -t ${FULL_IMAGE}:${IMAGE_TAG} -t ${FULL_IMAGE}:latest .
+docker build --build-arg VERSION=${GIT_SHA} -t ${FULL_IMAGE}:${IMAGE_TAG} -t ${FULL_IMAGE}:latest .
 
 echo "Pushing image to ECR..."
 docker push ${FULL_IMAGE}:${IMAGE_TAG}
@@ -52,6 +52,7 @@ helm upgrade --install ${RELEASE_NAME} ${HELM_CHART} \
     --set ingress.enabled=true \
     --set "ingress.hosts[0]=${STAGING_HOST}" \
     --set env.VERSION=${GIT_SHA} \
+    --values environments/common.yaml \
     --values environments/staging.yaml \
     --kube-apiserver ${K8S_API_SERVER} \
     --kube-token ${STAGING_KUBERNETES_TOKEN}

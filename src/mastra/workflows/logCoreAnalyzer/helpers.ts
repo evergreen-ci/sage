@@ -1,23 +1,39 @@
 import { Agent } from '@mastra/core/agent';
-import { TracingContext } from '@mastra/core/ai-tracing';
 import { IMastraLogger } from '@mastra/core/logger';
-import { USER_MARKDOWN_PROMPT, USER_CONCISE_SUMMARY_PROMPT } from './prompts';
+import { TracingContext } from '@mastra/core/observability';
+import { RequestContext } from '@mastra/core/request-context';
+import { z } from 'zod';
+import {
+  USER_MARKDOWN_PROMPT,
+  USER_CONCISE_SUMMARY_PROMPT,
+  USER_LINE_REFERENCES_PROMPTS,
+} from './prompts';
+import { LineReferenceSchema } from './schemas';
 
 export const generateMarkdownAndSummary = async ({
   abortSignal,
   agent,
   analysisContext,
+  context,
+  existingLineReferences,
   logger,
   text,
-  tracingContext,
 }: {
   abortSignal?: AbortSignal;
   agent: Agent;
   analysisContext?: string;
   logger: IMastraLogger;
   text: string;
-  tracingContext: TracingContext;
-}): Promise<{ markdown: string; summary: string }> => {
+  existingLineReferences: Array<z.infer<typeof LineReferenceSchema>>;
+  context: {
+    requestContext: RequestContext;
+    tracingContext: TracingContext;
+  };
+}): Promise<{
+  markdown: string;
+  summary: string;
+  lineReferences: Array<z.infer<typeof LineReferenceSchema>>;
+}> => {
   logger.debug('Generating markdown report', {
     textLength: text.length,
   });
@@ -26,7 +42,7 @@ export const generateMarkdownAndSummary = async ({
     USER_MARKDOWN_PROMPT(text, analysisContext),
     {
       abortSignal,
-      tracingContext,
+      ...context,
     }
   );
   const markdown = markdownResult.text;
@@ -35,13 +51,40 @@ export const generateMarkdownAndSummary = async ({
     markdownLength: markdown.length,
   });
 
+  logger.debug('Generating line references');
+
+  const lineReferencesResult = await agent.generate(
+    USER_LINE_REFERENCES_PROMPTS(
+      markdown,
+      existingLineReferences,
+      analysisContext
+    ),
+    {
+      abortSignal,
+      ...context,
+    }
+  );
+
+  let lineReferences: Array<z.infer<typeof LineReferenceSchema>> =
+    existingLineReferences;
+  try {
+    lineReferences = JSON.parse(lineReferencesResult.text);
+    logger.debug('Line references generated', {
+      lineReferencesLength: lineReferences.length,
+    });
+  } catch (error) {
+    logger.debug('Failed to parse line references, using empty array', {
+      error,
+    });
+  }
+
   logger.debug('Generating concise summary');
 
   const summaryResult = await agent.generate(
     USER_CONCISE_SUMMARY_PROMPT(markdown, analysisContext),
     {
       abortSignal,
-      tracingContext,
+      ...context,
     }
   );
   const summary = summaryResult.text;
@@ -50,5 +93,9 @@ export const generateMarkdownAndSummary = async ({
     summaryLength: summary.length,
   });
 
-  return { markdown, summary };
+  return {
+    markdown,
+    summary,
+    lineReferences,
+  };
 };

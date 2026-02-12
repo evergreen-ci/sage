@@ -104,6 +104,9 @@ export const chunkStep = createStep({
   execute: async ({ mastra, setState, state, tracingContext }) => {
     const logger = mastra.getLogger();
     const { text } = state;
+    if (!text) {
+      throw new Error('Text content is missing in state');
+    }
     const doc = MDocument.fromText(text);
     const chunks = await doc.chunk({
       strategy: 'token',
@@ -138,11 +141,14 @@ export const singlePassStep = createStep({
   description: 'Direct analysis and report generation for single-chunk files',
   stateSchema: WorkflowStateSchema,
   inputSchema: z.object({}),
-  outputSchema: z.object({
-    markdown: z.string(),
-    summary: z.string(),
-  }),
-  execute: async ({ abortSignal, mastra, state, tracingContext }) => {
+  outputSchema: WorkflowOutputSchema,
+  execute: async ({
+    abortSignal,
+    mastra,
+    requestContext,
+    state,
+    tracingContext,
+  }) => {
     const logger = mastra.getLogger();
     const { analysisContext, chunks } = state;
 
@@ -169,7 +175,11 @@ export const singlePassStep = createStep({
       analysisContext,
       logger,
       text,
-      tracingContext,
+      context: {
+        requestContext,
+        tracingContext,
+      },
+      existingLineReferences: [],
     });
 
     logger.debug('Single-pass analysis complete', {
@@ -282,9 +292,16 @@ export const refineStep = createStep({
 
     const updated = response.updated ?? false;
     let newSummary = existingSummary;
+    const newLineReferences = response.lineReferences ?? [];
+
     if (updated) {
       newSummary = response.summary ?? existingSummary;
     }
+
+    const accumulatedLineReferences = [
+      ...state.accumulatedLineReferences,
+      ...newLineReferences,
+    ];
 
     tracingContext.currentSpan?.update({
       metadata: {
@@ -299,6 +316,7 @@ export const refineStep = createStep({
       ...state,
       idx: idx + 1,
       analysisContext,
+      accumulatedLineReferences,
     });
     return {
       summary: newSummary,
@@ -318,6 +336,7 @@ export const finalizeStep = createStep({
     abortSignal,
     inputData,
     mastra,
+    requestContext,
     state,
     tracingContext,
   }) => {
@@ -333,12 +352,17 @@ export const finalizeStep = createStep({
       analysisContext,
       logger,
       text: summary,
-      tracingContext,
+      context: {
+        requestContext,
+        tracingContext,
+      },
+      existingLineReferences: state.accumulatedLineReferences,
     });
 
     logger.debug('Finalize step complete', {
       markdownLength: result.markdown.length,
       summaryLength: result.summary.length,
+      lineReferencesLength: result.lineReferences.length,
     });
 
     return result;

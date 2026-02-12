@@ -1,11 +1,14 @@
-arch: "amd64"
+# Production-specific configuration (merged with common.yaml)
+# Only contains overrides and production-specific values
 
 ingress:
   enabled: true
   hosts:
     - sage.devprod-evergreen.prod.corp.mongodb.com
+
 service:
   targetPort: 8080
+
 mesh:
   enabled: true
 
@@ -20,40 +23,20 @@ services:
 
 resources:
   requests:
-    cpu: 4
-    memory: 8Gi
+    cpu: 1
+    memory: 4Gi
   limits:
-    cpu: 8
+    cpu: 2
     memory: 8Gi
 
+# Environment-specific variables
 env:
   BRAINTRUST_PARENT: project_name:sage-prod
   BRAINTRUST_PROJECT_NAME: sage-prod
-  DB_NAME: sage
-  EVERGREEN_API_USER: sage
-  EVERGREEN_API_URL: https://evergreen.mongodb.com/rest/v2
-  EVERGREEN_URL: https://evergreen.mongodb.com
-  EVERGREEN_GRAPHQL_ENDPOINT: https://evergreen.mongodb.com/mcp/graphql/query
   NODE_ENV: production
-  OTEL_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/traces
-  OTEL_EXPORTER_OTLP_ENDPOINT: https://api.braintrust.dev/otel
-  OTEL_LOG_COLLECTOR_URL: http://otel-collector-web-app.devprod-platform.svc.cluster.local:4318/v1/logs
   PORT: 8080
-  SENTRY_DSN: https://3db76f0989faad4c102a8708fba9446f@o4504991346720768.ingest.us.sentry.io/4509905876942849
-  SENTRY_ENABLED: true
-  SENTRY_CAPTURE_CONSOLE: true
   SENTRY_ENVIRONMENT: production
-
-envSecrets:
-  AZURE_OPENAI_API_KEY: parsley-ai-secrets
-  AZURE_OPENAI_ENDPOINT: parsley-ai-secrets
-  EVERGREEN_API_KEY: parsley-ai-secrets
-  MONGODB_URI: parsley-ai-secrets
-  BRAINTRUST_API_KEY: parsley-ai-secrets
-  HONEYCOMB_API_KEY: parsley-ai-secrets
-
-serviceAccount:
-  enabled: true
+  SENTRY_CAPTURE_CONSOLE: true
 
 autoscaling:
   minReplicas: 2
@@ -65,10 +48,3 @@ autoscaling:
         target:
           type: Utilization
           averageUtilization: 80
-
-security:  # Most sensitive info is logs and task metadata.
-  dataClassification: "Internal"
-  dataDesignation: ["MI"]
-
-ownership:
-  driEmail: evergreen-team@mongodb.com
