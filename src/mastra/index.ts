@@ -4,6 +4,7 @@ import { Observability } from '@mastra/observability';
 import { initLogger } from 'braintrust';
 import { config } from '@/config';
 import { WinstonMastraLogger } from '@/utils/logger/winstonMastraLogger';
+import { devprodResearcherAgent } from './agents/devprodResearcherAgent';
 import { evergreenAgent } from './agents/evergreenAgent';
 import { questionClassifierAgent } from './agents/planning/questionClassifierAgent';
 import { sageThinkingAgent } from './agents/planning/sageThinkingAgent';
@@ -48,6 +49,7 @@ export const mastra: Mastra = new Mastra({
     questionOwnershipAgent,
     slackThreadSummarizerAgent,
     releaseNotesAgent,
+    devprodResearcherAgent,
   },
   logger: new WinstonMastraLogger({
     name: 'Mastra',
