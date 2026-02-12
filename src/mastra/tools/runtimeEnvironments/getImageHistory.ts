@@ -36,15 +36,15 @@ export const getImageHistoryTool = createTool({
   Use this tool when the user asks about:
   - AMI version history for an image
   - When an image was last updated
-  - Previous versions of a runtime environment
-  - Timeline of environment changes
+  - Previous versions of an image
+  - Timeline of image changes
 
   Example: "What's the AMI history for ubuntu2204?"
   Example: "When was rhel8 last updated?"
   Example: "Show me the last 5 versions of amazon-linux-2"
 
   Returns AMI identifiers and deployment timestamps ordered from most recent to oldest.
-  Useful for understanding environment changes over time or investigating when issues started.`,
+  Useful for understanding image changes over time or investigating when issues started.`,
 
   inputSchema,
   outputSchema,

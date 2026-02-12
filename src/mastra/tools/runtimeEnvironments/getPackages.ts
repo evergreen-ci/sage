@@ -47,7 +47,6 @@ export const getPackagesTool = createTool({
   Use this tool when the user asks about:
   - What packages are installed on an AMI/image
   - Package versions (Python, Node.js libraries, system packages)
-  - Dependencies available in an environment
   - Checking if a specific package is installed
 
   Accepts both AMI IDs (e.g., "ami-12345678") and image names (e.g., "ubuntu2204").

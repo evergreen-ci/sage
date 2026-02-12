@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 /**
  * Base schema for tools that accept either an image name or AMI ID.
- * Includes refinements enforcing mutual exclusivity.
  */
 export const imageIdentifierSchema = z
   .object({

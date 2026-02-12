@@ -13,12 +13,12 @@ const outputSchema = z.object({
  */
 export const getImageNamesTool = createTool({
   id: 'getImageNames',
-  description: `Get all available runtime environment image names from Evergreen.
+  description: `Get all available image names from Evergreen.
 
   Use this tool when the user asks about:
   - Available images or AMIs
   - What operating systems are available
-  - List of runtime environments
+  - List of images
 
   Returns an array of image IDs like ["ubuntu2204", "rhel8", "amazon-linux-2"]`,
 

@@ -37,9 +37,7 @@ export const getImageDiffTool = createTool({
 
   Use this tool when the user asks about:
   - What changed between two specific AMI IDs
-  - Differences in runtime environments
   - Package updates or toolchain changes
-  - Investigating environment-related failures
 
   IMPORTANT: This tool requires actual AMI IDs (e.g., "ami-12345678"), not image names.
   If the user provides image names, first use getImageHistoryTool to get the corresponding AMI IDs.
@@ -48,7 +46,7 @@ export const getImageDiffTool = createTool({
   Example: "Compare ami-old vs ami-new"
 
   Returns detailed changes showing before/after versions for OS, packages, toolchains, and files.
-  Helps identify what might have caused build or test failures after an environment update.`,
+  Helps identify what might have caused build or test failures after an AMI change.`,
 
   inputSchema,
   outputSchema,

@@ -47,7 +47,6 @@ export const getToolchainsTool = createTool({
   Use this tool when the user asks about:
   - What compilers or language runtimes are available
   - Go, Python, Node.js, Java versions installed
-  - Development environment details
   - Build tool availability
 
   Accepts both AMI IDs (e.g., "ami-12345678") and image names (e.g., "ubuntu2204").

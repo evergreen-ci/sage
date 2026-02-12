@@ -48,9 +48,9 @@ export const getImageEventsTool = createTool({
   description: `Get chronological change events showing what changed between AMI versions over time.
 
   Use this tool when the user asks about:
-  - Change history for a runtime environment
+  - Change history for an image
   - When specific packages or toolchains were added/updated/removed
-  - Timeline of environment evolution
+  - Timeline of AMI changes
   - Investigating when breaking changes were introduced
 
   Example: "What changed in ubuntu2204 over the last month?"
@@ -63,7 +63,7 @@ export const getImageEventsTool = createTool({
   - All changes (packages, toolchains, OS, files)
   - Actions taken (ADDED, UPDATED, DELETED)
 
-  This is extremely useful for root cause analysis when builds start failing after environment updates.`,
+  This is extremely useful for root cause analysis when builds start failing after image updates.`,
 
   inputSchema,
   outputSchema,
