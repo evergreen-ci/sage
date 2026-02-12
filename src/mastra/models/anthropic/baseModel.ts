@@ -4,14 +4,14 @@ import { config } from '@/config';
 import { logger } from '@/utils/logger';
 
 /**
- * BaseModel is a class that creates a language model from an Azure OpenAI deployment.
- * It is a wrapper around the Azure OpenAI SDK.
+ * BaseModel is a class that creates a language model from an Azure Anthropic deployment.
+ * It is a wrapper around the Anthropic integration provided by the Vercel AI SDK.
  */
 class BaseModel {
   private model: LanguageModelV2;
 
   constructor(deploymentName: string, apiVersion?: string) {
-    // Create Azure OpenAI client with Vercel AI SDK
+    // Create Azure Anthropic client with Vercel AI SDK
     const endpointParts = config.aiModels.azure.anthropic.endpoint.split('//');
     const resourceName = endpointParts[1]?.split('/')[0] || 'default';
 
