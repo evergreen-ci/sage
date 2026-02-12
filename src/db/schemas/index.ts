@@ -26,7 +26,7 @@ export const jobRunStatusSchema = z.enum(JobRunStatus);
 /**
  * PR status values from Jira Dev Status API
  */
-export enum PrStatus {
+export enum PRStatus {
   Open = 'OPEN',
   Merged = 'MERGED',
   Declined = 'DECLINED',
@@ -59,19 +59,13 @@ export const jobRunSchema = z.object({
   errorMessage: z.string().optional(),
   /** Additional metadata about the job */
   metadata: z.record(z.string(), z.unknown()).optional(),
-  /** Pull request information if a PR was created */
   pr: z
     .object({
-      /** Full PR URL (e.g., 'https://github.com/owner/repo/pull/123') */
       url: z.string(),
-      /** PR number extracted from the URL */
       number: z.number(),
-      /** Repository in owner/repo format */
       repository: z.string(),
-      /** PR status from Jira Dev Status API */
-      status: z.enum(PrStatus),
-      /** Last update timestamp from Jira Dev Status API (indicates when PR was merged/declined if not OPEN) */
-      lastUpdate: z.date().optional(),
+      status: z.enum(PRStatus),
+      updatedAt: z.date().optional(),
     })
     .optional(),
 });

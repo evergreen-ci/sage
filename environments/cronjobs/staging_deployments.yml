@@ -40,11 +40,11 @@ cronJobs:
       BRAINTRUST_PROJECT_NAME: sage-staging
       JIRA_BASE_URL: https://jira-staging.corp.mongodb.com
 
-  - name: poll-pr-merge-status-job
-    schedule: '0 0 1 1 *' # Disabled via suspend, runs Jan 1 at midnight if enabled
+  - name: jira-ticket-status-polling-job
+    schedule: '*/5 * * * *' # Run every 5 minutes (matches prod schedule)
     suspend: true
     concurrencyPolicy: Forbid
-    command: ['yarn', 'poll-pr-merge-status:staging']
+    command: ['yarn', 'poll-jira-ticket-status:staging']
     resources:
       requests:
         cpu: 500m

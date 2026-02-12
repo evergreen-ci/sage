@@ -3,7 +3,7 @@ import {
   findCompletedJobRunsWithOpenPRs,
   updateJobRun,
 } from '@/db/repositories/jobRunsRepository';
-import { JobRun, PrStatus } from '@/db/types';
+import { JobRun, PRStatus } from '@/db/types';
 import {
   JiraClient,
   jiraClient as defaultJiraClient,
@@ -108,7 +108,7 @@ export class PrMergeStatusPollingService {
       }
 
       // Check if PR status has changed
-      if (matchingPr.status === PrStatus.Open) {
+      if (matchingPr.status === PRStatus.Open) {
         // Still open, no update needed
         logger.debug(`PR still open for job ${jobId}`, {
           jobId,
@@ -124,12 +124,12 @@ export class PrMergeStatusPollingService {
         };
       }
 
-      // PR status has changed - update job run with status and lastUpdate from Jira
+      // PR status has changed - update job run with status and timestamp from Jira
       await updateJobRun(job._id!, {
         pr: {
           ...job.pr,
-          status: matchingPr.status as PrStatus.Merged | PrStatus.Declined,
-          lastUpdate: new Date(matchingPr.lastUpdate),
+          status: matchingPr.status as PRStatus.Merged | PRStatus.Declined,
+          updatedAt: new Date(matchingPr.lastUpdate),
         },
       });
 

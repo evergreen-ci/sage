@@ -38,10 +38,10 @@ cronJobs:
       BRAINTRUST_PROJECT_NAME: sage-prod
       JIRA_BASE_URL: https://jira.mongodb.org
 
-  - name: poll-pr-merge-status-job
+  - name: jira-ticket-status-polling-job
     schedule: '*/5 * * * *' # Run every 5 minutes
     concurrencyPolicy: Forbid
-    command: ['yarn', 'poll-pr-merge-status:prod']
+    command: ['yarn', 'poll-jira-ticket-status:prod']
     resources:
       requests:
         cpu: 500m

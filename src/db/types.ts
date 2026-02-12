@@ -17,7 +17,7 @@ export {
 } from '@/db/schemas';
 
 // Re-export enums
-export { JobRunStatus, PrStatus } from '@/db/schemas';
+export { JobRunStatus, PRStatus } from '@/db/schemas';
 
 /**
  * TypeScript type inferred from the JobRun schema

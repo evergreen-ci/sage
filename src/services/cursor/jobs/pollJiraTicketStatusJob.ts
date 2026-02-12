@@ -1,6 +1,6 @@
 /**
- * Entry point for the PR merge status polling cronjob
- * Run this file directly to poll Jira Dev Status API for PR merge status updates
+ * Entry point for the Jira ticket status polling cronjob
+ * Run this file directly to poll Jira Dev Status API for ticket updates (PR merge status, etc.)
  */
 
 // Initialize Sentry BEFORE any other imports to ensure proper instrumentation
@@ -22,7 +22,7 @@ const monitorConfig = {
 
 const checkInId = Sentry.captureCheckIn(
   {
-    monitorSlug: 'pr-merge-status-polling-job',
+    monitorSlug: 'jira-ticket-status-polling-job',
     status: 'in_progress',
   },
   monitorConfig
@@ -33,14 +33,14 @@ let hasError = false;
 prMergeStatusPollingService
   .runAsJob()
   .catch(error => {
-    logger.error('PR merge status polling job failed', { error });
+    logger.error('Jira ticket status polling job failed', { error });
     hasError = true;
     process.exitCode = 1;
   })
   .finally(async () => {
     Sentry.captureCheckIn({
       checkInId,
-      monitorSlug: 'pr-merge-status-polling-job',
+      monitorSlug: 'jira-ticket-status-polling-job',
       status: hasError ? 'error' : 'ok',
     });
     // Ensure Sentry flushes all events before process exits
