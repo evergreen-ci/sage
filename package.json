@@ -49,7 +49,7 @@
     "test": "vitest --project unit"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.41",
+    "@ai-sdk/anthropic": "^2.0.61",
     "@ai-sdk/azure": "^2.0.89",
     "@ai-sdk/openai": "^2.0.71",
     "@ai-sdk/provider": "^2.0.0",
