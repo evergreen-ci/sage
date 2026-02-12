@@ -15,14 +15,9 @@ The [agents.md](agents.md) file contains:
 
 ## Architecture Overview
 
-Sage uses the Mastra framework for building agentic systems. The architecture follows a clean separation:
+For full system architecture, component diagrams, and observability details, see [docs/architecture.md](docs/architecture.md).
 
-- **Routes** (Express.js) handle HTTP requests and responses
-- **Agents** handle reasoning and decision-making
-- **Tools** fetch data or perform specific actions
-- **Workflows** coordinate multi-step processes
-
-Components are composed together: routes orchestrate agents/workflows, agents use tools and workflows, workflows call agents in their steps, and agents can invoke other agents as tools.
+Sage uses the Mastra framework for building agentic systems. Routes orchestrate agents/workflows, agents use tools and workflows, workflows call agents in their steps, and agents can invoke other agents as tools.
 
 ## Quick Reference
 
