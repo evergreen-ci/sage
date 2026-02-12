@@ -5,11 +5,13 @@ const {
   mockEditIssue,
   mockGetIssue,
   mockSearchForIssuesUsingJqlPost,
+  mockSendRequest,
 } = vi.hoisted(() => ({
   mockSearchForIssuesUsingJqlPost: vi.fn(),
   mockEditIssue: vi.fn(),
   mockAddComment: vi.fn(),
   mockGetIssue: vi.fn(),
+  mockSendRequest: vi.fn(),
 }));
 
 vi.mock('jira.js', () => ({
@@ -19,6 +21,7 @@ vi.mock('jira.js', () => ({
     },
     issues: { editIssue: mockEditIssue, getIssue: mockGetIssue },
     issueComments: { addComment: mockAddComment },
+    sendRequest: mockSendRequest,
   })),
 }));
 
@@ -195,6 +198,74 @@ describe('jiraClient', () => {
       const result = await jiraClient.findLabelAddedBy('PROJ-123', 'sage-bot');
 
       expect(result).toBe('label-adder@example.com');
+    });
+  });
+
+  describe('getDevStatus', () => {
+    it('should fetch dev status from Jira API', async () => {
+      // Mock getIssue to return issue ID
+      mockGetIssue.mockResolvedValueOnce({
+        id: '12345',
+      });
+
+      // Mock sendRequest response
+      mockSendRequest.mockResolvedValueOnce({
+        detail: [
+          {
+            pullRequests: [
+              {
+                id: 'pr-1',
+                name: 'Test PR',
+                url: 'https://github.com/org/repo/pull/123',
+                status: 'MERGED',
+                lastUpdate: '2024-01-01T00:00:00Z',
+                author: {
+                  name: 'test-user',
+                  avatar: 'https://avatar.url',
+                  url: 'https://github.com/test-user',
+                },
+              },
+            ],
+          },
+        ],
+      });
+
+      const result = await jiraClient.getDevStatus('PROJ-123');
+
+      expect(mockGetIssue).toHaveBeenCalledWith({
+        issueIdOrKey: 'PROJ-123',
+        fields: ['id'],
+      });
+      expect(mockSendRequest).toHaveBeenCalledWith(
+        {
+          method: 'GET',
+          url: '/rest/dev-status/1.0/issue/detail?issueId=12345&applicationType=github&dataType=pullrequest',
+        },
+        undefined
+      );
+      expect(result).not.toBeNull();
+      expect(result!.detail[0].pullRequests).toHaveLength(1);
+      expect(result!.detail[0].pullRequests[0].status).toBe('MERGED');
+    });
+
+    it('should return null when sendRequest fails', async () => {
+      mockGetIssue.mockResolvedValueOnce({
+        id: '12345',
+      });
+
+      mockSendRequest.mockRejectedValueOnce(new Error('Request failed'));
+
+      const result = await jiraClient.getDevStatus('PROJ-123');
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when API error occurs', async () => {
+      mockGetIssue.mockRejectedValueOnce(new Error('Network error'));
+
+      const result = await jiraClient.getDevStatus('PROJ-123');
+
+      expect(result).toBeNull();
     });
   });
 });

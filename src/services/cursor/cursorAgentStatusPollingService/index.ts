@@ -3,7 +3,7 @@ import {
   findRunningJobRuns,
   updateJobRun,
 } from '@/db/repositories/jobRunsRepository';
-import { JobRun, JobRunStatus } from '@/db/types';
+import { JobRun, JobRunStatus, PRStatus } from '@/db/types';
 import { getAgentStatus, CursorAgentStatus } from '@/services/cursor';
 import {
   JiraClient,
@@ -72,6 +72,40 @@ export class CursorAgentStatusPollingService {
     const elapsed = Date.now() - startTime.getTime();
 
     return elapsed > this.ttlMs;
+  }
+
+  /**
+   * Extract PR number and repository from a GitHub PR URL
+   * @param prUrl - The GitHub PR URL (e.g., 'https://github.com/owner/repo/pull/123')
+   * @returns Object with prNumber and repository (owner/repo), or undefined if URL is invalid
+   */
+  private extractPrInfo(prUrl: string):
+    | {
+        prNumber: number;
+        repository: string;
+      }
+    | undefined {
+    try {
+      // Match GitHub PR URL pattern: https://github.com/owner/repo/pull/123
+      const match = prUrl.match(
+        /^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)$/
+      );
+      if (match) {
+        const [, owner, repo, prNumberStr] = match;
+        const prNumber = parseInt(prNumberStr, 10);
+        if (!isNaN(prNumber)) {
+          return {
+            prNumber,
+            repository: `${owner}/${repo}`,
+          };
+        }
+      }
+      logger.warn(`Invalid PR URL format: ${prUrl}`);
+      return undefined;
+    } catch (error) {
+      logger.warn(`Failed to extract PR info from URL: ${prUrl}`, error);
+      return undefined;
+    }
   }
 
   /**
@@ -208,8 +242,22 @@ export class CursorAgentStatusPollingService {
           prUrl: details.prUrl,
         });
 
+        // Extract PR information and build PR object if PR URL is present
+        const prInfo = details.prUrl
+          ? this.extractPrInfo(details.prUrl)
+          : undefined;
+
         await updateJobRun(job._id!, {
           status: JobRunStatus.Completed,
+          pr:
+            details.prUrl && prInfo
+              ? {
+                  url: details.prUrl,
+                  number: prInfo.prNumber,
+                  repository: prInfo.repository,
+                  status: PRStatus.Open,
+                }
+              : undefined,
         });
 
         const completedComment = formatAgentCompletedPanel(
