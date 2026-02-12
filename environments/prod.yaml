@@ -33,6 +33,7 @@ resources:
 env:
   BRAINTRUST_PARENT: project_name:sage-prod
   BRAINTRUST_PROJECT_NAME: sage-prod
+  JIRA_BASE_URL: https://jira.mongodb.org
   NODE_ENV: production
   PORT: 8080
   SENTRY_ENVIRONMENT: production
