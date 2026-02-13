@@ -3,6 +3,7 @@
  * It is used to identify the end user making the request to the downstream API.
  */
 const USER_ID = 'userId';
+const USER_EMAIL = 'userEmail';
 
 const EVERGREEN_AGENT_NAME = 'evergreenAgent';
 const QUESTION_CLASSIFIER_AGENT_NAME = 'questionClassifierAgent';
@@ -17,6 +18,7 @@ const RELEASE_NOTES_WORKFLOW_NAME = 'releaseNotesWorkflow';
 
 export {
   USER_ID,
+  USER_EMAIL,
   EVERGREEN_AGENT_NAME,
   QUESTION_CLASSIFIER_AGENT_NAME,
   RELEASE_NOTES_AGENT_NAME,

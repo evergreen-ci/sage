@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { mastra } from '@/mastra';
 import {
   DEVPROD_RESEARCHER_AGENT_NAME,
+  USER_EMAIL,
   USER_ID,
 } from '@/mastra/agents/constants';
 import { runWithRequestContext } from '@/mastra/utils/requestContext';
@@ -40,8 +41,12 @@ const chatRoute = async (
   const currentSpan = trace.getActiveSpan();
   const spanContext = currentSpan?.spanContext();
 
-  const requestContext = new RequestContext<{ [USER_ID]: string }>();
+  const requestContext = new RequestContext<{
+    [USER_ID]: string;
+    [USER_EMAIL]: string;
+  }>();
   requestContext.set(USER_ID, res.locals.userId!);
+  requestContext.set(USER_EMAIL, `${res.locals.userId}@mongodb.com`);
 
   const untypedRequestContext =
     requestContext as unknown as RequestContext<unknown>;

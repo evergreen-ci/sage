@@ -1,6 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { USER_ID } from '@/mastra/agents/constants';
+import { USER_EMAIL } from '@/mastra/agents/constants';
 import {
   launchCursorAgent,
   getAgentStatus,
@@ -49,7 +49,7 @@ export const launchCursorAgentTool = createTool({
   outputSchema: launchCursorAgentOutputSchema,
   execute: async (inputData, context) => {
     const { requestContext } = context || {};
-    const assigneeEmail = requestContext?.get(USER_ID) as string | undefined;
+    const assigneeEmail = requestContext?.get(USER_EMAIL) as string | undefined;
 
     if (!assigneeEmail) {
       return {
@@ -91,7 +91,7 @@ export const getCursorAgentStatusTool = createTool({
   outputSchema: getCursorAgentStatusOutputSchema,
   execute: async (inputData, context) => {
     const { requestContext } = context || {};
-    const assigneeEmail = requestContext?.get(USER_ID) as string | undefined;
+    const assigneeEmail = requestContext?.get(USER_EMAIL) as string | undefined;
 
     if (!assigneeEmail) {
       return {

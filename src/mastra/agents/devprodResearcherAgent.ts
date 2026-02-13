@@ -11,10 +11,11 @@ import { searchJiraIssuesTool } from '@/mastra/tools/jira';
 import { memoryStore } from '@/mastra/utils/memory';
 import { resolveLogFileUrlTool } from '@/mastra/workflows/evergreen/getLogFileUrlWorkflow';
 import { logCoreAnalyzerTool } from '@/mastra/workflows/logCoreAnalyzer';
-import { USER_ID } from './constants';
+import { USER_EMAIL, USER_ID } from './constants';
 
 const DevprodResearcherRequestContextSchema = z.object({
   [USER_ID]: z.string(),
+  [USER_EMAIL]: z.string(),
 });
 
 const devprodResearcherMemory = new Memory({
