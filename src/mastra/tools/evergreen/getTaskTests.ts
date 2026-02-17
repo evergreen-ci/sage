@@ -69,7 +69,7 @@ const getTaskTestsInputSchema = z.object({
   testName: z.string().optional(),
 });
 
-const getTaskTestsOutputSchema = z.object({
+export const getTaskTestsOutputSchema = z.object({
   task: z.object({
     id: z.string(),
     execution: z.number(),

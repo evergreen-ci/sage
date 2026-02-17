@@ -180,6 +180,12 @@ describe('CursorAgentStatusPollingService', () => {
       expect(result.jobsProcessed).toBe(1);
       expect(mockUpdateJobRun).toHaveBeenCalledWith(job._id, {
         status: JobRunStatus.Completed,
+        pr: {
+          url: 'https://github.com/org/repo/pull/123',
+          number: 123,
+          repository: 'org/repo',
+          status: 'OPEN',
+        },
       });
     });
 
@@ -211,6 +217,12 @@ describe('CursorAgentStatusPollingService', () => {
       expect(result.jobsProcessed).toBe(3);
       expect(mockUpdateJobRun).toHaveBeenCalledWith(finishedJob._id, {
         status: JobRunStatus.Completed,
+        pr: {
+          url: 'https://github.com/org/repo/pull/456',
+          number: 456,
+          repository: 'org/repo',
+          status: 'OPEN',
+        },
       });
       expect(mockUpdateJobRun).toHaveBeenCalledWith(errorJob._id, {
         status: JobRunStatus.Failed,
