@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { JOB_RUNS_COLLECTION_NAME } from '@/db/repositories/constants';
 import { getCollection } from '@/db/repositories/helpers';
-import { JobRun, JobRunStatus, CreateJobRunInput } from '@/db/types';
+import { JobRun, JobRunStatus, PRStatus, CreateJobRunInput } from '@/db/types';
 import logger from '@/utils/logger';
 
 /**
@@ -25,6 +25,12 @@ export const ensureIndexes = async (): Promise<void> => {
 
   // Index for status-based queries (e.g., finding pending/running jobs)
   await collection.createIndex({ status: 1 }, { name: 'status_idx' });
+
+  // Compound index for finding completed jobs with open PRs
+  await collection.createIndex(
+    { status: 1, 'pr.status': 1, 'pr.url': 1 },
+    { name: 'status_prStatus_prUrl_idx' }
+  );
 
   logger.info(`Indexes created for ${JOB_RUNS_COLLECTION_NAME} collection`);
 };
@@ -64,7 +70,7 @@ export const createJobRun = async (
  * Fields that can be updated on a job run
  */
 export type JobRunUpdate = Partial<
-  Pick<JobRun, 'status' | 'cursorAgentId' | 'errorMessage'>
+  Pick<JobRun, 'status' | 'cursorAgentId' | 'errorMessage' | 'pr'>
 >;
 
 /**
@@ -147,5 +153,23 @@ export const findRunningJobRuns = async (): Promise<JobRun[]> => {
   return collection
     .find({ status: JobRunStatus.Running })
     .sort({ startedAt: 1 })
+    .toArray();
+};
+
+/**
+ * Finds all completed job runs with open PRs
+ * Used by the PR merge status polling service to check for merged PRs
+ * @returns Array of completed job runs with open PRs
+ */
+export const findCompletedJobRunsWithOpenPRs = async (): Promise<JobRun[]> => {
+  const collection = getCollection<JobRun>(JOB_RUNS_COLLECTION_NAME);
+
+  return collection
+    .find({
+      status: JobRunStatus.Completed,
+      'pr.status': PRStatus.Open,
+      'pr.url': { $exists: true, $ne: null },
+    })
+    .sort({ completedAt: 1 })
     .toArray();
 };

@@ -39,3 +39,22 @@ cronJobs:
       BRAINTRUST_PARENT: project_name:sage-staging
       BRAINTRUST_PROJECT_NAME: sage-staging
       JIRA_BASE_URL: https://jira-staging.corp.mongodb.com
+
+  - name: jira-ticket-status-polling-job
+    schedule: '*/5 * * * *' # Run every 5 minutes (matches prod schedule)
+    suspend: true
+    concurrencyPolicy: Forbid
+    command: ['pnpm', 'poll-jira-ticket-status:staging']
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1
+        memory: 2Gi
+    env:
+      NODE_ENV: staging
+      SENTRY_ENVIRONMENT: staging
+      BRAINTRUST_PARENT: project_name:sage-staging
+      BRAINTRUST_PROJECT_NAME: sage-staging
+      JIRA_BASE_URL: https://jira-staging.corp.mongodb.com
