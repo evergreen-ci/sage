@@ -69,6 +69,11 @@ const buildDirectLogUrl = createStep({
   },
 });
 
+const testResultsSchema = z.object({
+  testResults: z.nullable(getTaskTestsOutputSchema),
+  testId: z.string(),
+  groupId: z.string().optional(),
+});
 /** 2b-i) Fetch test results when the log is a test log */
 const fetchTestResultsForTestLog = createStep({
   id: 'fetchTestResultsForTestLog',
@@ -76,11 +81,7 @@ const fetchTestResultsForTestLog = createStep({
   inputSchema: z.object({
     logMetadata: logMetadataSchema,
   }),
-  outputSchema: z.object({
-    testResults: z.nullable(getTaskTestsOutputSchema),
-    testId: z.string(),
-    groupId: z.string().optional(),
-  }),
+  outputSchema: testResultsSchema,
   execute: async ({ inputData, ...contextArgs }) => {
     const { logMetadata } = inputData;
 
