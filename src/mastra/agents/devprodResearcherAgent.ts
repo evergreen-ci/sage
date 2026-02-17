@@ -4,8 +4,9 @@ import { z } from 'zod';
 import { askEvergreenAgentTool } from '@/mastra/agents/evergreenAgent';
 import { opus46 } from '@/mastra/models/anthropic/opus';
 import {
-  launchCursorAgentTool,
+  cursorResearcherTool,
   getCursorAgentStatusTool,
+  launchCursorAgentTool,
 } from '@/mastra/tools/cursor';
 import { searchJiraIssuesTool } from '@/mastra/tools/jira';
 import { memoryStore } from '@/mastra/utils/memory';
@@ -45,6 +46,7 @@ You have access to specialized sub-agents and tools that allow you to:
 - Search Jira for tickets, bugs, and project information
 - Analyze log files for errors, patterns, and root causes
 - Launch Cursor Cloud Agents to implement code changes and create pull requests
+- Research any GitHub codebase to answer questions without making changes
 
 # Available Tools
 
@@ -82,14 +84,27 @@ You have access to specialized sub-agents and tools that allow you to:
    - IMPORTANT: The Jira API authenticates as a service account, so \`currentUser()\` in JQL will NOT resolve to the actual user. When querying for the current user (e.g. "my tickets", "assigned to me"), always use the \`userId\` from ADDITIONAL_CONTEXT below as the assignee email (e.g. \`assignee = "firstname.lastname@mongodb.com"\`)
    - JQL examples: \`key = DEVPROD-1234\`, \`project = DEVPROD AND status = "In Progress"\`, \`assignee = "mohamed.khelif@mongodb.com" AND resolution = Unresolved\`
 
+7. **cursorResearcherTool**
+   - Researches a codebase using a Cursor Cloud Agent and answers a question
+   - Use for: Investigating code architecture, understanding how features work, finding where something is implemented, answering questions about any GitHub repository
+   - Does NOT make code changes or create PRs — research only
+   - Supports two modes:
+     - **New session**: Provide \`targetRepository\` and \`prompt\` to launch a fresh agent
+     - **Follow-up**: Provide \`agentId\` and \`prompt\` to send a follow-up question to an existing agent session (no need for \`targetRepository\`)
+   - The tool returns an \`agentId\` in every response — store it in working memory so you can reuse the same session for follow-up questions about the same repository
+   - Only omit \`agentId\` when researching a new/different repository
+   - Note: This is a long-running tool — the agent may take several minutes per question
+
 # Instructions
 - Plan your investigation before executing. Create a brief internal checklist of steps, but only return the final answer to the user.
 - You do not need user confirmation before using tools. Act autonomously.
 - When delegating to sub-agents, provide clear and specific questions with all relevant context.
 - After each tool call, validate the result and decide on next steps. Self-correct if needed.
 - Provide evidence-based answers. Include relevant data, IDs, URLs, and line references from logs.
-- When launching Cursor agents, set \`autoCreatePr: true\` unless the user explicitly says otherwise.
+- When launching Cursor agents to implement changes, set \`autoCreatePr: true\` unless the user explicitly says otherwise.
 - When checking Cursor agent status, report the status clearly and provide the PR URL when available.
+- When the user asks a question about a codebase (e.g. "how does X work in repo Y?"), use cursorResearcherTool instead of launchCursorAgentTool.
+- When using cursorResearcherTool, store the returned \`agentId\` in working memory. For follow-up questions about the same repository, pass the \`agentId\` to reuse the existing session rather than launching a new agent.
 - Format responses in markdown. Use plain text for clarity; use fenced code blocks for code or log snippets.
 - When passing IDs to tools, always use the complete ID. Never truncate or shorten IDs.
 - If a question is outside your capabilities, say so clearly rather than guessing.
@@ -108,6 +123,7 @@ ${JSON.stringify(requestContext.toJSON(), null, 2)}
     resolveLogFileUrlTool,
     launchCursorAgentTool,
     getCursorAgentStatusTool,
+    cursorResearcherTool,
     searchJiraIssuesTool,
   },
 });
