@@ -5,26 +5,36 @@ export {
 } from './cursorApiClient';
 
 export {
+  addFollowupToAgent,
   buildPromptFromTicketData,
+  getAgentConversation,
   getAgentStatus,
   launchCursorAgent,
+  launchResearcherAgent,
   normalizeRepositoryUrl,
+  waitForAgentCompletion,
 } from './cursorAgentService';
 
-// Re-export internal types
 export type {
-  CursorAgentStatus,
+  AddFollowupInput,
+  AddFollowupResult,
+  AgentConversationInput,
+  AgentConversationMessage,
+  AgentConversationResult,
   AgentStatusInput,
   AgentStatusResult,
+  CursorAgentStatus,
   LaunchAgentInput,
   LaunchAgentResult,
+  LaunchResearcherInput,
 } from './types';
 
-// Re-export generated Cursor API types
 export type {
+  AddFollowupResponse,
   CreateAgentRequest,
   CreateAgentResponse,
   Error as CursorApiError,
+  GetAgentConversationResponse,
   GetAgentResponse,
   ListAgentsResponse,
 } from '@/generated/cursor-api';
