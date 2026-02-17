@@ -56,6 +56,7 @@ const rateMessageRoute = async (
   try {
     logger.info('Logging feedback to Braintrust', {
       spanId,
+      logRowId,
       rating,
       feedback,
     });
@@ -65,7 +66,7 @@ const rateMessageRoute = async (
       scores: {
         correctness: rating,
       },
-      source: 'app',
+      source: 'external',
       metadata: {
         timestamp: new Date(),
         user_id: res.locals.userId,

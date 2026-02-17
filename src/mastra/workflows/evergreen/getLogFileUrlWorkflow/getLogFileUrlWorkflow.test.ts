@@ -78,7 +78,9 @@ describe('getLogFileUrlWorkflow', () => {
             {
               id: 'myTestId',
               status: 'pass',
+              baseStatus: 'pass',
               testFile: 'foo.js',
+              testName: 'foo',
               logs: {
                 urlParsley: 'https://parsley/ui',
                 urlRaw: 'https://example/raw/log.txt',
@@ -117,7 +119,9 @@ describe('getLogFileUrlWorkflow', () => {
             {
               id: 'different-id',
               status: 'fail',
+              baseStatus: 'fail',
               testFile: 'x',
+              testName: 'x',
               logs: { urlRaw: 'y' },
             },
           ],
@@ -148,8 +152,10 @@ describe('getLogFileUrlWorkflow', () => {
           testResults: [
             {
               id: 'target',
+              baseStatus: 'fail',
               status: 'fail',
               testFile: 'foo',
+              testName: 'foo',
               logs: null,
             },
           ],

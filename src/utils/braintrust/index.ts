@@ -23,7 +23,7 @@ export const resolveRowIdByTraceId = async (
 
   const query = `
 from: project_logs('${projectId}')
-select: id
+select: root_span_id
 filter: metadata."mastra-trace-id" = '${traceId}'
 sort: created desc
 limit: 1
@@ -44,8 +44,9 @@ limit: 1
   }
 
   const data = (await response.json().catch(() => undefined)) as unknown as
-    | { data?: Array<{ id?: string }> }
+    | { data?: Array<{ root_span_id?: string }> }
     | undefined;
-  const spanId = data?.data?.[0]?.id;
+
+  const spanId = data?.data?.[0]?.root_span_id;
   return spanId;
 };
