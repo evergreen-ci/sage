@@ -193,6 +193,31 @@ describe('PrMergeStatusPollingService', () => {
       expect(mockUpdateJobRun).not.toHaveBeenCalled();
     });
 
+    it('marks stale PRs as abandoned when completed more than 30 days ago', async () => {
+      const thirtyOneDaysAgo = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+      const staleJob = createMockJob({ completedAt: thirtyOneDaysAgo });
+      mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([staleJob]);
+      mockUpdateJobRun.mockResolvedValueOnce(staleJob);
+
+      const service = new PrMergeStatusPollingService({
+        jiraClient: mockJiraClient,
+      });
+
+      const result = await service.poll();
+
+      expect(result.jobsProcessed).toBe(1);
+      expect(mockGetDevStatus).not.toHaveBeenCalled();
+      expect(mockUpdateJobRun).toHaveBeenCalledWith(staleJob._id, {
+        pr: {
+          url: 'https://github.com/org/repo/pull/123',
+          number: 123,
+          repository: 'org/repo',
+          status: PRStatus.Abandoned,
+          updatedAt: expect.any(Date),
+        },
+      });
+    });
+
     it('updates job when PR is merged', async () => {
       const job = createMockJob();
       mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([job]);

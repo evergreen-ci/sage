@@ -30,6 +30,7 @@ export enum PRStatus {
   Open = 'OPEN',
   Merged = 'MERGED',
   Declined = 'DECLINED',
+  Abandoned = 'ABANDONED',
 }
 
 /**

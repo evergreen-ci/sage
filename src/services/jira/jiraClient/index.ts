@@ -1,5 +1,6 @@
 import { Version2Client } from 'jira.js';
 import { config } from '@/config';
+import { PRStatus } from '@/db/schemas';
 import logger from '@/utils/logger';
 import { DEFAULT_ISSUE_FIELDS, MAX_SEARCH_RESULTS } from '../constants';
 import { JiraIssue, JiraIssueFields } from '../types';
@@ -11,7 +12,7 @@ export interface DevStatusPullRequest {
   id: string;
   name: string;
   url: string;
-  status: 'OPEN' | 'MERGED' | 'DECLINED';
+  status: PRStatus;
   lastUpdate: string;
   author: {
     name: string;

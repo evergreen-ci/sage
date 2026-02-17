@@ -11,6 +11,9 @@ import {
 } from '@/services/jira/jiraClient';
 import logger from '@/utils/logger';
 
+/** Milliseconds after which an open PR is considered abandoned (30 days) */
+const ABANDONED_PR_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000;
+
 export interface PrMergeStatusPollingConfig {
   jiraClient: JiraClient;
 }
@@ -70,6 +73,28 @@ export class PrMergeStatusPollingService {
           skipped: true,
           skipReason: 'Missing PR URL',
         };
+      }
+
+      // Check if the job is stale (completed more than 30 days ago)
+      const staleThreshold = new Date(Date.now() - ABANDONED_PR_THRESHOLD_MS);
+      if (job.completedAt && job.completedAt < staleThreshold) {
+        // Mark as abandoned to stop future polling
+        await updateJobRun(job._id!, {
+          pr: {
+            ...job.pr,
+            status: PRStatus.Abandoned,
+            updatedAt: new Date(),
+          },
+        });
+
+        logger.info(`Marked stale PR as abandoned for job ${jobId}`, {
+          jobId,
+          ticketKey,
+          prUrl: job.pr.url,
+          completedAt: job.completedAt,
+        });
+
+        return { jobId, ticketKey, success: true };
       }
 
       // Get dev status from Jira

@@ -26,6 +26,12 @@ export const ensureIndexes = async (): Promise<void> => {
   // Index for status-based queries (e.g., finding pending/running jobs)
   await collection.createIndex({ status: 1 }, { name: 'status_idx' });
 
+  // Compound index for finding completed jobs with open PRs
+  await collection.createIndex(
+    { status: 1, 'pr.status': 1, 'pr.url': 1 },
+    { name: 'status_prStatus_prUrl_idx' }
+  );
+
   logger.info(`Indexes created for ${JOB_RUNS_COLLECTION_NAME} collection`);
 };
 

@@ -41,7 +41,7 @@ cronJobs:
   - name: jira-ticket-status-polling-job
     schedule: '*/5 * * * *' # Run every 5 minutes
     concurrencyPolicy: Forbid
-    command: ['yarn', 'poll-jira-ticket-status:prod']
+    command: ['pnpm', 'poll-jira-ticket-status:prod']
     resources:
       requests:
         cpu: 500m
