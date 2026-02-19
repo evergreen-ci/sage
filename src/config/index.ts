@@ -63,10 +63,6 @@ export interface Config {
     /** EVERGREEN_URL */
     evergreenURL: string;
   };
-  runtimeEnvironments: {
-    /** RUNTIME_ENVIRONMENTS_API_URL */
-    apiURL: string;
-  };
   honeycomb: {
     /** HONEYCOMB_API_KEY */
     apiKey: string;
@@ -183,9 +179,6 @@ export const config: Config = {
     apiURL: getEnvVar('EVERGREEN_API_URL', ''),
     apiKey: getEnvVar('EVERGREEN_API_KEY', ''),
     evergreenURL: getEnvVar('EVERGREEN_URL', ''),
-  },
-  runtimeEnvironments: {
-    apiURL: getEnvVar('RUNTIME_ENVIRONMENTS_API_URL', ''),
   },
   honeycomb: {
     apiKey: getEnvVar('HONEYCOMB_API_KEY', ''),
