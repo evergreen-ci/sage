@@ -1,7 +1,9 @@
 import {
   Sdk,
+  type AddFollowupResponse,
   type CreateAgentRequest,
   type CreateAgentResponse,
+  type GetAgentConversationResponse,
   type GetAgentResponse,
 } from '@/generated/cursor-api';
 import { createClient, createConfig } from '@/generated/cursor-api/client';
@@ -141,6 +143,93 @@ export class CursorApiClient {
     });
 
     return agentResponse;
+  }
+
+  /**
+   * Get the conversation history of a cloud agent
+   * GET /v0/agents/{id}/conversation
+   * @param agentId - The unique identifier of the agent
+   * @returns The conversation response with message history
+   */
+  async getAgentConversation(
+    agentId: string
+  ): Promise<GetAgentConversationResponse> {
+    logger.debug('Fetching Cursor agent conversation', { agentId });
+
+    const response = await this.sdk.getAgentConversation({
+      path: { id: agentId },
+      throwOnError: false,
+    });
+
+    if (response.error) {
+      const err = parseCursorError(response.error);
+
+      logger.error(
+        `Cursor API error fetching agent conversation: ${err.message}`,
+        {
+          agentId,
+          statusCode: response.response.status,
+          code: err.code,
+        }
+      );
+
+      throw new CursorApiClientError(
+        err.message,
+        response.response.status,
+        err.code
+      );
+    }
+
+    const conversationResponse = response.data;
+
+    logger.debug('Cursor agent conversation retrieved', {
+      agentId: conversationResponse.id,
+      messageCount: conversationResponse.messages.length,
+    });
+
+    return conversationResponse;
+  }
+
+  /**
+   * Send a follow-up instruction to an existing cloud agent
+   * POST /v0/agents/{id}/followup
+   * @param agentId - The unique identifier of the agent
+   * @param text - The follow-up instruction text
+   * @returns The follow-up response with the agent ID
+   */
+  async addFollowup(
+    agentId: string,
+    text: string
+  ): Promise<AddFollowupResponse> {
+    logger.debug('Sending follow-up to Cursor agent', { agentId });
+
+    const response = await this.sdk.addFollowup({
+      path: { id: agentId },
+      body: { prompt: { text } },
+      throwOnError: false,
+    });
+
+    if (response.error) {
+      const err = parseCursorError(response.error);
+
+      logger.error(`Cursor API error sending follow-up: ${err.message}`, {
+        agentId,
+        statusCode: response.response.status,
+        code: err.code,
+      });
+
+      throw new CursorApiClientError(
+        err.message,
+        response.response.status,
+        err.code
+      );
+    }
+
+    logger.debug('Follow-up sent to Cursor agent', {
+      agentId: response.data.id,
+    });
+
+    return response.data;
   }
 }
 
