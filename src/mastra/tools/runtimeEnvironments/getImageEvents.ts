@@ -1,7 +1,18 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { GetImageEventsQuery, ImageEventType } from '@/gql/generated/types';
+import { USER_ID } from '@/mastra/agents/constants';
+import evergreenClient from '@/mastra/tools/evergreen/graphql/evergreenClient';
 import logger from '@/utils/logger';
-import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
+import { GET_IMAGE_EVENTS } from './graphql/queries';
+
+/** Map GraphQL ImageEventType enum values to display labels */
+const eventTypeDisplayMap: Record<ImageEventType, string> = {
+  [ImageEventType.OperatingSystem]: 'OS',
+  [ImageEventType.Package]: 'Packages',
+  [ImageEventType.Toolchain]: 'Toolchains',
+  [ImageEventType.File]: 'Files',
+};
 
 const inputSchema = z.object({
   image_id: z
@@ -68,33 +79,46 @@ export const getImageEventsTool = createTool({
   inputSchema,
   outputSchema,
 
-  execute: async inputData => {
+  execute: async (inputData, context) => {
     try {
-      const rawEvents = await runtimeEnvironmentsClient.getEvents({
-        image: inputData.image_id,
-        limit: inputData.limit,
-        page: inputData.page,
-      });
+      const userId = context?.requestContext?.get(USER_ID) as string;
+      const result = await evergreenClient.executeQuery<GetImageEventsQuery>(
+        GET_IMAGE_EVENTS,
+        {
+          imageId: inputData.image_id,
+          limit: inputData.limit,
+          page: inputData.page ?? 0,
+        },
+        { userID: userId }
+      );
+
+      const rawEvents = result.image?.events?.eventLogEntries ?? [];
 
       const events = rawEvents.map(event => {
+        const changes = event.entries.map(entry => ({
+          name: entry.name,
+          before: entry.before,
+          after: entry.after,
+          type: eventTypeDisplayMap[entry.type] as
+            | 'OS'
+            | 'Packages'
+            | 'Toolchains'
+            | 'Files',
+          action: entry.action as 'ADDED' | 'UPDATED' | 'DELETED',
+        }));
+
         const summary = {
-          total: event.entries.length,
-          added: event.entries.filter(e => e.action === 'ADDED').length,
-          updated: event.entries.filter(e => e.action === 'UPDATED').length,
-          deleted: event.entries.filter(e => e.action === 'DELETED').length,
+          total: changes.length,
+          added: changes.filter(c => c.action === 'ADDED').length,
+          updated: changes.filter(c => c.action === 'UPDATED').length,
+          deleted: changes.filter(c => c.action === 'DELETED').length,
         };
 
         return {
-          timestamp: event.timestamp.toISOString(),
-          ami_before: event.ami_before,
-          ami_after: event.ami_after,
-          changes: event.entries.map(entry => ({
-            name: entry.name,
-            before: entry.before,
-            after: entry.after,
-            type: entry.type,
-            action: entry.action,
-          })),
+          timestamp: new Date(event.timestamp).toISOString(),
+          ami_before: event.amiBefore ?? '',
+          ami_after: event.amiAfter,
+          changes,
           summary,
         };
       });

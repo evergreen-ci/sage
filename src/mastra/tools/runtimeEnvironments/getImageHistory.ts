@@ -1,7 +1,10 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { GetImageHistoryQuery } from '@/gql/generated/types';
+import { USER_ID } from '@/mastra/agents/constants';
+import evergreenClient from '@/mastra/tools/evergreen/graphql/evergreenClient';
 import logger from '@/utils/logger';
-import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
+import { GET_IMAGE_HISTORY } from './graphql/queries';
 
 const inputSchema = z.object({
   image_id: z
@@ -27,7 +30,9 @@ const outputSchema = z.object({
 });
 
 /**
- * Tool to get historical AMI versions for an image
+ * Tool to get historical AMI versions for an image.
+ * Derives AMI history from event transitions: each event's amiAfter
+ * represents a deployed AMI version at the event's timestamp.
  */
 export const getImageHistoryTool = createTool({
   id: 'getImageHistory',
@@ -49,33 +54,44 @@ export const getImageHistoryTool = createTool({
   inputSchema,
   outputSchema,
 
-  execute: async inputData => {
+  execute: async (inputData, context) => {
     try {
-      const response = await runtimeEnvironmentsClient.getImageHistory(
-        inputData.image_id,
-        inputData.page,
-        inputData.limit ?? 10
+      const userId = context?.requestContext?.get(USER_ID) as string;
+      const limit = inputData.limit ?? 10;
+      const result = await evergreenClient.executeQuery<GetImageHistoryQuery>(
+        GET_IMAGE_HISTORY,
+        {
+          imageId: inputData.image_id,
+          limit,
+          page: inputData.page ?? 0,
+        },
+        { userID: userId }
       );
 
+      const eventsPayload = result.image?.events;
+      const entries = eventsPayload?.eventLogEntries ?? [];
+      const totalCount = eventsPayload?.count ?? 0;
+
       const now = Date.now();
-      const history = response.data.map(item => ({
-        ami_id: item.ami_id,
-        created_date: new Date(item.created_date * 1000).toISOString(),
-        days_ago: Math.floor(
-          (now - item.created_date * 1000) / (1000 * 60 * 60 * 24)
-        ),
-      }));
+      const history = entries.map(entry => {
+        const ts = new Date(entry.timestamp).getTime();
+        return {
+          ami_id: entry.amiAfter,
+          created_date: new Date(entry.timestamp).toISOString(),
+          days_ago: Math.floor((now - ts) / (1000 * 60 * 60 * 24)),
+        };
+      });
 
       const latestDate =
         history.length > 0
-          ? new Date(response.data[0].created_date * 1000).toLocaleDateString()
+          ? new Date(history[0].created_date).toLocaleDateString()
           : 'unknown';
 
-      const summary = `Found ${response.total_count} historical versions for ${inputData.image_id}. Most recent: ${history[0]?.ami_id || 'none'} (deployed ${latestDate}).`;
+      const summary = `Found ${totalCount} historical versions for ${inputData.image_id}. Most recent: ${history[0]?.ami_id || 'none'} (deployed ${latestDate}).`;
 
       return {
         history,
-        total_count: response.total_count,
+        total_count: totalCount,
         summary,
       };
     } catch (error) {

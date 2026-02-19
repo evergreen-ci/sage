@@ -1,7 +1,10 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { GetImagesQuery } from '@/gql/generated/types';
+import { USER_ID } from '@/mastra/agents/constants';
+import evergreenClient from '@/mastra/tools/evergreen/graphql/evergreenClient';
 import logger from '@/utils/logger';
-import runtimeEnvironmentsClient from '@/utils/runtimeEnvironments/client';
+import { GET_IMAGES } from './graphql/queries';
 
 const outputSchema = z.object({
   images: z.array(z.string()),
@@ -25,13 +28,18 @@ export const getImageNamesTool = createTool({
   inputSchema: z.object({}),
   outputSchema,
 
-  execute: async () => {
+  execute: async (_, context) => {
     try {
-      const images = await runtimeEnvironmentsClient.getImageNames();
+      const userId = context?.requestContext?.get(USER_ID) as string;
+      const result = await evergreenClient.executeQuery<GetImagesQuery>(
+        GET_IMAGES,
+        {},
+        { userID: userId }
+      );
 
       return {
-        images,
-        count: images.length,
+        images: result.images,
+        count: result.images.length,
       };
     } catch (error) {
       logger.error('getImageNames tool failed', {
