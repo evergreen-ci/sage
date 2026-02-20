@@ -1,6 +1,21 @@
 # Production cronjob configuration
 # Environment-specific overrides (merged with cronjobs/common.yaml)
 
+defaultAlerts:
+  enabled: true
+  slack: "mySlackReceiver"
+
+alertRoutingConfig:
+  enabled: true
+  groupWait: 30s
+  groupInterval: 5m
+  repeatInterval: 12h
+  slackReceivers:
+    mySlackReceiver:
+      apiURL:
+        name: "slack-alert-secret"
+        key: "apiUrl"
+
 cronJobs:
   - name: sage-bot-jira-polling-job
     schedule: '* * * * *' # Run every minute
