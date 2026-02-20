@@ -7,6 +7,7 @@ import {
   getEvergreenTaskFileURL,
 } from '@/constants/parsley/logURLTemplates';
 import { getTaskTestsTool } from '@/mastra/tools/evergreen';
+import { getTaskTestsOutputSchema } from '@/mastra/tools/evergreen/getTaskTests';
 import { isValidationError } from '@/mastra/tools/utils';
 import { LogTypes } from '@/types/parsley';
 
@@ -68,6 +69,11 @@ const buildDirectLogUrl = createStep({
   },
 });
 
+const testResultsSchema = z.object({
+  testResults: z.nullable(getTaskTestsOutputSchema),
+  testId: z.string(),
+  groupId: z.string().optional(),
+});
 /** 2b-i) Fetch test results when the log is a test log */
 const fetchTestResultsForTestLog = createStep({
   id: 'fetchTestResultsForTestLog',
@@ -75,13 +81,7 @@ const fetchTestResultsForTestLog = createStep({
   inputSchema: z.object({
     logMetadata: logMetadataSchema,
   }),
-  outputSchema: z.object({
-    testResults: getTaskTestsTool.outputSchema
-      ? z.nullable(getTaskTestsTool.outputSchema)
-      : z.null(),
-    testId: z.string(),
-    groupId: z.string().optional(),
-  }),
+  outputSchema: testResultsSchema,
   execute: async ({ inputData, ...contextArgs }) => {
     const { logMetadata } = inputData;
 
@@ -92,7 +92,7 @@ const fetchTestResultsForTestLog = createStep({
     if (!getTaskTestsTool.execute) {
       throw new Error('getTaskTestsTool.execute is not defined');
     }
-    const testResults = await getTaskTestsTool.execute(
+    const toolResult = await getTaskTestsTool.execute(
       {
         id: logMetadata.task_id,
         execution: logMetadata.execution,
@@ -101,12 +101,12 @@ const fetchTestResultsForTestLog = createStep({
       contextArgs
     );
 
-    if (isValidationError(testResults)) {
-      throw new Error(testResults.message);
+    if (isValidationError(toolResult)) {
+      throw new Error(toolResult.message);
     }
 
     return {
-      testResults,
+      testResults: getTaskTestsOutputSchema.parse(toolResult),
       testId: logMetadata.test_id,
       groupId: logMetadata.group_id,
     };
@@ -117,7 +117,7 @@ const fetchTestResultsForTestLog = createStep({
 const deriveTestLogUrl = createStep({
   id: 'deriveTestLogUrl',
   description: 'Resolve the final test log URL for a specific test id',
-  inputSchema: fetchTestResultsForTestLog.outputSchema,
+  inputSchema: testResultsSchema,
   outputSchema: z.string(),
   execute: async ({ inputData }) => {
     const { testId, testResults } = inputData;

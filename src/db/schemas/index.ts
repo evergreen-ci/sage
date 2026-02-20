@@ -24,6 +24,16 @@ export enum JobRunStatus {
 export const jobRunStatusSchema = z.enum(JobRunStatus);
 
 /**
+ * PR status values from Jira Dev Status API
+ */
+export enum PRStatus {
+  Open = 'OPEN',
+  Merged = 'MERGED',
+  Declined = 'DECLINED',
+  Abandoned = 'ABANDONED',
+}
+
+/**
  * Zod schema for JobRun documents stored in MongoDB
  */
 export const jobRunSchema = z.object({
@@ -50,6 +60,15 @@ export const jobRunSchema = z.object({
   errorMessage: z.string().optional(),
   /** Additional metadata about the job */
   metadata: z.record(z.string(), z.unknown()).optional(),
+  pr: z
+    .object({
+      url: z.string(),
+      number: z.number(),
+      repository: z.string(),
+      status: z.enum(PRStatus),
+      updatedAt: z.date().optional(),
+    })
+    .optional(),
 });
 
 /**

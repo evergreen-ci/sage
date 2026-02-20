@@ -2,11 +2,28 @@ import {
   Sdk,
   type CreateAgentRequest,
   type CreateAgentResponse,
-  type Error as CursorError,
   type GetAgentResponse,
 } from '@/generated/cursor-api';
 import { createClient, createConfig } from '@/generated/cursor-api/client';
 import logger from '@/utils/logger';
+
+/**
+ * Normalize Cursor API error response to a consistent shape.
+ * Actual API returns: { error: string, code?: string }
+ * Spec format: { error: { message?: string, code?: string } }
+ * @param raw - The raw error response from the Cursor API
+ * @returns Normalized error with message and optional code
+ */
+const parseCursorError = (raw: unknown): { message: string; code?: string } => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const err = raw as any;
+  return {
+    message:
+      (typeof err?.error === 'string' ? err.error : err?.error?.message) ||
+      'Unknown Cursor API error',
+    code: err?.code ?? err?.error?.code,
+  };
+};
 
 /**
  * Error class for Cursor API errors
@@ -61,20 +78,17 @@ export class CursorApiClient {
     });
 
     if (response.error) {
-      const cursorError = response.error as CursorError;
-      const errorMessage =
-        cursorError.error?.message || 'Unknown Cursor API error';
-      const errorCode = cursorError.error?.code;
+      const err = parseCursorError(response.error);
 
-      logger.error(`Cursor API error: ${errorMessage}`, {
+      logger.error(`Cursor API error: ${err.message}`, {
         statusCode: response.response.status,
-        code: errorCode,
+        code: err.code,
       });
 
       throw new CursorApiClientError(
-        errorMessage,
+        err.message,
         response.response.status,
-        errorCode
+        err.code
       );
     }
 
@@ -104,21 +118,18 @@ export class CursorApiClient {
     });
 
     if (response.error) {
-      const cursorError = response.error as CursorError;
-      const errorMessage =
-        cursorError.error?.message || 'Unknown Cursor API error';
-      const errorCode = cursorError.error?.code;
+      const err = parseCursorError(response.error);
 
-      logger.error(`Cursor API error fetching agent: ${errorMessage}`, {
+      logger.error(`Cursor API error fetching agent: ${err.message}`, {
         agentId,
         statusCode: response.response.status,
-        code: errorCode,
+        code: err.code,
       });
 
       throw new CursorApiClientError(
-        errorMessage,
+        err.message,
         response.response.status,
-        errorCode
+        err.code
       );
     }
 

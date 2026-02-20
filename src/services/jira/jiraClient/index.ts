@@ -1,8 +1,31 @@
 import { Version2Client } from 'jira.js';
 import { config } from '@/config';
+import { PRStatus } from '@/db/schemas';
 import logger from '@/utils/logger';
 import { DEFAULT_ISSUE_FIELDS, MAX_SEARCH_RESULTS } from '../constants';
 import { JiraIssue, JiraIssueFields } from '../types';
+
+/**
+ * Response from Jira Dev Status API for pull requests
+ */
+export interface DevStatusPullRequest {
+  id: string;
+  name: string;
+  url: string;
+  status: PRStatus;
+  lastUpdate: string;
+  author: {
+    name: string;
+    avatar: string;
+    url: string;
+  };
+}
+
+export interface DevStatusResponse {
+  detail: Array<{
+    pullRequests: DevStatusPullRequest[];
+  }>;
+}
 
 /**
  * JiraClient provides methods for interacting with the Jira REST API
@@ -120,6 +143,45 @@ class JiraClient {
       return null;
     } catch (error) {
       logger.warn(`Failed to get changelog for ${issueKey}`, error);
+      return null;
+    }
+  };
+
+  /**
+   * Get development status information for an issue from Jira Dev Status API
+   * This includes pull request information from connected GitHub repositories
+   * @param issueKey - The Jira issue key (e.g., 'PROJ-123')
+   * @returns Development status response with pull request information
+   */
+  getDevStatus = async (
+    issueKey: string
+  ): Promise<DevStatusResponse | null> => {
+    try {
+      // First, get the issue ID from the issue key
+      const issue = await this.client.issues.getIssue({
+        issueIdOrKey: issueKey,
+        fields: ['id'],
+      });
+
+      const issueId = issue.id;
+
+      // Call the Dev Status API endpoint using the client's sendRequest
+      // Note: This endpoint is not available in jira.js typed methods
+      const data = await this.client.sendRequest<DevStatusResponse>(
+        {
+          method: 'GET',
+          url: `/rest/dev-status/1.0/issue/detail?issueId=${issueId}&applicationType=github&dataType=pullrequest`,
+        },
+        undefined as never
+      );
+
+      logger.debug(`Retrieved dev status for issue ${issueKey}`, {
+        pullRequestCount: data?.detail?.[0]?.pullRequests?.length ?? 0,
+      });
+
+      return data;
+    } catch (error) {
+      logger.warn(`Failed to get dev status for ${issueKey}`, error);
       return null;
     }
   };

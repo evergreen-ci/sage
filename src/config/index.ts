@@ -40,6 +40,15 @@ export interface Config {
         /** AZURE_OPENAI_DEFAULT_DEPLOYMENT */
         defaultDeployment: string;
       };
+      anthropic: {
+        /** ANTHROPIC_API_KEY */
+        apiKey: string;
+        /** ANTHROPIC_ENDPOINT */
+        endpoint: string;
+        /** ANTHROPIC_API_VERSION */
+        apiVersion: string;
+        defaultDeployment: string;
+      };
     };
   };
   evergreen: {
@@ -155,6 +164,12 @@ export const config: Config = {
         endpoint: getEnvVar('AZURE_OPENAI_ENDPOINT', ''),
         apiVersion: 'preview',
         defaultDeployment: getEnvVar('AZURE_OPENAI_DEFAULT_DEPLOYMENT', ''),
+      },
+      anthropic: {
+        apiKey: getEnvVar('ANTHROPIC_API_KEY', ''),
+        endpoint: getEnvVar('ANTHROPIC_ENDPOINT', ''),
+        apiVersion: 'preview',
+        defaultDeployment: getEnvVar('ANTHROPIC_DEFAULT_DEPLOYMENT', ''),
       },
     },
   },
