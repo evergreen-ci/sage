@@ -1,6 +1,21 @@
 # Production cronjob configuration
 # Environment-specific overrides (merged with cronjobs/common.yaml)
 
+defaultAlerts:
+  enabled: true
+  slack: "mySlackReceiver"
+
+alertRoutingConfig:
+  enabled: true
+  groupWait: 30s
+  groupInterval: 5m
+  repeatInterval: 12h
+  slackReceivers:
+    mySlackReceiver:
+      apiURL:
+        name: "slack-alert-secret"
+        key: "apiUrl"
+
 cronJobs:
   - name: sage-bot-jira-polling-job
     schedule: '* * * * *' # Run every minute
@@ -24,6 +39,25 @@ cronJobs:
     schedule: '* * * * *' # Run every minute
     concurrencyPolicy: Forbid
     command: ['pnpm', 'poll-cursor-status:prod']
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1
+        memory: 2Gi
+    env:
+      NODE_ENV: production
+      SENTRY_ENVIRONMENT: production
+      BRAINTRUST_PARENT: project_name:sage-prod
+      BRAINTRUST_PROJECT_NAME: sage-prod
+      JIRA_BASE_URL: https://jira.mongodb.org
+
+  - name: jira-ticket-status-polling-job
+    schedule: '*/5 * * * *' # Run every 5 minutes - disabled via suspend until Jira API permissions are granted (DEVPROD-28450)
+    suspend: true
+    concurrencyPolicy: Forbid
+    command: ['pnpm', 'poll-jira-ticket-status:prod']
     resources:
       requests:
         cpu: 500m

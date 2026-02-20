@@ -38,6 +38,18 @@ env:
   SENTRY_ENVIRONMENT: production
   SENTRY_CAPTURE_CONSOLE: true
 
+defaultAlerts:
+  enabled: true
+  slack: "mySlackReceiver"
+
+alertRoutingConfig:
+  enabled: true
+  slackReceivers:
+    mySlackReceiver:
+      apiURL:
+        name: "slack-alert-secret"
+        key: "apiUrl"
+
 autoscaling:
   minReplicas: 2
   maxReplicas: 5
