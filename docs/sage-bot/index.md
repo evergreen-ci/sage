@@ -46,4 +46,4 @@ All users are responsible for following the [MongoDB Policy for Use of AI Coding
 
 ## Getting Help
 
-If you encounter issues or have questions, check the [troubleshooting guide](./troubleshooting.md) or reach out in [#ask-devprod-evergreen](https://mongodb.enterprise.slack.com/archives/C0V896UV8).
+If you encounter issues or have questions, check the [troubleshooting guide](./troubleshooting.md) or reach out in [#ask-devprod](https://mongodb.enterprise.slack.com/archives/C0V896UV8).
