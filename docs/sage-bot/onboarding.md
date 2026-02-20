@@ -15,7 +15,7 @@ Sage Bot uses the API key to make requests with the Cursor Agent on your behalf.
 
 ## Step 1: Generate a Cursor API Key
 
-1. Go to [Cursor Integration settings](https://cursor.com/dashboard?tab=integrations)
+1. Go to [Cursor Integration settings](https://cursor.com/dashboard?tab=integrations) (sign in with your @mongodb.com email to go through okta integration)
 2. Navigate to the **User API Keys** section
 3. Click **New User API key**
 4. Copy and save your API key securely - you won't be able to see it again
