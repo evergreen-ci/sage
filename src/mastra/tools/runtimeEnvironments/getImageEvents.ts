@@ -5,6 +5,7 @@ import { USER_ID } from '@/mastra/agents/constants';
 import evergreenClient from '@/mastra/tools/evergreen/graphql/evergreenClient';
 import logger from '@/utils/logger';
 import { GET_IMAGE_EVENTS } from './graphql/queries';
+import { imageIdSchema } from './schemas';
 
 /** Map GraphQL ImageEventType enum values to display labels */
 const eventTypeDisplayMap: Record<ImageEventType, string> = {
@@ -14,10 +15,7 @@ const eventTypeDisplayMap: Record<ImageEventType, string> = {
   [ImageEventType.File]: 'Files',
 };
 
-const inputSchema = z.object({
-  image_id: z
-    .string()
-    .describe('Image ID (e.g., "ubuntu2204", "rhel8", "amazon-linux-2")'),
+const inputSchema = imageIdSchema.extend({
   limit: z
     .number()
     .default(5)
@@ -85,7 +83,7 @@ export const getImageEventsTool = createTool({
       const result = await evergreenClient.executeQuery<GetImageEventsQuery>(
         GET_IMAGE_EVENTS,
         {
-          imageId: inputData.image_id,
+          imageId: inputData.imageId,
           limit: inputData.limit,
           page: inputData.page ?? 0,
         },
@@ -124,7 +122,7 @@ export const getImageEventsTool = createTool({
       });
 
       const totalChanges = events.reduce((sum, e) => sum + e.summary.total, 0);
-      const description = `Retrieved ${events.length} change events for ${inputData.image_id} with ${totalChanges} total changes across all transitions.`;
+      const description = `Retrieved ${events.length} change events for ${inputData.imageId} with ${totalChanges} total changes across all transitions.`;
 
       return {
         events,

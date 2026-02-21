@@ -5,11 +5,9 @@ import { USER_ID } from '@/mastra/agents/constants';
 import evergreenClient from '@/mastra/tools/evergreen/graphql/evergreenClient';
 import logger from '@/utils/logger';
 import { GET_IMAGE_HISTORY } from './graphql/queries';
+import { imageIdSchema } from './schemas';
 
-const inputSchema = z.object({
-  image_id: z
-    .string()
-    .describe('Image ID (e.g., "ubuntu2204", "rhel8", "amazon-linux-2")'),
+const inputSchema = imageIdSchema.extend({
   page: z.number().optional().describe('Page number for pagination'),
   limit: z
     .number()
@@ -61,7 +59,7 @@ export const getImageHistoryTool = createTool({
       const result = await evergreenClient.executeQuery<GetImageHistoryQuery>(
         GET_IMAGE_HISTORY,
         {
-          imageId: inputData.image_id,
+          imageId: inputData.imageId,
           limit,
           page: inputData.page ?? 0,
         },
@@ -87,7 +85,7 @@ export const getImageHistoryTool = createTool({
           ? new Date(history[0].created_date).toLocaleDateString()
           : 'unknown';
 
-      const summary = `Found ${totalCount} historical versions for ${inputData.image_id}. Most recent: ${history[0]?.ami_id || 'none'} (deployed ${latestDate}).`;
+      const summary = `Found ${totalCount} historical versions for ${inputData.imageId}. Most recent: ${history[0]?.ami_id || 'none'} (deployed ${latestDate}).`;
 
       return {
         history,
