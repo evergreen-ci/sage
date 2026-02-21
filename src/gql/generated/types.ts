@@ -201,6 +201,7 @@ export type AdminSettings = {
   sage?: Maybe<SageConfig>;
   scheduler?: Maybe<SchedulerConfig>;
   serviceFlags?: Maybe<ServiceFlags>;
+  serviceFlagsList?: Maybe<Array<ServiceFlag>>;
   shutdownWaitSeconds?: Maybe<Scalars['Int']['output']>;
   singleTaskDistro?: Maybe<SingleTaskDistroConfig>;
   slack?: Maybe<SlackConfig>;
@@ -702,6 +703,7 @@ export type Cost = {
   __typename?: 'Cost';
   adjustedEC2Cost?: Maybe<Scalars['Float']['output']>;
   onDemandEC2Cost?: Maybe<Scalars['Float']['output']>;
+  s3ArtifactPutCost?: Maybe<Scalars['Float']['output']>;
 };
 
 export type CostConfig = {
@@ -2049,6 +2051,7 @@ export type Mutation = {
   setLastRevision: SetLastRevisionPayload;
   /** setPatchVisibility takes a list of patch ids and a boolean to set the visibility on the my patches queries */
   setPatchVisibility: Array<Patch>;
+  setServiceFlags: Array<ServiceFlag>;
   setTaskPriorities: Array<Task>;
   setTaskPriority: Task;
   setVersionPriority?: Maybe<Scalars['String']['output']>;
@@ -2285,6 +2288,10 @@ export type MutationSetLastRevisionArgs = {
 export type MutationSetPatchVisibilityArgs = {
   hidden: Scalars['Boolean']['input'];
   patchIds: Array<Scalars['String']['input']>;
+};
+
+export type MutationSetServiceFlagsArgs = {
+  updatedFlags: Array<ServiceFlagInput>;
 };
 
 export type MutationSetTaskPrioritiesArgs = {
@@ -3803,6 +3810,17 @@ export type SelectorInput = {
   type: Scalars['String']['input'];
 };
 
+export type ServiceFlag = {
+  __typename?: 'ServiceFlag';
+  enabled: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type ServiceFlagInput = {
+  enabled: Scalars['Boolean']['input'];
+  name: Scalars['String']['input'];
+};
+
 export type ServiceFlags = {
   __typename?: 'ServiceFlags';
   agentStartDisabled?: Maybe<Scalars['Boolean']['output']>;
@@ -5154,6 +5172,9 @@ export type GetTaskQuery = {
     buildVariantDisplayName?: string | null;
     projectIdentifier?: string | null;
     requester: string;
+    distroId: string;
+    imageId: string;
+    ami?: string | null;
     baseTask?: { __typename?: 'Task'; id: string } | null;
     versionMetadata: {
       __typename?: 'Version';

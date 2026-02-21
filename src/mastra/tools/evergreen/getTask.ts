@@ -22,6 +22,9 @@ const GET_TASK = gql`
       baseTask {
         id
       }
+      distroId
+      imageId
+      ami
       versionMetadata {
         id
         isPatch
@@ -63,6 +66,9 @@ const getTaskOutputSchema = z.object({
       })
       .optional()
       .nullable(),
+    distroId: z.string(),
+    imageId: z.string(),
+    ami: z.string().optional().nullable(),
     versionMetadata: z.object({
       id: z.string(),
       isPatch: z.boolean(),
