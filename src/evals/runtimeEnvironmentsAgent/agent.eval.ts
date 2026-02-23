@@ -1,10 +1,14 @@
+import { RequestContext } from '@mastra/core/request-context';
 import { Factuality } from 'autoevals';
 import { Eval } from 'braintrust';
-import { ReporterName, PROJECT_NAME } from '@/evals/constants';
+import { ReporterName, PROJECT_NAME, TestUser } from '@/evals/constants';
 import { loadTestCases } from '@/evals/loadTestCases';
 import { ToolUsage, ToolUsageMode } from '@/evals/scorers';
 import { tracedAgentEval } from '@/evals/utils/tracedAgent';
-import { RUNTIME_ENVIRONMENTS_AGENT_NAME } from '@/mastra/agents/constants';
+import {
+  RUNTIME_ENVIRONMENTS_AGENT_NAME,
+  USER_ID,
+} from '@/mastra/agents/constants';
 import { TestCase, TestInput, TestResult } from './types';
 
 /**
@@ -59,6 +63,11 @@ Eval(
           text: response.text,
           toolsUsed,
         };
+      },
+      setupRequestContext: () => {
+        const requestContext = new RequestContext();
+        requestContext.set(USER_ID, TestUser.Regular);
+        return requestContext;
       },
     }),
     scores: [
