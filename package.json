@@ -52,10 +52,10 @@
     "test": "vitest --project unit"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^2.0.61",
-    "@ai-sdk/azure": "^2.0.89",
-    "@ai-sdk/openai": "^2.0.71",
-    "@ai-sdk/provider": "^2.0.0",
+    "@ai-sdk/anthropic": "^3.0.46",
+    "@ai-sdk/azure": "^2.0.94",
+    "@ai-sdk/openai": "^2.0.92",
+    "@ai-sdk/provider": "^3.0.8",
     "@mastra/ai-sdk": "^1.0.4",
     "@mastra/braintrust": "^1.0.3",
     "@mastra/core": "^1.4.0",
@@ -77,7 +77,7 @@
     "@opentelemetry/winston-transport": "^0.21.0",
     "@sentry/node": "10.38.0",
     "@sentry/vite-plugin": "^4.6.0",
-    "ai": "^5.0.114",
+    "ai": "^5.0.137",
     "braintrust": "^2.2.2",
     "cors": "^2.8.5",
     "dotenv-flow": "^4.1.0",
