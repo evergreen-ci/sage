@@ -1,5 +1,6 @@
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createAzure } from '@ai-sdk/azure';
+import { LanguageModelV3 } from '@ai-sdk/provider';
 import { config } from '@/config';
 import { logger } from '@/utils/logger';
 
@@ -15,7 +16,7 @@ type ModelProvider = 'openai' | 'anthropic';
 export const createModel = (
   provider: ModelProvider,
   deploymentName: string
-): any => {
+): LanguageModelV3 => {
   if (provider === 'openai') {
     const endpointParts = config.aiModels.azure.openai.endpoint.split('//');
     const resourceName = endpointParts[1]?.split('.')[0] || 'default';
@@ -31,7 +32,7 @@ export const createModel = (
       apiVersion: config.aiModels.azure.openai.apiVersion,
     });
 
-    return azureOpenAI(deploymentName) as any;
+    return azureOpenAI(deploymentName);
   }
 
   const azureAnthropic = createAnthropic({
@@ -48,5 +49,5 @@ export const createModel = (
     apiVersion: config.aiModels.azure.anthropic.apiVersion,
   });
 
-  return azureAnthropic.languageModel(deploymentName) as any;
+  return azureAnthropic.languageModel(deploymentName);
 };

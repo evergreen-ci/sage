@@ -1,5 +1,6 @@
 import { toAISdkStream } from '@mastra/ai-sdk';
 import { AgentMemoryOption } from '@mastra/core/agent';
+import type { MessageListInput } from '@mastra/core/agent/message-list';
 import { RequestContext } from '@mastra/core/request-context';
 import { trace } from '@opentelemetry/api';
 import {
@@ -185,7 +186,9 @@ const chatRoute = async (
     const stream = await runWithRequestContext(
       { userId: res.locals.userId, requestId: res.locals.requestId },
       async () =>
-        await agent.stream(validatedMessage as any, {
+        // ai@6 UIMessage adds tool-approval states not yet in @mastra/core's bundled AI SDK types.
+        // This cast is safe at runtime; remove once Mastra's internal types catch up.
+        await agent.stream(validatedMessage as MessageListInput, {
           requestContext: requestContext,
           memory: memoryOptions,
           tracingOptions: {

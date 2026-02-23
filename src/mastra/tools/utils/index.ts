@@ -1,5 +1,5 @@
 import { createTool, type ValidationError } from '@mastra/core/tools';
-import { z, ZodType } from 'zod';
+import { z, type ZodType } from 'zod';
 
 const inputSchema = z.object({
   question: z.string(),
@@ -13,25 +13,16 @@ const constructAgentMessage = (input: z.infer<typeof inputSchema>) => `
     ADDITIONAL CONTEXT: ${input.additionalContext}
     `;
 
-/**
- * Creates a tool from an agent.
- * @param agentId - The id of the agent to create a tool from.
- * @param description - The description of the tool.
- * @param customOutputSchema - The output schema to use for the tool.
- * @returns A tool that can be used to execute the agent.
- */
-export const createToolFromAgent = <
-  TOutputSchema extends ZodType = typeof outputSchema,
->(
+export const createToolFromAgent = (
   agentId: string,
   description: string,
-  customOutputSchema?: TOutputSchema
+  customOutputSchema?: ZodType
 ) =>
   createTool({
     id: agentId,
     description,
     inputSchema,
-    outputSchema: (customOutputSchema || outputSchema) as any,
+    outputSchema: customOutputSchema ?? outputSchema,
     execute: async (inputData, context) => {
       const { requestContext } = context || {};
       const callableAgent = context?.mastra?.getAgent(agentId);
