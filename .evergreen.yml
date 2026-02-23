@@ -50,6 +50,7 @@ buildvariants:
       - name: slack-thread-summarizer-evals
       - name: slack-question-ownership-evals
       - name: release-notes-evals
+      - name: runtime-environments-evals
     display_tasks:
       - name: evals
         execution_tasks:
@@ -60,6 +61,7 @@ buildvariants:
           - "slack-thread-summarizer-evals"
           - "slack-question-ownership-evals"
           - "release-notes-evals"
+          - "runtime-environments-evals"
 tasks:
   - name: write_and_set_downstream_expansions
     commands:
@@ -166,6 +168,14 @@ tasks:
       - func: attach-braintrust-results
         vars:
           xml_file_name: release_notes_evals.xml
+  - name: runtime-environments-evals
+    commands:
+      - func: pnpm-eval
+        vars:
+          eval_dir: runtimeEnvironmentsAgent
+      - func: attach-braintrust-results
+        vars:
+          xml_file_name: runtime_environments_evals.xml
 
 functions:
   write repo name to downstream_expansions.yaml for Pine:
