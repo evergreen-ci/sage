@@ -32,6 +32,8 @@ buildvariants:
       mongosh_url_2204: https://downloads.mongodb.com/compass/mongosh-2.3.1-linux-x64.tgz
       node_version: 22.14.0
       goroot: /opt/golang/go1.24
+      staging_runtime_environments_base_url: ${STAGING_RUNTIME_ENVIRONMENTS_BASE_URL}
+      staging_runtime_environments_api_key: ${STAGING_RUNTIME_ENVIRONMENTS_API_KEY}
     modules:
       - evergreen
     tasks:
@@ -84,6 +86,7 @@ tasks:
   - name: e2e
     commands:
       - func: setup-mongodb
+      - func: add-runtime-environments-creds
       - func: run-make-background
         vars:
           target: local-evergreen
@@ -105,6 +108,7 @@ tasks:
   - name: evergreen-evals
     commands:
       - func: setup-mongodb
+      - func: add-runtime-environments-creds
       - func: run-make-background
         vars:
           target: local-evergreen
@@ -134,6 +138,7 @@ tasks:
   - name: sage-thinking-evals
     commands:
       - func: setup-mongodb
+      - func: add-runtime-environments-creds
       - func: run-make-background
         vars:
           target: local-evergreen
@@ -171,6 +176,7 @@ tasks:
   - name: runtime-environments-evals
     commands:
       - func: setup-mongodb
+      - func: add-runtime-environments-creds
       - func: run-make-background
         vars:
           target: local-evergreen
@@ -247,7 +253,6 @@ functions:
       env:
         SETTINGS_OVERRIDE: file
         GOROOT: ${goroot}
-        STAGING_RUNTIME_ENVIRONMENTS_BASE_URL: ${STAGING_RUNTIME_ENVIRONMENTS_BASE_URL}
 
   setup-mongodb:
     - command: subprocess.exec
@@ -348,6 +353,18 @@ functions:
       exec_timeout_secs: 600
       working_dir: sage
       script: ./scripts/wait-for-evergreen.sh
+
+  add-runtime-environments-creds:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      env:
+        STAGING_RUNTIME_ENVIRONMENTS_BASE_URL: ${staging_runtime_environments_base_url}
+        STAGING_RUNTIME_ENVIRONMENTS_API_KEY: ${staging_runtime_environments_api_key}
+      script: |
+        ${PREPARE_SHELL}
+        ../evergreen/mongosh --eval "$(cat scripts/add-runtime-environments-creds.js)"
 
   pnpm-build:
     command: shell.exec
