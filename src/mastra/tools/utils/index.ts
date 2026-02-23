@@ -31,7 +31,7 @@ export const createToolFromAgent = <
     id: agentId,
     description,
     inputSchema,
-    outputSchema: customOutputSchema || outputSchema,
+    outputSchema: (customOutputSchema || outputSchema) as any,
     execute: async (inputData, context) => {
       const { requestContext } = context || {};
       const callableAgent = context?.mastra?.getAgent(agentId);
