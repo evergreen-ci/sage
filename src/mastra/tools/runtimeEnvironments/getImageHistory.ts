@@ -80,12 +80,17 @@ export const getImageHistoryTool = createTool({
         };
       });
 
-      const latestDate =
-        history.length > 0
-          ? new Date(history[0].created_date).toLocaleDateString()
-          : 'unknown';
-
-      const summary = `Found ${totalCount} historical versions for ${inputData.imageId}. Most recent: ${history[0]?.ami_id || 'none'} (deployed ${latestDate}).`;
+      let summary: string;
+      if (history.length === 0 && totalCount > 0) {
+        summary = `Found ${totalCount} historical versions for ${inputData.imageId}, but no results on this page. Try an earlier page.`;
+      } else if (history.length === 0) {
+        summary = `No historical versions found for ${inputData.imageId}.`;
+      } else {
+        const latestDate = new Date(
+          history[0].created_date
+        ).toLocaleDateString();
+        summary = `Found ${totalCount} historical versions for ${inputData.imageId}. Most recent on this page: ${history[0].ami_id} (deployed ${latestDate}).`;
+      }
 
       return {
         history,

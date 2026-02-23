@@ -37,9 +37,10 @@ export const getImageNamesTool = createTool({
         { userID: userId }
       );
 
+      const images = result?.images ?? [];
       return {
-        images: result.images,
-        count: result.images.length,
+        images,
+        count: images.length,
       };
     } catch (error) {
       logger.error('getImageNames tool failed', {
