@@ -33,6 +33,7 @@ resources:
 env:
   BRAINTRUST_PARENT: project_name:sage-staging
   BRAINTRUST_PROJECT_NAME: sage-staging
+  JIRA_BASE_URL: https://jira-staging.corp.mongodb.com
   NODE_ENV: staging
   PORT: 8080
   SENTRY_ENVIRONMENT: staging
