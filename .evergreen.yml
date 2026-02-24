@@ -362,7 +362,7 @@ functions:
         STAGING_RUNTIME_ENVIRONMENTS_API_KEY: ${staging_runtime_environments_api_key}
       script: |
         ${PREPARE_SHELL}
-        ../evergreen/mongosh --eval "$(cat scripts/add-runtime-environments-creds.js)"
+        ./evergreen/mongosh/mongosh --eval "$(cat scripts/add-runtime-environments-creds.js)"
 
   pnpm-build:
     command: shell.exec
