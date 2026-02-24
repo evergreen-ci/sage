@@ -358,8 +358,8 @@ functions:
       working_dir: sage
       shell: bash
       env:
-        STAGING_RUNTIME_ENVIRONMENTS_BASE_URL: ${staging_runtime_environments_base_url}
-        STAGING_RUNTIME_ENVIRONMENTS_API_KEY: ${staging_runtime_environments_api_key}
+        STAGING_RUNTIME_ENVIRONMENTS_BASE_URL: ${STAGING_RUNTIME_ENVIRONMENTS_BASE_URL}
+        STAGING_RUNTIME_ENVIRONMENTS_API_KEY: ${STAGING_RUNTIME_ENVIRONMENTS_API_KEY}
       script: |
         ${PREPARE_SHELL}
         ./evergreen/mongosh/mongosh --eval "$(cat scripts/add-runtime-environments-creds.js)"
