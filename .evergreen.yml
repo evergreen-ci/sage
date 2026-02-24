@@ -174,11 +174,11 @@ tasks:
   - name: runtime-environments-evals
     commands:
       - func: setup-mongodb
-      - func: add-runtime-environments-creds
       - func: run-make-background
         vars:
           target: local-evergreen
       - func: wait-for-evergreen
+      - func: add-runtime-environments-creds
       - func: pnpm-eval
         vars:
           eval_dir: runtimeEnvironmentsAgent
