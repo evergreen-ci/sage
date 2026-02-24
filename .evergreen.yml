@@ -32,8 +32,6 @@ buildvariants:
       mongosh_url_2204: https://downloads.mongodb.com/compass/mongosh-2.3.1-linux-x64.tgz
       node_version: 22.14.0
       goroot: /opt/golang/go1.24
-      staging_runtime_environments_base_url: ${STAGING_RUNTIME_ENVIRONMENTS_BASE_URL}
-      staging_runtime_environments_api_key: ${STAGING_RUNTIME_ENVIRONMENTS_API_KEY}
     modules:
       - evergreen
     tasks:
