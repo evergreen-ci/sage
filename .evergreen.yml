@@ -84,13 +84,13 @@ tasks:
   - name: e2e
     commands:
       - func: setup-mongodb
-      - func: add-runtime-environments-creds
       - func: run-make-background
         vars:
           target: local-evergreen
       - func: symlink-graphql-schema
       - func: pnpm-build
       - func: wait-for-evergreen
+      - func: add-runtime-environments-creds
       - func: pnpm-e2e
   - name: check-mastra-dev-startup
     commands:
@@ -106,11 +106,11 @@ tasks:
   - name: evergreen-evals
     commands:
       - func: setup-mongodb
-      - func: add-runtime-environments-creds
       - func: run-make-background
         vars:
           target: local-evergreen
       - func: wait-for-evergreen
+      - func: add-runtime-environments-creds
       - func: pnpm-eval
         vars:
           eval_dir: evergreenAgent
@@ -136,11 +136,11 @@ tasks:
   - name: sage-thinking-evals
     commands:
       - func: setup-mongodb
-      - func: add-runtime-environments-creds
       - func: run-make-background
         vars:
           target: local-evergreen
       - func: wait-for-evergreen
+      - func: add-runtime-environments-creds
       - func: pnpm-eval
         vars:
           eval_dir: sageThinkingAgent
@@ -362,7 +362,7 @@ functions:
         STAGING_RUNTIME_ENVIRONMENTS_API_KEY: ${STAGING_RUNTIME_ENVIRONMENTS_API_KEY}
       script: |
         ${PREPARE_SHELL}
-        ./evergreen/mongosh/mongosh --eval "$(cat scripts/add-runtime-environments-creds.js)"
+        ./evergreen/mongosh/mongosh  evergreen_local --eval "$(cat scripts/add-runtime-environments-creds.js)"
 
   pnpm-build:
     command: shell.exec
