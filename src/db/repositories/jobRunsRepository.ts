@@ -143,6 +143,25 @@ export const findJobRunByTicketKey = async (
 };
 
 /**
+ * Finds the most recent job run for a given Jira ticket key and target repository
+ * Used for per-repository duplicate detection when multiple repo: labels are present
+ * @param ticketKey - The Jira ticket key (e.g., 'PROJ-123')
+ * @param repository - The target repository in org/repo format (e.g., 'mongodb/mongo-tools')
+ * @returns The most recent job run for the (ticket, repository) pair, or null if not found
+ */
+export const findJobRunByTicketKeyAndRepository = async (
+  ticketKey: string,
+  repository: string
+): Promise<JobRun | null> => {
+  const collection = getCollection<JobRun>(JOB_RUNS_COLLECTION_NAME);
+
+  return collection.findOne(
+    { jiraTicketKey: ticketKey, 'metadata.targetRepository': repository },
+    { sort: { createdAt: -1 } }
+  );
+};
+
+/**
  * Finds all job runs with Running status
  * Used by the Cursor agent status polling service to check for completed agents
  * @returns Array of job runs that are currently running
