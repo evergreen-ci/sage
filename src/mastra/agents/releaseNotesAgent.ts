@@ -1,6 +1,6 @@
 import { Agent } from '@mastra/core/agent';
 import { z } from 'zod';
-import { gpt41 } from '@/mastra/models/openAI/gpt41';
+import { sonnet45 } from '@/mastra/models/anthropic/sonnet';
 import { createToolFromAgent } from '@/mastra/tools/utils';
 import { RELEASE_NOTES_AGENT_NAME } from './constants';
 
@@ -148,32 +148,49 @@ const releaseNotesLinkSchema: z.ZodType<ReleaseNotesLink> = z.object({
     .describe('Destination URL for the hyperlink'),
 });
 
-/** Output schema for structured release notes */
-const releaseNotesItemSchema: z.ZodType<ReleaseNotesItem> = z.lazy(() =>
-  z.object({
-    text: z
-      .string()
-      .min(1, 'Each bullet must include descriptive text.')
-      .describe('Bullet text for this item'),
-    citations: z
-      .array(z.string())
-      .nonempty('Provide at least one citation when the field is present.')
-      .optional()
-      .describe('Supporting Jira issue keys for this item'),
-    subitems: z
-      .array(releaseNotesItemSchema)
-      .optional()
-      .describe('Nested bullet points under this item'),
-    links: z
-      .array(releaseNotesLinkSchema)
-      .optional()
-      .describe(
-        'Specific substrings within the bullet text that should be hyperlinked'
-      ),
-  })
-);
+/** Output schema for leaf-level items (no further nesting) */
+const releaseNotesLeafItemSchema = z.object({
+  text: z
+    .string()
+    .min(1, 'Each bullet must include descriptive text.')
+    .describe('Bullet text for this item'),
+  citations: z
+    .array(z.string())
+    .nonempty('Provide at least one citation when the field is present.')
+    .optional()
+    .describe('Supporting Jira issue keys for this item'),
+  links: z
+    .array(releaseNotesLinkSchema)
+    .optional()
+    .describe(
+      'Specific substrings within the bullet text that should be hyperlinked'
+    ),
+});
 
-const releaseNotesSectionSchema: z.ZodType<ReleaseNotesSection> = z.object({
+/** Output schema for structured release notes (fixed 2-level depth to avoid circular refs) */
+const releaseNotesItemSchema = z.object({
+  text: z
+    .string()
+    .min(1, 'Each bullet must include descriptive text.')
+    .describe('Bullet text for this item'),
+  citations: z
+    .array(z.string())
+    .nonempty('Provide at least one citation when the field is present.')
+    .optional()
+    .describe('Supporting Jira issue keys for this item'),
+  subitems: z
+    .array(releaseNotesLeafItemSchema)
+    .optional()
+    .describe('Nested bullet points under this item'),
+  links: z
+    .array(releaseNotesLinkSchema)
+    .optional()
+    .describe(
+      'Specific substrings within the bullet text that should be hyperlinked'
+    ),
+});
+
+const releaseNotesSectionSchema = z.object({
   title: z
     .string()
     .min(1, 'Each section needs a title.')
@@ -184,7 +201,7 @@ const releaseNotesSectionSchema: z.ZodType<ReleaseNotesSection> = z.object({
     .describe('Bullet items that belong to this section'),
 });
 
-const releaseNotesOutputSchema: z.ZodType<ReleaseNotesOutput> = z.object({
+const releaseNotesOutputSchema = z.object({
   sections: z
     .array(releaseNotesSectionSchema)
     .min(1, 'Provide at least one section in the response.')
@@ -420,7 +437,7 @@ Rules:
       temperature: 0.3, // Low temperature for consistency, but allow some creativity
     },
   },
-  model: gpt41,
+  model: sonnet45,
 });
 
 export const askReleaseNotesAgentTool = createToolFromAgent(
