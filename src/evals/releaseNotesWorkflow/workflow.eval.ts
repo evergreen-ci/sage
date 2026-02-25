@@ -8,6 +8,55 @@ import { releaseNotesWorkflow } from '@/mastra/workflows/releaseNotes';
 import { TestCase, TestInput, TestResult } from './types';
 
 /**
+ * Formats Jira issues as clean, readable text for the Faithfulness scorer.
+ * Avoids passing raw JSON with structural noise and empty fields.
+ * @param jiraIssues - Array of Jira issues to format
+ * @returns Human-readable text representation of the issues
+ */
+const formatIssuesAsText = (jiraIssues: TestInput['jiraIssues']): string =>
+  jiraIssues
+    .map(issue => {
+      const lines = [`${issue.key} (${issue.issueType}): ${issue.summary}`];
+      if (issue.description?.trim()) {
+        lines.push(`Description: ${issue.description.trim()}`);
+      }
+      if (issue.additionalMetadata) {
+        for (const [key, value] of Object.entries(issue.additionalMetadata)) {
+          if (value?.trim()) lines.push(`${key}: ${value.trim()}`);
+        }
+      }
+      if (issue.pullRequests?.length) {
+        for (const pr of issue.pullRequests) {
+          lines.push(`PR: ${pr.title}`);
+          if (pr.description?.trim()) lines.push(`  ${pr.description.trim()}`);
+        }
+      }
+      return lines.join('\n');
+    })
+    .join('\n\n');
+
+/**
+ * Extracts all bullet and sub-bullet text from the output as a flat list.
+ * Avoids passing the full JSON structure (with citations, links, metadata)
+ * to the scorer, which causes inconsistent statement decomposition.
+ * @param output - The release notes output to extract text from
+ * @returns Markdown-formatted bullet text
+ */
+const extractBulletText = (output: TestResult): string => {
+  const lines: string[] = [];
+  for (const section of output.sections ?? []) {
+    lines.push(`## ${section.title}`);
+    for (const item of section.items ?? []) {
+      lines.push(`- ${item.text}`);
+      for (const sub of item.subitems ?? []) {
+        lines.push(`  - ${sub.text}`);
+      }
+    }
+  }
+  return lines.join('\n');
+};
+
+/**
  * Expected structure of row.metadata from Braintrust dataset
  */
 type ReleaseNotesMetadata = {
@@ -69,14 +118,14 @@ Eval(
     scores: [
       ({ input, output }) =>
         SafeFaithfulness({
-          output: JSON.stringify(output, null, 2),
-          context: JSON.stringify(input.jiraIssues, null, 2),
+          output: extractBulletText(output),
+          context: formatIssuesAsText(input.jiraIssues),
           input: `Generate release notes for ${input.product || 'product'}`,
         }),
       ({ expected, output }) =>
         TechnicalAccuracy({
-          output: JSON.stringify(output, null, 2),
-          expected: JSON.stringify(expected, null, 2),
+          output: extractBulletText(output),
+          expected: extractBulletText(expected),
         }),
     ],
     experimentName: 'Release Notes Workflow Eval',
