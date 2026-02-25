@@ -29,6 +29,16 @@ export const jiraIssueSchema = z.object({
 });
 
 /**
+ * Zod schema for a parsed repository from a repo: label
+ */
+export const parsedRepositorySchema = z.object({
+  /** The repository in org/repo format */
+  repository: z.string(),
+  /** Optional branch/ref specified after @ */
+  ref: z.string().nullable(),
+});
+
+/**
  * Zod schema for parsed ticket data from Jira
  */
 export const parsedTicketDataSchema = z.object({
@@ -39,6 +49,8 @@ export const parsedTicketDataSchema = z.object({
   targetRepository: z.string().nullable(),
   /** Branch/ref specified inline in the repo label (e.g., repo:org/repo@branch) */
   targetRef: z.string().nullable(),
+  /** All target repositories parsed from repo: labels */
+  targetRepositories: z.array(parsedRepositorySchema),
   labels: z.array(z.string()),
 });
 

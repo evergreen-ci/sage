@@ -21,6 +21,7 @@ describe('extractTicketData', () => {
       assigneeEmail: 'user@example.com',
       targetRepository: 'mongodb/test',
       targetRef: null,
+      targetRepositories: [{ repository: 'mongodb/test', ref: null }],
       labels: ['sage-bot', 'repo:mongodb/test'],
     });
   });
@@ -41,6 +42,7 @@ describe('extractTicketData', () => {
     expect(result.assigneeEmail).toBeNull();
     expect(result.targetRepository).toBeNull();
     expect(result.targetRef).toBeNull();
+    expect(result.targetRepositories).toEqual([]);
     expect(result.labels).toEqual([]);
   });
 
@@ -60,6 +62,7 @@ describe('extractTicketData', () => {
     expect(result.labels).toEqual([]);
     expect(result.targetRepository).toBeNull();
     expect(result.targetRef).toBeNull();
+    expect(result.targetRepositories).toEqual([]);
   });
 
   it('parses target repository from labels', () => {
@@ -77,6 +80,9 @@ describe('extractTicketData', () => {
 
     expect(result.targetRepository).toBe('org/project');
     expect(result.targetRef).toBeNull();
+    expect(result.targetRepositories).toEqual([
+      { repository: 'org/project', ref: null },
+    ]);
   });
 
   it('parses target repository with inline ref from labels', () => {
@@ -94,6 +100,9 @@ describe('extractTicketData', () => {
 
     expect(result.targetRepository).toBe('mongodb/mongo-tools');
     expect(result.targetRef).toBe('feature-branch');
+    expect(result.targetRepositories).toEqual([
+      { repository: 'mongodb/mongo-tools', ref: 'feature-branch' },
+    ]);
   });
 
   it('parses ref with slashes (e.g., feature/branch-name)', () => {
@@ -128,5 +137,29 @@ describe('extractTicketData', () => {
 
     expect(result.targetRepository).toBe('mongodb/test-repo');
     expect(result.targetRef).toBe('v1.2.3-beta');
+  });
+
+  it('parses multiple repo labels into targetRepositories', () => {
+    const issue = {
+      key: 'PROJ-MULTI',
+      fields: {
+        summary: 'Multi-repo test',
+        description: 'Description',
+        assignee: { emailAddress: 'user@example.com', displayName: 'User' },
+        labels: ['sage-bot', 'repo:mongodb/repo1', 'repo:mongodb/repo2@main'],
+      },
+    };
+
+    const result = extractTicketData(issue);
+
+    // targetRepository and targetRef reflect the first repo label
+    expect(result.targetRepository).toBe('mongodb/repo1');
+    expect(result.targetRef).toBeNull();
+
+    // targetRepositories includes all repo labels
+    expect(result.targetRepositories).toEqual([
+      { repository: 'mongodb/repo1', ref: null },
+      { repository: 'mongodb/repo2', ref: 'main' },
+    ]);
   });
 });

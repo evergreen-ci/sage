@@ -14,6 +14,7 @@ export {
   jiraAssigneeSchema,
   jiraIssueFieldsSchema,
   jiraIssueSchema,
+  parsedRepositorySchema,
   parsedTicketDataSchema,
   pollingResultSchema,
   ticketProcessingResultSchema,

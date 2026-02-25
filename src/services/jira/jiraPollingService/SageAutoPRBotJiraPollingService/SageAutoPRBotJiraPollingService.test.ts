@@ -11,6 +11,7 @@ const {
   mockCredentialsExist,
   mockDisconnect,
   mockFindJobRunByTicketKey,
+  mockFindJobRunByTicketKeyAndRepository,
   mockFindLabelAddedBy,
   mockLaunchCursorAgent,
   mockRemoveLabel,
@@ -22,6 +23,7 @@ const {
   mockFindLabelAddedBy: vi.fn(),
   mockCreateJobRun: vi.fn(),
   mockFindJobRunByTicketKey: vi.fn(),
+  mockFindJobRunByTicketKeyAndRepository: vi.fn(),
   mockCredentialsExist: vi.fn(),
   mockAddComment: vi.fn(),
   mockUpdateJobRun: vi.fn(),
@@ -43,6 +45,7 @@ vi.mock('@/services/jira/jiraClient', () => ({
 vi.mock('@/db/repositories/jobRunsRepository', () => ({
   createJobRun: mockCreateJobRun,
   findJobRunByTicketKey: mockFindJobRunByTicketKey,
+  findJobRunByTicketKeyAndRepository: mockFindJobRunByTicketKeyAndRepository,
   updateJobRun: mockUpdateJobRun,
 }));
 
@@ -113,7 +116,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
       };
 
       mockSearchIssues.mockResolvedValueOnce([mockIssue]);
-      mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
+      mockFindJobRunByTicketKeyAndRepository.mockResolvedValueOnce(null);
       mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
       mockRemoveLabel.mockResolvedValueOnce(undefined);
       mockCredentialsExist.mockResolvedValueOnce(true);
@@ -169,7 +172,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
       );
     });
 
-    it('skips tickets with active (pending/running) job runs', async () => {
+    it('skips tickets where all repos have active (pending/running) job runs', async () => {
       const mockIssue = {
         key: 'DEVPROD-456',
         fields: {
@@ -181,7 +184,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
       };
 
       mockSearchIssues.mockResolvedValueOnce([mockIssue]);
-      mockFindJobRunByTicketKey.mockResolvedValueOnce({
+      mockFindJobRunByTicketKeyAndRepository.mockResolvedValueOnce({
         _id: new ObjectId(),
         jiraTicketKey: 'DEVPROD-456',
         status: JobRunStatus.Pending,
@@ -199,7 +202,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
             ticketKey: 'DEVPROD-456',
             success: true,
             skipped: true,
-            skipReason: 'Active job run exists with status: pending',
+            skipReason: 'All repositories have active job runs',
           },
         ],
       });
@@ -223,7 +226,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
 
       mockSearchIssues.mockResolvedValueOnce([mockIssue]);
       // Existing job is in Failed status - should allow retry
-      mockFindJobRunByTicketKey.mockResolvedValueOnce({
+      mockFindJobRunByTicketKeyAndRepository.mockResolvedValueOnce({
         _id: new ObjectId(),
         jiraTicketKey: 'DEVPROD-456',
         status: JobRunStatus.Failed,
@@ -321,9 +324,10 @@ describe('SageAutoPRBotJiraPollingService', () => {
       };
 
       mockSearchIssues.mockResolvedValueOnce([mockIssue1, mockIssue2]);
-      mockFindJobRunByTicketKey
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(null);
+      // DEVPROD-001 has no repo label -> uses findJobRunByTicketKey
+      mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
+      // DEVPROD-002 has a repo label -> uses findJobRunByTicketKeyAndRepository
+      mockFindJobRunByTicketKeyAndRepository.mockResolvedValueOnce(null);
       mockFindLabelAddedBy
         .mockRejectedValueOnce(new Error('API error'))
         .mockResolvedValueOnce('user@example.com');
@@ -377,7 +381,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
       };
 
       mockSearchIssues.mockResolvedValueOnce([mockIssue]);
-      mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
+      mockFindJobRunByTicketKeyAndRepository.mockResolvedValueOnce(null);
       mockFindLabelAddedBy.mockResolvedValueOnce('initiator@example.com');
       mockRemoveLabel.mockResolvedValueOnce(undefined);
       const mockJobId = new ObjectId();
@@ -444,7 +448,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
       };
 
       mockSearchIssues.mockResolvedValueOnce([mockIssue]);
-      mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
+      mockFindJobRunByTicketKeyAndRepository.mockResolvedValueOnce(null);
       mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
       mockRemoveLabel.mockResolvedValueOnce(undefined);
       mockCredentialsExist.mockResolvedValueOnce(true);
@@ -504,7 +508,7 @@ describe('SageAutoPRBotJiraPollingService', () => {
       };
 
       mockSearchIssues.mockResolvedValueOnce([mockIssue]);
-      mockFindJobRunByTicketKey.mockResolvedValueOnce(null);
+      mockFindJobRunByTicketKeyAndRepository.mockResolvedValueOnce(null);
       mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
       mockRemoveLabel.mockResolvedValueOnce(undefined);
       mockCredentialsExist.mockResolvedValueOnce(true);
@@ -524,6 +528,421 @@ describe('SageAutoPRBotJiraPollingService', () => {
           targetRef: 'feature-branch',
         })
       );
+    });
+
+    describe('multi-repo support', () => {
+      it('launches separate agents for each repo label', async () => {
+        const mockIssue = {
+          key: 'DEVPROD-MULTI',
+          fields: {
+            summary: 'Multi-repo test',
+            description: 'Test description',
+            assignee: {
+              emailAddress: 'user@example.com',
+              displayName: 'Test User',
+            },
+            labels: ['sage-bot', 'repo:mongodb/repo1', 'repo:mongodb/repo2'],
+          },
+        };
+
+        mockSearchIssues.mockResolvedValueOnce([mockIssue]);
+        // No active jobs for either repo
+        mockFindJobRunByTicketKeyAndRepository
+          .mockResolvedValueOnce(null) // repo1
+          .mockResolvedValueOnce(null); // repo2
+        mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
+        mockRemoveLabel.mockResolvedValueOnce(undefined);
+        mockCredentialsExist.mockResolvedValueOnce(true);
+        const mockJobId1 = new ObjectId();
+        const mockJobId2 = new ObjectId();
+        mockCreateJobRun
+          .mockResolvedValueOnce({
+            _id: mockJobId1,
+            jiraTicketKey: 'DEVPROD-MULTI',
+            status: JobRunStatus.Pending,
+          })
+          .mockResolvedValueOnce({
+            _id: mockJobId2,
+            jiraTicketKey: 'DEVPROD-MULTI',
+            status: JobRunStatus.Pending,
+          });
+        mockLaunchCursorAgent
+          .mockResolvedValueOnce({
+            success: true,
+            agentId: 'agent-repo1',
+            agentUrl: 'https://cursor.sh/agent/repo1',
+          })
+          .mockResolvedValueOnce({
+            success: true,
+            agentId: 'agent-repo2',
+            agentUrl: 'https://cursor.sh/agent/repo2',
+          });
+
+        const result = await service.poll();
+
+        expect(result).toEqual({
+          ticketsFound: 1,
+          ticketsProcessed: 1,
+          ticketsSkipped: 0,
+          ticketsErrored: 0,
+          results: [{ ticketKey: 'DEVPROD-MULTI', success: true }],
+        });
+
+        // Duplicate check called once per repo
+        expect(mockFindJobRunByTicketKeyAndRepository).toHaveBeenCalledTimes(2);
+        expect(mockFindJobRunByTicketKeyAndRepository).toHaveBeenCalledWith(
+          'DEVPROD-MULTI',
+          'mongodb/repo1'
+        );
+        expect(mockFindJobRunByTicketKeyAndRepository).toHaveBeenCalledWith(
+          'DEVPROD-MULTI',
+          'mongodb/repo2'
+        );
+
+        // Label removed once
+        expect(mockRemoveLabel).toHaveBeenCalledTimes(1);
+        expect(mockRemoveLabel).toHaveBeenCalledWith(
+          'DEVPROD-MULTI',
+          'sage-bot'
+        );
+
+        // Two job runs created, one per repo
+        expect(mockCreateJobRun).toHaveBeenCalledTimes(2);
+        expect(mockCreateJobRun).toHaveBeenCalledWith(
+          expect.objectContaining({
+            metadata: expect.objectContaining({
+              targetRepository: 'mongodb/repo1',
+            }),
+          })
+        );
+        expect(mockCreateJobRun).toHaveBeenCalledWith(
+          expect.objectContaining({
+            metadata: expect.objectContaining({
+              targetRepository: 'mongodb/repo2',
+            }),
+          })
+        );
+
+        // Two agents launched, one per repo
+        expect(mockLaunchCursorAgent).toHaveBeenCalledTimes(2);
+        expect(mockLaunchCursorAgent).toHaveBeenCalledWith(
+          expect.objectContaining({ targetRepository: 'mongodb/repo1' })
+        );
+        expect(mockLaunchCursorAgent).toHaveBeenCalledWith(
+          expect.objectContaining({ targetRepository: 'mongodb/repo2' })
+        );
+
+        // Two "Agent Launched" comments posted
+        expect(mockAddComment).toHaveBeenCalledTimes(2);
+        expect(mockAddComment).toHaveBeenCalledWith(
+          'DEVPROD-MULTI',
+          expect.stringContaining('Sage Bot Agent Launched')
+        );
+      });
+
+      it('only processes repos without active jobs when some already have active jobs', async () => {
+        const mockIssue = {
+          key: 'DEVPROD-PARTIAL',
+          fields: {
+            summary: 'Partial multi-repo test',
+            description: 'Test description',
+            assignee: {
+              emailAddress: 'user@example.com',
+              displayName: 'Test User',
+            },
+            labels: ['sage-bot', 'repo:mongodb/repo1', 'repo:mongodb/repo2'],
+          },
+        };
+
+        mockSearchIssues.mockResolvedValueOnce([mockIssue]);
+        // repo1 has an active job, repo2 does not
+        mockFindJobRunByTicketKeyAndRepository
+          .mockResolvedValueOnce({
+            _id: new ObjectId(),
+            jiraTicketKey: 'DEVPROD-PARTIAL',
+            status: JobRunStatus.Running,
+          }) // repo1 - active
+          .mockResolvedValueOnce(null); // repo2 - no active job
+        mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
+        mockRemoveLabel.mockResolvedValueOnce(undefined);
+        mockCredentialsExist.mockResolvedValueOnce(true);
+        const mockJobId = new ObjectId();
+        mockCreateJobRun.mockResolvedValueOnce({
+          _id: mockJobId,
+          jiraTicketKey: 'DEVPROD-PARTIAL',
+          status: JobRunStatus.Pending,
+        });
+        mockLaunchCursorAgent.mockResolvedValueOnce({
+          success: true,
+          agentId: 'agent-repo2',
+          agentUrl: 'https://cursor.sh/agent/repo2',
+        });
+
+        const result = await service.poll();
+
+        expect(result).toEqual({
+          ticketsFound: 1,
+          ticketsProcessed: 1,
+          ticketsSkipped: 0,
+          ticketsErrored: 0,
+          results: [{ ticketKey: 'DEVPROD-PARTIAL', success: true }],
+        });
+
+        // Only one job run created (for repo2)
+        expect(mockCreateJobRun).toHaveBeenCalledTimes(1);
+        expect(mockCreateJobRun).toHaveBeenCalledWith(
+          expect.objectContaining({
+            metadata: expect.objectContaining({
+              targetRepository: 'mongodb/repo2',
+            }),
+          })
+        );
+
+        // Only one agent launched (for repo2)
+        expect(mockLaunchCursorAgent).toHaveBeenCalledTimes(1);
+        expect(mockLaunchCursorAgent).toHaveBeenCalledWith(
+          expect.objectContaining({ targetRepository: 'mongodb/repo2' })
+        );
+      });
+
+      it('skips ticket when all repos have active jobs', async () => {
+        const mockIssue = {
+          key: 'DEVPROD-ALL-ACTIVE',
+          fields: {
+            summary: 'All active repos test',
+            description: 'Test description',
+            assignee: {
+              emailAddress: 'user@example.com',
+              displayName: 'Test User',
+            },
+            labels: ['sage-bot', 'repo:mongodb/repo1', 'repo:mongodb/repo2'],
+          },
+        };
+
+        mockSearchIssues.mockResolvedValueOnce([mockIssue]);
+        // Both repos have active jobs
+        mockFindJobRunByTicketKeyAndRepository
+          .mockResolvedValueOnce({
+            _id: new ObjectId(),
+            jiraTicketKey: 'DEVPROD-ALL-ACTIVE',
+            status: JobRunStatus.Running,
+          })
+          .mockResolvedValueOnce({
+            _id: new ObjectId(),
+            jiraTicketKey: 'DEVPROD-ALL-ACTIVE',
+            status: JobRunStatus.Pending,
+          });
+
+        const result = await service.poll();
+
+        expect(result).toEqual({
+          ticketsFound: 1,
+          ticketsProcessed: 0,
+          ticketsSkipped: 1,
+          ticketsErrored: 0,
+          results: [
+            {
+              ticketKey: 'DEVPROD-ALL-ACTIVE',
+              success: true,
+              skipped: true,
+              skipReason: 'All repositories have active job runs',
+            },
+          ],
+        });
+
+        // Label removed (race condition handling)
+        expect(mockRemoveLabel).toHaveBeenCalledWith(
+          'DEVPROD-ALL-ACTIVE',
+          'sage-bot'
+        );
+        expect(mockCreateJobRun).not.toHaveBeenCalled();
+        expect(mockLaunchCursorAgent).not.toHaveBeenCalled();
+      });
+
+      it('posts one validation error comment for all repos when validation fails', async () => {
+        const mockIssue = {
+          key: 'DEVPROD-MULTI-FAIL',
+          fields: {
+            summary: 'Multi-repo validation fail',
+            description: 'Test description',
+            assignee: null, // No assignee - validation will fail
+            labels: ['sage-bot', 'repo:mongodb/repo1', 'repo:mongodb/repo2'],
+          },
+        };
+
+        mockSearchIssues.mockResolvedValueOnce([mockIssue]);
+        mockFindJobRunByTicketKeyAndRepository
+          .mockResolvedValueOnce(null) // repo1
+          .mockResolvedValueOnce(null); // repo2
+        mockFindLabelAddedBy.mockResolvedValueOnce('initiator@example.com');
+        mockRemoveLabel.mockResolvedValueOnce(undefined);
+        const mockJobId = new ObjectId();
+        mockCreateJobRun.mockResolvedValueOnce({
+          _id: mockJobId,
+          jiraTicketKey: 'DEVPROD-MULTI-FAIL',
+          status: JobRunStatus.Pending,
+        });
+        mockUpdateJobRun.mockResolvedValueOnce(undefined);
+        mockAddComment.mockResolvedValueOnce(undefined);
+
+        const result = await service.poll();
+
+        expect(result).toEqual({
+          ticketsFound: 1,
+          ticketsProcessed: 0,
+          ticketsSkipped: 1,
+          ticketsErrored: 0,
+          results: [
+            {
+              ticketKey: 'DEVPROD-MULTI-FAIL',
+              success: true,
+              skipped: true,
+              skipReason: expect.stringContaining('No assignee set'),
+            },
+          ],
+        });
+
+        // Only ONE job run created (not one per repo)
+        expect(mockCreateJobRun).toHaveBeenCalledTimes(1);
+
+        // Only ONE validation error comment posted (not one per repo)
+        expect(mockAddComment).toHaveBeenCalledTimes(1);
+        expect(mockAddComment).toHaveBeenCalledWith(
+          'DEVPROD-MULTI-FAIL',
+          expect.stringContaining('Sage Bot Validation Failed')
+        );
+      });
+
+      it('succeeds overall when at least one repo agent launches successfully', async () => {
+        const mockIssue = {
+          key: 'DEVPROD-MIXED',
+          fields: {
+            summary: 'Mixed success/fail',
+            description: 'Test description',
+            assignee: {
+              emailAddress: 'user@example.com',
+              displayName: 'Test User',
+            },
+            labels: ['sage-bot', 'repo:mongodb/repo1', 'repo:mongodb/repo2'],
+          },
+        };
+
+        mockSearchIssues.mockResolvedValueOnce([mockIssue]);
+        mockFindJobRunByTicketKeyAndRepository
+          .mockResolvedValueOnce(null) // repo1
+          .mockResolvedValueOnce(null); // repo2
+        mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
+        mockRemoveLabel.mockResolvedValueOnce(undefined);
+        mockCredentialsExist.mockResolvedValueOnce(true);
+        const mockJobId1 = new ObjectId();
+        const mockJobId2 = new ObjectId();
+        mockCreateJobRun
+          .mockResolvedValueOnce({
+            _id: mockJobId1,
+            jiraTicketKey: 'DEVPROD-MIXED',
+            status: JobRunStatus.Pending,
+          })
+          .mockResolvedValueOnce({
+            _id: mockJobId2,
+            jiraTicketKey: 'DEVPROD-MIXED',
+            status: JobRunStatus.Pending,
+          });
+        // repo1 succeeds, repo2 fails
+        mockLaunchCursorAgent
+          .mockResolvedValueOnce({
+            success: true,
+            agentId: 'agent-repo1',
+            agentUrl: 'https://cursor.sh/agent/repo1',
+          })
+          .mockResolvedValueOnce({
+            success: false,
+            error: 'Rate limit exceeded',
+          });
+
+        const result = await service.poll();
+
+        // Overall success because at least one repo launched
+        expect(result).toEqual({
+          ticketsFound: 1,
+          ticketsProcessed: 1,
+          ticketsSkipped: 0,
+          ticketsErrored: 0,
+          results: [{ ticketKey: 'DEVPROD-MIXED', success: true }],
+        });
+
+        // Both job runs created
+        expect(mockCreateJobRun).toHaveBeenCalledTimes(2);
+
+        // repo2 job marked as failed
+        expect(mockUpdateJobRun).toHaveBeenCalledWith(mockJobId2, {
+          status: JobRunStatus.Failed,
+          errorMessage: expect.stringContaining('Rate limit exceeded'),
+        });
+      });
+
+      it('supports inline refs on multi-repo labels', async () => {
+        const mockIssue = {
+          key: 'DEVPROD-MULTI-REF',
+          fields: {
+            summary: 'Multi-repo with refs',
+            description: 'Test description',
+            assignee: {
+              emailAddress: 'user@example.com',
+              displayName: 'Test User',
+            },
+            labels: [
+              'sage-bot',
+              'repo:mongodb/repo1@feature-a',
+              'repo:mongodb/repo2@feature-b',
+            ],
+          },
+        };
+
+        mockSearchIssues.mockResolvedValueOnce([mockIssue]);
+        mockFindJobRunByTicketKeyAndRepository
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(null);
+        mockFindLabelAddedBy.mockResolvedValueOnce('user@example.com');
+        mockRemoveLabel.mockResolvedValueOnce(undefined);
+        mockCredentialsExist.mockResolvedValueOnce(true);
+        mockCreateJobRun
+          .mockResolvedValueOnce({
+            _id: new ObjectId(),
+            jiraTicketKey: 'DEVPROD-MULTI-REF',
+            status: JobRunStatus.Pending,
+          })
+          .mockResolvedValueOnce({
+            _id: new ObjectId(),
+            jiraTicketKey: 'DEVPROD-MULTI-REF',
+            status: JobRunStatus.Pending,
+          });
+        mockLaunchCursorAgent
+          .mockResolvedValueOnce({
+            success: true,
+            agentId: 'agent-a',
+            agentUrl: 'https://cursor.sh/agent/a',
+          })
+          .mockResolvedValueOnce({
+            success: true,
+            agentId: 'agent-b',
+            agentUrl: 'https://cursor.sh/agent/b',
+          });
+
+        await service.poll();
+
+        expect(mockLaunchCursorAgent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            targetRepository: 'mongodb/repo1',
+            targetRef: 'feature-a',
+          })
+        );
+        expect(mockLaunchCursorAgent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            targetRepository: 'mongodb/repo2',
+            targetRef: 'feature-b',
+          })
+        );
+      });
     });
   });
 
