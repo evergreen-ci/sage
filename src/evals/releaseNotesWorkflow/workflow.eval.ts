@@ -1,11 +1,84 @@
+import { Faithfulness } from 'autoevals';
 import { Eval, initDataset } from 'braintrust';
 import { z } from 'zod';
 import { ReporterName, PROJECT_NAME } from '@/evals/constants';
-import { SafeFaithfulness, TechnicalAccuracy } from '@/evals/scorers';
+import { TechnicalAccuracy } from '@/evals/scorers';
 import { tracedWorkflowEval } from '@/evals/utils/tracedWorkflow';
 import { RELEASE_NOTES_WORKFLOW_NAME } from '@/mastra/agents/constants';
 import { releaseNotesWorkflow } from '@/mastra/workflows/releaseNotes';
 import { TestCase, TestInput, TestResult } from './types';
+
+/**
+ * Formats Jira issues as clean, readable text for the Faithfulness scorer.
+ * Avoids passing raw JSON with structural noise and empty fields.
+ * @param jiraIssues - Array of Jira issues to format
+ * @returns Human-readable text representation of the issues
+ */
+const formatIssuesAsText = (jiraIssues: TestInput['jiraIssues']): string =>
+  jiraIssues
+    .map(issue => {
+      const lines = [`${issue.key} (${issue.issueType}): ${issue.summary}`];
+      if (issue.description?.trim()) {
+        lines.push(`Description: ${issue.description.trim()}`);
+      }
+      if (issue.additionalMetadata) {
+        for (const [key, value] of Object.entries(issue.additionalMetadata)) {
+          const trimmedKey = String(key).trim();
+          const trimmedValue =
+            value === null || value === undefined ? '' : String(value).trim();
+          if (trimmedKey && trimmedValue) {
+            lines.push(`${trimmedKey}: ${trimmedValue}`);
+          }
+        }
+      }
+      if (issue.pullRequests?.length) {
+        for (const pr of issue.pullRequests) {
+          lines.push(`PR: ${pr.title}`);
+          if (pr.description?.trim()) lines.push(`  ${pr.description.trim()}`);
+        }
+      }
+      return lines.join('\n');
+    })
+    .join('\n\n');
+
+/**
+ * Recursively collects bullet text from items at any nesting depth.
+ * @param items - Array of items with text and optional subitems
+ * @param lines - Accumulator for output lines
+ * @param indent - Current indentation prefix
+ */
+const collectBulletText = (
+  items: Array<{ text: string; subitems?: unknown }>,
+  lines: string[],
+  indent = ''
+): void => {
+  for (const item of items) {
+    lines.push(`${indent}- ${item.text}`);
+    if (Array.isArray(item.subitems) && item.subitems.length > 0) {
+      collectBulletText(
+        item.subitems as Array<{ text: string; subitems?: unknown }>,
+        lines,
+        `${indent}  `
+      );
+    }
+  }
+};
+
+/**
+ * Extracts all bullet and sub-bullet text from the output as a flat list.
+ * Avoids passing the full JSON structure (with citations, links, metadata)
+ * to the scorer, which causes inconsistent statement decomposition.
+ * @param output - The release notes output to extract text from
+ * @returns Markdown-formatted bullet text
+ */
+const extractBulletText = (output: TestResult): string => {
+  const lines: string[] = [];
+  for (const section of output.sections ?? []) {
+    lines.push(`## ${section.title}`);
+    collectBulletText(section.items ?? [], lines);
+  }
+  return lines.join('\n');
+};
 
 /**
  * Expected structure of row.metadata from Braintrust dataset
@@ -68,15 +141,15 @@ Eval(
     }),
     scores: [
       ({ input, output }) =>
-        SafeFaithfulness({
-          output: JSON.stringify(output, null, 2),
-          context: JSON.stringify(input.jiraIssues, null, 2),
+        Faithfulness({
+          output: extractBulletText(output),
+          context: formatIssuesAsText(input.jiraIssues),
           input: `Generate release notes for ${input.product || 'product'}`,
         }),
       ({ expected, output }) =>
         TechnicalAccuracy({
-          output: JSON.stringify(output, null, 2),
-          expected: JSON.stringify(expected, null, 2),
+          output: extractBulletText(output),
+          expected: extractBulletText(expected),
         }),
     ],
     experimentName: 'Release Notes Workflow Eval',

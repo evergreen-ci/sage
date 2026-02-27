@@ -81,11 +81,14 @@ type ReleaseNotesLink = {
   url: string;
 };
 
-type ReleaseNotesItem = {
+type ReleaseNotesLeafItem = {
   text: string;
-  citations?: string[];
-  subitems?: ReleaseNotesItem[];
-  links?: ReleaseNotesLink[];
+  citations: string[] | null;
+  links: ReleaseNotesLink[] | null;
+};
+
+type ReleaseNotesItem = ReleaseNotesLeafItem & {
+  subitems: ReleaseNotesLeafItem[] | null;
 };
 
 type ReleaseNotesSection = {
@@ -98,7 +101,7 @@ type ReleaseNotesOutput = {
 };
 
 const itemHasRequiredCitations = (
-  item: ReleaseNotesItem,
+  item: ReleaseNotesItem | ReleaseNotesLeafItem,
   parentHasCitations = false
 ): boolean => {
   const citations =
@@ -107,7 +110,7 @@ const itemHasRequiredCitations = (
   const hasCitations = citations.length > 0;
   const canInheritCitations = hasCitations || parentHasCitations;
 
-  const subitems = item.subitems ?? [];
+  const subitems = 'subitems' in item ? (item.subitems ?? []) : [];
 
   // If this is a leaf item (no subitems)
   if (subitems.length === 0) {
@@ -144,36 +147,55 @@ const releaseNotesLinkSchema: z.ZodType<ReleaseNotesLink> = z.object({
     .describe('Exact substring within the bullet text to hyperlink'),
   url: z
     .string()
-    .url('Link URLs must be valid.')
+    .min(1, 'Link URL must not be empty.')
     .describe('Destination URL for the hyperlink'),
 });
 
-/** Output schema for structured release notes */
-const releaseNotesItemSchema: z.ZodType<ReleaseNotesItem> = z.lazy(() =>
-  z.object({
-    text: z
-      .string()
-      .min(1, 'Each bullet must include descriptive text.')
-      .describe('Bullet text for this item'),
-    citations: z
-      .array(z.string())
-      .nonempty('Provide at least one citation when the field is present.')
-      .optional()
-      .describe('Supporting Jira issue keys for this item'),
-    subitems: z
-      .array(releaseNotesItemSchema)
-      .optional()
-      .describe('Nested bullet points under this item'),
-    links: z
-      .array(releaseNotesLinkSchema)
-      .optional()
-      .describe(
-        'Specific substrings within the bullet text that should be hyperlinked'
-      ),
-  })
-);
+/** Output schema for leaf-level items (no further nesting) */
+const releaseNotesLeafItemSchema = z.object({
+  text: z
+    .string()
+    .min(1, 'Each bullet must include descriptive text.')
+    .describe('Bullet text for this item'),
+  citations: z
+    .array(z.string())
+    .nonempty('Provide at least one citation when the field is present.')
+    .nullable()
+    .describe('Supporting Jira issue keys for this item'),
+  links: z
+    .array(releaseNotesLinkSchema)
+    .nullable()
+    .describe(
+      'Specific substrings within the bullet text that should be hyperlinked'
+    ),
+});
 
-const releaseNotesSectionSchema: z.ZodType<ReleaseNotesSection> = z.object({
+/** Output schema for structured release notes (fixed 2-level depth to avoid circular refs) */
+const releaseNotesItemSchema = z.object({
+  text: z
+    .string()
+    .min(1, 'Each bullet must include descriptive text.')
+    .describe('Bullet text for this item'),
+  citations: z
+    .array(z.string())
+    .nonempty('Provide at least one citation when the field is present.')
+    .nullable()
+    .describe('Supporting Jira issue keys for this item'),
+  subitems: z
+    .array(releaseNotesLeafItemSchema)
+    .nullable()
+    .describe(
+      'Nested bullet points under this item (single additional level only; subitems are leaf items and must not contain further subitems)'
+    ),
+  links: z
+    .array(releaseNotesLinkSchema)
+    .nullable()
+    .describe(
+      'Specific substrings within the bullet text that should be hyperlinked'
+    ),
+});
+
+const releaseNotesSectionSchema = z.object({
   title: z
     .string()
     .min(1, 'Each section needs a title.')
@@ -184,7 +206,7 @@ const releaseNotesSectionSchema: z.ZodType<ReleaseNotesSection> = z.object({
     .describe('Bullet items that belong to this section'),
 });
 
-const releaseNotesOutputSchema: z.ZodType<ReleaseNotesOutput> = z.object({
+const releaseNotesOutputSchema = z.object({
   sections: z
     .array(releaseNotesSectionSchema)
     .min(1, 'Provide at least one section in the response.')
@@ -394,11 +416,11 @@ CRITICAL SCHEMA REQUIREMENTS:
   ]
 }
 
-Note: Optional fields (citations, subitems, links) may be omitted entirely if not needed.
-If citations array is present, it must be non-empty. Do not include empty arrays.
+Note: Optional fields (citations, subitems, links) must always be present but set to null when not needed.
+If citations array is present (non-null), it must be non-empty. NEVER use an empty array [].
 
 - Do NOT include any fields outside of "sections" at the top level (e.g., no "links", "metadata", etc.)
-- Do NOT include empty arrays for citations - omit the field entirely if there are no citations. NEVER include "citations": [] - this will cause validation to fail.
+- Do NOT use empty arrays for citations - set to null when no citations apply. NEVER include "citations": [] - this will cause validation to fail.
 - Do NOT use "title" for items - ALWAYS use "text" for item content (only sections use "title")
 - Do NOT include markdown fences, explanatory text, or any content outside the JSON object
 
@@ -406,15 +428,16 @@ Rules:
 - Use the section titles surfaced in the Section Planner (e.g., Improvements, Bug Fixes).
 - Assign each Jira issue to the section that best matches its change; if none fits perfectly, choose the closest and explain the placement.
 - Every bullet focuses on user-facing impact using the supplied metadata.
-- Use subitems when additional context (like pull requests or follow-on work) improves clarity.
+- Use subitems when additional context (like pull requests or follow-on work) improves clarity; otherwise set subitems to null.
 - Wrap any literal token a user might copy (versions, package names, CLI commands, file paths, environment variables) in single backticks. Do not emit multiline code fences.
-- When hyperlink instructions are present, add entries to the "links" array on the specific item (not at top level) specifying the exact substring and URL to hyperlink; keep the bullet text itself free of inline markup.
-- Only include a citations array when at least one Jira issue applies to that bullet; omit the field entirely for structural or grouping bullets, but ensure actionable top-level bullets list their supporting Jira keys.
+- When hyperlink instructions are present, add entries to the "links" array on the specific item (not at top level) specifying the exact substring and URL to hyperlink; keep the bullet text itself free of inline markup. Set links to null when no hyperlinks are needed.
+- Set citations to null for structural or grouping bullets, but ensure actionable top-level bullets list their supporting Jira keys in the citations array.
 - Do NOT include Jira ticket keys (e.g., "CLOUDP-12345") in the "text" fields - the citations array already contains these keys, so mentioning them in the text is redundant.
 - Avoid redundant subitems that merely repeat release note URLs or restate the parent bullet; use the links array on the parent bullet instead.`,
   defaultOptions: {
     structuredOutput: {
       schema: releaseNotesOutputSchema,
+      model: gpt41,
     },
     modelSettings: {
       temperature: 0.3, // Low temperature for consistency, but allow some creativity
@@ -439,6 +462,7 @@ export {
 };
 
 export type {
+  ReleaseNotesLeafItem,
   ReleaseNotesItem,
   ReleaseNotesSection,
   ReleaseNotesOutput,
