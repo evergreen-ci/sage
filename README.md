@@ -1,5 +1,7 @@
 # Sage - Evergreen AI Service
 
+Hello world!
+
 A TypeScript-based Express.js server powering the Evergreen AI Service.
 
 ## Getting Started
