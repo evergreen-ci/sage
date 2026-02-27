@@ -1,4 +1,9 @@
-import { CursorApiClient } from './cursorApiClient';
+import {
+  CursorApiClient,
+  isBranchIdentificationError,
+  BRANCH_ERROR_PATTERNS,
+  LAUNCH_RETRY_CONFIG,
+} from './cursorApiClient';
 
 // Hoist mock functions so they're available when vi.mock is hoisted
 const { mockCreateAgent, mockCreateConfig, mockGetAgent } = vi.hoisted(() => ({
@@ -25,7 +30,12 @@ describe('CursorApiClient', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
     client = new CursorApiClient(testApiKey);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('constructor', () => {
@@ -53,6 +63,11 @@ describe('CursorApiClient', () => {
   });
 
   describe('launchAgent', () => {
+    const defaultRequest = {
+      prompt: { text: 'Test' },
+      source: { repository: 'https://github.com/org/repo' },
+    };
+
     it('throws CursorApiClientError with status code, message, and error code on API failure', async () => {
       // Actual API format: { error: string, code?: string }
       mockCreateAgent.mockResolvedValueOnce({
@@ -64,12 +79,7 @@ describe('CursorApiClient', () => {
         response: { status: 403 },
       });
 
-      await expect(
-        client.launchAgent({
-          prompt: { text: 'Test' },
-          source: { repository: 'https://github.com/org/repo' },
-        })
-      ).rejects.toMatchObject({
+      await expect(client.launchAgent(defaultRequest)).rejects.toMatchObject({
         name: 'CursorApiClientError',
         message: 'Insufficient permissions',
         statusCode: 403,
@@ -87,12 +97,7 @@ describe('CursorApiClient', () => {
         response: { status: 400 },
       });
 
-      await expect(
-        client.launchAgent({
-          prompt: { text: 'Test' },
-          source: { repository: 'https://github.com/org/repo' },
-        })
-      ).rejects.toMatchObject({
+      await expect(client.launchAgent(defaultRequest)).rejects.toMatchObject({
         name: 'CursorApiClientError',
         message: 'Legacy error format',
         statusCode: 400,
@@ -107,12 +112,7 @@ describe('CursorApiClient', () => {
         response: { status: 500 },
       });
 
-      await expect(
-        client.launchAgent({
-          prompt: { text: 'Test' },
-          source: { repository: 'https://github.com/org/repo' },
-        })
-      ).rejects.toMatchObject({
+      await expect(client.launchAgent(defaultRequest)).rejects.toMatchObject({
         name: 'CursorApiClientError',
         message: 'Unknown Cursor API error',
         statusCode: 500,
@@ -147,6 +147,158 @@ describe('CursorApiClient', () => {
       expect(mockCreateAgent).toHaveBeenCalledWith({
         body: request,
         throwOnError: false,
+      });
+    });
+
+    describe('retry on branch identification errors', () => {
+      const branchErrorResponse = (message: string) => ({
+        data: null,
+        error: { error: message },
+        response: { status: 400 },
+      });
+
+      const successResponse = {
+        data: {
+          id: 'bc_abc123',
+          status: 'CREATING' as const,
+          source: { repository: 'https://github.com/org/repo' },
+          createdAt: '2024-01-15T10:30:00Z',
+        },
+        error: null,
+        response: { status: 201 },
+      };
+
+      it('retries and succeeds on "Failed to determine repository default branch"', async () => {
+        mockCreateAgent
+          .mockResolvedValueOnce(
+            branchErrorResponse('Failed to determine repository default branch')
+          )
+          .mockResolvedValueOnce(successResponse);
+
+        const promise = client.launchAgent(defaultRequest);
+        await vi.advanceTimersByTimeAsync(LAUNCH_RETRY_CONFIG.baseDelayMs);
+        const result = await promise;
+
+        expect(mockCreateAgent).toHaveBeenCalledTimes(2);
+        expect(result.id).toBe('bc_abc123');
+      });
+
+      it('retries and succeeds on "Failed to verify existence of branch"', async () => {
+        mockCreateAgent
+          .mockResolvedValueOnce(
+            branchErrorResponse(
+              "Failed to verify existence of branch 'main' in repository 10gen/ops-manager. Please ensure the branch name is correct."
+            )
+          )
+          .mockResolvedValueOnce(successResponse);
+
+        const promise = client.launchAgent(defaultRequest);
+        await vi.advanceTimersByTimeAsync(LAUNCH_RETRY_CONFIG.baseDelayMs);
+        const result = await promise;
+
+        expect(mockCreateAgent).toHaveBeenCalledTimes(2);
+        expect(result.id).toBe('bc_abc123');
+      });
+
+      it('retries up to maxRetries times before throwing', async () => {
+        const errorMsg = 'Failed to determine repository default branch';
+        const totalAttempts = LAUNCH_RETRY_CONFIG.maxRetries + 1;
+        for (let i = 0; i < totalAttempts; i++) {
+          mockCreateAgent.mockResolvedValueOnce(branchErrorResponse(errorMsg));
+        }
+
+        const promise = client.launchAgent(defaultRequest);
+        promise.catch(() => {}); // prevent unhandled rejection warning during timer advancement
+
+        await vi.runAllTimersAsync();
+
+        await expect(promise).rejects.toMatchObject({
+          name: 'CursorApiClientError',
+          message: errorMsg,
+          statusCode: 400,
+        });
+
+        expect(mockCreateAgent).toHaveBeenCalledTimes(totalAttempts);
+      });
+
+      it('succeeds on the last retry attempt', async () => {
+        const errorMsg = 'Failed to determine repository default branch';
+        for (let i = 0; i < LAUNCH_RETRY_CONFIG.maxRetries; i++) {
+          mockCreateAgent.mockResolvedValueOnce(branchErrorResponse(errorMsg));
+        }
+        mockCreateAgent.mockResolvedValueOnce(successResponse);
+
+        const promise = client.launchAgent(defaultRequest);
+
+        await vi.runAllTimersAsync();
+
+        const result = await promise;
+
+        expect(mockCreateAgent).toHaveBeenCalledTimes(
+          LAUNCH_RETRY_CONFIG.maxRetries + 1
+        );
+        expect(result.id).toBe('bc_abc123');
+      });
+
+      it('does not retry non-branch 400 errors', async () => {
+        mockCreateAgent.mockResolvedValueOnce(
+          branchErrorResponse('Invalid request format')
+        );
+
+        await expect(client.launchAgent(defaultRequest)).rejects.toMatchObject({
+          name: 'CursorApiClientError',
+          message: 'Invalid request format',
+          statusCode: 400,
+        });
+
+        expect(mockCreateAgent).toHaveBeenCalledTimes(1);
+      });
+
+      it('does not retry non-400 errors even with branch-like messages', async () => {
+        mockCreateAgent.mockResolvedValueOnce({
+          data: null,
+          error: {
+            error: 'Failed to determine repository default branch',
+          },
+          response: { status: 500 },
+        });
+
+        await expect(client.launchAgent(defaultRequest)).rejects.toMatchObject({
+          name: 'CursorApiClientError',
+          statusCode: 500,
+        });
+
+        expect(mockCreateAgent).toHaveBeenCalledTimes(1);
+      });
+
+      it('uses exponential backoff delays', async () => {
+        const errorMsg = 'Failed to determine repository default branch';
+        const totalAttempts = LAUNCH_RETRY_CONFIG.maxRetries + 1;
+        for (let i = 0; i < totalAttempts; i++) {
+          mockCreateAgent.mockResolvedValueOnce(branchErrorResponse(errorMsg));
+        }
+
+        const promise = client.launchAgent(defaultRequest);
+        promise.catch(() => {}); // prevent unhandled rejection warning during timer advancement
+
+        // Attempt 1 fails immediately, should wait baseDelayMs * 2^0 = 2000ms
+        expect(mockCreateAgent).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(LAUNCH_RETRY_CONFIG.baseDelayMs);
+        expect(mockCreateAgent).toHaveBeenCalledTimes(2);
+
+        // Attempt 2 fails, should wait baseDelayMs * 2^1 = 4000ms
+        await vi.advanceTimersByTimeAsync(LAUNCH_RETRY_CONFIG.baseDelayMs * 2);
+        expect(mockCreateAgent).toHaveBeenCalledTimes(3);
+
+        // Attempt 3 fails, should wait baseDelayMs * 2^2 = 8000ms
+        await vi.advanceTimersByTimeAsync(LAUNCH_RETRY_CONFIG.baseDelayMs * 4);
+        expect(mockCreateAgent).toHaveBeenCalledTimes(4);
+
+        // All retries exhausted, should throw
+        await expect(promise).rejects.toMatchObject({
+          name: 'CursorApiClientError',
+          statusCode: 400,
+        });
       });
     });
   });
@@ -193,5 +345,55 @@ describe('CursorApiClient', () => {
         code: 'NOT_FOUND',
       });
     });
+  });
+});
+
+describe('isBranchIdentificationError', () => {
+  it('returns true for "Failed to determine repository default branch" with 400 status', () => {
+    expect(
+      isBranchIdentificationError(
+        'Failed to determine repository default branch',
+        400
+      )
+    ).toBe(true);
+  });
+
+  it('returns true for "Failed to verify existence of branch" with 400 status', () => {
+    expect(
+      isBranchIdentificationError(
+        "Failed to verify existence of branch 'main' in repository 10gen/ops-manager. Please ensure the branch name is correct.",
+        400
+      )
+    ).toBe(true);
+  });
+
+  it('returns false for non-400 status codes', () => {
+    expect(
+      isBranchIdentificationError(
+        'Failed to determine repository default branch',
+        500
+      )
+    ).toBe(false);
+  });
+
+  it('returns false for non-branch error messages with 400 status', () => {
+    expect(isBranchIdentificationError('Invalid request format', 400)).toBe(
+      false
+    );
+  });
+
+  it('returns false for empty message', () => {
+    expect(isBranchIdentificationError('', 400)).toBe(false);
+  });
+});
+
+describe('BRANCH_ERROR_PATTERNS', () => {
+  it('includes the expected error patterns', () => {
+    expect(BRANCH_ERROR_PATTERNS).toContain(
+      'Failed to determine repository default branch'
+    );
+    expect(BRANCH_ERROR_PATTERNS).toContain(
+      'Failed to verify existence of branch'
+    );
   });
 });
