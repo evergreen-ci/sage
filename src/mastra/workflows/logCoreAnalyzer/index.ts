@@ -37,9 +37,33 @@ export const logCoreAnalyzerTool = createTool({
   execute: async (inputData, context) => {
     const run = await logCoreAnalyzerWorkflow.createRun({});
 
+    // Use custom() to forward chunks without ToolStream envelope wrapping.
+    // write() would nest the chunk inside a {type: "tool-output"} envelope,
+    // hiding it from the AI SDK stream transformer which only recognises
+    // top-level `data-*` typed chunks.
+    //
+    // Inject the toolCallId so the frontend can correlate progress updates
+    // with the correct tool call when multiple calls run in parallel.
+    const toolCallId = context?.agent?.toolCallId;
+    const outputWriter = context?.writer
+      ? async (chunk: unknown) => {
+          const record = chunk as
+            | { type: `data-${string}`; data: Record<string, unknown> }
+            | undefined;
+          const augmented =
+            toolCallId && record?.data
+              ? { ...record, data: { ...record.data, toolCallId } }
+              : record;
+          await context.writer!.custom(
+            augmented as { type: `data-${string}`; data: unknown }
+          );
+        }
+      : undefined;
+
     const runResult = await run.start({
       inputData,
       ...context,
+      outputWriter,
     });
     if (runResult.status === 'success') {
       return runResult.result;
