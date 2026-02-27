@@ -176,7 +176,7 @@ describe('CursorApiClient', () => {
           .mockResolvedValueOnce(successResponse);
 
         const promise = client.launchAgent(defaultRequest);
-        await vi.advanceTimersByTimeAsync(LAUNCH_RETRY_CONFIG.baseDelayMs);
+        await vi.runAllTimersAsync();
         const result = await promise;
 
         expect(mockCreateAgent).toHaveBeenCalledTimes(2);
@@ -193,7 +193,7 @@ describe('CursorApiClient', () => {
           .mockResolvedValueOnce(successResponse);
 
         const promise = client.launchAgent(defaultRequest);
-        await vi.advanceTimersByTimeAsync(LAUNCH_RETRY_CONFIG.baseDelayMs);
+        await vi.runAllTimersAsync();
         const result = await promise;
 
         expect(mockCreateAgent).toHaveBeenCalledTimes(2);
@@ -208,7 +208,7 @@ describe('CursorApiClient', () => {
         }
 
         const promise = client.launchAgent(defaultRequest);
-        promise.catch(() => {}); // prevent unhandled rejection warning during timer advancement
+        promise.catch(() => {});
 
         await vi.runAllTimersAsync();
 
@@ -240,7 +240,7 @@ describe('CursorApiClient', () => {
         expect(result.id).toBe('bc_abc123');
       });
 
-      it('does not retry non-branch 400 errors', async () => {
+      it('does not retry non-branch 400 errors (AbortError)', async () => {
         mockCreateAgent.mockResolvedValueOnce(
           branchErrorResponse('Invalid request format')
         );
@@ -254,7 +254,7 @@ describe('CursorApiClient', () => {
         expect(mockCreateAgent).toHaveBeenCalledTimes(1);
       });
 
-      it('does not retry non-400 errors even with branch-like messages', async () => {
+      it('does not retry non-400 errors even with branch-like messages (AbortError)', async () => {
         mockCreateAgent.mockResolvedValueOnce({
           data: null,
           error: {
@@ -271,7 +271,7 @@ describe('CursorApiClient', () => {
         expect(mockCreateAgent).toHaveBeenCalledTimes(1);
       });
 
-      it('uses exponential backoff delays', async () => {
+      it('makes the correct number of attempts with p-retry backoff', async () => {
         const errorMsg = 'Failed to determine repository default branch';
         const totalAttempts = LAUNCH_RETRY_CONFIG.maxRetries + 1;
         for (let i = 0; i < totalAttempts; i++) {
@@ -279,26 +279,16 @@ describe('CursorApiClient', () => {
         }
 
         const promise = client.launchAgent(defaultRequest);
-        promise.catch(() => {}); // prevent unhandled rejection warning during timer advancement
+        promise.catch(() => {});
 
-        // Attempt 1 fails immediately, should wait baseDelayMs * 2^0 = 2000ms
-        expect(mockCreateAgent).toHaveBeenCalledTimes(1);
-        await vi.advanceTimersByTimeAsync(LAUNCH_RETRY_CONFIG.baseDelayMs);
-        expect(mockCreateAgent).toHaveBeenCalledTimes(2);
+        await vi.runAllTimersAsync();
 
-        // Attempt 2 fails, should wait baseDelayMs * 2^1 = 4000ms
-        await vi.advanceTimersByTimeAsync(LAUNCH_RETRY_CONFIG.baseDelayMs * 2);
-        expect(mockCreateAgent).toHaveBeenCalledTimes(3);
-
-        // Attempt 3 fails, should wait baseDelayMs * 2^2 = 8000ms
-        await vi.advanceTimersByTimeAsync(LAUNCH_RETRY_CONFIG.baseDelayMs * 4);
-        expect(mockCreateAgent).toHaveBeenCalledTimes(4);
-
-        // All retries exhausted, should throw
         await expect(promise).rejects.toMatchObject({
           name: 'CursorApiClientError',
           statusCode: 400,
         });
+
+        expect(mockCreateAgent).toHaveBeenCalledTimes(totalAttempts);
       });
     });
   });

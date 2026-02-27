@@ -1,3 +1,4 @@
+import pRetry, { AbortError } from 'p-retry';
 import {
   Sdk,
   type CreateAgentRequest,
@@ -52,9 +53,6 @@ export const isBranchIdentificationError = (
   statusCode === 400 &&
   BRANCH_ERROR_PATTERNS.some(pattern => message.includes(pattern));
 
-const sleep = (ms: number): Promise<void> =>
-  new Promise(resolve => setTimeout(resolve, ms));
-
 /**
  * Error class for Cursor API errors
  */
@@ -105,64 +103,59 @@ export class CursorApiClient {
 
     const maxAttempts = LAUNCH_RETRY_CONFIG.maxRetries + 1;
 
-    /* eslint-disable no-await-in-loop -- sequential retries with backoff are inherently serial */
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      const response = await this.sdk.createAgent({
-        body: request,
-        throwOnError: false,
-      });
+    const agentResponse = await pRetry(
+      async () => {
+        const response = await this.sdk.createAgent({
+          body: request,
+          throwOnError: false,
+        });
 
-      if (response.error) {
-        const err = parseCursorError(response.error);
-        const statusCode = response.response.status;
-
-        if (
-          attempt < maxAttempts &&
-          isBranchIdentificationError(err.message, statusCode)
-        ) {
-          const delay = Math.min(
-            LAUNCH_RETRY_CONFIG.baseDelayMs * Math.pow(2, attempt - 1),
-            LAUNCH_RETRY_CONFIG.maxDelayMs
+        if (response.error) {
+          const err = parseCursorError(response.error);
+          const statusCode = response.response.status;
+          const cursorError = new CursorApiClientError(
+            err.message,
+            statusCode,
+            err.code
           );
+
+          if (isBranchIdentificationError(err.message, statusCode)) {
+            throw cursorError;
+          }
+
+          throw new AbortError(cursorError);
+        }
+
+        return response.data;
+      },
+      {
+        retries: maxAttempts - 1,
+        factor: 2,
+        minTimeout: LAUNCH_RETRY_CONFIG.baseDelayMs,
+        maxTimeout: LAUNCH_RETRY_CONFIG.maxDelayMs,
+        onFailedAttempt: error => {
           logger.warn(
-            `Cursor API branch identification error (attempt ${attempt}/${maxAttempts}), retrying in ${delay}ms`,
+            `Cursor API branch identification error (attempt ${error.attemptNumber}/${maxAttempts}), retrying`,
             {
-              error: err.message,
-              statusCode,
-              attempt,
+              error: error.message,
+              attempt: error.attemptNumber,
               maxAttempts,
-              retryDelayMs: delay,
+              retriesLeft: error.retriesLeft,
               repository: request.source.repository,
               ref: request.source.ref,
             }
           );
-          await sleep(delay);
-          continue;
-        }
-
-        logger.error(`Cursor API error: ${err.message}`, {
-          statusCode,
-          code: err.code,
-          ...(attempt > 1 && { finalAttempt: attempt, maxAttempts }),
-        });
-
-        throw new CursorApiClientError(err.message, statusCode, err.code);
+        },
       }
+    );
 
-      const agentResponse = response.data;
+    logger.info('Cursor agent launched successfully', {
+      agentId: agentResponse.id,
+      status: agentResponse.status,
+      targetUrl: agentResponse.target?.url,
+    });
 
-      logger.info('Cursor agent launched successfully', {
-        agentId: agentResponse.id,
-        status: agentResponse.status,
-        targetUrl: agentResponse.target?.url,
-        ...(attempt > 1 && { attemptsTaken: attempt }),
-      });
-
-      return agentResponse;
-    }
-    /* eslint-enable no-await-in-loop */
-
-    throw new Error('Unexpected: launch retry loop exited without result');
+    return agentResponse;
   }
 
   /**
