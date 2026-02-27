@@ -23,7 +23,12 @@ const formatIssuesAsText = (jiraIssues: TestInput['jiraIssues']): string =>
       }
       if (issue.additionalMetadata) {
         for (const [key, value] of Object.entries(issue.additionalMetadata)) {
-          if (value?.trim()) lines.push(`${key}: ${value.trim()}`);
+          const trimmedKey = String(key).trim();
+          const trimmedValue =
+            value === null || value === undefined ? '' : String(value).trim();
+          if (trimmedKey && trimmedValue) {
+            lines.push(`${trimmedKey}: ${trimmedValue}`);
+          }
         }
       }
       if (issue.pullRequests?.length) {
@@ -37,6 +42,29 @@ const formatIssuesAsText = (jiraIssues: TestInput['jiraIssues']): string =>
     .join('\n\n');
 
 /**
+ * Recursively collects bullet text from items at any nesting depth.
+ * @param items - Array of items with text and optional subitems
+ * @param lines - Accumulator for output lines
+ * @param indent - Current indentation prefix
+ */
+const collectBulletText = (
+  items: Array<{ text: string; subitems?: unknown }>,
+  lines: string[],
+  indent = ''
+): void => {
+  for (const item of items) {
+    lines.push(`${indent}- ${item.text}`);
+    if (Array.isArray(item.subitems) && item.subitems.length > 0) {
+      collectBulletText(
+        item.subitems as Array<{ text: string; subitems?: unknown }>,
+        lines,
+        `${indent}  `
+      );
+    }
+  }
+};
+
+/**
  * Extracts all bullet and sub-bullet text from the output as a flat list.
  * Avoids passing the full JSON structure (with citations, links, metadata)
  * to the scorer, which causes inconsistent statement decomposition.
@@ -47,12 +75,7 @@ const extractBulletText = (output: TestResult): string => {
   const lines: string[] = [];
   for (const section of output.sections ?? []) {
     lines.push(`## ${section.title}`);
-    for (const item of section.items ?? []) {
-      lines.push(`- ${item.text}`);
-      for (const sub of item.subitems ?? []) {
-        lines.push(`  - ${sub.text}`);
-      }
-    }
+    collectBulletText(section.items ?? [], lines);
   }
   return lines.join('\n');
 };

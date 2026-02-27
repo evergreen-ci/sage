@@ -81,11 +81,14 @@ type ReleaseNotesLink = {
   url: string;
 };
 
-type ReleaseNotesItem = {
+type ReleaseNotesLeafItem = {
   text: string;
   citations: string[] | null;
-  subitems: ReleaseNotesItem[] | null;
   links: ReleaseNotesLink[] | null;
+};
+
+type ReleaseNotesItem = ReleaseNotesLeafItem & {
+  subitems: ReleaseNotesLeafItem[] | null;
 };
 
 type ReleaseNotesSection = {
@@ -98,7 +101,7 @@ type ReleaseNotesOutput = {
 };
 
 const itemHasRequiredCitations = (
-  item: ReleaseNotesItem,
+  item: ReleaseNotesItem | ReleaseNotesLeafItem,
   parentHasCitations = false
 ): boolean => {
   const citations =
@@ -107,7 +110,7 @@ const itemHasRequiredCitations = (
   const hasCitations = citations.length > 0;
   const canInheritCitations = hasCitations || parentHasCitations;
 
-  const subitems = item.subitems ?? [];
+  const subitems = 'subitems' in item ? (item.subitems ?? []) : [];
 
   // If this is a leaf item (no subitems)
   if (subitems.length === 0) {
@@ -181,7 +184,9 @@ const releaseNotesItemSchema = z.object({
   subitems: z
     .array(releaseNotesLeafItemSchema)
     .nullable()
-    .describe('Nested bullet points under this item'),
+    .describe(
+      'Nested bullet points under this item (single additional level only; subitems are leaf items and must not contain further subitems)'
+    ),
   links: z
     .array(releaseNotesLinkSchema)
     .nullable()
@@ -457,6 +462,7 @@ export {
 };
 
 export type {
+  ReleaseNotesLeafItem,
   ReleaseNotesItem,
   ReleaseNotesSection,
   ReleaseNotesOutput,
