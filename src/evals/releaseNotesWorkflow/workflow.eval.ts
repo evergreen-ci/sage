@@ -1,7 +1,8 @@
+import { Faithfulness } from 'autoevals';
 import { Eval, initDataset } from 'braintrust';
 import { z } from 'zod';
 import { ReporterName, PROJECT_NAME } from '@/evals/constants';
-import { SafeFaithfulness, TechnicalAccuracy } from '@/evals/scorers';
+import { TechnicalAccuracy } from '@/evals/scorers';
 import { tracedWorkflowEval } from '@/evals/utils/tracedWorkflow';
 import { RELEASE_NOTES_WORKFLOW_NAME } from '@/mastra/agents/constants';
 import { releaseNotesWorkflow } from '@/mastra/workflows/releaseNotes';
@@ -117,7 +118,7 @@ Eval(
     }),
     scores: [
       ({ input, output }) =>
-        SafeFaithfulness({
+        Faithfulness({
           output: extractBulletText(output),
           context: formatIssuesAsText(input.jiraIssues),
           input: `Generate release notes for ${input.product || 'product'}`,
