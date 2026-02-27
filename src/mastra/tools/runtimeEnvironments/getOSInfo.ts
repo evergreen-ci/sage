@@ -66,7 +66,7 @@ export const getOSInfoTool = createTool({
         { userID: userId }
       );
 
-      const os = result.image?.operatingSystem;
+      const os = result?.image?.operatingSystem;
       return {
         os_info: os?.data ?? [],
         filtered_count: os?.filteredCount ?? 0,

@@ -90,7 +90,7 @@ export const getImageEventsTool = createTool({
         { userID: userId }
       );
 
-      const rawEvents = result.image?.events?.eventLogEntries ?? [];
+      const rawEvents = result?.image?.events?.eventLogEntries ?? [];
 
       const events = rawEvents.map(event => {
         const changes = event.entries.map(entry => ({

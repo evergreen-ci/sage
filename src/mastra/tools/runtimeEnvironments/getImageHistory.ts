@@ -37,8 +37,6 @@ export const getImageHistoryTool = createTool({
   description: `Get historical AMI versions for an image ID, ordered from most recent to oldest.
 
   Use this tool when the user asks about:
-  - AMI version history for an image
-  - When an image was last updated
   - Previous versions of an image
   - Timeline of image changes
 
@@ -66,7 +64,7 @@ export const getImageHistoryTool = createTool({
         { userID: userId }
       );
 
-      const eventsPayload = result.image?.events;
+      const eventsPayload = result?.image?.events;
       const entries = eventsPayload?.eventLogEntries ?? [];
       const totalCount = eventsPayload?.count ?? 0;
 

@@ -46,8 +46,6 @@ export const getToolchainsTool = createTool({
   - Go, Python, Node.js, Java versions installed
   - Build tool availability
 
-  Accepts image names (e.g., "ubuntu2204").
-
   Example: "What version of Go is on ubuntu2204?"
   Example: "What toolchains are available on rhel8?"
 
@@ -73,7 +71,7 @@ export const getToolchainsTool = createTool({
           { userID: userId }
         );
 
-      const toolchains = result.image?.toolchains;
+      const toolchains = result?.image?.toolchains;
       const filteredCount = toolchains?.filteredCount ?? 0;
       const totalCount = toolchains?.totalCount ?? 0;
 

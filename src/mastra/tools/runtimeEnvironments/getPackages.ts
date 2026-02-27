@@ -48,8 +48,6 @@ export const getPackagesTool = createTool({
   - Package versions (Python, Node.js libraries, system packages)
   - Checking if a specific package is installed
 
-  Accepts image names (e.g., "ubuntu2204").
-
   Example: "What Python packages are available on ubuntu2204?"
   Example: "Is numpy installed on ubuntu2204?"
 
@@ -75,7 +73,7 @@ export const getPackagesTool = createTool({
         { userID: userId }
       );
 
-      const packages = result.image?.packages;
+      const packages = result?.image?.packages;
       const filteredCount = packages?.filteredCount ?? 0;
       const totalCount = packages?.totalCount ?? 0;
 

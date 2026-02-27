@@ -74,7 +74,7 @@ export const getFilesTool = createTool({
         { userID: userId }
       );
 
-      const files = result.image?.files;
+      const files = result?.image?.files;
       const filteredCount = files?.filteredCount ?? 0;
       const totalCount = files?.totalCount ?? 0;
 
