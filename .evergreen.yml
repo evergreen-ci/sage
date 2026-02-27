@@ -50,6 +50,7 @@ buildvariants:
       - name: slack-thread-summarizer-evals
       - name: slack-question-ownership-evals
       - name: release-notes-evals
+      - name: runtime-environments-evals
     display_tasks:
       - name: evals
         execution_tasks:
@@ -60,6 +61,7 @@ buildvariants:
           - "slack-thread-summarizer-evals"
           - "slack-question-ownership-evals"
           - "release-notes-evals"
+          - "runtime-environments-evals"
 tasks:
   - name: write_and_set_downstream_expansions
     commands:
@@ -88,6 +90,7 @@ tasks:
       - func: symlink-graphql-schema
       - func: pnpm-build
       - func: wait-for-evergreen
+      - func: add-runtime-environments-creds
       - func: pnpm-e2e
   - name: check-mastra-dev-startup
     commands:
@@ -107,6 +110,7 @@ tasks:
         vars:
           target: local-evergreen
       - func: wait-for-evergreen
+      - func: add-runtime-environments-creds
       - func: pnpm-eval
         vars:
           eval_dir: evergreenAgent
@@ -136,6 +140,7 @@ tasks:
         vars:
           target: local-evergreen
       - func: wait-for-evergreen
+      - func: add-runtime-environments-creds
       - func: pnpm-eval
         vars:
           eval_dir: sageThinkingAgent
@@ -166,6 +171,20 @@ tasks:
       - func: attach-braintrust-results
         vars:
           xml_file_name: release_notes_evals.xml
+  - name: runtime-environments-evals
+    commands:
+      - func: setup-mongodb
+      - func: run-make-background
+        vars:
+          target: local-evergreen
+      - func: wait-for-evergreen
+      - func: add-runtime-environments-creds
+      - func: pnpm-eval
+        vars:
+          eval_dir: runtimeEnvironmentsAgent
+      - func: attach-braintrust-results
+        vars:
+          xml_file_name: runtime_environments_evals.xml
 
 functions:
   write repo name to downstream_expansions.yaml for Pine:
@@ -332,6 +351,18 @@ functions:
       exec_timeout_secs: 600
       working_dir: sage
       script: ./scripts/wait-for-evergreen.sh
+
+  add-runtime-environments-creds:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      env:
+        STAGING_RUNTIME_ENVIRONMENTS_BASE_URL: ${STAGING_RUNTIME_ENVIRONMENTS_BASE_URL}
+        STAGING_RUNTIME_ENVIRONMENTS_API_KEY: ${STAGING_RUNTIME_ENVIRONMENTS_API_KEY}
+      script: |
+        ${PREPARE_SHELL}
+        ./evergreen/mongosh/mongosh  evergreen_local --eval "$(cat scripts/add-runtime-environments-creds.js)"
 
   pnpm-build:
     command: shell.exec

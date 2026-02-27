@@ -1,6 +1,7 @@
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { askEvergreenAgentTool } from '@/mastra/agents/evergreenAgent';
+import { askRuntimeEnvironmentsAgentTool } from '@/mastra/agents/runtimeEnvironmentsAgent';
 import { ParsleyRequestContextSchema } from '@/mastra/memory/parsley/requestContext';
 import { gpt41 } from '@/mastra/models/openAI/gpt41';
 import { memoryStore } from '@/mastra/utils/memory';
@@ -55,6 +56,11 @@ export const sageThinkingAgent: Agent = new Agent({
    - Does NOT fetch directly from Evergreen—use \`evergreenAgent\` to retrieve logs before analyzing.
    - When providing a URL, ensure it is a direct link to the log content. Do not modify the URL.
 
+5. **runtimeEnvironmentsAgent**
+   - Provides information about Evergreen runtime environment images (AMIs), their contents, and changes over time.
+   - Use for: Questions about image/AMI contents (packages, toolchains, OS, files), environment changes, package versions, and image history.
+   - Example queries: "What Go version is on ubuntu2204?", "What changed in rhel8 recently?", "What packages are installed on amazon-linux-2?"
+
 # Instructions
 - Generate a concise checklist (3-7 bullets) of what you will do for each user query to guide your internal workflow, but do not display this checklist to the user; only return the final answer.
 - Before invoking any tool, briefly state its purpose. Just give a reason such as "I need to get the task history to answer the user question". "Or I need to review the logs for this task"
@@ -80,6 +86,7 @@ export const sageThinkingAgent: Agent = new Agent({
   tools: {
     askQuestionClassifierAgentTool,
     askEvergreenAgentTool,
+    askRuntimeEnvironmentsAgentTool,
     logCoreAnalyzerTool,
     resolveLogFileUrlTool,
   },

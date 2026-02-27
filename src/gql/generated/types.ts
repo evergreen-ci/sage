@@ -169,6 +169,7 @@ export type AdminSettings = {
   configDir?: Maybe<Scalars['String']['output']>;
   containerPools?: Maybe<ContainerPoolsConfig>;
   cost?: Maybe<CostConfig>;
+  debugSpawnHosts?: Maybe<DebugSpawnHostsConfig>;
   disabledGQLQueries: Array<Scalars['String']['output']>;
   domainName?: Maybe<Scalars['String']['output']>;
   expansions?: Maybe<Scalars['StringMap']['output']>;
@@ -177,6 +178,7 @@ export type AdminSettings = {
   githubOrgs?: Maybe<Array<Scalars['String']['output']>>;
   githubPRCreatorOrg?: Maybe<Scalars['String']['output']>;
   githubWebhookSecret?: Maybe<Scalars['String']['output']>;
+  graphite?: Maybe<GraphiteConfig>;
   hostInit?: Maybe<HostInitConfig>;
   hostJasper?: Maybe<HostJasperConfig>;
   jira?: Maybe<JiraConfig>;
@@ -196,8 +198,10 @@ export type AdminSettings = {
   releaseMode?: Maybe<ReleaseModeConfig>;
   repotracker?: Maybe<RepotrackerConfig>;
   runtimeEnvironments?: Maybe<RuntimeEnvironmentConfig>;
+  sage?: Maybe<SageConfig>;
   scheduler?: Maybe<SchedulerConfig>;
   serviceFlags?: Maybe<ServiceFlags>;
+  serviceFlagsList?: Maybe<Array<ServiceFlag>>;
   shutdownWaitSeconds?: Maybe<Scalars['Int']['output']>;
   singleTaskDistro?: Maybe<SingleTaskDistroConfig>;
   slack?: Maybe<SlackConfig>;
@@ -224,6 +228,7 @@ export type AdminSettingsInput = {
   configDir?: InputMaybe<Scalars['String']['input']>;
   containerPools?: InputMaybe<ContainerPoolsConfigInput>;
   cost?: InputMaybe<CostConfigInput>;
+  debugSpawnHosts?: InputMaybe<DebugSpawnHostsConfigInput>;
   disabledGQLQueries?: InputMaybe<Array<Scalars['String']['input']>>;
   domainName?: InputMaybe<Scalars['String']['input']>;
   expansions?: InputMaybe<Scalars['StringMap']['input']>;
@@ -232,6 +237,7 @@ export type AdminSettingsInput = {
   githubOrgs?: InputMaybe<Array<Scalars['String']['input']>>;
   githubPRCreatorOrg?: InputMaybe<Scalars['String']['input']>;
   githubWebhookSecret?: InputMaybe<Scalars['String']['input']>;
+  graphite?: InputMaybe<GraphiteConfigInput>;
   hostInit?: InputMaybe<HostInitConfigInput>;
   hostJasper?: InputMaybe<HostJasperConfigInput>;
   jira?: InputMaybe<JiraConfigInput>;
@@ -251,6 +257,7 @@ export type AdminSettingsInput = {
   releaseMode?: InputMaybe<ReleaseModeConfigInput>;
   repotracker?: InputMaybe<RepotrackerConfigInput>;
   runtimeEnvironments?: InputMaybe<RuntimeEnvironmentConfigInput>;
+  sage?: InputMaybe<SageConfigInput>;
   scheduler?: InputMaybe<SchedulerConfigInput>;
   serviceFlags?: InputMaybe<ServiceFlagsInput>;
   shutdownWaitSeconds?: InputMaybe<Scalars['Int']['input']>;
@@ -691,16 +698,26 @@ export type CopyProjectInput = {
   projectIdToCopy: Scalars['String']['input'];
 };
 
+/** Cost represents the cost breakdown for a task or version. */
+export type Cost = {
+  __typename?: 'Cost';
+  adjustedEC2Cost?: Maybe<Scalars['Float']['output']>;
+  onDemandEC2Cost?: Maybe<Scalars['Float']['output']>;
+  s3ArtifactPutCost?: Maybe<Scalars['Float']['output']>;
+};
+
 export type CostConfig = {
   __typename?: 'CostConfig';
   financeFormula?: Maybe<Scalars['Float']['output']>;
   onDemandDiscount?: Maybe<Scalars['Float']['output']>;
+  s3Cost?: Maybe<S3CostConfig>;
   savingsPlanDiscount?: Maybe<Scalars['Float']['output']>;
 };
 
 export type CostConfigInput = {
   financeFormula?: InputMaybe<Scalars['Float']['input']>;
   onDemandDiscount?: InputMaybe<Scalars['Float']['input']>;
+  s3Cost?: InputMaybe<S3CostConfigInput>;
   savingsPlanDiscount?: InputMaybe<Scalars['Float']['input']>;
 };
 
@@ -739,6 +756,13 @@ export type CursorParams = {
   includeCursor: Scalars['Boolean']['input'];
 };
 
+/** CursorSettings represents the status of a user's Cursor API key stored in Sage. */
+export type CursorSettings = {
+  __typename?: 'CursorSettings';
+  keyConfigured: Scalars['Boolean']['output'];
+  keyLastFour?: Maybe<Scalars['String']['output']>;
+};
+
 /** DeactivateStepbackTaskInput is the input to the deactivateStepbackTask mutation. */
 export type DeactivateStepbackTaskInput = {
   buildVariantName: Scalars['String']['input'];
@@ -746,10 +770,25 @@ export type DeactivateStepbackTaskInput = {
   taskName: Scalars['String']['input'];
 };
 
+export type DebugSpawnHostsConfig = {
+  __typename?: 'DebugSpawnHostsConfig';
+  setupScript?: Maybe<Scalars['String']['output']>;
+};
+
+export type DebugSpawnHostsConfigInput = {
+  setupScript?: InputMaybe<Scalars['String']['input']>;
+};
+
 /** DefaultSectionToRepoInput is the input to the defaultSectionToRepo mutation. */
 export type DefaultSectionToRepoInput = {
   projectId: Scalars['String']['input'];
   section: ProjectSettingsSection;
+};
+
+/** DeleteCursorAPIKeyPayload is the response from deleting a Cursor API key. */
+export type DeleteCursorApiKeyPayload = {
+  __typename?: 'DeleteCursorAPIKeyPayload';
+  success: Scalars['Boolean']['output'];
 };
 
 /** DeleteDistroInput is the input to the deleteDistro mutation. */
@@ -1270,6 +1309,17 @@ export type GithubUser = {
 
 export type GithubUserInput = {
   lastKnownAs?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type GraphiteConfig = {
+  __typename?: 'GraphiteConfig';
+  ciOptimizationToken?: Maybe<Scalars['String']['output']>;
+  serverUrl?: Maybe<Scalars['String']['output']>;
+};
+
+export type GraphiteConfigInput = {
+  ciOptimizationToken?: InputMaybe<Scalars['String']['input']>;
+  serverUrl?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type GroupedBuildVariant = {
@@ -1963,6 +2013,7 @@ export type Mutation = {
   createPublicKey: Array<PublicKey>;
   deactivateStepbackTask: Scalars['Boolean']['output'];
   defaultSectionToRepo?: Maybe<Scalars['String']['output']>;
+  deleteCursorAPIKey: DeleteCursorApiKeyPayload;
   deleteDistro: DeleteDistroPayload;
   deleteGithubAppCredentials?: Maybe<DeleteGithubAppCredentialsPayload>;
   deleteProject: Scalars['Boolean']['output'];
@@ -1996,9 +2047,11 @@ export type Mutation = {
   scheduleTasks: Array<Task>;
   scheduleUndispatchedBaseTasks?: Maybe<Array<Task>>;
   setAnnotationMetadataLinks: Scalars['Boolean']['output'];
+  setCursorAPIKey: SetCursorApiKeyPayload;
   setLastRevision: SetLastRevisionPayload;
   /** setPatchVisibility takes a list of patch ids and a boolean to set the visibility on the my patches queries */
   setPatchVisibility: Array<Patch>;
+  setServiceFlags: Array<ServiceFlag>;
   setTaskPriorities: Array<Task>;
   setTaskPriority: Task;
   setVersionPriority?: Maybe<Scalars['String']['output']>;
@@ -2224,6 +2277,10 @@ export type MutationSetAnnotationMetadataLinksArgs = {
   taskId: Scalars['String']['input'];
 };
 
+export type MutationSetCursorApiKeyArgs = {
+  apiKey: Scalars['String']['input'];
+};
+
 export type MutationSetLastRevisionArgs = {
   opts: SetLastRevisionInput;
 };
@@ -2231,6 +2288,10 @@ export type MutationSetLastRevisionArgs = {
 export type MutationSetPatchVisibilityArgs = {
   hidden: Scalars['Boolean']['input'];
   patchIds: Array<Scalars['String']['input']>;
+};
+
+export type MutationSetServiceFlagsArgs = {
+  updatedFlags: Array<ServiceFlagInput>;
 };
 
 export type MutationSetTaskPrioritiesArgs = {
@@ -2529,6 +2590,7 @@ export type Patch = {
   taskStatuses: Array<Scalars['String']['output']>;
   tasks: Array<Scalars['String']['output']>;
   time?: Maybe<PatchTime>;
+  user: User;
   variants: Array<Scalars['String']['output']>;
   variantsTasks: Array<VariantTask>;
   versionFull?: Maybe<Version>;
@@ -2600,6 +2662,7 @@ export type Patches = {
  * Based on the information in PatchesInput, we return a list of Patches for either an individual user or a project.
  */
 export type PatchesInput = {
+  countLimit?: InputMaybe<Scalars['Int']['input']>;
   includeHidden?: InputMaybe<Scalars['Boolean']['input']>;
   limit?: Scalars['Int']['input'];
   onlyMergeQueue?: InputMaybe<Scalars['Boolean']['input']>;
@@ -2797,6 +2860,7 @@ export type Project = {
   commitQueue: CommitQueueParams;
   containerSizeDefinitions?: Maybe<Array<ContainerResources>>;
   deactivatePrevious?: Maybe<Scalars['Boolean']['output']>;
+  debugSpawnHostsDisabled?: Maybe<Scalars['Boolean']['output']>;
   disabledStatsCache?: Maybe<Scalars['Boolean']['output']>;
   dispatchingDisabled?: Maybe<Scalars['Boolean']['output']>;
   displayName: Scalars['String']['output'];
@@ -2952,6 +3016,7 @@ export type ProjectInput = {
   commitQueue?: InputMaybe<CommitQueueParamsInput>;
   containerSizeDefinitions?: InputMaybe<Array<ContainerResourcesInput>>;
   deactivatePrevious?: InputMaybe<Scalars['Boolean']['input']>;
+  debugSpawnHostsDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   disabledStatsCache?: InputMaybe<Scalars['Boolean']['input']>;
   dispatchingDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   displayName?: InputMaybe<Scalars['String']['input']>;
@@ -3129,6 +3194,7 @@ export type Query = {
   buildBaron: BuildBaron;
   buildVariantsForTaskName?: Maybe<Array<BuildVariantTuple>>;
   clientConfig?: Maybe<ClientConfig>;
+  cursorSettings?: Maybe<CursorSettings>;
   distro?: Maybe<Distro>;
   distroEvents: DistroEventsPayload;
   distroTaskQueue: Array<TaskQueueItem>;
@@ -3372,6 +3438,7 @@ export type RepoRef = {
   commitQueue: RepoCommitQueueParams;
   containerSizeDefinitions?: Maybe<Array<ContainerResources>>;
   deactivatePrevious: Scalars['Boolean']['output'];
+  debugSpawnHostsDisabled: Scalars['Boolean']['output'];
   disabledStatsCache: Scalars['Boolean']['output'];
   dispatchingDisabled: Scalars['Boolean']['output'];
   displayName: Scalars['String']['output'];
@@ -3418,6 +3485,7 @@ export type RepoRefInput = {
   commitQueue?: InputMaybe<CommitQueueParamsInput>;
   containerSizeDefinitions?: InputMaybe<Array<ContainerResourcesInput>>;
   deactivatePrevious?: InputMaybe<Scalars['Boolean']['input']>;
+  debugSpawnHostsDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   disabledStatsCache?: InputMaybe<Scalars['Boolean']['input']>;
   dispatchingDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   displayName?: InputMaybe<Scalars['String']['input']>;
@@ -3570,6 +3638,17 @@ export type RuntimeEnvironmentConfigInput = {
   baseUrl: Scalars['String']['input'];
 };
 
+export type S3CostConfig = {
+  __typename?: 'S3CostConfig';
+  storage?: Maybe<S3StorageCostConfig>;
+  upload?: Maybe<S3UploadCostConfig>;
+};
+
+export type S3CostConfigInput = {
+  storage?: InputMaybe<S3StorageCostConfigInput>;
+  upload?: InputMaybe<S3UploadCostConfigInput>;
+};
+
 export type S3Credentials = {
   __typename?: 'S3Credentials';
   bucket?: Maybe<Scalars['String']['output']>;
@@ -3581,6 +3660,26 @@ export type S3CredentialsInput = {
   bucket?: InputMaybe<Scalars['String']['input']>;
   key?: InputMaybe<Scalars['String']['input']>;
   secret?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type S3StorageCostConfig = {
+  __typename?: 'S3StorageCostConfig';
+  iAStorageCostDiscount?: Maybe<Scalars['Float']['output']>;
+  standardStorageCostDiscount?: Maybe<Scalars['Float']['output']>;
+};
+
+export type S3StorageCostConfigInput = {
+  iAStorageCostDiscount?: InputMaybe<Scalars['Float']['input']>;
+  standardStorageCostDiscount?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type S3UploadCostConfig = {
+  __typename?: 'S3UploadCostConfig';
+  uploadCostDiscount?: Maybe<Scalars['Float']['output']>;
+};
+
+export type S3UploadCostConfigInput = {
+  uploadCostDiscount?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type SesConfig = {
@@ -3612,6 +3711,15 @@ export type SshKeyPair = {
 export type SshKeyPairInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   secretARN?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type SageConfig = {
+  __typename?: 'SageConfig';
+  baseUrl?: Maybe<Scalars['String']['output']>;
+};
+
+export type SageConfigInput = {
+  baseUrl?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SaveAdminSettingsInput = {
@@ -3702,6 +3810,17 @@ export type SelectorInput = {
   type: Scalars['String']['input'];
 };
 
+export type ServiceFlag = {
+  __typename?: 'ServiceFlag';
+  enabled: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type ServiceFlagInput = {
+  enabled: Scalars['Boolean']['input'];
+  name: Scalars['String']['input'];
+};
+
 export type ServiceFlags = {
   __typename?: 'ServiceFlags';
   agentStartDisabled?: Maybe<Scalars['Boolean']['output']>;
@@ -3713,6 +3832,7 @@ export type ServiceFlags = {
   checkBlockedTasksDisabled?: Maybe<Scalars['Boolean']['output']>;
   cliUpdatesDisabled?: Maybe<Scalars['Boolean']['output']>;
   cloudCleanupDisabled?: Maybe<Scalars['Boolean']['output']>;
+  debugSpawnHostDisabled?: Maybe<Scalars['Boolean']['output']>;
   degradedModeDisabled?: Maybe<Scalars['Boolean']['output']>;
   elasticIPsDisabled?: Maybe<Scalars['Boolean']['output']>;
   emailNotificationsDisabled?: Maybe<Scalars['Boolean']['output']>;
@@ -3727,8 +3847,10 @@ export type ServiceFlags = {
   monitorDisabled?: Maybe<Scalars['Boolean']['output']>;
   podAllocatorDisabled?: Maybe<Scalars['Boolean']['output']>;
   podInitDisabled?: Maybe<Scalars['Boolean']['output']>;
+  psLoggingDisabled?: Maybe<Scalars['Boolean']['output']>;
   releaseModeDisabled?: Maybe<Scalars['Boolean']['output']>;
   repotrackerDisabled?: Maybe<Scalars['Boolean']['output']>;
+  s3LifecycleSyncDisabled?: Maybe<Scalars['Boolean']['output']>;
   schedulerDisabled?: Maybe<Scalars['Boolean']['output']>;
   slackNotificationsDisabled?: Maybe<Scalars['Boolean']['output']>;
   sleepScheduleDisabled?: Maybe<Scalars['Boolean']['output']>;
@@ -3738,6 +3860,7 @@ export type ServiceFlags = {
   taskLoggingDisabled?: Maybe<Scalars['Boolean']['output']>;
   taskReliabilityDisabled?: Maybe<Scalars['Boolean']['output']>;
   unrecognizedPodCleanupDisabled?: Maybe<Scalars['Boolean']['output']>;
+  useMergeQueuePathFilteringDisabled?: Maybe<Scalars['Boolean']['output']>;
   webhookNotificationsDisabled?: Maybe<Scalars['Boolean']['output']>;
 };
 
@@ -3751,6 +3874,7 @@ export type ServiceFlagsInput = {
   checkBlockedTasksDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   cliUpdatesDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   cloudCleanupDisabled?: InputMaybe<Scalars['Boolean']['input']>;
+  debugSpawnHostDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   degradedModeDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   elasticIPsDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   emailNotificationsDisabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -3765,8 +3889,10 @@ export type ServiceFlagsInput = {
   monitorDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   podAllocatorDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   podInitDisabled?: InputMaybe<Scalars['Boolean']['input']>;
+  psLoggingDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   releaseModeDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   repotrackerDisabled?: InputMaybe<Scalars['Boolean']['input']>;
+  s3LifecycleSyncDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   schedulerDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   slackNotificationsDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   sleepScheduleDisabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -3776,7 +3902,15 @@ export type ServiceFlagsInput = {
   taskLoggingDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   taskReliabilityDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   unrecognizedPodCleanupDisabled?: InputMaybe<Scalars['Boolean']['input']>;
+  useMergeQueuePathFilteringDisabled?: InputMaybe<Scalars['Boolean']['input']>;
   webhookNotificationsDisabled?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/** SetCursorAPIKeyPayload is the response from setting a Cursor API key. */
+export type SetCursorApiKeyPayload = {
+  __typename?: 'SetCursorAPIKeyPayload';
+  keyLastFour?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
 };
 
 /**
@@ -3911,6 +4045,7 @@ export type SpawnHostInput = {
   distroId: Scalars['String']['input'];
   expiration?: InputMaybe<Scalars['Time']['input']>;
   homeVolumeSize?: InputMaybe<Scalars['Int']['input']>;
+  isDebug?: InputMaybe<Scalars['Boolean']['input']>;
   isVirtualWorkStation: Scalars['Boolean']['input'];
   noExpiration: Scalars['Boolean']['input'];
   publicKey: PublicKeyInput;
@@ -3982,6 +4117,7 @@ export type SpruceConfig = {
   jira?: Maybe<JiraConfig>;
   providers?: Maybe<CloudProviderConfig>;
   secretFields: Array<Scalars['String']['output']>;
+  serviceFlags: UserServiceFlags;
   singleTaskDistro?: Maybe<SingleTaskDistroConfig>;
   slack?: Maybe<SlackConfig>;
   spawnHost: SpawnHostConfig;
@@ -4101,6 +4237,7 @@ export type Task = {
   generateTask?: Maybe<Scalars['Boolean']['output']>;
   generatedBy?: Maybe<Scalars['String']['output']>;
   generatedByName?: Maybe<Scalars['String']['output']>;
+  generator?: Maybe<Task>;
   hasTestResults: Scalars['Boolean']['output'];
   hostId?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
@@ -4114,7 +4251,7 @@ export type Task = {
   patch?: Maybe<Patch>;
   patchNumber?: Maybe<Scalars['Int']['output']>;
   pod?: Maybe<Pod>;
-  predictedTaskCost?: Maybe<TaskCost>;
+  predictedTaskCost?: Maybe<Cost>;
   priority?: Maybe<Scalars['Int']['output']>;
   project?: Maybe<Project>;
   projectId: Scalars['String']['output'];
@@ -4130,7 +4267,7 @@ export type Task = {
   /** taskLogs returns the tail 100 lines of the task's logs. */
   stepbackInfo?: Maybe<StepbackInfo>;
   tags: Array<Scalars['String']['output']>;
-  taskCost?: Maybe<TaskCost>;
+  taskCost?: Maybe<Cost>;
   taskGroup?: Maybe<Scalars['String']['output']>;
   taskGroupMaxHosts?: Maybe<Scalars['Int']['output']>;
   taskLogs: TaskLogs;
@@ -4164,13 +4301,6 @@ export type TaskContainerCreationOpts = {
   memoryMB: Scalars['Int']['output'];
   os: Scalars['String']['output'];
   workingDir: Scalars['String']['output'];
-};
-
-/** TaskCost represents the cost breakdown for a task. */
-export type TaskCost = {
-  __typename?: 'TaskCost';
-  adjustedCost?: Maybe<Scalars['Float']['output']>;
-  onDemandCost?: Maybe<Scalars['Float']['output']>;
 };
 
 /** TaskCountOptions defines the parameters that are used when counting tasks from a Version. */
@@ -4518,6 +4648,7 @@ export type TicketFields = {
   assignedTeam?: Maybe<Scalars['String']['output']>;
   assigneeDisplayName?: Maybe<Scalars['String']['output']>;
   created: Scalars['String']['output'];
+  failingTasks?: Maybe<Array<Scalars['String']['output']>>;
   resolutionName?: Maybe<Scalars['String']['output']>;
   status: JiraStatus;
   summary: Scalars['String']['output'];
@@ -4594,7 +4725,6 @@ export type UiConfig = {
   csrfKey?: Maybe<Scalars['String']['output']>;
   defaultProject: Scalars['String']['output'];
   fileStreamingContentTypes: Array<Scalars['String']['output']>;
-  helpUrl?: Maybe<Scalars['String']['output']>;
   httpListenAddr?: Maybe<Scalars['String']['output']>;
   loginDomain?: Maybe<Scalars['String']['output']>;
   parsleyUrl?: Maybe<Scalars['String']['output']>;
@@ -4612,7 +4742,6 @@ export type UiConfigInput = {
   csrfKey: Scalars['String']['input'];
   defaultProject: Scalars['String']['input'];
   fileStreamingContentTypes: Array<Scalars['String']['input']>;
-  helpUrl: Scalars['String']['input'];
   httpListenAddr: Scalars['String']['input'];
   loginDomain: Scalars['String']['input'];
   parsleyUrl: Scalars['String']['input'];
@@ -4687,14 +4816,14 @@ export type UseSpruceOptionsInput = {
  */
 export type User = {
   __typename?: 'User';
-  betaFeatures: BetaFeatures;
-  displayName: Scalars['String']['output'];
-  emailAddress: Scalars['String']['output'];
-  parsleyFilters: Array<ParsleyFilter>;
-  parsleySettings: ParsleySettings;
-  patches: Patches;
-  permissions: Permissions;
-  settings: UserSettings;
+  betaFeatures?: Maybe<BetaFeatures>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  emailAddress?: Maybe<Scalars['String']['output']>;
+  parsleyFilters?: Maybe<Array<ParsleyFilter>>;
+  parsleySettings?: Maybe<ParsleySettings>;
+  patches?: Maybe<Patches>;
+  permissions?: Maybe<Permissions>;
+  settings?: Maybe<UserSettings>;
   subscriptions?: Maybe<Array<GeneralSubscription>>;
   userId: Scalars['String']['output'];
 };
@@ -4721,6 +4850,12 @@ export type UserConfig = {
   oauth_issuer: Scalars['String']['output'];
   ui_server_host: Scalars['String']['output'];
   user: Scalars['String']['output'];
+};
+
+export type UserServiceFlags = {
+  __typename?: 'UserServiceFlags';
+  debugSpawnHostDisabled?: Maybe<Scalars['Boolean']['output']>;
+  jwtTokenForCLIDisabled?: Maybe<Scalars['Boolean']['output']>;
 };
 
 /**
@@ -4794,6 +4929,7 @@ export type Version = {
   order: Scalars['Int']['output'];
   parameters: Array<Parameter>;
   patch?: Maybe<Patch>;
+  predictedCost?: Maybe<Cost>;
   previousVersion?: Maybe<Version>;
   project: Scalars['String']['output'];
   projectIdentifier: Scalars['String']['output'];
@@ -4808,6 +4944,7 @@ export type Version = {
   taskStatuses: Array<Scalars['String']['output']>;
   tasks: VersionTasks;
   upstreamProject?: Maybe<UpstreamProject>;
+  user: User;
   versionTiming?: Maybe<VersionTiming>;
   warnings: Array<Scalars['String']['output']>;
   waterfallBuilds?: Maybe<Array<WaterfallBuild>>;
@@ -4917,6 +5054,7 @@ export type WaterfallOptions = {
   maxOrder?: InputMaybe<Scalars['Int']['input']>;
   /** Return versions with an order greater than minOrder. Used for paginating backward. */
   minOrder?: InputMaybe<Scalars['Int']['input']>;
+  omitInactiveBuilds?: InputMaybe<Scalars['Boolean']['input']>;
   projectIdentifier: Scalars['String']['input'];
   requesters?: InputMaybe<Array<Scalars['String']['input']>>;
   revision?: InputMaybe<Scalars['String']['input']>;
@@ -4945,7 +5083,6 @@ export type WaterfallTask = {
   displayStatusCache: Scalars['String']['output'];
   execution: Scalars['Int']['output'];
   id: Scalars['String']['output'];
-  status: Scalars['String']['output'];
 };
 
 export type WaterfallVersion = {
@@ -5032,8 +5169,12 @@ export type GetTaskQuery = {
     execution: number;
     patchNumber?: number | null;
     buildVariant: string;
+    buildVariantDisplayName?: string | null;
     projectIdentifier?: string | null;
     requester: string;
+    distroId: string;
+    imageId: string;
+    ami?: string | null;
     baseTask?: { __typename?: 'Task'; id: string } | null;
     versionMetadata: {
       __typename?: 'Version';
@@ -5203,4 +5344,149 @@ export type VersionQuery = {
       revision: string;
     } | null;
   };
+};
+
+export type GetImagesQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetImagesQuery = { __typename?: 'Query'; images: Array<string> };
+
+export type GetImageOsQueryVariables = Exact<{
+  imageId: Scalars['String']['input'];
+  opts: OperatingSystemOpts;
+}>;
+
+export type GetImageOsQuery = {
+  __typename?: 'Query';
+  image?: {
+    __typename?: 'Image';
+    operatingSystem: {
+      __typename?: 'ImageOperatingSystemPayload';
+      filteredCount: number;
+      totalCount: number;
+      data: Array<{ __typename?: 'OSInfo'; name: string; version: string }>;
+    };
+  } | null;
+};
+
+export type GetImagePackagesQueryVariables = Exact<{
+  imageId: Scalars['String']['input'];
+  opts: PackageOpts;
+}>;
+
+export type GetImagePackagesQuery = {
+  __typename?: 'Query';
+  image?: {
+    __typename?: 'Image';
+    packages: {
+      __typename?: 'ImagePackagesPayload';
+      filteredCount: number;
+      totalCount: number;
+      data: Array<{
+        __typename?: 'Package';
+        name: string;
+        manager: string;
+        version: string;
+      }>;
+    };
+  } | null;
+};
+
+export type GetImageToolchainsQueryVariables = Exact<{
+  imageId: Scalars['String']['input'];
+  opts: ToolchainOpts;
+}>;
+
+export type GetImageToolchainsQuery = {
+  __typename?: 'Query';
+  image?: {
+    __typename?: 'Image';
+    toolchains: {
+      __typename?: 'ImageToolchainsPayload';
+      filteredCount: number;
+      totalCount: number;
+      data: Array<{
+        __typename?: 'Toolchain';
+        name: string;
+        path: string;
+        version: string;
+      }>;
+    };
+  } | null;
+};
+
+export type GetImageFilesQueryVariables = Exact<{
+  imageId: Scalars['String']['input'];
+  opts: ImageFileOpts;
+}>;
+
+export type GetImageFilesQuery = {
+  __typename?: 'Query';
+  image?: {
+    __typename?: 'Image';
+    files: {
+      __typename?: 'ImageFilesPayload';
+      filteredCount: number;
+      totalCount: number;
+      data: Array<{
+        __typename?: 'ImageFile';
+        name: string;
+        path: string;
+        version: string;
+      }>;
+    };
+  } | null;
+};
+
+export type GetImageEventsQueryVariables = Exact<{
+  imageId: Scalars['String']['input'];
+  limit: Scalars['Int']['input'];
+  page: Scalars['Int']['input'];
+}>;
+
+export type GetImageEventsQuery = {
+  __typename?: 'Query';
+  image?: {
+    __typename?: 'Image';
+    events: {
+      __typename?: 'ImageEventsPayload';
+      count: number;
+      eventLogEntries: Array<{
+        __typename?: 'ImageEvent';
+        timestamp: string;
+        amiBefore?: string | null;
+        amiAfter: string;
+        entries: Array<{
+          __typename?: 'ImageEventEntry';
+          name: string;
+          before: string;
+          after: string;
+          type: ImageEventType;
+          action: ImageEventEntryAction;
+        }>;
+      }>;
+    };
+  } | null;
+};
+
+export type GetImageHistoryQueryVariables = Exact<{
+  imageId: Scalars['String']['input'];
+  limit: Scalars['Int']['input'];
+  page: Scalars['Int']['input'];
+}>;
+
+export type GetImageHistoryQuery = {
+  __typename?: 'Query';
+  image?: {
+    __typename?: 'Image';
+    events: {
+      __typename?: 'ImageEventsPayload';
+      count: number;
+      eventLogEntries: Array<{
+        __typename?: 'ImageEvent';
+        timestamp: string;
+        amiBefore?: string | null;
+        amiAfter: string;
+      }>;
+    };
+  } | null;
 };
