@@ -33,6 +33,9 @@ resources:
 env:
   BRAINTRUST_PARENT: project_name:sage-staging
   BRAINTRUST_PROJECT_NAME: sage-staging
+  EVERGREEN_API_URL: https://spruce-staging.corp.mongodb.com/rest/v2
+  EVERGREEN_GRAPHQL_ENDPOINT: https://spruce-staging.corp.mongodb.com/mcp/graphql/query
+  EVERGREEN_URL: https://spruce-staging.corp.mongodb.com
   NODE_ENV: staging
   PORT: 8080
   SENTRY_ENVIRONMENT: staging
