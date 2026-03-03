@@ -2,10 +2,10 @@ import { Faithfulness } from 'autoevals';
 import { Eval, initDataset } from 'braintrust';
 import { z } from 'zod';
 import { ReporterName, PROJECT_NAME } from '@/evals/constants';
-import { TechnicalAccuracy } from '@/evals/scorers';
 import { tracedWorkflowEval } from '@/evals/utils/tracedWorkflow';
 import { RELEASE_NOTES_WORKFLOW_NAME } from '@/mastra/agents/constants';
 import { releaseNotesWorkflow } from '@/mastra/workflows/releaseNotes';
+import { CitationAccuracy, extractAllCitations } from './scorers';
 import { TestCase, TestInput, TestResult } from './types';
 
 /**
@@ -90,7 +90,7 @@ type ReleaseNotesMetadata = {
   version?: string;
   scoreThresholds?: {
     Faithfulness?: number;
-    TechnicalAccuracy?: number;
+    CitationAccuracy?: number;
   };
 };
 
@@ -115,10 +115,7 @@ const loadReleaseNotesTestCases = async (): Promise<TestCase[]> => {
           `Release notes for ${metadata?.product || 'unknown'} ${metadata?.version || ''}`.trim(),
         scoreThresholds: {
           Faithfulness: metadata?.scoreThresholds?.Faithfulness ?? 0.7,
-          TechnicalAccuracy:
-            // lowered threshold for release notes generation due to variability in outputs
-            // will revisit after further iterations
-            metadata?.scoreThresholds?.TechnicalAccuracy ?? 0.6,
+          CitationAccuracy: metadata?.scoreThresholds?.CitationAccuracy ?? 1.0,
         },
       },
     };
@@ -146,10 +143,10 @@ Eval(
           context: formatIssuesAsText(input.jiraIssues),
           input: `Generate release notes for ${input.product || 'product'}`,
         }),
-      ({ expected, output }) =>
-        TechnicalAccuracy({
-          output: extractBulletText(output),
-          expected: extractBulletText(expected),
+      ({ input, output }) =>
+        CitationAccuracy({
+          outputCitations: extractAllCitations(output),
+          inputKeys: input.jiraIssues.map(issue => issue.key),
         }),
     ],
     experimentName: 'Release Notes Workflow Eval',

@@ -11,7 +11,7 @@ export type TestResult = ReleaseNotesOutput;
 
 export type Scores = BaseScores & {
   Faithfulness: number;
-  TechnicalAccuracy: number;
+  CitationAccuracy: number;
 };
 
 export type TestCase = BaseTestCase<TestInput, TestResult, Scores>;
