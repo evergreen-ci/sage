@@ -4,4 +4,7 @@ export { default as getTaskHistoryTool } from './getTaskHistory';
 export { default as getTaskTestsTool } from './getTaskTests';
 export { default as getTaskHistoryByIdTool } from './getTaskHistoryById';
 export { default as getVersionTool } from './getVersion';
+export { default as getDistroTool } from './getDistro';
+export { default as getImageTool } from './getImage';
+export { default as listImagesTool } from './listImages';
 export { default as getVersionFromTaskTool } from './getVersionFromTask';
