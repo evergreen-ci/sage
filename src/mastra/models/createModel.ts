@@ -1,6 +1,6 @@
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createAzure } from '@ai-sdk/azure';
-import { LanguageModelV2 } from '@ai-sdk/provider';
+import { LanguageModelV3 } from '@ai-sdk/provider';
 import { config } from '@/config';
 import { logger } from '@/utils/logger';
 
@@ -16,7 +16,7 @@ type ModelProvider = 'openai' | 'anthropic';
 export const createModel = (
   provider: ModelProvider,
   deploymentName: string
-): LanguageModelV2 => {
+): LanguageModelV3 => {
   if (provider === 'openai') {
     const endpointParts = config.aiModels.azure.openai.endpoint.split('//');
     const resourceName = endpointParts[1]?.split('.')[0] || 'default';
