@@ -154,8 +154,9 @@ export const formatPromptStep = createStep({
 - Wrap tokens that a user might copy verbatim (versions, package names, CLI commands, file paths, environment variables) in single backticks; avoid multiline code fences.
 - When hyperlink guidance is available (for example in metadata or guidelines), populate the links array with { "text", "url" } objects instead of embedding inline markup.
 - Keep bullet text plain prose (no markdown, Jira formatting, or decorative prefixes).
-- Include a citations array only when at least one Jira issue applies to that bullet; omit the field for structural or grouping bullets, but ensure actionable top-level bullets cite their supporting Jira keys. NEVER include an empty citations array ([]). If there are no citations, omit the citations field entirely.
-- Omit the citations property on subitems only when they inherit the citation from their parent bullet.
+- Include a citations array only when at least one Jira issue applies to that bullet; set citations to null for structural or grouping bullets, but ensure actionable top-level bullets cite their supporting Jira keys. NEVER include an empty citations array ([]). If there are no citations, set citations to null.
+- Set the citations property to null on subitems only when they inherit the citation from their parent bullet.
+- IMPORTANT: Always include all fields (citations, subitems, links) in every item. When a field does not apply, set its value to null — do NOT omit the field entirely.
 - Do not create subitems that only point to additional reading (for example, "See the release notes"). Capture URLs via the links array on the relevant bullet instead.
 - If a section plan instructs you to group vulnerabilities, use a parent bullet with subitems for the individual CVEs.
 - For pull requests listed under an issue, prefer subitems that briefly describe the change and cite the parent issue.`;
