@@ -1,12 +1,14 @@
 # Lumber
 
-Lumber analyzes user questions and routes them to the appropriate DevProd team. It provides a team name, team ID, and reasoning for the routing decision, enabling automated question triage in Slack and other channels.
+DevProd is made up of multiple teams, each owning different parts of the ecosystem. When someone posts a question in #ask-devprod, figuring out which team should handle it takes time and tribal knowledge. Lumber automates this triage — it analyzes a question and routes it to the right team, along with a reasoning explanation.
 
 ## How It Works
 
+For example, if someone asks _"How do I configure task timeouts in Evergreen?"_, Lumber determines this is an Evergreen App question and routes it to the Evergreen team with reasoning like: _"This question is about configuring task timeouts, which is a core Evergreen app feature."_
+
 1. A user question is submitted to the API
-2. The agent classifies the question using a dynamic prompt loaded from Braintrust
-3. It returns the team that should handle the question, along with a reasoning explanation
+2. The agent classifies the question using a dynamic prompt loaded from Braintrust (so routing rules can be updated without code changes)
+3. It returns the team name, team ID, and reasoning for the decision
 
 ## Output Fields
 
@@ -18,20 +20,35 @@ Lumber analyzes user questions and routes them to the appropriate DevProd team. 
 
 ## Dynamic Prompt Configuration
 
-Lumber's routing rules are managed externally in **Braintrust** rather than being hardcoded:
+Lumber's routing rules are managed externally in **Braintrust** (project: `sage-prod`, slug: `slack-question-ownership-agent`) rather than being hardcoded in the source. This means the team can update routing logic — adding new teams, adjusting boundaries between teams, or refining decision criteria — without deploying code. The agent loads its instructions at runtime, supporting both `completion` and `chat` prompt types.
 
-| Setting     | Value                            |
-| ----------- | -------------------------------- |
-| **Project** | `sage-prod`                      |
-| **Slug**    | `slack-question-ownership-agent` |
+> **Why Braintrust for the prompt?** Team structures and ownership boundaries change more often than the routing agent's code. By storing the prompt externally, the team can iterate on routing accuracy through Braintrust's experimentation tools and measure the impact of prompt changes against eval scores.
 
-This means routing logic can be updated without code changes by modifying the prompt in Braintrust. The agent loads its instructions at runtime, supporting both `completion` and `chat` prompt types.
+## Quick Start
+
+Route a question to the appropriate team:
+
+```bash
+curl -X POST https://sage.prod.corp.mongodb.com/completions/lumber/determine-owner \
+  -H "Content-Type: application/json" \
+  -d '{"question": "How do I configure task timeouts in Evergreen?"}'
+```
+
+Response:
+
+```json
+{
+  "teamName": "Evergreen App",
+  "teamId": "evergreen-team-id",
+  "reasoning": "The question is about configuring task timeouts, which is a core Evergreen platform feature managed by the Evergreen team."
+}
+```
 
 ## API Reference
 
 ### Determine Question Owner
 
-**`POST /completions/lumber/determine-owner`**
+`**POST /completions/lumber/determine-owner**`
 
 Routes a user question to the appropriate DevProd team.
 
@@ -65,18 +82,6 @@ Routes a user question to the appropriate DevProd team.
 | ------ | ----------------------------------------------------- |
 | 400    | Invalid request body (missing or empty `question`)    |
 | 500    | Agent not found, not configured, or generation failed |
-
-## Technical Details
-
-| Property              | Value                      |
-| --------------------- | -------------------------- |
-| **Agent ID**          | `questionOwnershipAgent`   |
-| **Model**             | GPT-4.1                    |
-| **Temperature**       | 0 (deterministic)          |
-| **Tools**             | None (pure classification) |
-| **Structured Output** | Enforced via Zod schema    |
-
-The zero temperature setting ensures consistent, deterministic routing decisions for identical questions. The agent uses structured output to guarantee a well-formed response with all required fields.
 
 ## Getting Help
 

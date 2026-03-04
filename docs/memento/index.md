@@ -1,12 +1,12 @@
 # Memento
 
-Memento converts Slack thread captures into structured Jira ticket data. Given a raw Slack thread, it extracts the reporter, generates a concise title, and produces a detailed description formatted with Jira text syntax.
+Useful context about bugs, feature requests, and operational issues often surfaces in Slack threads — but turning those conversations into actionable Jira tickets is tedious. Memento automates this: given a raw Slack thread capture, it extracts the reporter, generates a concise title, and produces a detailed description formatted with Jira text syntax, ready to be dropped into a new ticket.
 
 ## How It Works
 
-1. A Slack thread capture (plain text) is submitted to the API
-2. The agent analyzes the thread to identify the reporter, core issue, and proposed solution
-3. It returns a structured JSON object with three fields ready for Jira ticket creation
+1. Someone captures a Slack thread (copy-paste of the conversation text) and submits it to the API
+2. The agent reads through the thread to identify who reported the issue, what the core problem is, and what solutions were discussed
+3. It returns a structured JSON object with three fields — `reporter`, `title`, and `description` — ready for Jira ticket creation
 
 ## Output Fields
 
@@ -18,7 +18,7 @@ Memento converts Slack thread captures into structured Jira ticket data. Given a
 
 ## Description Format
 
-The generated description uses **Jira text formatting** (not markdown) and follows a consistent structure:
+The generated description uses **Jira text formatting** (not markdown — Jira has its own markup syntax) and follows a consistent structure:
 
 1. **Issue Summary** - Clear statement of the problem
 2. **Context** - Relevant technical details from the conversation (APIs, code, documentation)
@@ -38,6 +38,20 @@ The generated description uses **Jira text formatting** (not markdown) and follo
 | Numbered lists | `# item`                                 |
 | Links          | `[Link text\|URL]`                       |
 | Quotes         | `{quote}quoted text{quote}`              |
+
+## Quick Start
+
+Submit a Slack thread capture and get back structured Jira ticket data:
+
+```bash
+curl -X POST https://sage.example.com/completions/memento/summarize-thread \
+  -H "Content-Type: application/json" \
+  -d '{
+    "slackThreadCapture": "Slack thread from #ask-devprod\nhttps://mongodb.slack.com/archives/...\n\n[~john.doe@mongodb.com] 10:30 AM\nI noticed the github_pr_number expansion returns unexpected values for merge queue items...\n\n[~jane.smith@mongodb.com] 10:45 AM\nThat looks like a bug in the expansion logic..."
+  }'
+```
+
+The response includes a `reporter`, `title`, and `description` that you can use directly when creating a Jira ticket.
 
 ## API Reference
 
@@ -77,17 +91,6 @@ Analyzes a Slack thread capture and returns structured ticket data.
 | ------ | ------------------------------------------------------------ |
 | 400    | Invalid request body (missing or empty `slackThreadCapture`) |
 | 500    | Agent not found or generation failed                         |
-
-## Technical Details
-
-| Property        | Value                        |
-| --------------- | ---------------------------- |
-| **Agent ID**    | `slackThreadSummarizerAgent` |
-| **Model**       | GPT-4.1                      |
-| **Temperature** | 0.3                          |
-| **Tools**       | None (pure analysis)         |
-
-The agent performs pure text analysis without external tool calls. It relies on the structure and content of the Slack thread capture to extract all necessary information.
 
 ## Getting Help
 

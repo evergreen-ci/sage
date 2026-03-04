@@ -1,20 +1,20 @@
 # Parsley AI
 
-Parsley AI is a conversational assistant for analyzing Evergreen tasks, builds, and logs. It classifies user questions, fetches Evergreen metadata, and performs deep log analysis to provide evidence-based answers with streamed responses.
+Debugging Evergreen task failures often involves jumping between the Evergreen UI for task metadata and raw log files that can be tens of megabytes. Parsley AI is a conversational assistant that brings both together — you ask a question in natural language, and it figures out whether it needs task metadata, log analysis, or both, then streams back an evidence-based answer with line references.
 
 ## Documentation
 
-- [Architecture](./architecture.md) - Technical deep-dive into agents, workflows, and data flow
-- [Parsley AI Product Page](https://docs.devprod.prod.corp.mongodb.com/parsley/Parsley-AI) - User-facing documentation for Parsley AI in the DevProd docs
+- [Architecture](./architecture.md) — Technical deep-dive into agents, workflows, and data flow
+- [Parsley AI Product Page](https://docs.devprod.prod.corp.mongodb.com/parsley/Parsley-AI) — User-facing documentation for Parsley AI in the DevProd docs
 
 ## How It Works
 
-1. A user sends a question through the chat API
-2. The **Question Classifier Agent** categorizes the question (Evergreen metadata, log analysis, combination, general knowledge, or irrelevant)
-3. Based on the classification, the appropriate sub-agent or workflow is invoked:
+1. A user sends a question through the chat API (e.g., "Why did the `compile` task fail on this patch?")
+2. The **Question Classifier Agent** categorizes the question — is this about task metadata, log contents, both, general Evergreen knowledge, or something out of scope?
+3. Based on the classification, the appropriate specialist is invoked:
    - **Evergreen Agent** for metadata queries (task status, test results, task history)
-   - **Log Core Analyzer Workflow** for log file analysis
-   - Both for combination questions
+   - **Log Core Analyzer Workflow** for log file analysis (supports files up to 100MB)
+   - Both for combination questions (e.g., "Was this failure introduced recently? Compare with the last passing run.")
    - Direct response for general Evergreen knowledge
 4. The response is streamed back to the user with evidence and line references
 
@@ -33,7 +33,7 @@ Parsley AI is a conversational assistant for analyzing Evergreen tasks, builds, 
 
 ## Question Classification
 
-When a user submits a question, the Question Classifier Agent assigns it to one of these categories:
+Not every question requires the same tools. The Question Classifier Agent inspects each question and decides the fastest path to an answer:
 
 | Class               | Description                          | Example                                                            | Action                   |
 | ------------------- | ------------------------------------ | ------------------------------------------------------------------ | ------------------------ |
@@ -48,6 +48,47 @@ When a user submits a question, the Question Classifier Agent assigns it to one 
 - If the user mentions a specific task/run/test and asks "why/where/how it failed," the question is classified as `LOG`
 - If ambiguous between `EVERGREEN` and `LOG`, the classifier prefers `COMBINATION`
 - Questions clearly unrelated to Evergreen are classified as `IRRELEVANT`
+
+## Quick Start
+
+Send a message and receive a streamed response:
+
+```bash
+curl -N -X POST https://sage.example.com/completions/parsley/conversations/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "my-conversation-123",
+    "message": "What is the status of task abc123?"
+  }'
+```
+
+The response is a streamed UIMessage — each chunk arrives as it's generated, so you see partial answers immediately. To continue the conversation, send another request with the same `id`:
+
+```bash
+curl -N -X POST https://sage.example.com/completions/parsley/conversations/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "my-conversation-123",
+    "message": "What tests failed on that task?"
+  }'
+```
+
+If you're analyzing a specific log file, provide `logMetadata` to pre-resolve the log URL before the agent starts processing:
+
+```bash
+curl -N -X POST https://sage.example.com/completions/parsley/conversations/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "my-conversation-456",
+    "message": "Why did this task fail?",
+    "logMetadata": {
+      "task_id": "abc123",
+      "execution": 0,
+      "log_type": "EVERGREEN_TASK_LOGS",
+      "origin": "agent"
+    }
+  }'
+```
 
 ## API Reference
 
@@ -114,12 +155,9 @@ Retrieves the message history for an existing conversation.
 
 ## Conversation Memory
 
-Parsley AI maintains persistent conversation memory:
+Parsley AI remembers earlier messages so users can ask follow-up questions like "what about the other test?" without restating context. Conversations are stored in MongoDB via [Mastra Memory](https://mastra.ai/docs/memory/overview), scoped to individual threads. To resume a conversation, just provide the same conversation ID in subsequent requests.
 
-- **Storage:** MongoDB-backed via Mastra Memory
-- **Scope:** Thread-scoped working memory per conversation
-- **Persistence:** Conversations are stored and can be resumed by providing the same conversation ID
-- **Access control:** Each thread stores the creating user's ID; only that user can access the conversation
+Each thread records the creating user's ID for access control — only the user who started a conversation can retrieve its history.
 
 ## Getting Help
 

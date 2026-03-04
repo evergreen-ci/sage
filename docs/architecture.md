@@ -64,19 +64,21 @@ graph TD
 
 ## API Products
 
-Sage exposes five products, each backed by a dedicated agent or workflow:
+Sage exposes five products, each solving a distinct problem for DevProd teams:
 
-| Product           | Route                          | Agent / Workflow           | Description                                                                                         |
-| ----------------- | ------------------------------ | -------------------------- | --------------------------------------------------------------------------------------------------- |
-| **Parsley AI**    | `/completions/parsley/*`       | SageThinkingAgent          | Interactive conversational AI for Evergreen task and log analysis. Streams responses via SSE.       |
-| **Memento**       | `/completions/memento/*`       | SlackThreadSummarizerAgent | Converts Slack thread captures into structured Jira-ready summaries (reporter, title, description). |
-| **Lumber**        | `/completions/lumber/*`        | QuestionOwnershipAgent     | Classifies questions and routes them to the appropriate DevProd team.                               |
-| **Release Notes** | `/completions/release-notes/*` | releaseNotesWorkflow       | Generates structured, citation-backed release notes from Jira issues.                               |
-| **Sage-Bot**      | Cronjob (Jira polling)         | Cursor Remote Agent        | Polls Jira for `sage-bot`-labeled tickets and launches Cursor Cloud Agents to create PRs.           |
+- **[Parsley AI](./parsley/index.md)** (`/completions/parsley/*`) — When developers are debugging Evergreen task failures, they often need to cross-reference task metadata with log contents. Parsley AI provides a conversational interface backed by the SageThinkingAgent that handles both, streaming responses via SSE so users get answers incrementally.
+
+- **[Memento](./memento/index.md)** (`/completions/memento/*`) — Useful context about bugs and feature requests often lives in Slack threads that never make it into Jira. Memento uses the SlackThreadSummarizerAgent to convert raw Slack thread captures into structured Jira-ready summaries with a reporter, title, and description.
+
+- **[Lumber](./lumber/index.md)** (`/completions/lumber/*`) — Questions posted in #ask-devprod need to reach the right team quickly. Lumber's QuestionOwnershipAgent classifies incoming questions and routes them to the appropriate DevProd team with a reasoning explanation.
+
+- **[Release Notes](./release-notes/index.md)** (`/completions/release-notes/*`) — Writing release notes from dozens of Jira issues is tedious and error-prone. The releaseNotesWorkflow automates this by generating structured, citation-backed release notes that map issues to user-facing sections.
+
+- **[Sage-Bot](./sage-bot/index.md)** (Cronjob) — For straightforward implementation tasks, Sage-Bot can generate a PR directly from a Jira ticket. It polls Jira for `sage-bot`-labeled tickets and launches Cursor Cloud Agents to create pull requests automatically.
 
 ## SageThinkingAgent (Parsley AI)
 
-The SageThinkingAgent is the central orchestrator for the Parsley AI chat experience. It reasons about user questions and delegates to specialized sub-agents and workflows.
+When a user asks a question in Parsley, it could be about task metadata ("what's the status of this task?"), log contents ("why did this test fail?"), or both. Rather than requiring the user to know which system to query, the SageThinkingAgent figures out what kind of question was asked and delegates to the right specialist, assembling a single coherent answer.
 
 ### Orchestration Flow
 
@@ -100,16 +102,18 @@ flowchart TD
 
 The SageThinkingAgent uses two composition patterns to delegate work:
 
-- **Agent-as-tool** -- QuestionClassifierAgent and EvergreenAgent are wrapped as tools (`askQuestionClassifierAgentTool`, `askEvergreenAgentTool`) so the orchestrator can invoke them as standard tool calls.
-- **Workflow-as-tool** -- `logCoreAnalyzerWorkflow` and `getLogFileUrlWorkflow` are exposed as tools (`logCoreAnalyzerTool`, `resolveLogFileUrlTool`), keeping multi-step logic encapsulated.
+- **Agent-as-tool** — Sub-agents (Question Classifier, Evergreen Agent) are wrapped as [tools](https://mastra.ai/docs/agents/using-tools) so the orchestrator can invoke them as standard tool calls.
+- **Workflow-as-tool** — Multi-step [workflows](https://mastra.ai/docs/workflows/overview) (Log Analyzer, Log URL Resolver) are exposed as tools, keeping their internal complexity encapsulated.
+
+> **Why these patterns?** Wrapping sub-agents and workflows as tools lets the orchestrator invoke them through the standard tool-calling interface. This keeps the orchestrator's reasoning loop simple — it just decides which "tool" to call — while the actual complexity lives inside each sub-agent or workflow. It also means sub-agents can be tested and evolved independently.
 
 ### Memory
 
-Each conversation maintains thread-scoped working memory via Mastra Memory backed by MongoDB. The thread ID corresponds to the conversation ID from the client, enabling multi-turn conversations with full context.
+Parsley AI needs to remember earlier messages in a conversation so users can ask follow-up questions like "what about the other test?" without restating context. Each conversation maintains thread-scoped [working memory](https://mastra.ai/docs/memory/working-memory) via Mastra Memory backed by MongoDB, where the thread ID maps to the client's conversation ID.
 
 ## Sage-Bot & Cursor Remote Agents
 
-Sage-Bot is an automated PR generation system that bridges Jira and Cursor Cloud Agents.
+Many DevProd tasks are well-defined enough that an AI agent can implement them directly from a Jira ticket description. Sage-Bot bridges Jira and Cursor Cloud Agents so that developers can describe work in a ticket, add a label, and get a PR back without writing code themselves.
 
 ### Pipeline
 
@@ -136,7 +140,7 @@ flowchart TD
 
 ## Observability
 
-Sage uses a layered observability stack covering tracing, error tracking, eval scoring, and structured logging.
+Because Sage orchestrates multiple LLM calls, workflows, and external APIs per request, understanding what happened when something goes wrong requires layered observability. The stack covers distributed tracing, error tracking, eval scoring, and structured logging.
 
 ```mermaid
 graph LR
@@ -150,63 +154,30 @@ graph LR
 
 ### Honeycomb (OpenTelemetry)
 
-- **Protocol:** OTLP over HTTP with W3C Trace Context propagation
-- **Instrumented:** Express routes, MongoDB queries
-- **Context:** `AsyncLocalStorageContextManager` for async context propagation
+Honeycomb provides distributed tracing so you can follow a single user request across Express routes, agent calls, and MongoDB queries.
 
 ### Braintrust
 
-- **Tracing:** All LLM calls are traced via the `BraintrustExporter` configured in Mastra's observability layer
-- **Dynamic Prompts:** Some agents (e.g., QuestionOwnershipAgent) load their system prompts from Braintrust at runtime via `loadPrompt()`, enabling prompt iteration without code deploys
-- **Eval Suite:** Comprehensive evaluations for every agent and workflow, producing scores and JUnit XML reports
+Braintrust serves a dual role. First, all LLM calls are traced, giving visibility into model inputs, outputs, and latency. Second, some agents load their system prompts from Braintrust at runtime, so the team can iterate on prompts without deploying code. Braintrust also hosts the eval suite, which produces scores and JUnit XML reports for CI.
+
+> **Why Braintrust for prompts?** Storing prompts externally lets the team experiment with prompt changes and measure their impact through A/B comparisons in Braintrust, without going through the full deploy cycle.
 
 ### Sentry
 
-- **Error Tracking:** Captures unhandled exceptions, rejections, and Express errors
-- **Transaction Tracing:** Samples a configurable percentage of requests (default 10%)
-- **Console Capture:** Experimental integration captures `console.log/warn/error` as Sentry logs
-- **User Context:** Middleware sets the authenticated user on the Sentry scope for each request
+Sentry captures unhandled exceptions, rejections, and Express errors with transaction tracing. Middleware sets the authenticated user on each scope, making it easy to trace errors back to specific users.
 
 ## Eval Suite (Braintrust)
 
-Every agent and workflow has a corresponding eval suite that scores outputs against test cases.
+LLM outputs are non-deterministic, so every agent and workflow has a corresponding eval suite that scores outputs against known test cases. This catches regressions when prompts, models, or tools change.
 
-| Eval                         | What It Tests                                          |
-| ---------------------------- | ------------------------------------------------------ |
-| `sageThinkingAgent`          | End-to-end reasoning quality and tool usage            |
-| `questionClassifierAgent`    | Classification accuracy across question types          |
-| `evergreenAgent`             | Correctness of GraphQL queries and data interpretation |
-| `logAnalyzerWorkflow`        | Log analysis completeness and accuracy                 |
-| `slackThreadSummarizerAgent` | Summary quality and Jira formatting                    |
-| `questionOwnershipAgent`     | Team routing correctness                               |
-| `releaseNotesWorkflow`       | Structure, citation validity, and content quality      |
-
-Evals report to the Braintrust project `sage-prod` and generate JUnit XML for CI integration.
+Evals report to the Braintrust project `sage-prod` and generate JUnit XML for CI integration. For implementation details on writing new evals, see the [Creating Evals](../agents.md#creating-evals) section in agents.md.
 
 ## Data Layer
 
-MongoDB serves as the primary data store with the following collections:
+MongoDB serves as the primary data store. Each collection has a focused purpose:
 
 | Collection                | Purpose                                                        |
 | ------------------------- | -------------------------------------------------------------- |
 | **Mastra Memory Threads** | Conversation history and thread metadata for Parsley AI        |
 | **User Credentials**      | Encrypted Cursor API keys (AES-256) for sage-bot users         |
 | **Job Runs**              | Sage-bot execution records for idempotency and status tracking |
-
-## Key Source Locations
-
-| Component                               | Location                   |
-| --------------------------------------- | -------------------------- |
-| Application entry point                 | `src/main.ts`              |
-| Express server & routes                 | `src/api-server/`          |
-| Mastra registration (agents, workflows) | `src/mastra/index.ts`      |
-| Agent implementations                   | `src/mastra/agents/`       |
-| Tool implementations                    | `src/mastra/tools/`        |
-| Workflow implementations                | `src/mastra/workflows/`    |
-| Cursor service                          | `src/services/cursor/`     |
-| Jira service & polling                  | `src/services/jira/`       |
-| Eval suite                              | `src/evals/`               |
-| OpenTelemetry setup                     | `src/instrumentation.ts`   |
-| Sentry setup                            | `src/sentry-instrument.ts` |
-| Config & environment                    | `src/config/index.ts`      |
-| Database connection                     | `src/db/connection.ts`     |
