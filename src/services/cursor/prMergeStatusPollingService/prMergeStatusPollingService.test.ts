@@ -1,20 +1,20 @@
 import { ObjectId } from 'mongodb';
 import { JobRun, JobRunStatus, PRStatus } from '@/db/types';
-import { JiraClient } from '@/services/jira/jiraClient';
+import { GitHubTokenManager } from '@/services/github';
 import { PrMergeStatusPollingService } from '.';
 
 const {
   mockConnect,
   mockDisconnect,
   mockFindCompletedJobRunsWithOpenPRs,
-  mockGetDevStatus,
+  mockGetPullRequestByUrl,
   mockUpdateJobRun,
   mockValidateConfig,
 } = vi.hoisted(() => ({
   mockConnect: vi.fn(),
   mockDisconnect: vi.fn(),
   mockFindCompletedJobRunsWithOpenPRs: vi.fn(),
-  mockGetDevStatus: vi.fn(),
+  mockGetPullRequestByUrl: vi.fn(),
   mockUpdateJobRun: vi.fn(),
   mockValidateConfig: vi.fn(),
 }));
@@ -24,8 +24,9 @@ vi.mock('@/db/repositories/jobRunsRepository', () => ({
   updateJobRun: mockUpdateJobRun,
 }));
 
-vi.mock('@/services/jira/jiraClient', () => ({
-  jiraClient: {},
+vi.mock('@/services/github', () => ({
+  githubTokenManager: {},
+  GitHubTokenManager: vi.fn(),
 }));
 
 vi.mock('@/db/connection', () => ({
@@ -44,7 +45,7 @@ vi.mock('@/config', async importOriginal => {
 });
 
 describe('PrMergeStatusPollingService', () => {
-  let mockJiraClient: JiraClient;
+  let mockGitHubTokenManager: GitHubTokenManager;
 
   const createMockJob = (overrides: Partial<JobRun> = {}): JobRun => ({
     _id: new ObjectId(),
@@ -66,9 +67,9 @@ describe('PrMergeStatusPollingService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockJiraClient = {
-      getDevStatus: mockGetDevStatus,
-    } as unknown as JiraClient;
+    mockGitHubTokenManager = {
+      getPullRequestByUrl: mockGetPullRequestByUrl,
+    } as unknown as GitHubTokenManager;
   });
 
   describe('poll()', () => {
@@ -76,7 +77,7 @@ describe('PrMergeStatusPollingService', () => {
       mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([]);
 
       const service = new PrMergeStatusPollingService({
-        jiraClient: mockJiraClient,
+        githubTokenManager: mockGitHubTokenManager,
       });
 
       const result = await service.poll();
@@ -96,7 +97,7 @@ describe('PrMergeStatusPollingService', () => {
       mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([jobWithoutPr]);
 
       const service = new PrMergeStatusPollingService({
-        jiraClient: mockJiraClient,
+        githubTokenManager: mockGitHubTokenManager,
       });
 
       const result = await service.poll();
@@ -104,86 +105,24 @@ describe('PrMergeStatusPollingService', () => {
       expect(result.jobsFound).toBe(1);
       expect(result.jobsSkipped).toBe(1);
       expect(result.results[0].skipReason).toBe('Missing PR URL');
-      expect(mockGetDevStatus).not.toHaveBeenCalled();
-    });
-
-    it('skips jobs when dev status not found', async () => {
-      const job = createMockJob();
-      mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([job]);
-      mockGetDevStatus.mockResolvedValueOnce(null);
-
-      const service = new PrMergeStatusPollingService({
-        jiraClient: mockJiraClient,
-      });
-
-      const result = await service.poll();
-
-      expect(result.jobsSkipped).toBe(1);
-      expect(result.results[0].skipReason).toBe('No dev status found in Jira');
-    });
-
-    it('skips jobs when PR not found in dev status', async () => {
-      const job = createMockJob();
-      mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([job]);
-      mockGetDevStatus.mockResolvedValueOnce({
-        detail: [
-          {
-            pullRequests: [
-              {
-                id: 'pr-1',
-                name: 'Other PR',
-                url: 'https://github.com/org/repo/pull/999',
-                status: 'OPEN',
-                lastUpdate: '2024-01-01T00:00:00Z',
-                author: {
-                  name: 'user',
-                  avatar: '',
-                  url: '',
-                },
-              },
-            ],
-          },
-        ],
-      });
-
-      const service = new PrMergeStatusPollingService({
-        jiraClient: mockJiraClient,
-      });
-
-      const result = await service.poll();
-
-      expect(result.jobsSkipped).toBe(1);
-      expect(result.results[0].skipReason).toBe(
-        'PR not found in Jira dev status'
-      );
+      expect(mockGetPullRequestByUrl).not.toHaveBeenCalled();
     });
 
     it('skips jobs when PR is still open', async () => {
       const job = createMockJob();
       mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([job]);
-      mockGetDevStatus.mockResolvedValueOnce({
-        detail: [
-          {
-            pullRequests: [
-              {
-                id: 'pr-1',
-                name: 'Test PR',
-                url: 'https://github.com/org/repo/pull/123',
-                status: 'OPEN',
-                lastUpdate: '2024-01-01T00:00:00Z',
-                author: {
-                  name: 'user',
-                  avatar: '',
-                  url: '',
-                },
-              },
-            ],
-          },
-        ],
+      mockGetPullRequestByUrl.mockResolvedValueOnce({
+        number: 123,
+        title: 'Test PR',
+        state: 'open',
+        merged: false,
+        mergedAt: null,
+        url: 'https://github.com/org/repo/pull/123',
+        repository: 'org/repo',
       });
 
       const service = new PrMergeStatusPollingService({
-        jiraClient: mockJiraClient,
+        githubTokenManager: mockGitHubTokenManager,
       });
 
       const result = await service.poll();
@@ -200,13 +139,13 @@ describe('PrMergeStatusPollingService', () => {
       mockUpdateJobRun.mockResolvedValueOnce(staleJob);
 
       const service = new PrMergeStatusPollingService({
-        jiraClient: mockJiraClient,
+        githubTokenManager: mockGitHubTokenManager,
       });
 
       const result = await service.poll();
 
       expect(result.jobsProcessed).toBe(1);
-      expect(mockGetDevStatus).not.toHaveBeenCalled();
+      expect(mockGetPullRequestByUrl).not.toHaveBeenCalled();
       expect(mockUpdateJobRun).toHaveBeenCalledWith(staleJob._id, {
         pr: {
           url: 'https://github.com/org/repo/pull/123',
@@ -221,30 +160,19 @@ describe('PrMergeStatusPollingService', () => {
     it('updates job when PR is merged', async () => {
       const job = createMockJob();
       mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([job]);
-      mockGetDevStatus.mockResolvedValueOnce({
-        detail: [
-          {
-            pullRequests: [
-              {
-                id: 'pr-1',
-                name: 'Test PR',
-                url: 'https://github.com/org/repo/pull/123',
-                status: 'MERGED',
-                lastUpdate: '2024-01-01T00:00:00Z',
-                author: {
-                  name: 'user',
-                  avatar: '',
-                  url: '',
-                },
-              },
-            ],
-          },
-        ],
+      mockGetPullRequestByUrl.mockResolvedValueOnce({
+        number: 123,
+        title: 'Test PR',
+        state: 'closed',
+        merged: true,
+        mergedAt: '2024-01-01T00:00:00Z',
+        url: 'https://github.com/org/repo/pull/123',
+        repository: 'org/repo',
       });
       mockUpdateJobRun.mockResolvedValueOnce(job);
 
       const service = new PrMergeStatusPollingService({
-        jiraClient: mockJiraClient,
+        githubTokenManager: mockGitHubTokenManager,
       });
 
       const result = await service.poll();
@@ -264,30 +192,19 @@ describe('PrMergeStatusPollingService', () => {
     it('updates job when PR is declined', async () => {
       const job = createMockJob();
       mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([job]);
-      mockGetDevStatus.mockResolvedValueOnce({
-        detail: [
-          {
-            pullRequests: [
-              {
-                id: 'pr-1',
-                name: 'Test PR',
-                url: 'https://github.com/org/repo/pull/123',
-                status: 'DECLINED',
-                lastUpdate: '2024-01-01T00:00:00Z',
-                author: {
-                  name: 'user',
-                  avatar: '',
-                  url: '',
-                },
-              },
-            ],
-          },
-        ],
+      mockGetPullRequestByUrl.mockResolvedValueOnce({
+        number: 123,
+        title: 'Test PR',
+        state: 'closed',
+        merged: false,
+        mergedAt: null,
+        url: 'https://github.com/org/repo/pull/123',
+        repository: 'org/repo',
       });
       mockUpdateJobRun.mockResolvedValueOnce(job);
 
       const service = new PrMergeStatusPollingService({
-        jiraClient: mockJiraClient,
+        githubTokenManager: mockGitHubTokenManager,
       });
 
       const result = await service.poll();
@@ -317,53 +234,31 @@ describe('PrMergeStatusPollingService', () => {
       });
 
       mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([job1, job2]);
-      mockGetDevStatus
+      mockGetPullRequestByUrl
         .mockResolvedValueOnce({
-          detail: [
-            {
-              pullRequests: [
-                {
-                  id: 'pr-1',
-                  name: 'Test PR',
-                  url: 'https://github.com/org/repo/pull/123',
-                  status: 'MERGED',
-                  lastUpdate: '2024-01-01T00:00:00Z',
-                  author: {
-                    name: 'user',
-                    avatar: '',
-                    url: '',
-                  },
-                },
-              ],
-            },
-          ],
+          number: 123,
+          title: 'Test PR',
+          state: 'closed',
+          merged: true,
+          mergedAt: '2024-01-01T00:00:00Z',
+          url: 'https://github.com/org/repo/pull/123',
+          repository: 'org/repo',
         })
         .mockResolvedValueOnce({
-          detail: [
-            {
-              pullRequests: [
-                {
-                  id: 'pr-2',
-                  name: 'Test PR 2',
-                  url: 'https://github.com/org/repo/pull/456',
-                  status: 'MERGED',
-                  lastUpdate: '2024-01-01T00:00:00Z',
-                  author: {
-                    name: 'user',
-                    avatar: '',
-                    url: '',
-                  },
-                },
-              ],
-            },
-          ],
+          number: 456,
+          title: 'Test PR 2',
+          state: 'closed',
+          merged: true,
+          mergedAt: '2024-01-01T00:00:00Z',
+          url: 'https://github.com/org/repo/pull/456',
+          repository: 'org/repo',
         });
       mockUpdateJobRun
         .mockRejectedValueOnce(new Error('Database error'))
         .mockResolvedValueOnce(job2);
 
       const service = new PrMergeStatusPollingService({
-        jiraClient: mockJiraClient,
+        githubTokenManager: mockGitHubTokenManager,
       });
 
       const result = await service.poll();
@@ -379,7 +274,7 @@ describe('PrMergeStatusPollingService', () => {
       );
 
       const service = new PrMergeStatusPollingService({
-        jiraClient: mockJiraClient,
+        githubTokenManager: mockGitHubTokenManager,
       });
 
       await expect(service.poll()).rejects.toThrow('Connection failed');
@@ -394,7 +289,7 @@ describe('PrMergeStatusPollingService', () => {
       mockDisconnect.mockResolvedValueOnce(undefined);
 
       const service = new PrMergeStatusPollingService({
-        jiraClient: mockJiraClient,
+        githubTokenManager: mockGitHubTokenManager,
       });
 
       await service.runAsJob();
@@ -414,7 +309,7 @@ describe('PrMergeStatusPollingService', () => {
       mockDisconnect.mockResolvedValueOnce(undefined);
 
       const service = new PrMergeStatusPollingService({
-        jiraClient: mockJiraClient,
+        githubTokenManager: mockGitHubTokenManager,
       });
 
       await expect(service.runAsJob()).rejects.toThrow('DB query failed');
@@ -429,31 +324,20 @@ describe('PrMergeStatusPollingService', () => {
       mockValidateConfig.mockReturnValueOnce(null);
       mockConnect.mockResolvedValueOnce(undefined);
       mockFindCompletedJobRunsWithOpenPRs.mockResolvedValueOnce([job]);
-      mockGetDevStatus.mockResolvedValueOnce({
-        detail: [
-          {
-            pullRequests: [
-              {
-                id: 'pr-1',
-                name: 'Test PR',
-                url: 'https://github.com/org/repo/pull/123',
-                status: 'MERGED',
-                lastUpdate: '2024-01-01T00:00:00Z',
-                author: {
-                  name: 'user',
-                  avatar: '',
-                  url: '',
-                },
-              },
-            ],
-          },
-        ],
+      mockGetPullRequestByUrl.mockResolvedValueOnce({
+        number: 123,
+        title: 'Test PR',
+        state: 'closed',
+        merged: true,
+        mergedAt: '2024-01-01T00:00:00Z',
+        url: 'https://github.com/org/repo/pull/123',
+        repository: 'org/repo',
       });
       mockUpdateJobRun.mockRejectedValueOnce(new Error('Update failed'));
       mockDisconnect.mockResolvedValueOnce(undefined);
 
       const service = new PrMergeStatusPollingService({
-        jiraClient: mockJiraClient,
+        githubTokenManager: mockGitHubTokenManager,
       });
 
       const originalExitCode = process.exitCode;

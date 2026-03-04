@@ -95,4 +95,6 @@ log_data/
 PLAN_*.md
 
 # datasets 
-datasets/
+datasets
+.claude/settings.local.json
+pnpm-lock.yaml

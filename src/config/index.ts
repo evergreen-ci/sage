@@ -106,6 +106,18 @@ export interface Config {
     /** JIRA_API_TOKEN */
     jiraApiToken: string;
   };
+  github: {
+    /** GITHUB_APP_ID */
+    appId: string;
+    /** GITHUB_PRIVATE_KEY */
+    privateKey: string;
+    installationIds: {
+      /** GITHUB_INSTALLATION_ID_10GEN */
+      tenGen: string;
+      /** GITHUB_INSTALLATION_ID_EVERGREEN_CI */
+      evergreenCi: string;
+    };
+  };
 }
 
 /**
@@ -207,6 +219,14 @@ export const config: Config = {
     jiraBaseUrl: getEnvVar('JIRA_BASE_URL', 'https://jira.mongodb.org'),
     jiraApiToken: getEnvVar('JIRA_API_TOKEN', ''),
   },
+  github: {
+    appId: getEnvVar('GITHUB_APP_ID', ''),
+    privateKey: getEnvVar('GITHUB_PRIVATE_KEY', ''),
+    installationIds: {
+      tenGen: getEnvVar('GITHUB_INSTALLATION_ID_10GEN', ''),
+      evergreenCi: getEnvVar('GITHUB_INSTALLATION_ID_EVERGREEN_CI', ''),
+    },
+  },
 };
 
 /**
@@ -238,6 +258,10 @@ export const validateConfig = (): string[] | undefined => {
     'ENCRYPTION_KEY',
     'JIRA_BASE_URL',
     'JIRA_API_TOKEN',
+    'GITHUB_APP_ID',
+    'GITHUB_PRIVATE_KEY',
+    'GITHUB_INSTALLATION_ID_10GEN',
+    'GITHUB_INSTALLATION_ID_EVERGREEN_CI',
   ];
 
   const errors: string[] = [];
