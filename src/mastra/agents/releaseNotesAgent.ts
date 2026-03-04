@@ -1,8 +1,8 @@
 import { Agent } from '@mastra/core/agent';
 import { z } from 'zod';
+import { sonnet45 } from '@/mastra/models/anthropic/sonnet';
 import { gpt41 } from '@/mastra/models/openAI/gpt41';
 import { createToolFromAgent } from '@/mastra/tools/utils';
-import { sonnet45 } from '../models/anthropic/sonnet';
 import { RELEASE_NOTES_AGENT_NAME } from './constants';
 
 const normalizeIssueType = (value: string): string =>
