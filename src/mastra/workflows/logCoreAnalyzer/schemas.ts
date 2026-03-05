@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const LineReferenceSchema = z.object({
-  line: z.number().optional(),
+  line: z.number().nullable(),
   description: z.string(),
   evidence: z.string(),
 });

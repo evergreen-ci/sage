@@ -4,6 +4,9 @@
 defaultAlerts:
   enabled: true
   slack: "mySlackReceiver"
+  durations:
+    containerTerminatedError: 5m
+    cronjobFailed: 5m
 
 alertRoutingConfig:
   enabled: true

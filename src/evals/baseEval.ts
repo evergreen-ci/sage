@@ -138,7 +138,7 @@ const buildTestCase = <
     .className(testSuiteName)
     .name(testResult.metadata.testName);
 
-  testCase.time(testResult.output.duration / 1000);
+  testCase.time((testResult.output?.duration ?? 0) / 1000);
 
   const messages: string[] = [];
   if (testResult.error) {

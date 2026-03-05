@@ -15,6 +15,13 @@ export const iterativeRefinementWorkflow = createWorkflow({
     attempts: 3,
     delay: 1000,
   },
+  options: {
+    onError: ({ error, logger }) => {
+      logger.error('Iterative refinement workflow failed', {
+        error: error?.message,
+      });
+    },
+  },
 })
   .then(initialStep)
   .dowhile(
@@ -33,10 +40,18 @@ export const decideAndRunStep = createStep({
   outputSchema: WorkflowOutputSchema,
   stateSchema: WorkflowStateSchema,
   execute: async params => {
-    const { state } = params;
+    const { mastra, state } = params;
+    const logger = mastra.getLogger();
+
     if (!state.chunks) {
       throw new Error('Chunks are not available');
     }
+
+    const strategy = state.chunks.length === 1 ? 'single-pass' : 'iterative';
+    logger.info(`Routing to ${strategy} analysis`, {
+      chunkCount: state.chunks.length,
+    });
+
     const result =
       state.chunks.length === 1
         ? await singlePassStep.execute(params)
