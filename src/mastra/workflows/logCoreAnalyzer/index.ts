@@ -21,6 +21,9 @@ export const logCoreAnalyzerWorkflow = createWorkflow({
   inputSchema: WorkflowInputSchema,
   outputSchema: WorkflowOutputSchema,
   stateSchema: WorkflowStateSchema,
+  options: {
+    shouldPersistSnapshot: () => false,
+  },
 })
   .then(loadDataStep) // Use the new unified load step with validation
   .then(chunkStep)
