@@ -53,10 +53,7 @@ export const logCoreAnalyzerTool = createTool({
       return runResult.result;
     }
     if (runResult.status === 'failed') {
-      const errorMessage =
-        runResult.error instanceof Error
-          ? runResult.error.message
-          : String(runResult.error);
+      const errorMessage = runResult.error.message;
       throw new Error(`Log analyzer workflow failed: ${errorMessage}`);
     }
     throw new Error(
