@@ -14,24 +14,21 @@ PR titles and descriptions may not follow conventions specified in your reposito
 
 ### Failed to Determine Repository Default Branch
 
-When launching an agent without specifying a branch, the Cursor API attempts to determine the repository's default branch automatically. For certain repositories, this may fail with the following error:
+When launching an agent, the Cursor API may intermittently fail to resolve the target branch for certain repositories, producing the following error:
 
 ```
 Cursor API error (400): Failed to determine repository default branch
 ```
 
-A related error may also occur when Cursor cannot verify a specific branch:
+A related error may also occur, even when the branch is specified explicitly:
 
 ```
 Cursor API error (400): Failed to verify existence of branch 'master' in repository <org>/<repo>. Please ensure the branch name is correct.
 ```
 
-This is a [known Cursor API limitation](https://forum.cursor.com/t/failed-to-determine-repository-default-branch/152319) and is not caused by Sage Bot.
+This is a [known Cursor API limitation](https://forum.cursor.com/t/failed-to-determine-repository-default-branch/152319) and is not caused by Sage Bot. Both errors stem from the same underlying issue on Cursor's side and occur regardless of whether a branch is specified explicitly.
 
-**Workarounds:**
-
-- **Specify the branch explicitly** in your repository label using the format `repo:<org>/<repo>@<branch>` (e.g., `repo:10gen/mms@master`). This bypasses the automatic default branch detection.
-- **Wait and retry.** The issue is often transient on Cursor's side and resolves on its own. Re-add the `sage-bot` label after some time to retry.
+**Workaround:** Wait and retry. The issue is transient on Cursor's side and resolves on its own. Re-add the `sage-bot` label after some time to retry.
 
 ### Commit Signing
 
