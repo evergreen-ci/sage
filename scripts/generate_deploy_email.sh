@@ -23,7 +23,7 @@ while read -r hash message; do
 <li><a href="${REPO_URL}/commit/${hash}">${short_hash}</a> ${message}</li>
 EOF
 )
-done < <(git -c safe.directory=/drone/src log --pretty=format:"%H %s" ${PREV_COMMIT}^..${CURRENT_COMMIT})
+done < <(git -c safe.directory=/drone/src log --pretty=tformat:"%H %s" ${PREV_COMMIT}..${CURRENT_COMMIT})
 
 HTML_CONTENT=$(cat <<EOF
 <p>The following changes were deployed:</p>

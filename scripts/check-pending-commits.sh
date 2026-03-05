@@ -82,8 +82,8 @@ if [[ "$DEPLOYED_COMMIT" == "$CURRENT_COMMIT" ]]; then
   exit 0
 fi
 
-# Get undeployed commits (using ^.. to match generate_deploy_email.sh behavior)
-COMMIT_COUNT=$(git rev-list --count ${DEPLOYED_COMMIT}^..${CURRENT_COMMIT})
+# Get undeployed commits
+COMMIT_COUNT=$(git rev-list --count ${DEPLOYED_COMMIT}..${CURRENT_COMMIT})
 
 if [[ "$COMMIT_COUNT" -eq 0 ]]; then
   if [[ "$OUTPUT_JSON" == true ]]; then
@@ -118,7 +118,7 @@ if [[ "$OUTPUT_JSON" == true ]]; then
     FIRST=false
 
     echo -n "    {\"hash\": \"$hash\", \"short_hash\": \"${hash:0:7}\", \"message\": \"$message\", \"url\": \"$REPO_URL/commit/$hash\"}"
-  done < <(git log --pretty=format:"%H %s" ${DEPLOYED_COMMIT}^..${CURRENT_COMMIT})
+  done < <(git log --pretty=tformat:"%H %s" ${DEPLOYED_COMMIT}..${CURRENT_COMMIT})
 
   echo ""
   echo "  ]"
@@ -138,7 +138,7 @@ else
     short_hash=${hash:0:7}
     echo "  $short_hash - $message"
     echo "    $REPO_URL/commit/$hash"
-  done < <(git log --pretty=format:"%H %s" ${DEPLOYED_COMMIT}^..${CURRENT_COMMIT})
+  done < <(git log --pretty=tformat:"%H %s" ${DEPLOYED_COMMIT}..${CURRENT_COMMIT})
 
   echo ""
   echo "To deploy these commits to $ENVIRONMENT, promote the latest commit."
