@@ -75,7 +75,8 @@ const getEvergreenTaskFileURL = (
   taskID: string,
   execution: string | number,
   fileName: string
-) => `${evergreenURL}/task_file_raw/${taskID}/${execution}/${fileName}`;
+) =>
+  `${evergreenURL}/task_file_raw/${taskID}/${execution}/${encodeURIComponent(fileName)}`;
 
 /**
  * getEvergreenCompleteLogsURL constructs an Evergreen URL to download complete logs for a task.

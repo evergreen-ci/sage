@@ -21,6 +21,14 @@ export const logCoreAnalyzerWorkflow = createWorkflow({
   inputSchema: WorkflowInputSchema,
   outputSchema: WorkflowOutputSchema,
   stateSchema: WorkflowStateSchema,
+  options: {
+    shouldPersistSnapshot: () => false,
+    onError: ({ error, logger }) => {
+      logger.error('Log core analyzer workflow failed', {
+        error: error?.message,
+      });
+    },
+  },
 })
   .then(loadDataStep) // Use the new unified load step with validation
   .then(chunkStep)
@@ -69,10 +77,7 @@ export const logCoreAnalyzerTool = createTool({
       return runResult.result;
     }
     if (runResult.status === 'failed') {
-      const errorMessage =
-        runResult.error instanceof Error
-          ? runResult.error.message
-          : String(runResult.error);
+      const errorMessage = runResult.error.message;
       throw new Error(`Log analyzer workflow failed: ${errorMessage}`);
     }
     throw new Error(
