@@ -23,6 +23,11 @@ export const logCoreAnalyzerWorkflow = createWorkflow({
   stateSchema: WorkflowStateSchema,
   options: {
     shouldPersistSnapshot: () => false,
+    onError: ({ error, logger }) => {
+      logger.error('Log core analyzer workflow failed', {
+        error: error?.message,
+      });
+    },
   },
 })
   .then(loadDataStep) // Use the new unified load step with validation

@@ -15,6 +15,13 @@ export const iterativeRefinementWorkflow = createWorkflow({
     attempts: 3,
     delay: 1000,
   },
+  options: {
+    onError: ({ error, logger }) => {
+      logger.error('Iterative refinement workflow failed', {
+        error: error?.message,
+      });
+    },
+  },
 })
   .then(initialStep)
   .dowhile(
@@ -37,7 +44,6 @@ export const decideAndRunStep = createStep({
     const logger = mastra.getLogger();
 
     if (!state.chunks) {
-      logger.error('Chunks are not available in decide-and-run step');
       throw new Error('Chunks are not available');
     }
 
@@ -52,7 +58,6 @@ export const decideAndRunStep = createStep({
         : await iterativeRefinementWorkflow.execute(params);
 
     if (!result) {
-      logger.error('Step execution failed to return a result');
       throw new Error('Step execution failed to return a result');
     }
 

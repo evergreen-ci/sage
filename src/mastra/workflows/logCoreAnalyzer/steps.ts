@@ -37,21 +37,14 @@ export const loadDataStep = createStep({
 
     let result: LoadResult;
 
-    try {
-      if (filePath) {
-        result = await loadFromFile(filePath);
-      } else if (url) {
-        result = await loadFromUrl(url);
-      } else if (text) {
-        result = await loadFromText(text);
-      } else {
-        throw new Error(
-          'No input source provided (path, url, or text required)'
-        );
-      }
-    } catch (error) {
-      logger.error('Failed to load data', error);
-      throw error;
+    if (filePath) {
+      result = await loadFromFile(filePath);
+    } else if (url) {
+      result = await loadFromUrl(url);
+    } else if (text) {
+      result = await loadFromText(text);
+    } else {
+      throw new Error('No input source provided (path, url, or text required)');
     }
 
     // Normalize the text
@@ -108,7 +101,6 @@ export const chunkStep = createStep({
     const logger = mastra.getLogger();
     const { text } = state;
     if (!text) {
-      logger.error('Text content is missing in state');
       throw new Error('Text content is missing in state');
     }
     const doc = MDocument.fromText(text);
@@ -157,14 +149,10 @@ export const singlePassStep = createStep({
     const { analysisContext, chunks } = state;
 
     if (!chunks) {
-      logger.error('Chunks are not available in single-pass step');
       throw new Error('Chunks are not available');
     }
     // Validate we have exactly one chunk
     if (chunks.length !== 1) {
-      logger.error('Single-pass step received wrong chunk count', {
-        chunkCount: chunks.length,
-      });
       throw new Error(
         `Single-pass step requires exactly one chunk, but got ${chunks.length} chunks`
       );
@@ -213,7 +201,6 @@ export const initialStep = createStep({
     const logger = mastra.getLogger();
     const { analysisContext, chunks } = state;
     if (!chunks) {
-      logger.error('Chunks are not available in initial step');
       throw new Error('Chunks are not available');
     }
     const first = chunks[0]?.text ?? '';
