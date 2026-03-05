@@ -73,6 +73,9 @@ export const loadDataStep = createStep({
     // Append truncation warning to analysis context if content was truncated
     let enrichedContext = analysisContext;
     if (result.metadata.truncated) {
+      logger.warn('Content was truncated due to size limit', {
+        maxSizeMB: logAnalyzerConfig.limits.maxSizeMB,
+      });
       const truncationNote = `\n\nIMPORTANT: The source content exceeded the ${logAnalyzerConfig.limits.maxSizeMB}MB size limit and was truncated during download. You are analyzing only the first ${logAnalyzerConfig.limits.maxSizeMB}MB of the original content. Keep this in mind when drawing conclusions - there may be additional information in the truncated portion.`;
       enrichedContext = analysisContext
         ? `${analysisContext}${truncationNote}`
@@ -105,6 +108,7 @@ export const chunkStep = createStep({
     const logger = mastra.getLogger();
     const { text } = state;
     if (!text) {
+      logger.error('Text content is missing in state');
       throw new Error('Text content is missing in state');
     }
     const doc = MDocument.fromText(text);
@@ -153,10 +157,14 @@ export const singlePassStep = createStep({
     const { analysisContext, chunks } = state;
 
     if (!chunks) {
+      logger.error('Chunks are not available in single-pass step');
       throw new Error('Chunks are not available');
     }
     // Validate we have exactly one chunk
     if (chunks.length !== 1) {
+      logger.error('Single-pass step received wrong chunk count', {
+        chunkCount: chunks.length,
+      });
       throw new Error(
         `Single-pass step requires exactly one chunk, but got ${chunks.length} chunks`
       );
@@ -205,11 +213,15 @@ export const initialStep = createStep({
     const logger = mastra.getLogger();
     const { analysisContext, chunks } = state;
     if (!chunks) {
+      logger.error('Chunks are not available in initial step');
       throw new Error('Chunks are not available');
     }
     const first = chunks[0]?.text ?? '';
 
-    logger.debug('Chunk length', { length: first.length });
+    logger.debug('Initial analysis starting', {
+      firstChunkLength: first.length,
+      totalChunks: chunks.length,
+    });
 
     const result = await initialAnalyzerAgent.generate(
       USER_INITIAL_PROMPT(first, analysisContext),
@@ -220,6 +232,10 @@ export const initialStep = createStep({
     );
 
     const summary = result.text;
+
+    logger.debug('Initial analysis complete', {
+      summaryLength: summary.length,
+    });
     tracingContext.currentSpan?.update({
       metadata: {
         idx: 1,
@@ -297,6 +313,11 @@ export const refineStep = createStep({
     if (updated) {
       newSummary = response.summary ?? existingSummary;
     }
+
+    logger.debug(`Refinement chunk #${idx + 1} processed`, {
+      updated,
+      newLineReferences: newLineReferences.length,
+    });
 
     const accumulatedLineReferences = [
       ...state.accumulatedLineReferences,
