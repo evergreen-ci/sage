@@ -109,12 +109,14 @@ class JiraClient {
     await this.client.issueComments.addComment({
       issueIdOrKey: issueKey,
       comment: commentText,
-      ...(isPublic && {
-        visibility: {
-          type: 'role',
-          value: COMMENT_VISIBILITY_ROLE,
-        },
-      }),
+      ...(isPublic
+        ? {
+            visibility: {
+              type: 'role',
+              value: COMMENT_VISIBILITY_ROLE,
+            },
+          }
+        : {}),
     });
 
     logger.info(

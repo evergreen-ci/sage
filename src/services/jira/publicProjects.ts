@@ -51,6 +51,6 @@ export const PUBLIC_PROJECT_KEYS = new Set([
  * @returns true if the ticket's project is publicly accessible, false otherwise
  */
 export const isTicketPublic = (issueKey: string): boolean => {
-  const projectKey = issueKey.split('-')[0];
+  const projectKey = issueKey.split('-')[0].trim().toUpperCase();
   return PUBLIC_PROJECT_KEYS.has(projectKey);
 };

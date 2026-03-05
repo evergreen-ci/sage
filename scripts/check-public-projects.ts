@@ -1,4 +1,3 @@
-#!/usr/bin/env npx ts-node
 /**
  * CI script to verify the hardcoded PUBLIC_PROJECT_KEYS list matches
  * the actual public projects from Jira.

@@ -1,18 +1,19 @@
+import { COMMENT_VISIBILITY_ROLE } from '../constants';
 import { jiraClient } from '.';
 
 const {
   mockAddComment,
   mockEditIssue,
   mockGetIssue,
-  mockIsPublicProject,
+  mockIsTicketPublic,
   mockSearchForIssuesUsingJqlPost,
   mockSendRequest,
 } = vi.hoisted(() => ({
-  mockSearchForIssuesUsingJqlPost: vi.fn(),
-  mockEditIssue: vi.fn(),
   mockAddComment: vi.fn(),
+  mockEditIssue: vi.fn(),
   mockGetIssue: vi.fn(),
-  mockIsPublicProject: vi.fn(),
+  mockIsTicketPublic: vi.fn(),
+  mockSearchForIssuesUsingJqlPost: vi.fn(),
   mockSendRequest: vi.fn(),
 }));
 
@@ -28,7 +29,7 @@ vi.mock('jira.js', () => ({
 }));
 
 vi.mock('../publicProjects', () => ({
-  isTicketPublic: mockIsPublicProject,
+  isTicketPublic: mockIsTicketPublic,
 }));
 
 describe('jiraClient', () => {
@@ -105,7 +106,7 @@ describe('jiraClient', () => {
 
   describe('addComment', () => {
     it('adds comment with visibility restriction on public projects', async () => {
-      mockIsPublicProject.mockReturnValue(true);
+      mockIsTicketPublic.mockReturnValue(true);
       mockAddComment.mockResolvedValueOnce(undefined);
 
       await jiraClient.addComment('PROJ-123', 'This is a test comment');
@@ -115,13 +116,13 @@ describe('jiraClient', () => {
         comment: 'This is a test comment',
         visibility: {
           type: 'role',
-          value: 'Developers',
+          value: COMMENT_VISIBILITY_ROLE,
         },
       });
     });
 
     it('adds comment without visibility restriction on private projects', async () => {
-      mockIsPublicProject.mockReturnValue(false);
+      mockIsTicketPublic.mockReturnValue(false);
       mockAddComment.mockResolvedValueOnce(undefined);
 
       await jiraClient.addComment('PROJ-123', 'This is a test comment');
