@@ -96,3 +96,5 @@ PLAN_*.md
 
 # datasets 
 datasets/
+
+.local/

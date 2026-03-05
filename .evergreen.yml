@@ -39,6 +39,7 @@ buildvariants:
       - name: compile
       - name: lint
       - name: check-generated-cursor-client
+      - name: check-public-projects
       - name: test
       - name: e2e
       - name: check-mastra-dev-startup
@@ -76,6 +77,9 @@ tasks:
   - name: check-generated-cursor-client
     commands:
       - func: check-generated-cursor-client
+  - name: check-public-projects
+    commands:
+      - func: check-public-projects
   - name: test
     commands:
       - func: pnpm-test
@@ -368,6 +372,15 @@ functions:
       script: |
         ${PREPARE_SHELL}
         ./scripts/check-generated-cursor-client.sh
+
+  check-public-projects:
+    command: shell.exec
+    params:
+      working_dir: sage
+      shell: bash
+      script: |
+        ${PREPARE_SHELL}
+        pnpm check:public-projects
 
   pnpm-start:
     command: shell.exec
