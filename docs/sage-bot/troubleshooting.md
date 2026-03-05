@@ -12,6 +12,27 @@ PR titles and descriptions may not follow conventions specified in your reposito
 
 **Workaround:** Manually edit PR titles and descriptions if they don't match your conventions.
 
+### Failed to Determine Repository Default Branch
+
+When launching an agent without specifying a branch, the Cursor API attempts to determine the repository's default branch automatically. For certain repositories, this may fail with the following error:
+
+```
+Cursor API error (400): Failed to determine repository default branch
+```
+
+A related error may also occur when Cursor cannot verify a specific branch:
+
+```
+Cursor API error (400): Failed to verify existence of branch 'master' in repository <org>/<repo>. Please ensure the branch name is correct.
+```
+
+This is a [known Cursor API limitation](https://forum.cursor.com/t/failed-to-determine-repository-default-branch/152319) and is not caused by Sage Bot.
+
+**Workarounds:**
+
+- **Specify the branch explicitly** in your repository label using the format `repo:<org>/<repo>@<branch>` (e.g., `repo:10gen/mms@master`). This bypasses the automatic default branch detection.
+- **Wait and retry.** The issue is often transient on Cursor's side and resolves on its own. Re-add the `sage-bot` label after some time to retry.
+
 ### Commit Signing
 
 Some repositories (MMS specifically) require all merged commits to be signed. The Cursor cloud agent produces unsigned commits, so engineers will need to sign commits before merging.
