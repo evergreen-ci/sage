@@ -30,9 +30,6 @@ const outputSchema = z.object({
   total_count: z.number(),
 });
 
-/**
- * Tool to get operating system information for a specific image
- */
 export const getOSInfoTool = createTool({
   id: 'getOSInfo',
   description: `Get operating system information for a specific image.

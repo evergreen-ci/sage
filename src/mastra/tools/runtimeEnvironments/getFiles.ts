@@ -34,9 +34,6 @@ const outputSchema = z.object({
   summary: z.string(),
 });
 
-/**
- * Tool to get files present in a specific image
- */
 export const getFilesTool = createTool({
   id: 'getFiles',
   description: `Get tracked files present in a specific image runtime environment.

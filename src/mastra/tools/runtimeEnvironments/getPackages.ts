@@ -36,9 +36,6 @@ const outputSchema = z.object({
   summary: z.string(),
 });
 
-/**
- * Tool to get installed packages for a specific image
- */
 export const getPackagesTool = createTool({
   id: 'getPackages',
   description: `Get installed packages for a specific image runtime environment.

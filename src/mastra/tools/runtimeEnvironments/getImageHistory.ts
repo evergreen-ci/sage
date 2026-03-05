@@ -27,11 +27,6 @@ const outputSchema = z.object({
   summary: z.string(),
 });
 
-/**
- * Tool to get historical AMI versions for an image.
- * Derives AMI history from event transitions: each event's amiAfter
- * represents a deployed AMI version at the event's timestamp.
- */
 export const getImageHistoryTool = createTool({
   id: 'getImageHistory',
   description: `Get historical AMI versions for an image ID, ordered from most recent to oldest.

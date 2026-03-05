@@ -49,9 +49,6 @@ const outputSchema = z.object({
   description: z.string(),
 });
 
-/**
- * Tool to get chronological change events for an image
- */
 export const getImageEventsTool = createTool({
   id: 'getImageEvents',
   description: `Get chronological change events showing what changed between AMI versions over time.

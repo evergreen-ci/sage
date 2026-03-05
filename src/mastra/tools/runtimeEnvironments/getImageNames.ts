@@ -11,9 +11,6 @@ const outputSchema = z.object({
   count: z.number(),
 });
 
-/**
- * Tool to get all available runtime environment image names
- */
 export const getImageNamesTool = createTool({
   id: 'getImageNames',
   description: `Get all available image names from Evergreen.

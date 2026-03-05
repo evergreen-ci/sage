@@ -34,9 +34,6 @@ const outputSchema = z.object({
   summary: z.string(),
 });
 
-/**
- * Tool to get installed toolchains (compilers, runtimes) for a specific image
- */
 export const getToolchainsTool = createTool({
   id: 'getToolchains',
   description: `Get installed toolchains (compilers, language runtimes) for a specific image.
