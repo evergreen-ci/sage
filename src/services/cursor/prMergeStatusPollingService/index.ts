@@ -5,17 +5,16 @@ import {
 } from '@/db/repositories/jobRunsRepository';
 import { JobRun, PRStatus } from '@/db/types';
 import {
-  JiraClient,
-  jiraClient as defaultJiraClient,
-  DevStatusResponse,
-} from '@/services/jira/jiraClient';
+  GitHubTokenManager,
+  githubTokenManager as defaultGitHubTokenManager,
+} from '@/services/github';
 import logger from '@/utils/logger';
 
 /** Milliseconds after which an open PR is considered abandoned (30 days) */
 const ABANDONED_PR_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface PrMergeStatusPollingConfig {
-  jiraClient: JiraClient;
+  githubTokenManager: GitHubTokenManager;
 }
 
 export interface JobPollingResult {
@@ -36,12 +35,12 @@ export interface PollingResult {
 }
 
 /**
- * Polls Jira Dev Status API for PR merge status and updates job runs accordingly
+ * Polls GitHub API for PR merge status and updates job runs accordingly
  *
  * This service:
  * 1. Finds all completed job runs with open PRs
- * 2. Calls Jira Dev Status API for each job's ticket
- * 3. Matches PR by URL and checks if status is MERGED or DECLINED
+ * 2. Calls GitHub API directly for each PR
+ * 3. Checks if PR is merged or closed
  * 4. Updates job run with PR status and timestamps
  */
 export class PrMergeStatusPollingService {
@@ -97,28 +96,13 @@ export class PrMergeStatusPollingService {
         return { jobId, ticketKey, success: true };
       }
 
-      // Get dev status from Jira
-      const devStatus = await this.config.jiraClient.getDevStatus(ticketKey);
+      // Get PR status from GitHub
+      const prInfo = await this.config.githubTokenManager.getPullRequestByUrl(
+        job.pr.url
+      );
 
-      if (!devStatus) {
-        logger.debug(`No dev status found for job ${jobId}`, {
-          jobId,
-          ticketKey,
-        });
-        return {
-          jobId,
-          ticketKey,
-          success: true,
-          skipped: true,
-          skipReason: 'No dev status found in Jira',
-        };
-      }
-
-      // Find matching PR by URL
-      const matchingPr = this.findMatchingPr(devStatus, job.pr.url);
-
-      if (!matchingPr) {
-        logger.debug(`No matching PR found for job ${jobId}`, {
+      if (!prInfo) {
+        logger.debug(`PR not found in GitHub for job ${jobId}`, {
           jobId,
           ticketKey,
           prUrl: job.pr.url,
@@ -128,12 +112,22 @@ export class PrMergeStatusPollingService {
           ticketKey,
           success: true,
           skipped: true,
-          skipReason: 'PR not found in Jira dev status',
+          skipReason: 'PR not found in GitHub',
         };
       }
 
+      // Determine new PR status
+      let newStatus: PRStatus;
+      if (prInfo.merged) {
+        newStatus = PRStatus.Merged;
+      } else if (prInfo.state === 'closed') {
+        newStatus = PRStatus.Declined;
+      } else {
+        newStatus = PRStatus.Open;
+      }
+
       // Check if PR status has changed
-      if (matchingPr.status === PRStatus.Open) {
+      if (newStatus === PRStatus.Open) {
         // Still open, no update needed
         logger.debug(`PR still open for job ${jobId}`, {
           jobId,
@@ -149,12 +143,12 @@ export class PrMergeStatusPollingService {
         };
       }
 
-      // PR status has changed - update job run with status and timestamp from Jira
+      // PR status has changed - update job run with status and timestamp
       await updateJobRun(job._id!, {
         pr: {
           ...job.pr,
-          status: matchingPr.status as PRStatus.Merged | PRStatus.Declined,
-          updatedAt: new Date(matchingPr.lastUpdate),
+          status: newStatus,
+          updatedAt: prInfo.mergedAt ? new Date(prInfo.mergedAt) : new Date(),
         },
       });
 
@@ -162,7 +156,8 @@ export class PrMergeStatusPollingService {
         jobId,
         ticketKey,
         prUrl: job.pr.url,
-        status: matchingPr.status,
+        status: newStatus,
+        merged: prInfo.merged,
       });
 
       return { jobId, ticketKey, success: true };
@@ -176,32 +171,6 @@ export class PrMergeStatusPollingService {
       });
       return { jobId, ticketKey, success: false, error: errorMessage };
     }
-  }
-
-  /**
-   * Find the PR in dev status response that matches the job's PR URL
-   * @param devStatus - The dev status response from Jira
-   * @param prUrl - The PR URL to match
-   * @returns The matching PR, or null if not found
-   */
-  private findMatchingPr(
-    devStatus: DevStatusResponse,
-    prUrl: string
-  ): DevStatusResponse['detail'][0]['pullRequests'][0] | null {
-    // Normalize URLs for comparison (remove trailing slashes, etc.)
-    const normalizeUrl = (url: string): string => url.trim().replace(/\/$/, '');
-
-    const normalizedPrUrl = normalizeUrl(prUrl);
-
-    for (const detail of devStatus.detail || []) {
-      for (const pr of detail.pullRequests || []) {
-        if (normalizeUrl(pr.url) === normalizedPrUrl) {
-          return pr;
-        }
-      }
-    }
-
-    return null;
   }
 
   /**
@@ -229,7 +198,7 @@ export class PrMergeStatusPollingService {
         return result;
       }
 
-      // Process jobs sequentially to avoid bursting Jira API calls.
+      // Process jobs sequentially to avoid bursting GitHub API calls.
       // Running these in parallel (e.g. via Promise.all) can easily exceed
       // external rate limits and cause 429/throttling responses.
       for (const job of completedJobs) {
@@ -297,18 +266,18 @@ export class PrMergeStatusPollingService {
 
 /**
  * Factory function to create a polling service instance
- * @param jiraClient - The Jira client instance
+ * @param githubTokenManager - The GitHub token manager instance
  * @returns A new PrMergeStatusPollingService instance
  */
 export const createPrMergeStatusPollingService = (
-  jiraClient: JiraClient
+  githubTokenManager: GitHubTokenManager
 ): PrMergeStatusPollingService =>
   new PrMergeStatusPollingService({
-    jiraClient,
+    githubTokenManager,
   });
 
 /**
  * Default instance of the PR merge status polling service
  */
 export const prMergeStatusPollingService =
-  createPrMergeStatusPollingService(defaultJiraClient);
+  createPrMergeStatusPollingService(defaultGitHubTokenManager);
