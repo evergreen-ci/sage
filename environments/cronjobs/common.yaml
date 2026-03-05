@@ -8,6 +8,8 @@ defaultArch: arm64
 globalEnvSecrets:
   AZURE_OPENAI_API_KEY: parsley-ai-secrets
   AZURE_OPENAI_ENDPOINT: parsley-ai-secrets
+  ANTHROPIC_API_KEY: parsley-ai-secrets
+  ANTHROPIC_ENDPOINT: parsley-ai-secrets
   EVERGREEN_API_KEY: parsley-ai-secrets
   MONGODB_URI: parsley-ai-secrets
   BRAINTRUST_API_KEY: parsley-ai-secrets

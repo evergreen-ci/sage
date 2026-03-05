@@ -230,6 +230,8 @@ export const validateConfig = (): string[] | undefined => {
     'NODE_ENV',
     'AZURE_OPENAI_API_KEY',
     'AZURE_OPENAI_ENDPOINT',
+    'ANTHROPIC_API_KEY',
+    'ANTHROPIC_ENDPOINT',
     'EVERGREEN_GRAPHQL_ENDPOINT',
     'EVERGREEN_API_USER',
     'EVERGREEN_API_KEY',
