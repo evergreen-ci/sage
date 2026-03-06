@@ -4,12 +4,28 @@ Writing release notes from dozens of Jira issues is tedious, error-prone, and ti
 
 ## How It Works
 
-The workflow runs a four-step pipeline:
+You provide Jira issues (and optionally section titles and formatting guidelines), and the workflow returns structured release notes with every item traced back to its source issues. If your Jira issues contain curated release note text in metadata fields, the workflow uses that verbatim instead of generating new copy.
 
-1. **Plan Sections** — Reads through the Jira issues and figures out which section each belongs to (e.g., "Improvements" vs. "Bug Fixes"). It also detects security issues and checks for curated copy in issue metadata that should be used verbatim.
-2. **Format Prompt** — Converts the section plans into a structured prompt for the AI agent, including what each section should focus on and the relevant issue details.
-3. **Generate** — Calls the Release Notes Agent to produce structured release notes with retry logic on failure.
-4. **Validate** — Checks that the output matches the expected schema and that every actionable item has proper Jira citations. This catches hallucinated ticket numbers and missing references.
+## Quick Start
+
+Generate release notes from a set of Jira issues:
+
+```bash
+curl -X POST https://sage.example.com/completions/release-notes/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jiraIssues": [
+      {
+        "key": "CLOUDP-12345",
+        "issueType": "Bug",
+        "summary": "Fix memory leak in connection pooling"
+      }
+    ],
+    "sections": ["Improvements", "Bug Fixes"]
+  }'
+```
+
+The response is a JSON object with sections and items, each item citing the Jira issues it was derived from. See [Output Format](#output-format) for the full structure.
 
 ## Input Requirements
 
@@ -94,67 +110,9 @@ The output is a JSON object with an array of sections, each containing items:
 
 ## Key Features
 
-### Curated Copy Priority
-
-Product teams sometimes write their own release note text in Jira fields. When this exists, the workflow respects it rather than generating new copy. It checks issue metadata in this order:
-
-1. `release_notes`
-2. `customer_impact`
-3. `upgrade_notes`
-
-The first non-empty value is used as the basis for the bullet text. If no curated copy exists, the workflow falls back to the issue summary and description.
-
-> **Why this priority order?** `release_notes` is the most specific and intentional field — if someone wrote it, they meant it to appear in the release notes. `customer_impact` and `upgrade_notes` are progressively less specific but still curated by humans, so they're preferred over AI-generated text.
-
-### Security Issue Detection
-
-Issues are flagged as security-related if the issue type or summary contains keywords like `CVE`, `VULNERABILITY`, or `SECURITY`. Security issues receive special treatment:
-
-- Grouped under a parent bullet with sub-bullets per vulnerability
-- Special formatting guidance in the prompt
-
-### Citation Validation
-
-Release notes are only useful if readers can trace each change back to its source. The validation step enforces strict citation requirements:
-
-- Every leaf item (no subitems) must have citations, either its own or inherited from a parent
-- Grouping bullets with subitems are valid if all subitems are valid
-- Subitems can inherit citations from their parent item
-- Empty citation arrays (`"citations": []`) are invalid and cause validation failure
-
-> **Why strict citation validation?** Without it, the model occasionally generates plausible-sounding but uncited items, or cites ticket numbers that don't exist in the input. The validation step catches these before they reach users.
-
-### Section Focus Derivation
-
-Section titles are automatically mapped to focus descriptions:
-
-| Title Keywords                                      | Focus                                    |
-| --------------------------------------------------- | ---------------------------------------- |
-| improvement, enhancement, feature, new, upgrade     | Enhancements and new capabilities        |
-| bug, fix, stability, quality, reliability           | Resolved defects and quality fixes       |
-| security, vulnerability, cve, compliance, hardening | Security and vulnerability remediation   |
-| Other                                               | Key updates related to the section title |
-
-## Quick Start
-
-Generate release notes from a set of Jira issues:
-
-```bash
-curl -X POST https://sage.example.com/completions/release-notes/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jiraIssues": [
-      {
-        "key": "CLOUDP-12345",
-        "issueType": "Bug",
-        "summary": "Fix memory leak in connection pooling"
-      }
-    ],
-    "sections": ["Improvements", "Bug Fixes"]
-  }'
-```
-
-The response is a JSON object with sections and items, each item citing the Jira issues it was derived from. See [Output Format](#output-format) for the full structure.
+- **Curated copy priority** — If your Jira issues contain text in `release_notes`, `customer_impact`, or `upgrade_notes` metadata fields, that text is used verbatim instead of AI-generated copy.
+- **Security issue detection** — Issues with keywords like `CVE`, `VULNERABILITY`, or `SECURITY` are automatically grouped under a dedicated section with sub-bullets per vulnerability.
+- **Citation validation** — Every item in the output is validated to have proper Jira citations tracing back to source issues. This prevents hallucinated ticket numbers and missing references.
 
 ## API Reference
 

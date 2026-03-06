@@ -18,12 +18,6 @@ For example, if someone asks _"How do I configure task timeouts in Evergreen?"_,
 | `teamId`    | string | The Jira team ID for routing                          |
 | `reasoning` | string | Explanation of why this team was selected             |
 
-## Dynamic Prompt Configuration
-
-Lumber's routing rules are managed externally in **Braintrust** (project: `sage-prod`, slug: `slack-question-ownership-agent`) rather than being hardcoded in the source. This means the team can update routing logic — adding new teams, adjusting boundaries between teams, or refining decision criteria — without deploying code. The agent loads its instructions at runtime, supporting both `completion` and `chat` prompt types.
-
-> **Why Braintrust for the prompt?** Team structures and ownership boundaries change more often than the routing agent's code. By storing the prompt externally, the team can iterate on routing accuracy through Braintrust's experimentation tools and measure the impact of prompt changes against eval scores.
-
 ## Quick Start
 
 Route a question to the appropriate team:

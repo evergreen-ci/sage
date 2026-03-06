@@ -2,11 +2,6 @@
 
 Debugging Evergreen task failures often involves jumping between the Evergreen UI for task metadata and raw log files that can be tens of megabytes. Parsley AI is a conversational assistant that brings both together — you ask a question in natural language, and it figures out whether it needs task metadata, log analysis, or both, then streams back an evidence-based answer with line references.
 
-## Documentation
-
-- [Architecture](./architecture.md) — Technical deep-dive into agents, workflows, and data flow
-- [Parsley AI Product Page](https://docs.devprod.prod.corp.mongodb.com/parsley/Parsley-AI) — User-facing documentation for Parsley AI in the DevProd docs
-
 ## How It Works
 
 1. A user sends a question through the chat API (e.g., "Why did the `compile` task fail on this patch?")
@@ -30,24 +25,6 @@ Debugging Evergreen task failures often involves jumping between the Evergreen U
 | Log analysis       | Analyze log files with single-pass or iterative chunked processing for large files (up to 100MB) |
 | Log URL resolution | Resolve log file URLs from Evergreen metadata (task logs, task files, test logs)                 |
 | General knowledge  | Answer general Evergreen platform questions without tool calls                                   |
-
-## Question Classification
-
-Not every question requires the same tools. The Question Classifier Agent inspects each question and decides the fastest path to an answer:
-
-| Class               | Description                          | Example                                                            | Action                   |
-| ------------------- | ------------------------------------ | ------------------------------------------------------------------ | ------------------------ |
-| `EVERGREEN`         | Metadata-only questions              | "What's the status of task X?"                                     | Use Evergreen Agent      |
-| `LOG`               | Requires reading/analyzing logs      | "Why did test A fail in task T?"                                   | Use Log Core Analyzer    |
-| `COMBINATION`       | Needs both metadata and log analysis | "Was this failure introduced recently? Compare with last passing." | Use both agents          |
-| `CAN_ANSWER_ON_OWN` | General knowledge                    | "What does task status 'undispatched' mean?"                       | Generate answer directly |
-| `IRRELEVANT`        | Out of scope                         | "Write me a poem"                                                  | Decline to answer        |
-
-**Edge cases:**
-
-- If the user mentions a specific task/run/test and asks "why/where/how it failed," the question is classified as `LOG`
-- If ambiguous between `EVERGREEN` and `LOG`, the classifier prefers `COMBINATION`
-- Questions clearly unrelated to Evergreen are classified as `IRRELEVANT`
 
 ## Quick Start
 
@@ -152,12 +129,6 @@ Retrieves the message history for an existing conversation.
 ```
 
 **Access Control:** Conversations are user-scoped. Only the user who created a conversation can retrieve its messages. Requests from other users return `403 Access denied`.
-
-## Conversation Memory
-
-Parsley AI remembers earlier messages so users can ask follow-up questions like "what about the other test?" without restating context. Conversations are stored in MongoDB via [Mastra Memory](https://mastra.ai/docs/memory/overview), scoped to individual threads. To resume a conversation, just provide the same conversation ID in subsequent requests.
-
-Each thread records the creating user's ID for access control — only the user who started a conversation can retrieve its history.
 
 ## Getting Help
 

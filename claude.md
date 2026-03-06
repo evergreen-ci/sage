@@ -15,7 +15,7 @@ The [agents.md](agents.md) file contains:
 
 ## Architecture Overview
 
-For full system architecture, component diagrams, and observability details, see [docs/architecture.md](docs/architecture.md).
+For full system architecture, component diagrams, and observability details, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 Sage uses the Mastra framework for building agentic systems. Routes orchestrate agents/workflows, agents use tools and workflows, workflows call agents in their steps, and agents can invoke other agents as tools.
 
