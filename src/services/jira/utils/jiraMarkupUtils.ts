@@ -119,24 +119,43 @@ export const formatAgentLaunchedPanel = (agentUrl: string): string =>
       `The agent will create a pull request when the implementation is complete.`
   );
 
+const CURSOR_BRANCH_ERROR_PATTERNS = [
+  'failed to determine repository default branch',
+  'failed to verify existence of branch',
+];
+
+const isCursorBranchResolutionError = (errorMessage: string): boolean =>
+  CURSOR_BRANCH_ERROR_PATTERNS.some(pattern =>
+    errorMessage.toLowerCase().includes(pattern)
+  );
+
 /**
  * Format agent launch failure panel
  * @param errorMessage - The error message from the launch attempt
  * @returns Formatted Jira comment with error panel
  */
-export const formatAgentLaunchFailedPanel = (errorMessage: string): string =>
-  formatPanel(
+export const formatAgentLaunchFailedPanel = (errorMessage: string): string => {
+  let guidance =
+    `Please check the configuration and re-add the {{sage-bot}} label to retry. ` +
+    `For help resolving this issue, see the [troubleshooting guide|${SAGE_BOT_DOCS_LINKS.TROUBLESHOOTING}].`;
+
+  if (isCursorBranchResolutionError(errorMessage)) {
+    guidance =
+      `This is a known intermittent issue on Cursor's side (not caused by Sage Bot). ` +
+      `Please wait a few minutes and re-add the {{sage-bot}} label to retry. ` +
+      `For more details, see the [troubleshooting guide|${SAGE_BOT_DOCS_LINKS.TROUBLESHOOTING}].`;
+  }
+
+  return formatPanel(
     {
       title: 'Sage Bot Agent Launch Failed',
       borderColor: '#DE350B',
       titleBGColor: '#DE350B',
       titleColor: '#FFFFFF',
     },
-    `Failed to launch Cursor Cloud Agent for this ticket.\n\n` +
-      `*Error:* ${errorMessage}\n\n` +
-      `Please check the configuration and re-add the {{sage-bot}} label to retry. ` +
-      `For help resolving this issue, see the [troubleshooting guide|${SAGE_BOT_DOCS_LINKS.TROUBLESHOOTING}].`
+    `Failed to launch Cursor Cloud Agent for this ticket.\n\n*Error:* ${errorMessage}\n\n${guidance}`
   );
+};
 
 /**
  * Format agent completed success panel
