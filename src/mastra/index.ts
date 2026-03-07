@@ -1,5 +1,10 @@
 import { BraintrustExporter } from '@mastra/braintrust';
 import { Mastra } from '@mastra/core/mastra';
+import {
+  type AnySpan,
+  type SpanOutputProcessor,
+  SpanType,
+} from '@mastra/core/observability';
 import { Observability } from '@mastra/observability';
 import { initLogger } from 'braintrust';
 import { config } from '@/config';
@@ -14,6 +19,17 @@ import { memoryStore } from './utils/memory';
 import * as evergreenWorkflows from './workflows/evergreen';
 import { logCoreAnalyzerWorkflow } from './workflows/logCoreAnalyzer';
 import { releaseNotesWorkflow } from './workflows/releaseNotes';
+
+// Filter out model chunk spans from the span output
+// This is to avoid the noise of the model chunk spans in braintrust traces
+const chunkSpanFilter: SpanOutputProcessor = {
+  name: 'chunk-span-filter',
+  process(span?: AnySpan) {
+    if (span?.type === SpanType.MODEL_CHUNK) return undefined;
+    return span;
+  },
+  async shutdown() {},
+};
 
 export const braintrustLogger = initLogger({
   projectName: config.braintrust.projectName,
@@ -37,6 +53,7 @@ export const mastra: Mastra = new Mastra({
             braintrustLogger: braintrustLogger,
           }),
         ],
+        spanOutputProcessors: [chunkSpanFilter],
       },
     },
   }),
