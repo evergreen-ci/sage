@@ -214,6 +214,7 @@ const chatRoute = async (
         // @mastra/ai-sdk bundles its own AI SDK types whose FinishReason union
         // includes "unknown", while the top-level `ai` package does not.
         // The streams are structurally identical at runtime; cast across the boundary.
+        // Remove once resolved: https://github.com/mastra-ai/mastra/issues/13950
         toAISdkStream(stream, { from: 'agent' })! as ReadableStream<
           InferUIMessageChunk<UIMessage>
         >,
