@@ -87,8 +87,8 @@ importers:
         specifier: ^6.0.116
         version: 6.0.116(zod@4.3.6)
       braintrust:
-        specifier: 3.3.0
-        version: 3.3.0(zod@4.3.6)
+        specifier: 2.2.0
+        version: 2.2.0(chokidar@3.6.0)(zod@4.3.6)
       cors:
         specifier: ^2.8.5
         version: 2.8.6
@@ -333,9 +333,6 @@ packages:
 
   '@apm-js-collab/code-transformer@0.8.2':
     resolution: {integrity: sha512-YRjJjNq5KFSjDUoqu5pFUWrrsvGOxl6c3bu+uMFc9HNNptZ2rNU/TI2nLw4jnhQNtka972Ee2m3uqbvDQtPeCA==}
-
-  '@apm-js-collab/code-transformer@0.9.0':
-    resolution: {integrity: sha512-cfHtufVUBKJz6se/tQBJqizgoot5AOxhVy5B9Cuo493p6b7hXKBEIi6tcZEbr4XwN1VnV9JZOu52MMTCOCSBMw==}
 
   '@apm-js-collab/tracing-hooks@0.3.1':
     resolution: {integrity: sha512-Vu1CbmPURlN5fTboVuKMoJjbO5qcq9fA5YXpskx3dXe/zTBvjODFoerw+69rVBlRLrJpwPqSDqEuJDEKIrTldw==}
@@ -3144,14 +3141,8 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
-  braintrust@2.2.2:
-    resolution: {integrity: sha512-g8TPnfZb7X8ziJG3w2iYRBMiIbSTV6YW79rjhDyDAeVCwa4hq52ns4JzQeQTPRWusm7vE3gXAEgIxuBc9q18uQ==}
-    hasBin: true
-    peerDependencies:
-      zod: ^3.25.34 || ^4.0
-
-  braintrust@3.3.0:
-    resolution: {integrity: sha512-T9AS1p+VPezG01TvDTzT5mf9m893FGI55Q/5vjqP3yQ2gz2w2XfpMJW7vcVQU2QJzV5+3TCHlZiyfBji/yYjyA==}
+  braintrust@2.2.0:
+    resolution: {integrity: sha512-ReH9Cyo0t5WlGppzPYmFXvBy6R84rpG8XzpULp0Nq/lhsffOJ//u/I4T96s1rVk+Gr+fWgKG139a0MR7lFWKaw==}
     hasBin: true
     peerDependencies:
       zod: ^3.25.34 || ^4.0
@@ -3500,9 +3491,6 @@ packages:
 
   dateformat@4.6.3:
     resolution: {integrity: sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==}
-
-  dc-browser@1.0.3:
-    resolution: {integrity: sha512-B2PJFzWouEPzc+jLo+yTgUXaVz0eZjVsfKX9CnUDzezsluxOKOjllBpw0EJJ1KNJGnNzKpZ4dDYtd+jVp0KRNA==}
 
   debounce@2.2.0:
     resolution: {integrity: sha512-Xks6RUDLZFdz8LIdR6q0MTH44k7FikOmnh5xkSjMig6ch45afc8sjTjRQf3P6ax8dMgcQrYO/AR2RGWURrruqw==}
@@ -6155,10 +6143,6 @@ packages:
   unplugin@1.0.1:
     resolution: {integrity: sha512-aqrHaVBWW1JVKBHmGo33T5TxeL0qWzfvjWokObHA9bYmN7eNDkwOxmLjhioHl9878qDFMAaT51XNroRyuz7WxA==}
 
-  unplugin@2.3.11:
-    resolution: {integrity: sha512-5uKD0nqiYVzlmCRs01Fhs2BdkEgBS3SAVP6ndrBsuK42iC2+JHyxM05Rm9G8+5mkmRtzMZGY8Ct5+mliZxU/Ww==}
-    engines: {node: '>=18.12.0'}
-
   unrs-resolver@1.11.1:
     resolution: {integrity: sha512-bSjt9pjaEBnNiGgc9rUiHGKv5l4/TGzDmYw3RhnkJGtLhbnnA/5qJj7x3dNDCRx/PJxu774LlH8lCOlB4hEfKg==}
 
@@ -6314,9 +6298,6 @@ packages:
 
   webpack-virtual-modules@0.5.0:
     resolution: {integrity: sha512-kyDivFZ7ZM0BVOUteVbDFhlRt7Ah/CSPwJdi8hBpkK7QLumUqdLtVfm/PX/hkcnrvr0i77fO5+TjZ94Pe+C9iw==}
-
-  webpack-virtual-modules@0.6.2:
-    resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
   whatwg-mimetype@4.0.0:
     resolution: {integrity: sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==}
@@ -6577,8 +6558,6 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
 
   '@apm-js-collab/code-transformer@0.8.2': {}
-
-  '@apm-js-collab/code-transformer@0.9.0': {}
 
   '@apm-js-collab/tracing-hooks@0.3.1':
     dependencies:
@@ -7721,7 +7700,7 @@ snapshots:
     dependencies:
       '@mastra/core': 1.10.0(@standard-community/standard-json@0.3.5(@standard-schema/spec@1.1.0)(@types/json-schema@7.0.15)(quansync@0.2.11)(zod-to-json-schema@3.25.1(zod@4.3.6))(zod@4.3.6))(@standard-community/standard-openapi@0.2.9(@standard-community/standard-json@0.3.5(@standard-schema/spec@1.1.0)(@types/json-schema@7.0.15)(quansync@0.2.11)(zod-to-json-schema@3.25.1(zod@4.3.6))(zod@4.3.6))(@standard-schema/spec@1.1.0)(openapi-types@12.1.3)(zod@4.3.6))(@types/json-schema@7.0.15)(openapi-types@12.1.3)(zod@4.3.6)
       '@mastra/observability': 1.3.1(@mastra/core@1.10.0(@standard-community/standard-json@0.3.5(@standard-schema/spec@1.1.0)(@types/json-schema@7.0.15)(quansync@0.2.11)(zod-to-json-schema@3.25.1(zod@4.3.6))(zod@4.3.6))(@standard-community/standard-openapi@0.2.9(@standard-community/standard-json@0.3.5(@standard-schema/spec@1.1.0)(@types/json-schema@7.0.15)(quansync@0.2.11)(zod-to-json-schema@3.25.1(zod@4.3.6))(zod@4.3.6))(@standard-schema/spec@1.1.0)(openapi-types@12.1.3)(zod@4.3.6))(@types/json-schema@7.0.15)(openapi-types@12.1.3)(zod@4.3.6))
-      braintrust: 2.2.2(chokidar@3.6.0)(zod@4.3.6)
+      braintrust: 2.2.0(chokidar@3.6.0)(zod@4.3.6)
       zod: 4.3.6
     transitivePeerDependencies:
       - '@aws-sdk/credential-provider-web-identity'
@@ -9781,13 +9760,12 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  braintrust@2.2.2(chokidar@3.6.0)(zod@4.3.6):
+  braintrust@2.2.0(chokidar@3.6.0)(zod@4.3.6):
     dependencies:
       '@ai-sdk/provider': 1.1.3
       '@next/env': 14.2.35
       '@types/nunjucks': 3.2.6
       '@vercel/functions': 1.6.0
-      ajv: 8.18.0
       argparse: 2.0.1
       boxen: 8.0.1
       chalk: 4.1.2
@@ -9813,41 +9791,6 @@ snapshots:
     transitivePeerDependencies:
       - '@aws-sdk/credential-provider-web-identity'
       - chokidar
-      - supports-color
-
-  braintrust@3.3.0(zod@4.3.6):
-    dependencies:
-      '@ai-sdk/provider': 1.1.3
-      '@apm-js-collab/code-transformer': 0.9.0
-      '@next/env': 14.2.35
-      '@vercel/functions': 1.6.0
-      ajv: 8.18.0
-      argparse: 2.0.1
-      boxen: 8.0.1
-      chalk: 4.1.2
-      cli-progress: 3.12.0
-      cli-table3: 0.6.5
-      cors: 2.8.6
-      dc-browser: 1.0.3
-      dotenv: 16.6.1
-      esbuild: 0.27.3
-      eventsource-parser: 1.1.2
-      express: 4.22.1
-      graceful-fs: 4.2.11
-      http-errors: 2.0.1
-      minimatch: 9.0.9
-      module-details-from-path: 1.0.4
-      mustache: 4.2.0
-      pluralize: 8.0.0
-      simple-git: 3.32.3
-      source-map: 0.7.6
-      termi-link: 1.1.0
-      unplugin: 2.3.11
-      uuid: 9.0.1
-      zod: 4.3.6
-      zod-to-json-schema: 3.25.1(zod@4.3.6)
-    transitivePeerDependencies:
-      - '@aws-sdk/credential-provider-web-identity'
       - supports-color
 
   browserslist@4.28.1:
@@ -10229,8 +10172,6 @@ snapshots:
   dataloader@2.2.3: {}
 
   dateformat@4.6.3: {}
-
-  dc-browser@1.0.3: {}
 
   debounce@2.2.0: {}
 
@@ -13141,13 +13082,6 @@ snapshots:
       webpack-sources: 3.3.4
       webpack-virtual-modules: 0.5.0
 
-  unplugin@2.3.11:
-    dependencies:
-      '@jridgewell/remapping': 2.3.5
-      acorn: 8.16.0
-      picomatch: 4.0.3
-      webpack-virtual-modules: 0.6.2
-
   unrs-resolver@1.11.1:
     dependencies:
       napi-postinstall: 0.3.4
@@ -13312,8 +13246,6 @@ snapshots:
   webpack-sources@3.3.4: {}
 
   webpack-virtual-modules@0.5.0: {}
-
-  webpack-virtual-modules@0.6.2: {}
 
   whatwg-mimetype@4.0.0: {}
 

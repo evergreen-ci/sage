@@ -78,7 +78,7 @@
     "@sentry/node": "10.38.0",
     "@sentry/vite-plugin": "^4.6.0",
     "ai": "^6.0.116",
-    "braintrust": "3.3.0",
+    "braintrust": "2.2.0",
     "cors": "^2.8.5",
     "dotenv-flow": "^4.1.0",
     "express": "^4.18.2",
