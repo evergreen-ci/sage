@@ -35,7 +35,7 @@ export type CreateAgentRequest = {
         images?: Array<Image>;
     };
     /**
-     * The LLM to use. Set to "default" for Auto model selection. When omitted, resolves from your user or team settings.
+     * Set to an explicit model ID for launch requests, or use "default" to use the configured default model. When omitted, Cursor resolves your user default model, then your team default model, then a system default.
      */
     model?: string;
     source: {
@@ -902,7 +902,7 @@ export type ListModelsResponses = {
      */
     200: {
         /**
-         * Array of available model names
+         * Array of recommended explicit model IDs
          */
         models: Array<string>;
     };
