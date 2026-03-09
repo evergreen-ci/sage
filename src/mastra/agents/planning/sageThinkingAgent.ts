@@ -19,7 +19,7 @@ const sageThinkingAgentMemory = new Memory({
   },
 });
 
-export const sageThinkingAgent: Agent = new Agent({
+export const sageThinkingAgent = new Agent({
   id: 'sageThinkingAgent',
   name: 'Sage Thinking Agent',
   description:

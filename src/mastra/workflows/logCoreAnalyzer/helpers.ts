@@ -27,7 +27,7 @@ export const generateMarkdownAndSummary = async ({
   existingLineReferences: Array<z.infer<typeof LineReferenceSchema>>;
   context: {
     requestContext: RequestContext;
-    tracingContext: TracingContext;
+    tracingContext?: TracingContext;
   };
 }): Promise<{
   markdown: string;

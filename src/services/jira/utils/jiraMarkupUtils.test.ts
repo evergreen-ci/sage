@@ -2,6 +2,7 @@ import {
   formatAgentCompletedPanel,
   formatAgentExpiredPanel,
   formatAgentFailedPanel,
+  formatAgentLaunchFailedPanel,
   formatAgentTimeoutPanel,
   formatBulletList,
   formatInfoPanel,
@@ -118,6 +119,52 @@ describe('jiraMarkupUtils', () => {
       expect(result).toContain('has completed work');
       expect(result).not.toContain('View PR');
       expect(result).not.toContain('Summary');
+    });
+  });
+
+  describe('formatAgentLaunchFailedPanel', () => {
+    it('formats generic launch failure with default guidance', () => {
+      const result = formatAgentLaunchFailedPanel('Some unexpected error');
+
+      expect(result).toContain('Sage Bot Agent Launch Failed');
+      expect(result).toContain('Some unexpected error');
+      expect(result).toContain('Please check the configuration');
+      expect(result).toContain('troubleshooting');
+    });
+
+    it('includes Cursor-side context for default branch resolution error', () => {
+      const result = formatAgentLaunchFailedPanel(
+        'Failed to determine repository default branch'
+      );
+
+      expect(result).toContain('Sage Bot Agent Launch Failed');
+      expect(result).toContain(
+        'known intermittent issue on Cursor\u0027s side'
+      );
+      expect(result).toContain('wait a few minutes');
+      expect(result).toContain('troubleshooting');
+      expect(result).not.toContain('Please check the configuration');
+    });
+
+    it('includes Cursor-side context for branch verification error', () => {
+      const result = formatAgentLaunchFailedPanel(
+        "Failed to verify existence of branch 'master' in repository 10gen/mms"
+      );
+
+      expect(result).toContain(
+        'known intermittent issue on Cursor\u0027s side'
+      );
+      expect(result).toContain('wait a few minutes');
+    });
+
+    it('matches branch resolution errors case-insensitively', () => {
+      const result = formatAgentLaunchFailedPanel(
+        'FAILED TO DETERMINE REPOSITORY DEFAULT BRANCH'
+      );
+
+      expect(result).toContain(
+        'known intermittent issue on Cursor\u0027s side'
+      );
     });
   });
 

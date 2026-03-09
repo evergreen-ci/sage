@@ -198,7 +198,7 @@ export class Sdk extends HeyApiClient {
     /**
      * List available models
      *
-     * Returns a recommended subset of available models. The agent creation endpoint accepts model keys beyond this list.
+     * Returns a recommended set of explicit model IDs for launch requests. This list excludes "default".
      */
     public listModels<ThrowOnError extends boolean = false>(options?: Options<ListModelsData, ThrowOnError>) {
         return (options?.client ?? this.client).get<ListModelsResponses, ListModelsErrors, ThrowOnError>({
