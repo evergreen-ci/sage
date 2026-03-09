@@ -1,21 +1,39 @@
 import { context, trace } from '@opentelemetry/api';
 import express from 'express';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 import {
   KANOPY_AUTH_HEADER,
   EVERGREEN_USER_ID_HEADER,
   EVERGREEN_SPIFFE_IDENTITY,
 } from '@/constants/headers';
+import { config } from '@/config';
 import { logger } from '@/utils/logger';
 
 interface KanopyJWTClaims {
   sub: string;
 }
 
+// Module-level JWKS set, lazily initialized and cached for reuse across requests
+let jwkSet: ReturnType<typeof createRemoteJWKSet> | null = null;
+
+const getJWKSet = (): ReturnType<typeof createRemoteJWKSet> | null => {
+  const jwksUri = config.kanopy.jwksUri;
+  if (!jwksUri) {
+    return null;
+  }
+  if (!jwkSet) {
+    jwkSet = createRemoteJWKSet(new URL(jwksUri));
+  }
+  return jwkSet;
+};
+
 /**
  * @param authHeader - The authorization header string
- * @returns The user ID or null if extraction fails
+ * @returns The user ID or null if extraction or verification fails
  */
-const extractUserIdFromKanopyHeader = (authHeader: string): string | null => {
+const extractUserIdFromKanopyHeader = async (
+  authHeader: string
+): Promise<string | null> => {
   try {
     if (!authHeader) {
       return null;
@@ -26,6 +44,35 @@ const extractUserIdFromKanopyHeader = (authHeader: string): string | null => {
       logger.warn('Invalid JWT format');
       return null;
     }
+
+    const jwks = getJWKSet();
+
+    if (jwks) {
+      // Verify the JWT signature using the configured JWKS endpoint
+      try {
+        const { payload } = await jwtVerify(authHeader, jwks);
+        return (payload as KanopyJWTClaims).sub || null;
+      } catch (error) {
+        logger.error('JWT signature verification failed', { error });
+        return null;
+      }
+    }
+
+    // KANOPY_JWKS_URI is not configured — fall back to unverified decode.
+    // This is only safe in development/test environments where the proxy
+    // layer is not present. In production, KANOPY_JWKS_URI must be set.
+    if (config.nodeEnv === 'production' || config.nodeEnv === 'staging') {
+      logger.error(
+        'KANOPY_JWKS_URI is not configured in a production-like environment. ' +
+          'Rejecting request to prevent unverified JWT acceptance.'
+      );
+      return null;
+    }
+
+    logger.warn(
+      'JWT signature is NOT being verified — KANOPY_JWKS_URI is not set. ' +
+        'This is only acceptable in local development or testing.'
+    );
 
     const encodedPayload = parts[1];
     if (!encodedPayload) {
@@ -45,24 +92,6 @@ const extractUserIdFromKanopyHeader = (authHeader: string): string | null => {
 };
 
 /**
- * Checks if the request is from Evergreen's service account.
- * Verifies by checking if the Kanopy JWT's subject matches Evergreen's SPIFFE identity.
- * @param req - The Express request object
- * @returns True if the caller is Evergreen's service account
- */
-const isEvergreenServiceAccount = (req: express.Request): boolean => {
-  const kanopyAuthHeader = req.headers[KANOPY_AUTH_HEADER] as
-    | string
-    | undefined;
-  if (!kanopyAuthHeader) {
-    return false;
-  }
-
-  const sub = extractUserIdFromKanopyHeader(kanopyAuthHeader);
-  return sub === EVERGREEN_SPIFFE_IDENTITY;
-};
-
-/**
  * Authentication result containing the user ID and the authentication method used.
  */
 interface AuthResult {
@@ -77,29 +106,9 @@ interface AuthResult {
  * @param req - The Express request object
  * @returns AuthResult containing the user ID and authentication method
  */
-const getUserFromRequest = (req: express.Request): AuthResult => {
-  // Check for X-Evergreen-User-ID header
-  const evergreenUserId = req.headers[EVERGREEN_USER_ID_HEADER] as
-    | string
-    | undefined;
-
-  // Check if request is from Evergreen's service account (via Kanopy JWT subject)
-  if (isEvergreenServiceAccount(req)) {
-    if (evergreenUserId) {
-      return {
-        userId: evergreenUserId,
-        authMethod: 'evergreen-service',
-      };
-    }
-
-    // Evergreen service account but no user ID header - reject
-    logger.warn(
-      'Request from Evergreen service account missing X-Evergreen-User-ID header'
-    );
-    return { userId: null, authMethod: null };
-  }
-
-  // Use the existing Kanopy JWT authentication
+const getUserFromRequest = async (
+  req: express.Request
+): Promise<AuthResult> => {
   const kanopyAuthHeader = req.headers[KANOPY_AUTH_HEADER] as
     | string
     | undefined;
@@ -115,8 +124,32 @@ const getUserFromRequest = (req: express.Request): AuthResult => {
     return { userId: null, authMethod: null };
   }
 
+  // Verify the JWT and extract the subject claim
+  const sub = await extractUserIdFromKanopyHeader(kanopyAuthHeader);
+
+  // Check for X-Evergreen-User-ID header
+  const evergreenUserId = req.headers[EVERGREEN_USER_ID_HEADER] as
+    | string
+    | undefined;
+
+  // Check if request is from Evergreen's service account (via verified Kanopy JWT subject)
+  if (sub === EVERGREEN_SPIFFE_IDENTITY) {
+    if (evergreenUserId) {
+      return {
+        userId: evergreenUserId,
+        authMethod: 'evergreen-service',
+      };
+    }
+
+    // Evergreen service account but no user ID header - reject
+    logger.warn(
+      'Request from Evergreen service account missing X-Evergreen-User-ID header'
+    );
+    return { userId: null, authMethod: null };
+  }
+
   return {
-    userId: extractUserIdFromKanopyHeader(kanopyAuthHeader),
+    userId: sub,
     authMethod: 'kanopy-jwt',
   };
 };
@@ -127,12 +160,12 @@ const getUserFromRequest = (req: express.Request): AuthResult => {
  * @param res - Express response object
  * @param next - Express next function
  */
-export const userIdMiddleware = (
+export const userIdMiddleware = async (
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const authResult = getUserFromRequest(req);
+  const authResult = await getUserFromRequest(req);
   if (!authResult.userId) {
     logger.error('No authentication provided', {
       requestId: res.locals.requestId,

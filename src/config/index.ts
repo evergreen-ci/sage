@@ -106,6 +106,10 @@ export interface Config {
     /** JIRA_API_TOKEN */
     jiraApiToken: string;
   };
+  kanopy: {
+    /** KANOPY_JWKS_URI - JWKS endpoint for verifying Kanopy-issued JWTs */
+    jwksUri: string;
+  };
 }
 
 /**
@@ -206,6 +210,9 @@ export const config: Config = {
   sageBot: {
     jiraBaseUrl: getEnvVar('JIRA_BASE_URL', 'https://jira.mongodb.org'),
     jiraApiToken: getEnvVar('JIRA_API_TOKEN', ''),
+  },
+  kanopy: {
+    jwksUri: getEnvVar('KANOPY_JWKS_URI', ''),
   },
 };
 
