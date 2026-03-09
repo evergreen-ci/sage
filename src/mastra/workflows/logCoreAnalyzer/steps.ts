@@ -173,7 +173,7 @@ export const singlePassStep = createStep({
       text,
       context: {
         requestContext,
-        tracingContext: tracingContext!,
+        tracingContext,
       },
       existingLineReferences: [],
     });
@@ -362,7 +362,7 @@ export const finalizeStep = createStep({
       text: summary,
       context: {
         requestContext,
-        tracingContext: tracingContext!,
+        tracingContext,
       },
       existingLineReferences: state.accumulatedLineReferences,
     });
