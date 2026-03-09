@@ -52,10 +52,10 @@
     "test": "vitest --project unit"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.0",
+    "@ai-sdk/anthropic": "^3.0.58",
     "@ai-sdk/azure": "^3.0.0",
     "@ai-sdk/openai": "^3.0.0",
-    "@ai-sdk/provider": "^3.0.0",
+    "@ai-sdk/provider": "^3.0.8",
     "@mastra/ai-sdk": "^1.1.2",
     "@mastra/braintrust": "^1.0.6",
     "@mastra/core": "^1.10.0",
