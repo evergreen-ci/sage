@@ -380,7 +380,7 @@ functions:
       shell: bash
       script: |
         ${PREPARE_SHELL}
-        pnpm check:public-projects
+        ./scripts/check-generated-public-projects.sh
 
   pnpm-start:
     command: shell.exec

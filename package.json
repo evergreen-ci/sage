@@ -10,7 +10,7 @@
     "chat-with-staging": "vite-node src/mastra/tests/scripts/chat-with-staging.ts",
     "clean": "rm -rf dist bin node_modules",
     "codegen": "graphql-codegen-esm --config graphql.config.ts",
-    "check:public-projects": "vite-node scripts/check-public-projects.ts",
+    "generate:public-projects": "vite-node scripts/generate-public-projects.ts",
     "deploy:staging": "NODE_ENV=staging dotenv-flow -- sh scripts/deploy.sh",
     "dev-run": "vite-node --watch src/main.ts",
     "dev:prod": "VERSION=$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown') NODE_ENV=production dotenv-flow pnpm dev-run",

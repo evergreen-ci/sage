@@ -2,13 +2,10 @@ import { Version2Client } from 'jira.js';
 import { config } from '@/config';
 import { PRStatus } from '@/db/schemas';
 import logger from '@/utils/logger';
-import {
-  COMMENT_VISIBILITY_ROLE,
-  DEFAULT_ISSUE_FIELDS,
-  MAX_SEARCH_RESULTS,
-} from '../constants';
-import { isTicketPublic } from '../publicProjects';
+import { DEFAULT_ISSUE_FIELDS, MAX_SEARCH_RESULTS } from '../constants';
 import { JiraIssue, JiraIssueFields } from '../types';
+import { COMMENT_VISIBILITY_ROLE } from './constants';
+import { isTicketPublic } from './publicProjects';
 
 /**
  * Response from Jira Dev Status API for pull requests

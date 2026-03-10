@@ -1,4 +1,4 @@
-import { COMMENT_VISIBILITY_ROLE } from '../constants';
+import { COMMENT_VISIBILITY_ROLE } from './constants';
 import { jiraClient } from '.';
 
 const {
@@ -28,7 +28,7 @@ vi.mock('jira.js', () => ({
   })),
 }));
 
-vi.mock('../publicProjects', () => ({
+vi.mock('./publicProjects', () => ({
   isTicketPublic: mockIsTicketPublic,
 }));
 
