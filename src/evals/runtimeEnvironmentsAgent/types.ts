@@ -1,7 +1,8 @@
 import { BaseTestCase, BaseScores } from '@/evals/types';
 
 export type TestInput = {
-  content: string;
+  text: string;
+  toolsUsed: string[];
 };
 
 export type Scores = BaseScores & {
