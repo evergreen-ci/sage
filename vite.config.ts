@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import ViteYaml from '@modyfi/vite-plugin-yaml';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { defineConfig, mergeConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -29,6 +30,7 @@ console.log(`Building with VERSION: ${version}`);
 const viteConfig = defineConfig({
   plugins: [
     tsconfigPaths(),
+    ViteYaml(),
     sentryVitePlugin({
       authToken: process.env.SENTRY_AUTH_TOKEN,
       org: 'mongodb-org',
