@@ -37,21 +37,14 @@ export const loadDataStep = createStep({
 
     let result: LoadResult;
 
-    try {
-      if (filePath) {
-        result = await loadFromFile(filePath);
-      } else if (url) {
-        result = await loadFromUrl(url);
-      } else if (text) {
-        result = await loadFromText(text);
-      } else {
-        throw new Error(
-          'No input source provided (path, url, or text required)'
-        );
-      }
-    } catch (error) {
-      logger.error('Failed to load data', error);
-      throw error;
+    if (filePath) {
+      result = await loadFromFile(filePath);
+    } else if (url) {
+      result = await loadFromUrl(url);
+    } else if (text) {
+      result = await loadFromText(text);
+    } else {
+      throw new Error('No input source provided (path, url, or text required)');
     }
 
     // Normalize the text
@@ -73,13 +66,16 @@ export const loadDataStep = createStep({
     // Append truncation warning to analysis context if content was truncated
     let enrichedContext = analysisContext;
     if (result.metadata.truncated) {
+      logger.warn('Content was truncated due to size limit', {
+        maxSizeMB: logAnalyzerConfig.limits.maxSizeMB,
+      });
       const truncationNote = `\n\nIMPORTANT: The source content exceeded the ${logAnalyzerConfig.limits.maxSizeMB}MB size limit and was truncated during download. You are analyzing only the first ${logAnalyzerConfig.limits.maxSizeMB}MB of the original content. Keep this in mind when drawing conclusions - there may be additional information in the truncated portion.`;
       enrichedContext = analysisContext
         ? `${analysisContext}${truncationNote}`
         : truncationNote.trim();
     }
 
-    tracingContext.currentSpan?.update({
+    tracingContext?.currentSpan?.update({
       metadata: {
         analysisContext: analysisContext ?? 'No analysis context provided',
         textLength: normalizedText?.length ?? 0,
@@ -119,7 +115,7 @@ export const chunkStep = createStep({
       chunkCount: chunks.length,
     });
 
-    tracingContext.currentSpan?.update({
+    tracingContext?.currentSpan?.update({
       metadata: {
         chunkCount: chunks.length,
         chunkSize: logAnalyzerConfig.chunking.maxSize,
@@ -209,7 +205,10 @@ export const initialStep = createStep({
     }
     const first = chunks[0]?.text ?? '';
 
-    logger.debug('Chunk length', { length: first.length });
+    logger.debug('Initial analysis starting', {
+      firstChunkLength: first.length,
+      totalChunks: chunks.length,
+    });
 
     const result = await initialAnalyzerAgent.generate(
       USER_INITIAL_PROMPT(first, analysisContext),
@@ -220,7 +219,11 @@ export const initialStep = createStep({
     );
 
     const summary = result.text;
-    tracingContext.currentSpan?.update({
+
+    logger.debug('Initial analysis complete', {
+      summaryLength: summary.length,
+    });
+    tracingContext?.currentSpan?.update({
       metadata: {
         idx: 1,
         total: chunks.length,
@@ -298,12 +301,17 @@ export const refineStep = createStep({
       newSummary = response.summary ?? existingSummary;
     }
 
+    logger.debug(`Refinement chunk #${idx + 1} processed`, {
+      updated,
+      newLineReferences: newLineReferences.length,
+    });
+
     const accumulatedLineReferences = [
       ...state.accumulatedLineReferences,
       ...newLineReferences,
     ];
 
-    tracingContext.currentSpan?.update({
+    tracingContext?.currentSpan?.update({
       metadata: {
         idx: idx + 1,
         total: chunks.length,

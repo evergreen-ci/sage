@@ -441,7 +441,7 @@ Rules:
       model: sonnet45,
     },
     modelSettings: {
-      temperature: 0.3, // Low temperature for consistency, but allow some creativity
+      temperature: 0,
     },
   },
   model: gpt41,

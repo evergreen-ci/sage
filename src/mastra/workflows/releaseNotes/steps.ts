@@ -93,7 +93,7 @@ export const planSectionsStep = createStep({
 
     const sectionPlans = buildReleaseNotesSectionPlans(inputData);
 
-    tracingContext.currentSpan?.update({
+    tracingContext?.currentSpan?.update({
       metadata: {
         plannedSections: sectionPlans.sections.map(s => s.title),
         hasSecurityIssues: sectionPlans.hasSecurityIssues,
@@ -212,7 +212,7 @@ export const generateStep = createStep({
       abortSignal,
     });
 
-    tracingContext.currentSpan?.update({
+    tracingContext?.currentSpan?.update({
       metadata: {
         hasStructuredOutput: !!result.object,
         hasTextOutput: !!result.text,
@@ -266,7 +266,7 @@ export const validateStep = createStep({
     // Validate citations
     validateReleaseNotesCitations(validated);
 
-    tracingContext.currentSpan?.update({
+    tracingContext?.currentSpan?.update({
       metadata: {
         sectionCount: validated.sections.length,
         totalItems: validated.sections.reduce(
