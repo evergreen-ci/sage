@@ -2,6 +2,10 @@
 
 Debugging Evergreen task failures often involves jumping between the Evergreen UI for task metadata and raw log files that can be tens of megabytes. Parsley AI is a conversational assistant that brings both together — you ask a question in natural language, and it figures out whether it needs task metadata, log analysis, or both, then streams back an evidence-based answer with line references.
 
+To learn more about Parsley AI, see the [Parsley AI documentation](https://docs.devprod.prod.corp.mongodb.com/parsley/Parsley-AI).
+
+To learn more about the technical details of Parsley AI, see the sections below.
+
 ## How It Works
 
 1. A user sends a question through the chat API (e.g., "Why did the `compile` task fail on this patch?")
