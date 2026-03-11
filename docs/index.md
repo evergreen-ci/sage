@@ -1,6 +1,6 @@
 # Sage
 
-Sage is DevProd's agentic infrastructure platform. It provides a structured way to build, deploy, and observe AI agents — built on the [Mastra framework](https://mastra.ai/) and running on Express.js. Observability (distributed tracing, LLM call logging, error tracking) is wired in out of the box so you can focus on building agent logic rather than infrastructure.
+Sage is DevProd's agentic infrastructure platform. It provides a structured way to build, deploy, and observe AI agents — built on the [Mastra framework](https://mastra.ai/). Observability (distributed tracing, LLM call logging, error tracking) is wired in out of the box so you can focus on building agent logic rather than infrastructure.
 
 ## Platform
 

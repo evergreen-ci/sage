@@ -12,7 +12,7 @@ graph TD
         Jira["Jira (Polling Service)"]
     end
 
-    subgraph Sage["Sage (Express.js)"]
+    subgraph Sage["Sage (Web Server)"]
         API["API Routes"]
         subgraph Mastra["Mastra Framework"]
             Agents["Agents"]
