@@ -36,6 +36,9 @@ export const runtimeEnvironmentsAgent: Agent = new Agent({
 # Image Identifiers
 All tools accept image names (e.g., "ubuntu2204", "rhel8", "amazon-linux-2"). Use \`getImageNamesTool\` to discover available images.
 
+# Pagination
+All paginated tools use **0-based page numbers** (first page = 0). Omitting the \`page\` parameter defaults to page 0.
+
 # Multi-Tool Workflows
 - **Verify package after update**: \`getImageEventsTool\` → check if package appears in recent changes. If not: \`getPackagesTool\` → confirm current version.
 - **Recent changes**: Use \`getImageEventsTool\` which returns full change details including before/after AMI IDs and all entries.

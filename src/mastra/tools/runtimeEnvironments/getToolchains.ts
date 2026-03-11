@@ -14,7 +14,11 @@ const inputSchema = imageIdSchema.extend({
     .describe(
       'Optional filter by toolchain name (e.g., "golang", "python", "node")'
     ),
-  page: z.number().optional().describe('Page number for pagination'),
+  page: z
+    .number()
+    .optional()
+    .describe('Page number for pagination (pagination starts at 0)')
+    .default(0),
   limit: z
     .number()
     .optional()
@@ -67,7 +71,6 @@ export const getToolchainsTool = createTool({
           },
           { userID: userId }
         );
-
       const toolchains = result?.image?.toolchains;
       const filteredCount = toolchains?.filteredCount ?? 0;
       const totalCount = toolchains?.totalCount ?? 0;

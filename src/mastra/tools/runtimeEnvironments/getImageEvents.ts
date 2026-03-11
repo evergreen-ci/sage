@@ -20,7 +20,11 @@ const inputSchema = imageIdSchema.extend({
     .number()
     .default(5)
     .describe('Number of events/transitions to retrieve (default: 5)'),
-  page: z.number().optional().describe('Page number for pagination'),
+  page: z
+    .number()
+    .optional()
+    .describe('Page number for pagination (pagination starts at 0)')
+    .default(0),
 });
 
 const outputSchema = z.object({
@@ -82,7 +86,7 @@ export const getImageEventsTool = createTool({
         {
           imageId: inputData.imageId,
           limit: inputData.limit,
-          page: inputData.page ?? 0,
+          page: inputData.page,
         },
         { userID: userId }
       );

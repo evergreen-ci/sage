@@ -14,7 +14,7 @@ const inputSchema = imageIdSchema.extend({
     .describe(
       'Optional filter by file name (e.g., "certificate.pem", "config")'
     ),
-  page: z.number().optional().describe('Page number for pagination'),
+  page: z.number().optional().describe('Page number for pagination (pagination starts at 0)').default(0),
   limit: z
     .number()
     .optional()

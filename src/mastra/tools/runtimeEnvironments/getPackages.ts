@@ -16,7 +16,11 @@ const inputSchema = imageIdSchema.extend({
     .string()
     .optional()
     .describe('Optional filter by package manager (e.g., "pip", "apt", "npm")'),
-  page: z.number().optional().describe('Page number for pagination'),
+  page: z
+    .number()
+    .optional()
+    .describe('Page number for pagination (pagination starts at 0)')
+    .default(0),
   limit: z
     .number()
     .optional()

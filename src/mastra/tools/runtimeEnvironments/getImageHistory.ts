@@ -8,7 +8,11 @@ import { GET_IMAGE_HISTORY } from './graphql/queries';
 import { imageIdSchema } from './schemas';
 
 const inputSchema = imageIdSchema.extend({
-  page: z.number().optional().describe('Page number for pagination'),
+  page: z
+    .number()
+    .optional()
+    .describe('Page number for pagination (pagination starts at 0)')
+    .default(0),
   limit: z
     .number()
     .optional()
@@ -54,7 +58,7 @@ export const getImageHistoryTool = createTool({
         {
           imageId: inputData.imageId,
           limit,
-          page: inputData.page ?? 0,
+          page: inputData.page,
         },
         { userID: userId }
       );
