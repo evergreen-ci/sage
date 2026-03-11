@@ -17,7 +17,7 @@ Braintrust is the most important observability tool for engineers building on Sa
 
 ### Prompt Management
 
-Some agents load their system prompts from Braintrust at runtime rather than hardcoding them in source. This means routing rules and agent instructions can be updated without going through a code change and deploy cycle — just edit the prompt in Braintrust, run an A/B comparison to measure the impact, and ship it. For new agents with prompts that need frequent iteration, this pattern is worth adopting early.
+Some agents load their system prompts from Braintrust at runtime rather than hardcoding them in source. This means routing rules and agent instructions can be updated without going through a code change and deploy cycle — just edit the prompt in Braintrust, run an A/B comparison to measure the impact, and ship it. For new agents with prompts that need frequent iteration, this pattern is worth adopting early. Heres an [example](https://github.com/evergreen-ci/sage/blob/main/src/mastra/agents/questionOwnershipAgent.ts)
 
 ### Evals
 
@@ -41,7 +41,7 @@ This runs with `--no-send-logs`, so results appear locally without being forward
 
 ## Honeycomb (Distributed Tracing)
 
-Honeycomb receives OpenTelemetry traces and lets you follow a single request across Express routes, agent calls, and MongoDB queries. Express routes, MongoDB operations, and async context propagation are all auto-instrumented via `src/instrumentation.ts`. To enable, set `HONEYCOMB_OTEL_COLLECTOR_URL` and `HONEYCOMB_API_KEY` in your environment — if `HONEYCOMB_OTEL_COLLECTOR_URL` is unset, no traces are exported.
+Honeycomb receives OpenTelemetry traces under the `sage` dataset and lets you follow a single request across Express routes, agent calls, and MongoDB queries. Express routes, MongoDB operations, and async context propagation are all auto-instrumented via `src/instrumentation.ts`. To enable, set `HONEYCOMB_OTEL_COLLECTOR_URL` and `HONEYCOMB_API_KEY` in your environment — if `HONEYCOMB_OTEL_COLLECTOR_URL` is unset, no traces are exported.
 
 ## Sentry (Error Tracking)
 

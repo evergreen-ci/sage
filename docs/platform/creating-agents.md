@@ -8,7 +8,7 @@ Sage is built on the [Mastra framework](https://mastra.ai/). New capabilities ar
 Route
   └── calls Agent or Workflow
         Agent
-          └── calls Tools (including other agents or workflows wrapped as tools)
+          └── calls Tools (including other agents or workflows)
         Workflow
           └── Step 1 → Step 2 → Step 3 (each step can call agents)
 ```
@@ -135,38 +135,11 @@ Routes are Express handlers in `src/api-server/routes/`. They validate input, se
 
 **Agent route (streaming):**
 
-```typescript
-// src/api-server/routes/completions/myFeature/myRoute.ts
-import { Router } from 'express';
-import { mastra } from '@/mastra';
-
-export const myRouter = Router();
-
-myRouter.post('/my-endpoint', async (req, res) => {
-  const agent = mastra.getAgent('my-agent');
-
-  const stream = await agent.stream(req.body.message, {
-    threadId: req.body.id,
-  });
-
-  res.setHeader('Content-Type', 'text/event-stream');
-  for await (const chunk of stream) {
-    res.write(`data: ${JSON.stringify(chunk)}\n\n`);
-  }
-  res.end();
-});
-```
+[Example](https://github.com/evergreen-ci/sage/blob/main/src/api-server/routes/completions/parsley/chat.ts)
 
 **Workflow route (JSON response):**
 
-```typescript
-myRouter.post('/my-workflow-endpoint', async (req, res) => {
-  const workflow = mastra.getWorkflow('my-workflow');
-  const run = await workflow.createRun();
-  const result = await run.start({ inputData: req.body });
-  res.json(result.result);
-});
-```
+[Example](https://github.com/evergreen-ci/sage/blob/main/src/api-server/routes/completions/releaseNotes/generate.ts)
 
 **Register** the router in `src/api-server/index.ts`.
 
@@ -186,7 +159,7 @@ When adding a new agent or workflow, update these files:
 
 **RequestContext** — use Mastra's RuntimeContext to pass request-scoped data (user ID, pre-resolved URLs, etc.) through agents, tools, and workflow steps without threading it through every function argument.
 
-**Streaming** — agent responses stream via SSE. Set `Content-Type: text/event-stream` and write chunks as they arrive so users see partial answers immediately.
+**Streaming** — agent responses stream via [SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events). Set `Content-Type: text/event-stream` and write chunks as they arrive so users see partial answers immediately.
 
 **Prompt management** — system prompts for some agents (e.g., Lumber's QuestionOwnershipAgent) are loaded from Braintrust at runtime, allowing prompt iteration without code deploys.
 
