@@ -1,4 +1,4 @@
-# Sage - DevProd AI Service
+# Sage - DevProd AI Platform
 
 Sage is DevProd's agentic AI platform. It powers Parsley AI, Memento, Lumber, Release Notes, and Sage-Bot — a suite of AI products built on the [Mastra framework](https://mastra.ai/) with observability (distributed tracing, LLM call logging, error tracking) wired in out of the box.
 
