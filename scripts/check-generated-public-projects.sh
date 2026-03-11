@@ -8,7 +8,7 @@ echo "Regenerating public projects list from Jira API..."
 pnpm generate:public-projects
 
 echo "Checking for changes in generated files..."
-if ! git diff --exit-code src/services/jira/jiraClient/publicProjects.yaml; then
+if ! git diff --exit-code src/generated/public-projects/; then
   echo ""
   echo "ERROR: The public projects list is out of sync with Jira."
   echo ""

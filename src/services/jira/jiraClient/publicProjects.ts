@@ -1,21 +1,7 @@
-// YAML is parsed at build time by vite-plugin-yaml
-import publicProjectsConfig from './publicProjects.yaml';
+import { PUBLIC_PROJECT_KEYS } from '@/generated/public-projects';
 
-/**
- * Load the public project keys from the YAML configuration.
- * The YAML is parsed at build time by vite-plugin-yaml.
- * @returns Set of public project keys
- */
-const loadPublicProjectKeys = (): Set<string> =>
-  new Set(publicProjectsConfig.projects);
-
-/**
- * Set of project keys that are publicly accessible (visible without authentication).
- * These projects are visible to anonymous users on jira.mongodb.org.
- *
- * To update this list, run: pnpm generate:public-projects
- */
-export const PUBLIC_PROJECT_KEYS = loadPublicProjectKeys();
+// Re-export from generated file
+export { PUBLIC_PROJECT_KEYS };
 
 /**
  * Checks if a Jira ticket belongs to a publicly accessible project.

@@ -104,7 +104,6 @@
     "@graphql-codegen/cli": "^6.1.1",
     "@hey-api/client-fetch": "^0.13.1",
     "@hey-api/openapi-ts": "^0.91.1",
-    "@modyfi/vite-plugin-yaml": "^1.1.1",
     "@opentelemetry/propagation-utils": "^0.31.16",
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.17",

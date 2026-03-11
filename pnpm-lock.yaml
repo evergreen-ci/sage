@@ -156,9 +156,6 @@ importers:
       '@hey-api/openapi-ts':
         specifier: ^0.91.1
         version: 0.91.1(magicast@0.3.5)(typescript@5.9.3)
-      '@modyfi/vite-plugin-yaml':
-        specifier: ^1.1.1
-        version: 1.1.1(rollup@4.55.3)(vite@7.3.1(@types/node@20.19.30)(jiti@2.6.1)(yaml@2.8.2))
       '@opentelemetry/propagation-utils':
         specifier: ^0.31.16
         version: 0.31.16(@opentelemetry/api@1.9.0)
@@ -1718,11 +1715,6 @@ packages:
       '@cfworker/json-schema':
         optional: true
 
-  '@modyfi/vite-plugin-yaml@1.1.1':
-    resolution: {integrity: sha512-rEbfFNlMGLKpAYs2RsfLAhxCHFa6M4QKHHk0A4EYcCJAUwFtFO6qiEdLjUGUTtnRUxAC7GxxCa+ZbeUILSDvqQ==}
-    peerDependencies:
-      vite: '>=3.2.7'
-
   '@mongodb-js/saslprep@1.4.5':
     resolution: {integrity: sha512-k64Lbyb7ycCSXHSLzxVdb2xsKGPMvYZfCICXvDsI8Z65CeWQzTEKS4YmGbnqw+U9RBvLPTsB6UCmwkgsDTGWIw==}
 
@@ -2492,15 +2484,6 @@ packages:
 
   '@rollup/plugin-virtual@3.0.2':
     resolution: {integrity: sha512-10monEYsBp3scM4/ND4LNH5Rxvh3e/cVeL3jWTgZ2SrQ+BmUoQcopVQvnaMcOnykb1VkxUFuDAN+0FnpTFRy2A==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
-
-  '@rollup/pluginutils@5.1.0':
-    resolution: {integrity: sha512-XTIWOPPcpvyKI6L1NHo0lFlCyznUEyPmPY1mc3KpPVDYulHSTvyeLNVW00QTLIAFNhR3kYnJTQHeGqU4M3n09g==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
@@ -5135,10 +5118,6 @@ packages:
     resolution: {integrity: sha512-PMSmkqxr106Xa156c2M265Z+FTrPl+oxd/rgOQy2tijQeK5TxQ43psO1ZCwhVOSdnn+RzkzlRz/eY4BgJBYVpg==}
     hasBin: true
 
-  js-yaml@4.1.0:
-    resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
-    hasBin: true
-
   js-yaml@4.1.1:
     resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
     hasBin: true
@@ -6489,10 +6468,6 @@ packages:
   toidentifier@1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
     engines: {node: '>=0.6'}
-
-  tosource@2.0.0-alpha.3:
-    resolution: {integrity: sha512-KAB2lrSS48y91MzFPFuDg4hLbvDiyTjOVgaK7Erw+5AmZXNq4sFRVn8r6yxSLuNs15PaokrDRpS61ERY9uZOug==}
-    engines: {node: '>=10'}
 
   totalist@3.0.1:
     resolution: {integrity: sha512-sf4i37nQ2LBx4m3wB74y+ubopq6W/dIzXg0FDGjsYnZHVa1Da8FH853wlL2gtUhg+xJXjfk3kUZS3BRoQeoQBQ==}
@@ -8651,15 +8626,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@modyfi/vite-plugin-yaml@1.1.1(rollup@4.55.3)(vite@7.3.1(@types/node@20.19.30)(jiti@2.6.1)(yaml@2.8.2))':
-    dependencies:
-      '@rollup/pluginutils': 5.1.0(rollup@4.55.3)
-      js-yaml: 4.1.0
-      tosource: 2.0.0-alpha.3
-      vite: 7.3.1(@types/node@20.19.30)(jiti@2.6.1)(yaml@2.8.2)
-    transitivePeerDependencies:
-      - rollup
-
   '@mongodb-js/saslprep@1.4.5':
     dependencies:
       sparse-bitfield: 3.0.3
@@ -9702,14 +9668,6 @@ snapshots:
       rollup: 4.55.3
 
   '@rollup/plugin-virtual@3.0.2(rollup@4.55.3)':
-    optionalDependencies:
-      rollup: 4.55.3
-
-  '@rollup/pluginutils@5.1.0(rollup@4.55.3)':
-    dependencies:
-      '@types/estree': 1.0.8
-      estree-walker: 2.0.2
-      picomatch: 2.3.1
     optionalDependencies:
       rollup: 4.55.3
 
@@ -12597,10 +12555,6 @@ snapshots:
       argparse: 1.0.10
       esprima: 4.0.1
 
-  js-yaml@4.1.0:
-    dependencies:
-      argparse: 2.0.1
-
   js-yaml@4.1.1:
     dependencies:
       argparse: 2.0.1
@@ -14058,8 +14012,6 @@ snapshots:
       reserved-identifiers: 1.2.0
 
   toidentifier@1.0.1: {}
-
-  tosource@2.0.0-alpha.3: {}
 
   totalist@3.0.1: {}
 
