@@ -1,17 +1,26 @@
-# Sage Documentation
+# Sage
 
-Sage is DevProd's agentic infrastructure platform. It coordinates specialized agents, tools, and workflows — built on the [Mastra framework](https://mastra.ai/) — to power AI features across DevProd products: conversational debugging, Slack thread summarization, question routing, release note generation, and automated PR creation.
+Sage is DevProd's agentic infrastructure platform. It provides a structured way to build, deploy, and observe AI agents — built on the [Mastra framework](https://mastra.ai/) and running on Express.js. Observability (distributed tracing, LLM call logging, error tracking) is wired in out of the box so you can focus on building agent logic rather than infrastructure.
+
+## Platform
+
+- **[Creating Agents](./platform/creating-agents.md)** — How to add a new agent, tool, workflow, or route to Sage. Covers the building blocks, registration, and key patterns.
+- **[Observability](./platform/observability.md)** — How Honeycomb, Braintrust, and Sentry are configured and what they capture automatically.
+
+For the full system architecture and component diagrams, see [ARCHITECTURE.md](../ARCHITECTURE.md). For exhaustive implementation reference (all patterns, examples, and Zod schemas), see [agents.md](../agents.md).
 
 ## Products
 
-Each product solves a specific problem for DevProd teams:
+Each product is an agent or workflow exposed through a REST API. The source for each lives alongside its route handler.
 
-- **[Parsley AI](./parsley/index.md)** — Conversational AI assistant for debugging task failures and analyzing logs. Ask questions in natural language and get streamed, evidence-based answers.
-- **[Sage Bot](./sage-bot/index.md)** — Automatically generate PRs from Jira tickets. Describe the work in a ticket, add a label, and get a PR back.
-- **[Memento](./memento/index.md)** — Turn Slack threads into structured Jira ticket data. Captures the reporter, issue summary, and proposed solution.
-- **[Lumber](./lumber/index.md)** — Route #ask-devprod questions to the right team. Classifies questions and explains its routing reasoning.
-- **[Release Notes](./release-notes/index.md)** — Generate structured, citation-backed release notes from Jira issues.
+| Product           | What it does                                                                                                                     | API Reference                                                         |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **Parsley AI**    | Conversational debugging of CI task failures and logs — classifies questions, fetches Evergreen metadata, and analyzes log files | [README](../src/api-server/routes/completions/parsley/README.md)      |
+| **Memento**       | Converts Slack thread captures into structured Jira ticket data                                                                  | [README](../src/api-server/routes/completions/memento/README.md)      |
+| **Lumber**        | Routes #ask-devprod questions to the right DevProd team                                                                          | [README](../src/api-server/routes/completions/lumber/README.md)       |
+| **Release Notes** | Generates structured, citation-backed release notes from Jira issues                                                             | [README](../src/api-server/routes/completions/releaseNotes/README.md) |
+| **Sage-Bot**      | Generates PRs from Jira tickets via Cursor Cloud Agents                                                                          | [docs/sage-bot/](./sage-bot/index.md)                                 |
 
 ## Getting Help
 
-If you have questions or encounter issues, reach out in the [#ask-devprod](https://mongodb.enterprise.slack.com/archives/C69UXN1CP) Slack channel.
+Reach out in [#ask-devprod](https://mongodb.enterprise.slack.com/archives/C69UXN1CP) on Slack.
