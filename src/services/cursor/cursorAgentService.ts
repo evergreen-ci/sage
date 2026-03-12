@@ -3,10 +3,16 @@ import { type CreateAgentRequest } from '@/generated/cursor-api';
 import logger from '@/utils/logger';
 import { createCursorApiClient, CursorApiClientError } from './cursorApiClient';
 import {
+  AddFollowupInput,
+  AddFollowupResult,
+  AgentConversationInput,
+  AgentConversationResult,
   AgentStatusInput,
   AgentStatusResult,
+  CursorAgentStatus,
   LaunchAgentInput,
   LaunchAgentResult,
+  LaunchResearcherInput,
 } from './types';
 
 /**
@@ -79,6 +85,60 @@ export const normalizeRepositoryUrl = (repository: string): string => {
   return repository;
 };
 
+const TERMINAL_STATUSES: CursorAgentStatus[] = ['FINISHED', 'ERROR', 'EXPIRED'];
+
+const DEFAULT_POLL_INTERVAL_MS = 10_000;
+const DEFAULT_MAX_WAIT_MS = 15 * 60 * 1000; // 15 minutes
+
+// Shared helper that executes a Cursor agent launch request.
+// Handles API key lookup, client creation, and error handling.
+const executeCursorAgentRequest = async (
+  assigneeEmail: string,
+  request: CreateAgentRequest,
+  logContext: Record<string, unknown>
+): Promise<LaunchAgentResult> => {
+  const apiKey = await getDecryptedApiKey(assigneeEmail);
+
+  if (!apiKey) {
+    const errorMessage = `No Cursor API key found for assignee: ${assigneeEmail}`;
+    logger.error(errorMessage, { assigneeEmail, ...logContext });
+    return { success: false, error: errorMessage };
+  }
+
+  try {
+    const client = createCursorApiClient(apiKey);
+    const agentResponse = await client.launchAgent(request);
+
+    logger.info('Cursor agent launched successfully', {
+      agentId: agentResponse.id,
+      status: agentResponse.status,
+      agentUrl: agentResponse.target?.url,
+      ...logContext,
+    });
+
+    return {
+      success: true,
+      agentId: agentResponse.id,
+      agentUrl: agentResponse.target?.url,
+    };
+  } catch (error) {
+    let errorMessage = 'Failed to launch Cursor agent';
+
+    if (error instanceof CursorApiClientError) {
+      errorMessage = `Cursor API error (${error.statusCode}): ${error.message}`;
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
+    logger.error('Failed to launch Cursor agent', {
+      error: errorMessage,
+      ...logContext,
+    });
+
+    return { success: false, error: errorMessage };
+  }
+};
+
 /**
  * Launches a Cursor Cloud Agent for a Jira ticket
  * @param input - The ticket data and configuration for launching the agent
@@ -102,30 +162,11 @@ export const launchCursorAgent = async (
     autoCreatePr,
   });
 
-  // Get the assignee's decrypted API key
-  const apiKey = await getDecryptedApiKey(assigneeEmail);
-
-  if (!apiKey) {
-    const errorMessage = `No Cursor API key found for assignee: ${assigneeEmail}`;
-    logger.error(errorMessage, { ticketKey, assigneeEmail });
-    return {
-      success: false,
-      error: errorMessage,
-    };
-  }
-
-  // Build the prompt from ticket data
   const promptText = buildPromptFromTicketData(input);
-
-  // Normalize the repository URL
   const repositoryUrl = normalizeRepositoryUrl(targetRepository);
 
-  // Build the launch request
-  // Only include ref if explicitly provided; otherwise Cursor uses the repo's default branch
   const launchRequest: CreateAgentRequest = {
-    prompt: {
-      text: promptText,
-    },
+    prompt: { text: promptText },
     source: {
       repository: repositoryUrl,
       ...(targetRef && { ref: targetRef }),
@@ -137,42 +178,62 @@ export const launchCursorAgent = async (
     },
   };
 
-  try {
-    // Create client with user's API key and launch agent
-    const client = createCursorApiClient(apiKey);
-    const agentResponse = await client.launchAgent(launchRequest);
+  return executeCursorAgentRequest(assigneeEmail, launchRequest, {
+    ticketKey,
+    targetRepository,
+  });
+};
 
-    logger.info(`Cursor agent launched successfully for ticket ${ticketKey}`, {
-      agentId: agentResponse.id,
-      status: agentResponse.status,
-      agentUrl: agentResponse.target?.url,
-    });
+/**
+ * Launches a Cursor Cloud Agent in research-only mode (no PR creation).
+ * The agent explores the codebase and answers the given prompt.
+ * @param input - The research request configuration
+ * @returns Result indicating success/failure with agent ID and URL
+ */
+export const launchResearcherAgent = async (
+  input: LaunchResearcherInput
+): Promise<LaunchAgentResult> => {
+  const { prompt, targetRef, targetRepository, userEmail } = input;
 
-    return {
-      success: true,
-      agentId: agentResponse.id,
-      agentUrl: agentResponse.target?.url,
-    };
-  } catch (error) {
-    let errorMessage = 'Failed to launch Cursor agent';
+  logger.info('Launching Cursor researcher agent', {
+    targetRepository,
+    targetRef: targetRef ?? '(default branch)',
+    userEmail,
+  });
 
-    if (error instanceof CursorApiClientError) {
-      errorMessage = `Cursor API error (${error.statusCode}): ${error.message}`;
-    } else if (error instanceof Error) {
-      errorMessage = error.message;
-    }
+  const repositoryUrl = normalizeRepositoryUrl(targetRepository);
 
-    logger.error(`Failed to launch Cursor agent for ticket ${ticketKey}`, {
-      error: errorMessage,
-      ticketKey,
-      targetRepository,
-    });
+  const researchPrompt = `You are a codebase researcher. Your job is to explore this repository and answer the following question thoroughly.
 
-    return {
-      success: false,
-      error: errorMessage,
-    };
-  }
+**Do NOT make any code changes or create pull requests.** Your sole task is to investigate the codebase and provide a comprehensive, evidence-based answer.
+
+## Research Question
+${prompt}
+
+## Instructions
+1. Explore the repository structure to understand the codebase layout
+2. Read relevant files, modules, and documentation
+3. Trace code paths, dependencies, and data flows as needed
+4. Provide a detailed answer with specific file paths, code references, and line numbers where relevant
+5. If the answer requires understanding multiple components, explain how they relate to each other`;
+
+  const launchRequest: CreateAgentRequest = {
+    prompt: { text: researchPrompt },
+    source: {
+      repository: repositoryUrl,
+      ...(targetRef && { ref: targetRef }),
+    },
+    target: {
+      autoCreatePr: false,
+      openAsCursorGithubApp: false,
+      skipReviewerRequest: false,
+    },
+  };
+
+  return executeCursorAgentRequest(userEmail, launchRequest, {
+    targetRepository,
+    purpose: 'research',
+  });
 };
 
 /**
@@ -240,4 +301,160 @@ export const getAgentStatus = async (
       error: errorMessage,
     };
   }
+};
+
+/**
+ * Gets the conversation history of a Cursor Cloud Agent
+ * @param input - The agent ID and user email (for API key lookup)
+ * @returns Result with conversation messages
+ */
+export const getAgentConversation = async (
+  input: AgentConversationInput
+): Promise<AgentConversationResult> => {
+  const { agentId, userEmail } = input;
+
+  const apiKey = await getDecryptedApiKey(userEmail);
+
+  if (!apiKey) {
+    const errorMessage = `No Cursor API key found for user: ${userEmail}`;
+    logger.error(errorMessage, { agentId, userEmail });
+    return { success: false, error: errorMessage };
+  }
+
+  try {
+    const client = createCursorApiClient(apiKey);
+    const conversationResponse = await client.getAgentConversation(agentId);
+
+    return {
+      success: true,
+      messages: conversationResponse.messages,
+    };
+  } catch (error) {
+    let errorMessage = 'Failed to get Cursor agent conversation';
+
+    if (error instanceof CursorApiClientError) {
+      errorMessage = `Cursor API error (${error.statusCode}): ${error.message}`;
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
+    logger.error(`Failed to get conversation for Cursor agent ${agentId}`, {
+      error: errorMessage,
+      agentId,
+      userEmail,
+    });
+
+    return { success: false, error: errorMessage };
+  }
+};
+
+/**
+ * Sends a follow-up instruction to an existing Cursor Cloud Agent
+ * @param input - The agent ID, follow-up text, and user email (for API key lookup)
+ * @returns Result indicating success/failure with agent ID
+ */
+export const addFollowupToAgent = async (
+  input: AddFollowupInput
+): Promise<AddFollowupResult> => {
+  const { agentId, text, userEmail } = input;
+
+  const apiKey = await getDecryptedApiKey(userEmail);
+
+  if (!apiKey) {
+    const errorMessage = `No Cursor API key found for user: ${userEmail}`;
+    logger.error(errorMessage, { agentId, userEmail });
+    return { success: false, error: errorMessage };
+  }
+
+  try {
+    const client = createCursorApiClient(apiKey);
+    const followupResponse = await client.addFollowup(agentId, text);
+
+    logger.info('Follow-up sent to Cursor agent', {
+      agentId: followupResponse.id,
+    });
+
+    return {
+      success: true,
+      agentId: followupResponse.id,
+    };
+  } catch (error) {
+    let errorMessage = 'Failed to send follow-up to Cursor agent';
+
+    if (error instanceof CursorApiClientError) {
+      errorMessage = `Cursor API error (${error.statusCode}): ${error.message}`;
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
+    logger.error(`Failed to send follow-up to Cursor agent ${agentId}`, {
+      error: errorMessage,
+      agentId,
+      userEmail,
+    });
+
+    return { success: false, error: errorMessage };
+  }
+};
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Polls a Cursor Cloud Agent until it reaches a terminal state (FINISHED, ERROR, EXPIRED).
+ * Uses a fixed polling interval with a configurable maximum wait time.
+ * @param input - The agent ID and assignee email (for API key lookup)
+ * @param options - Optional polling configuration
+ * @param options.maxWaitMs - Maximum time to wait before timing out (default: 15 minutes)
+ * @param options.pollIntervalMs - Interval between status checks (default: 10 seconds)
+ * @returns Result with the final agent status
+ */
+export const waitForAgentCompletion = async (
+  input: AgentStatusInput,
+  options?: { maxWaitMs?: number; pollIntervalMs?: number }
+): Promise<AgentStatusResult> => {
+  const maxWaitMs = options?.maxWaitMs ?? DEFAULT_MAX_WAIT_MS;
+  const pollIntervalMs = options?.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
+  const startTime = Date.now();
+
+  logger.info(`Polling Cursor agent ${input.agentId} until completion`, {
+    agentId: input.agentId,
+    maxWaitMs,
+    pollIntervalMs,
+  });
+
+  /* eslint-disable no-await-in-loop -- intentional sequential polling */
+  while (Date.now() - startTime < maxWaitMs) {
+    const statusResult = await getAgentStatus(input);
+
+    if (!statusResult.success) {
+      return statusResult;
+    }
+
+    if (
+      statusResult.status &&
+      TERMINAL_STATUSES.includes(statusResult.status)
+    ) {
+      logger.info(
+        `Cursor agent ${input.agentId} reached terminal state: ${statusResult.status}`,
+        {
+          agentId: input.agentId,
+          status: statusResult.status,
+          elapsedMs: Date.now() - startTime,
+        }
+      );
+      return statusResult;
+    }
+
+    logger.debug(
+      `Cursor agent ${input.agentId} still ${statusResult.status}, polling again in ${pollIntervalMs}ms`,
+      { agentId: input.agentId, status: statusResult.status }
+    );
+
+    await sleep(pollIntervalMs);
+  }
+  /* eslint-enable no-await-in-loop */
+
+  const errorMessage = `Cursor agent ${input.agentId} did not complete within ${maxWaitMs}ms`;
+  logger.warn(errorMessage, { agentId: input.agentId });
+  return { success: false, error: errorMessage };
 };

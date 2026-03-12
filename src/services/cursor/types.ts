@@ -47,3 +47,39 @@ export interface AgentStatusResult {
   agentUrl?: string;
   error?: string;
 }
+
+export interface LaunchResearcherInput {
+  targetRepository: string;
+  targetRef?: string;
+  prompt: string;
+  userEmail: string;
+}
+
+export interface AgentConversationInput {
+  agentId: string;
+  userEmail: string;
+}
+
+export interface AgentConversationMessage {
+  id: string;
+  type: 'user_message' | 'assistant_message';
+  text: string;
+}
+
+export interface AgentConversationResult {
+  success: boolean;
+  messages?: AgentConversationMessage[];
+  error?: string;
+}
+
+export interface AddFollowupInput {
+  agentId: string;
+  text: string;
+  userEmail: string;
+}
+
+export interface AddFollowupResult {
+  success: boolean;
+  agentId?: string;
+  error?: string;
+}
