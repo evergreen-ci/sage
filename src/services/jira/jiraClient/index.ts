@@ -4,6 +4,8 @@ import { PRStatus } from '@/db/schemas';
 import logger from '@/utils/logger';
 import { DEFAULT_ISSUE_FIELDS, MAX_SEARCH_RESULTS } from '../constants';
 import { JiraIssue, JiraIssueFields } from '../types';
+import { COMMENT_VISIBILITY_ROLE } from './constants';
+import { isTicketPublic } from './publicProjects';
 
 /**
  * Response from Jira Dev Status API for pull requests
@@ -92,17 +94,31 @@ class JiraClient {
   };
 
   /**
-   * Add a comment to an issue
+   * Add a comment to an issue.
+   * On public projects, comments are restricted to the project role defined by
+   * COMMENT_VISIBILITY_ROLE to prevent unintended exposure of internal information.
    * @param issueKey - The Jira issue key
    * @param commentText - The comment text to add
    */
   addComment = async (issueKey: string, commentText: string): Promise<void> => {
+    const isPublic = isTicketPublic(issueKey);
+
     await this.client.issueComments.addComment({
       issueIdOrKey: issueKey,
       comment: commentText,
+      ...(isPublic
+        ? {
+            visibility: {
+              type: 'role',
+              value: COMMENT_VISIBILITY_ROLE,
+            },
+          }
+        : {}),
     });
 
-    logger.info(`Added comment to issue ${issueKey}`);
+    logger.info(
+      `Added ${isPublic ? 'private ' : ''}comment to issue ${issueKey}`
+    );
   };
 
   /**

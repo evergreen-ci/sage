@@ -1,45 +1,43 @@
-import { Faithfulness } from 'autoevals';
+import { AnswerCorrectness, ContextRecall } from 'autoevals';
 import { Eval, initDataset } from 'braintrust';
 import { z } from 'zod';
 import { ReporterName, PROJECT_NAME } from '@/evals/constants';
 import { tracedWorkflowEval } from '@/evals/utils/tracedWorkflow';
 import { RELEASE_NOTES_WORKFLOW_NAME } from '@/mastra/agents/constants';
+import { buildReleaseNotesSectionPlans } from '@/mastra/agents/releaseNotesAgent';
 import { releaseNotesWorkflow } from '@/mastra/workflows/releaseNotes';
 import { CitationAccuracy, extractAllCitations } from './scorers';
 import { TestCase, TestInput, TestResult } from './types';
 
 /**
- * Formats Jira issues as clean, readable text for the Faithfulness scorer.
- * Avoids passing raw JSON with structural noise and empty fields.
- * @param jiraIssues - Array of Jira issues to format
- * @returns Human-readable text representation of the issues
+ * Formats the scorer context to match what the agent actually sees.
+ * Uses buildReleaseNotesSectionPlans to elevate curated copy,
+ * mirroring the agent's input rather than raw Jira issue text.
+ * @param input - The test input
+ * @returns The formatted context
  */
-const formatIssuesAsText = (jiraIssues: TestInput['jiraIssues']): string =>
-  jiraIssues
-    .map(issue => {
-      const lines = [`${issue.key} (${issue.issueType}): ${issue.summary}`];
-      if (issue.description?.trim()) {
-        lines.push(`Description: ${issue.description.trim()}`);
+const formatContextForScorer = (input: TestInput): string => {
+  const sectionPlans = buildReleaseNotesSectionPlans(input);
+  const lines: string[] = [];
+  for (const issue of sectionPlans.issues) {
+    lines.push(`${issue.key} (${issue.issueType}): ${issue.summary}`);
+    if (issue.curatedCopy) lines.push(`Curated Copy: ${issue.curatedCopy}`);
+    if (issue.description) lines.push(`Description: ${issue.description}`);
+    if (issue.metadata) {
+      for (const [key, value] of Object.entries(issue.metadata)) {
+        lines.push(`${key}: ${value}`);
       }
-      if (issue.additionalMetadata) {
-        for (const [key, value] of Object.entries(issue.additionalMetadata)) {
-          const trimmedKey = String(key).trim();
-          const trimmedValue =
-            value === null || value === undefined ? '' : String(value).trim();
-          if (trimmedKey && trimmedValue) {
-            lines.push(`${trimmedKey}: ${trimmedValue}`);
-          }
-        }
+    }
+    if (issue.pullRequests?.length) {
+      for (const pr of issue.pullRequests) {
+        lines.push(`PR: ${pr.title}`);
+        if (pr.description) lines.push(`  ${pr.description}`);
       }
-      if (issue.pullRequests?.length) {
-        for (const pr of issue.pullRequests) {
-          lines.push(`PR: ${pr.title}`);
-          if (pr.description?.trim()) lines.push(`  ${pr.description.trim()}`);
-        }
-      }
-      return lines.join('\n');
-    })
-    .join('\n\n');
+    }
+    lines.push('');
+  }
+  return lines.join('\n');
+};
 
 /**
  * Recursively collects bullet text from items at any nesting depth.
@@ -89,7 +87,8 @@ type ReleaseNotesMetadata = {
   product?: string;
   version?: string;
   scoreThresholds?: {
-    Faithfulness?: number;
+    AnswerCorrectness?: number;
+    ContextRecall?: number;
     CitationAccuracy?: number;
   };
 };
@@ -114,7 +113,9 @@ const loadReleaseNotesTestCases = async (): Promise<TestCase[]> => {
           metadata?.description ||
           `Release notes for ${metadata?.product || 'unknown'} ${metadata?.version || ''}`.trim(),
         scoreThresholds: {
-          Faithfulness: metadata?.scoreThresholds?.Faithfulness ?? 0.7,
+          AnswerCorrectness:
+            metadata?.scoreThresholds?.AnswerCorrectness ?? 0.5,
+          ContextRecall: metadata?.scoreThresholds?.ContextRecall ?? 0.7,
           CitationAccuracy: metadata?.scoreThresholds?.CitationAccuracy ?? 1.0,
         },
       },
@@ -137,12 +138,24 @@ Eval(
       workflowName: RELEASE_NOTES_WORKFLOW_NAME,
     }),
     scores: [
-      ({ input, output }) =>
-        Faithfulness({
-          output: extractBulletText(output),
-          context: formatIssuesAsText(input.jiraIssues),
+      ({ input, output }) => {
+        const bulletText = extractBulletText(output);
+        return ContextRecall({
+          output: bulletText,
+          expected: bulletText,
           input: `Generate release notes for ${input.product || 'product'}`,
-        }),
+          context: formatContextForScorer(input),
+        });
+      },
+      ({ expected, input, output }) => {
+        const outputText = extractBulletText(output);
+        const expectedText = extractBulletText(expected);
+        return AnswerCorrectness({
+          input: `Generate release notes for ${input.product || 'product'}`,
+          output: outputText,
+          expected: expectedText,
+        });
+      },
       ({ input, output }) =>
         CitationAccuracy({
           outputCitations: extractAllCitations(output),

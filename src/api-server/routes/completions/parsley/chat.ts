@@ -4,6 +4,7 @@ import type { MessageListInput } from '@mastra/core/agent/message-list';
 import { RequestContext } from '@mastra/core/request-context';
 import { trace } from '@opentelemetry/api';
 import {
+  InferUIMessageChunk,
   pipeUIMessageStreamToResponse,
   UIMessage,
   validateUIMessages,
@@ -210,7 +211,9 @@ const chatRoute = async (
     pipeUIMessageStreamToResponse({
       response: res,
       stream: createAISdkStreamWithMetadata(
-        toAISdkStream(stream, { from: 'agent' })!,
+        toAISdkStream(stream, { from: 'agent' })! as unknown as ReadableStream<
+          InferUIMessageChunk<UIMessage>
+        >,
         {
           spanId: stream.traceId,
         }

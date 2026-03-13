@@ -85,7 +85,7 @@ export const loadDataStep = createStep({
         : truncationNote.trim();
     }
 
-    tracingContext.currentSpan?.update({
+    tracingContext?.currentSpan?.update({
       metadata: {
         analysisContext: analysisContext ?? 'No analysis context provided',
         textLength: normalizedText?.length ?? 0,
@@ -130,7 +130,7 @@ export const chunkStep = createStep({
       chunkCount: chunks.length,
     });
 
-    tracingContext.currentSpan?.update({
+    tracingContext?.currentSpan?.update({
       metadata: {
         chunkCount: chunks.length,
         chunkSize: logAnalyzerConfig.chunking.maxSize,
@@ -255,7 +255,7 @@ export const initialStep = createStep({
     logger.debug('Initial analysis complete', {
       summaryLength: summary.length,
     });
-    tracingContext.currentSpan?.update({
+    tracingContext?.currentSpan?.update({
       metadata: {
         idx: 1,
         total: chunks.length,
@@ -356,7 +356,7 @@ export const refineStep = createStep({
       ...newLineReferences,
     ];
 
-    tracingContext.currentSpan?.update({
+    tracingContext?.currentSpan?.update({
       metadata: {
         idx: idx + 1,
         total: chunks.length,

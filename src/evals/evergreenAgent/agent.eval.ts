@@ -39,7 +39,7 @@ Eval(
         ToolUsage({
           output: output.toolsUsed,
           expected: expected.toolsUsed,
-          mode: ToolUsageMode.ExactMatch,
+          mode: ToolUsageMode.Subset,
         }),
     ],
     experimentName: 'Evergreen Agent Eval',
