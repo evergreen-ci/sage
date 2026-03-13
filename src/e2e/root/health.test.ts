@@ -15,8 +15,9 @@ describe('Health check', () => {
       'evergreenAgent',
       'questionClassifierAgent',
       'questionOwnershipAgent',
-      'slackThreadSummarizerAgent',
       'releaseNotesAgent',
+      'runtimeEnvironmentsAgent',
+      'slackThreadSummarizerAgent',
     ]);
   });
 });

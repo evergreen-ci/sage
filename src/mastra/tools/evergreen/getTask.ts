@@ -22,6 +22,9 @@ const GET_TASK = gql`
       baseTask {
         id
       }
+      distroId
+      imageId
+      ami
       versionMetadata {
         id
         isPatch
@@ -63,6 +66,9 @@ const getTaskOutputSchema = z.object({
       })
       .optional()
       .nullable(),
+    distroId: z.string(),
+    imageId: z.string(),
+    ami: z.string().optional().nullable(),
     versionMetadata: z.object({
       id: z.string(),
       isPatch: z.boolean(),
@@ -89,7 +95,7 @@ const getTaskOutputSchema = z.object({
 const getTaskTool = createGraphQLTool<GetTaskQuery, GetTaskQueryVariables>({
   id: 'getTask',
   description:
-    'Get a task from Evergreen. This tool is used to get the details of a task from Evergreen. It is used to get the details of a task from Evergreen. It requires a taskId to be provided. A taskId is a string that is unique to a task in Evergreen',
+    'Get a task from Evergreen. Returns task details including display name, status, build variant, project, distro, image, AMI, and version metadata. Requires a taskId (unique string identifier for a task in Evergreen).',
   query: GET_TASK,
   inputSchema: getTaskInputSchema,
   outputSchema: getTaskOutputSchema,
