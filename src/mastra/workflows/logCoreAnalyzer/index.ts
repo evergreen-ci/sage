@@ -53,18 +53,21 @@ export const logCoreAnalyzerTool = createTool({
     // Inject the toolCallId so the frontend can correlate progress updates
     // with the correct tool call when multiple calls run in parallel.
     const toolCallId = context?.agent?.toolCallId;
-    const outputWriter = context?.writer
+    const writer = context?.writer;
+    const outputWriter = writer
       ? async (chunk: unknown) => {
-          const record = chunk as
-            | { type: `data-${string}`; data: Record<string, unknown> }
-            | undefined;
-          const augmented =
-            toolCallId && record?.data
-              ? { ...record, data: { ...record.data, toolCallId } }
-              : record;
-          await context.writer!.custom(
-            augmented as { type: `data-${string}`; data: unknown }
-          );
+          const record = chunk as {
+            type: `data-${string}`;
+            data: Record<string, unknown>;
+          };
+          const data =
+            toolCallId && record.data
+              ? { ...record.data, toolCallId }
+              : record.data;
+          await writer.custom({ ...record, data } as {
+            type: `data-${string}`;
+            data: unknown;
+          });
         }
       : undefined;
 
