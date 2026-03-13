@@ -1,6 +1,8 @@
-# Sage - Evergreen AI Service
+# Sage - DevProd AI Platform
 
-A TypeScript-based Express.js server powering the Evergreen AI Service.
+Sage is DevProd's agentic AI platform. It powers Parsley AI, Memento, Lumber, Release Notes, and Sage-Bot — a suite of AI products built on the [Mastra framework](https://mastra.ai/) with observability (distributed tracing, LLM call logging, error tracking) wired in out of the box.
+
+For full documentation, see [docs/index.md](docs/index.md).
 
 ## Getting Started
 
@@ -34,9 +36,9 @@ openssl rand -hex 32
 1. Clone the repository or navigate to the project directory.
 2. Install dependencies:
 
-   ```bash
-   pnpm install
-   ```
+```bash
+ pnpm install
+```
 
 ---
 
@@ -44,56 +46,35 @@ openssl rand -hex 32
 
 ```
 sage/
+├── docs/                             # Platform and product documentation
+│   ├── index.md                      # Platform overview
+│   ├── platform/                     # Platform guides (creating agents, observability)
+│   └── sage-bot/                     # Sage-Bot user docs
 ├── src/
 │   ├── api-server/
-│   │   ├── index.ts                  # API server setup
-│   │   ├── middlewares/             # Express middlewares
-│   │   │   ├── index.ts
-│   │   │   └── logging.ts
-│   │   ├── routes/                  # HTTP route handlers
-│   │   │   ├── completions/
-│   │   │   │   ├── index.ts
-│   │   │   │   └── parsley.ts
-│   │   │   ├── health.ts
-│   │   │   ├── index.ts
-│   │   │   └── root.ts
-│   │   └── types/
-│   │       └── index.ts
-│   ├── config/
-│   │   └── index.ts                  # Environment config
-│   ├── db/
-│   │   └── connection.ts             # MongoDB connection
+│   │   ├── index.ts                  # Route registration
+│   │   ├── middlewares/              # Express middlewares
+│   │   └── routes/                   # HTTP route handlers
+│   │       ├── completions/          # One subdirectory per product (routes + README)
+│   │       └── user/                 # User credential routes (Sage-Bot)
+│   ├── config/                       # Environment config
+│   ├── db/                           # MongoDB connection
+│   ├── evals/                        # Braintrust eval suite
 │   ├── mastra/                       # Mastra agent framework
-│   │   ├── agents/
-│   │   │   └── evergreenAgent.ts
-│   │   ├── tools/
-│   │   │   └── some_tool.ts          # [Tools documentation](https://mastra.ai/en/docs/tools-mcp/overview)
-│   │   ├── workflows/
-│   │   │   └── some_workflow.ts      # [Workflows documentation](https://mastra.ai/en/docs/workflows/overview)
-│   │   ├── models/
-│   │   │   └── openAI/
-│   │   │       ├── baseModel.ts
-│   │   │       └── gpt41.ts
-│   │   └── index.ts                  # Mastra setup/exports
-│   ├── types/
-│   │   └── index.ts
-│   ├── utils/
-│   │   ├── logger/
-│   │   │   ├── index.ts
-│   │   │   ├── setup.ts
-│   │   │   ├── winstonMastraLogger.ts
-│   │   │   └── logger.test.ts
-│   │   └── index.ts
-│   ├── __tests__/                    # Unit and integration tests
+│   │   ├── agents/                   # Agent implementations
+│   │   ├── tools/                    # Tool implementations
+│   │   ├── workflows/                # Workflow implementations
+│   │   ├── models/                   # LLM model config
+│   │   └── index.ts                  # Agent/workflow registration
+│   ├── services/                     # Business logic (Sage-Bot, etc.)
+│   ├── utils/                        # Shared utilities
 │   └── main.ts                       # App entry point
 ├── environments/
 │   └── staging.yaml                  # Deployment configuration
 ├── scripts/                          # Project automation scripts
 ├── .drone.yml                        # Drone CI pipeline
 ├── .evergreen.yml                    # Evergreen configuration
-├── .env.defaults                     # Shared environment variables
-├── .env.<NODE_ENV>                   # Non-secret environment variables
-└── README.md
+└── .env.defaults                     # Shared environment variables
 ```
 
 ---
@@ -130,25 +111,6 @@ Removes the `dist/` directory.
 ## Testing the API Locally
 
 Most API endpoints require authentication via the `x-kanopy-internal-authorization` header. For local development, there are two ways to authenticate requests:
-
-### Configuring Cursor API Key for Local Testing
-
-To test the Cursor agent integration locally, you'll need to:
-
-1. **Get a Cursor API Key**: Obtain an API key from the [Cursor Dashboard](https://cursor.com/dashboard?tab=integrations). Navigate to the **API Keys** section and generate a new key.
-
-2. **Add the Key via REST Endpoints**: Use the local API endpoints to store your key:
-   - `POST /pr-bot/user/cursor-key` - Create or update your Cursor API key
-   - `GET /pr-bot/user/cursor-key` - Check if a key is registered
-   - `DELETE /pr-bot/user/cursor-key` - Remove your stored key
-
-   Example:
-
-   ```bash
-   curl -X POST http://localhost:8080/pr-bot/user/cursor-key \
-     -H "Content-Type: application/json" \
-     -d '{"apiKey": "your-cursor-api-key"}'
-   ```
 
 ### Option 1: Set the `USER_NAME` Environment Variable (Recommended)
 
@@ -187,40 +149,7 @@ echo -n '{"sub":"your.email@mongodb.com"}' | base64
 
 ---
 
-## Docker Builds
-
-- Docker contexts now respect `.dockerignore`, so local `docker build` and `docker buildx` commands skip large directories such as `node_modules/`, `coverage/`, and generated GraphQL schemas. If you need to reference a file that is ignored by default, build with `--no-cache` or temporarily remove the entry.
-
-- The Drone `publish` step uses Kaniko layer caching backed by ECR. Subsequent CI builds reuse previously published layers automatically, so rebuilds after small changes are significantly faster.
-
-### Reusing CI cache locally
-
-You can opt into the same cache when iterating locally with BuildKit:
-
-1. Authenticate against the Sage ECR registry (example):
-
-   ```bash
-   aws ecr get-login-password --region us-east-1 \
-     | docker login --username AWS --password-stdin 795250896452.dkr.ecr.us-east-1.amazonaws.com
-   ```
-
-2. Run `docker buildx build` with the cache image that Drone maintains:
-
-   ```bash
-   docker buildx build \
-     --platform linux/arm64 \
-     --cache-from type=registry,ref=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME}-cache \
-     --cache-to type=registry,ref=795250896452.dkr.ecr.us-east-1.amazonaws.com/devprod-evergreen/${DRONE_REPO_NAME}-cache,mode=max \
-     -t sage:local .
-   ```
-
-Replace `${DRONE_REPO_NAME}` with your repository name if you are building from a fork (Sage uses `sage`). The `-t sage:local` tag is just a local image label—name it however you like. The `--cache-to` flag updates the shared cache so that your next build—and CI—can reuse the warmed layers.
-
----
-
 ## Working with Mastra Agents
-
-The project uses [Mastra](https://mastra.ai/en/docs/overview), a framework for building agentic systems with tools and workflows.
 
 ### Environment Symlinks
 
@@ -240,13 +169,9 @@ pnpm mastra:dev
 
 Launches a local Mastra server at `http://localhost:4111` for agent testing.
 
-### Customizing Agents
+### Building Agents
 
-- **Agents**: Add or update agents in `src/mastra/agents`.
-- **Tools**: Place reusable tools in `src/mastra/tools`. Tools are composable functions an agent can call.
-- **Workflows**: Add workflows to `src/mastra/workflows`. Workflows define multi-step logic that agents can follow.
-
-All agents and workflows should be registered in `src/mastra/index.ts`.
+For a full guide on creating agents, tools, workflows, and routes, see [docs/platform/creating-agents.md](docs/platform/creating-agents.md).
 
 ---
 
@@ -254,7 +179,7 @@ All agents and workflows should be registered in `src/mastra/index.ts`.
 
 Sage relies on Evergreen’s GraphQL schema for both query linting and type
 generation. To keep the schema in sync with Evergreen, create a local symlink
-to the [Evergreen repository’s `graphql/schema`](https://github.com/evergreen-ci/evergreen/tree/master/graphql/schema) directory.
+to the [Evergreen repository’s `graphql/schema](https://github.com/evergreen-ci/evergreen/tree/master/graphql/schema)` directory.
 
 ### 1. Symlink the GraphQL schema
 
@@ -281,7 +206,7 @@ pnpm lint
 
 ### 3. GraphQL Type Generation
 
-We use [`@graphql-codegen`](https://www.graphql-code-generator.com/) to generate
+We use `[@graphql-codegen](https://www.graphql-code-generator.com/)` to generate
 TypeScript types for queries, mutations, and their variables. The generated
 types live in `src/gql/generated/types.ts`.
 
@@ -314,20 +239,17 @@ For detailed information about running evals, managing datasets, scoring, and re
 Before deploying, you can check which commits are pending deployment to an environment:
 
 1. Switch to the appropriate kubectl context:
-   - **Production**: Run `kcp` (switches to production context)
-   - **Staging**: Run `kcs` (switches to staging context)
+
+- **Production**: Run `kcp` (switches to production context)
+- **Staging**: Run `kcs` (switches to staging context)
 
 2. Check pending commits:
 
-   ```bash
-   pnpm pending-commits
-   ```
+```bash
+ pnpm pending-commits
+```
 
-   For JSON output:
-
-   ```bash
-   pnpm pending-commits:json
-   ```
+For JSON output:
 
 This will show all commits between what is currently deployed and your local HEAD, including commit hashes, messages, and GitHub URLs.
 
@@ -343,8 +265,9 @@ Drone can [promote](https://docs.drone.io/promote/) builds opened on PRs to stag
 2. Check pending commits using `kcs && pnpm pending-commits` to see what will be deployed.
 3. Once the build completes, find the build number on [Drone](https://drone.corp.mongodb.com/evergreen-ci/sage).
 4. Promote the build to staging:
-   - **CLI**: Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> staging`
-   - **Web UI**: Click `…` > `Promote` on your build's page. Enter "staging" in the "Target" field and submit.
+
+- **CLI**: Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> staging`
+- **Web UI**: Click `…` > `Promote` on your build's page. Enter "staging" in the "Target" field and submit.
 
 #### Local
 
@@ -359,8 +282,9 @@ To deploy to production:
 1. Check pending commits: `kcp && pnpm pending-commits`
 2. Find the build on [Drone](https://drone.corp.mongodb.com/evergreen-ci/sage) for the commit you want to deploy (must be on `main` branch).
 3. Promote the build to production:
-   - **CLI**: Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> production`
-   - **Web UI**: Click `…` > `Promote` on your build's page. Enter "production" in the "Target" field and submit.
+
+- **CLI**: Run `drone build promote evergreen-ci/sage <DRONE_BUILD_NUMBER> production`
+- **Web UI**: Click `…` > `Promote` on your build's page. Enter "production" in the "Target" field and submit.
 
 **Note**: You must be promoting a Drone build that pushed a commit to `main`.
 
@@ -377,9 +301,10 @@ These cronjobs can still be manually executed using `kubectl` for testing purpos
 
 1. Ensure you have `kubectl` installed and configured
 2. Switch to the staging Kubernetes context:
-   ```bash
-   kcs  # or manually: kubectl config use-context <staging-context>
-   ```
+
+```bash
+ kcs  # or manually: kubectl config use-context <staging-context>
+```
 
 All commands below use the `-n devprod-evergreen` flag to specify the namespace. This avoids persisting namespace changes in your kubeconfig.
 
