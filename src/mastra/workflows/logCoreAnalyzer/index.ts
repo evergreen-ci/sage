@@ -1,6 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { createWorkflow } from '@mastra/core/workflows';
-import { createProgressOutputWriter } from '@/mastra/utils/tools/progress';
+import { createToolOutputWriter } from '@/mastra/utils/tools/progress';
 import {
   WorkflowInputSchema,
   WorkflowOutputSchema,
@@ -46,7 +46,7 @@ export const logCoreAnalyzerTool = createTool({
   execute: async (inputData, context) => {
     const run = await logCoreAnalyzerWorkflow.createRun({});
 
-    const outputWriter = createProgressOutputWriter(
+    const outputWriter = createToolOutputWriter(
       context?.writer,
       context?.agent?.toolCallId
     );
