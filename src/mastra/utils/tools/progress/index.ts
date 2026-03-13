@@ -50,7 +50,7 @@ type DataOutputChunk = {
  * @param toolCallId - The tool call ID to inject into each chunk's data.
  * @returns An outputWriter function, or undefined when no writer is available.
  * @example
- * Tool execute method example:
+ * // Tool execute method example:
  * execute: async (inputData, context) => {
  *   const run = await myWorkflow.createRun({});
  *   const outputWriter = createToolOutputWriter(
