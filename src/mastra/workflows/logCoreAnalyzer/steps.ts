@@ -1,6 +1,7 @@
 import { createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
 import { z } from 'zod';
+import { writeProgress } from '@/mastra/utils/tools/progress';
 import {
   initialAnalyzerAgent,
   refinementAgent,
@@ -31,9 +32,18 @@ export const loadDataStep = createStep({
   inputSchema: WorkflowInputSchema,
   stateSchema: WorkflowStateSchema,
   outputSchema: z.object({}), // Stores data in state, not output
-  execute: async ({ inputData, mastra, setState, state, tracingContext }) => {
+  execute: async ({
+    inputData,
+    mastra,
+    setState,
+    state,
+    tracingContext,
+    writer,
+  }) => {
     const logger = mastra.getLogger();
     const { analysisContext, path: filePath, text, url } = inputData;
+
+    await writeProgress(writer, 0, 'Loading data');
 
     let result: LoadResult;
 
@@ -87,6 +97,8 @@ export const loadDataStep = createStep({
       analysisContext: enrichedContext,
     });
 
+    await writeProgress(writer, 10, 'Data loaded');
+
     return {};
   },
 });
@@ -97,12 +109,15 @@ export const chunkStep = createStep({
   stateSchema: WorkflowStateSchema,
   inputSchema: z.object({}),
   outputSchema: z.object({}),
-  execute: async ({ mastra, setState, state, tracingContext }) => {
+  execute: async ({ mastra, setState, state, tracingContext, writer }) => {
     const logger = mastra.getLogger();
     const { text } = state;
     if (!text) {
       throw new Error('Text content is missing in state');
     }
+
+    await writeProgress(writer, 10, 'Chunking content');
+
     const doc = MDocument.fromText(text);
     const chunks = await doc.chunk({
       strategy: 'token',
@@ -126,6 +141,9 @@ export const chunkStep = createStep({
       ...state,
       chunks,
     });
+
+    await writeProgress(writer, 20, 'Chunking complete');
+
     return {};
   },
 });
@@ -144,6 +162,7 @@ export const singlePassStep = createStep({
     requestContext,
     state,
     tracingContext,
+    writer,
   }) => {
     const logger = mastra.getLogger();
     const { analysisContext, chunks } = state;
@@ -159,6 +178,8 @@ export const singlePassStep = createStep({
     }
 
     const text = chunks[0]?.text ?? '';
+
+    await writeProgress(writer, 20, 'Analyzing content');
 
     logger.debug('Single-pass analysis starting', {
       textLength: text.length,
@@ -177,6 +198,8 @@ export const singlePassStep = createStep({
       },
       existingLineReferences: [],
     });
+
+    await writeProgress(writer, 100, 'Analysis complete');
 
     logger.debug('Single-pass analysis complete', {
       markdownLength: result.markdown.length,
@@ -197,13 +220,22 @@ export const initialStep = createStep({
   outputSchema: z.object({
     summary: z.string(),
   }),
-  execute: async ({ abortSignal, mastra, setState, state, tracingContext }) => {
+  execute: async ({
+    abortSignal,
+    mastra,
+    setState,
+    state,
+    tracingContext,
+    writer,
+  }) => {
     const logger = mastra.getLogger();
     const { analysisContext, chunks } = state;
     if (!chunks) {
       throw new Error('Chunks are not available');
     }
     const first = chunks[0]?.text ?? '';
+
+    await writeProgress(writer, 20, 'Analyzing first chunk');
 
     logger.debug('Initial analysis starting', {
       firstChunkLength: first.length,
@@ -232,6 +264,8 @@ export const initialStep = createStep({
         summary,
       },
     });
+    await writeProgress(writer, 30, 'Initial analysis complete');
+
     setState({
       ...state,
       idx: 1,
@@ -260,6 +294,7 @@ export const refineStep = createStep({
     setState,
     state,
     tracingContext,
+    writer,
   }) => {
     const logger = mastra.getLogger();
     const { analysisContext, chunks, idx } = state;
@@ -267,6 +302,16 @@ export const refineStep = createStep({
     if (!chunks) {
       throw new Error('Chunks are not available');
     }
+
+    const totalChunks = chunks.length;
+    // Progress from 30% to 80% proportional to chunk index
+    const progress = totalChunks > 1 ? 30 + (idx / (totalChunks - 1)) * 50 : 30;
+    await writeProgress(
+      writer,
+      progress,
+      `Refining chunk ${idx + 1} of ${totalChunks}`
+    );
+
     const chunk = chunks[state.idx]?.text ?? '';
 
     // TODO: make sure summary size stays manageable
@@ -347,10 +392,13 @@ export const finalizeStep = createStep({
     requestContext,
     state,
     tracingContext,
+    writer,
   }) => {
     const logger = mastra.getLogger();
     const { summary } = inputData;
     const { analysisContext } = state;
+
+    await writeProgress(writer, 80, 'Generating final report');
 
     logger.debug('Finalize step starting');
 
@@ -366,6 +414,8 @@ export const finalizeStep = createStep({
       },
       existingLineReferences: state.accumulatedLineReferences,
     });
+
+    await writeProgress(writer, 100, 'Report complete');
 
     logger.debug('Finalize step complete', {
       markdownLength: result.markdown.length,
