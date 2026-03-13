@@ -1,5 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { createWorkflow } from '@mastra/core/workflows';
+import { createProgressOutputWriter } from '@/mastra/utils/tools/progress';
 import {
   WorkflowInputSchema,
   WorkflowOutputSchema,
@@ -45,31 +46,10 @@ export const logCoreAnalyzerTool = createTool({
   execute: async (inputData, context) => {
     const run = await logCoreAnalyzerWorkflow.createRun({});
 
-    // Use custom() to forward chunks without ToolStream envelope wrapping.
-    // write() would nest the chunk inside a {type: "tool-output"} envelope,
-    // hiding it from the AI SDK stream transformer which only recognises
-    // top-level `data-*` typed chunks.
-    //
-    // Inject the toolCallId so the frontend can correlate progress updates
-    // with the correct tool call when multiple calls run in parallel.
-    const toolCallId = context?.agent?.toolCallId;
-    const writer = context?.writer;
-    const outputWriter = writer
-      ? async (chunk: unknown) => {
-          const record = chunk as {
-            type: `data-${string}`;
-            data: Record<string, unknown>;
-          };
-          const data =
-            toolCallId && record.data
-              ? { ...record.data, toolCallId }
-              : record.data;
-          await writer.custom({ ...record, data } as {
-            type: `data-${string}`;
-            data: unknown;
-          });
-        }
-      : undefined;
+    const outputWriter = createProgressOutputWriter(
+      context?.writer,
+      context?.agent?.toolCallId
+    );
 
     const runResult = await run.start({
       inputData,

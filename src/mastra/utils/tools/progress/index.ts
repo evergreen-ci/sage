@@ -34,3 +34,31 @@ export const writeProgress = async (
     } satisfies ProgressData,
   });
 };
+
+/**
+ * Creates an outputWriter bridge for forwarding workflow chunks directly to
+ * the stream via writer.custom(), bypassing ToolStream's envelope wrapping.
+ * Injects toolCallId into each chunk's data so the frontend can correlate
+ * progress updates with the correct tool call during parallel execution.
+ * @param writer - The ToolStream instance to write to, or undefined to no-op.
+ * @param toolCallId - The tool call ID to inject into each chunk's data.
+ * @returns An outputWriter function, or undefined when no writer is available.
+ */
+export const createProgressOutputWriter = (
+  writer: ToolStream | undefined,
+  toolCallId: string | undefined
+): ((chunk: unknown) => Promise<void>) | undefined => {
+  if (!writer) return undefined;
+  return async (chunk: unknown) => {
+    const record = chunk as {
+      type: `data-${string}`;
+      data: Record<string, unknown>;
+    };
+    const data =
+      toolCallId && record.data ? { ...record.data, toolCallId } : record.data;
+    await writer.custom({ ...record, data } as {
+      type: `data-${string}`;
+      data: unknown;
+    });
+  };
+};

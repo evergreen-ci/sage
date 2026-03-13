@@ -1,6 +1,7 @@
 import { createStep } from '@mastra/core/workflows';
 import { MDocument } from '@mastra/rag';
 import { z } from 'zod';
+import { writeProgress } from '@/mastra/utils/tools/progress';
 import {
   initialAnalyzerAgent,
   refinementAgent,
@@ -15,7 +16,6 @@ import {
   type LoadResult,
 } from './dataLoader';
 import { generateMarkdownAndSummary } from './helpers';
-import { writeProgress } from './progress';
 import { USER_INITIAL_PROMPT, USER_REFINE } from './prompts';
 import {
   WorkflowInputSchema,
