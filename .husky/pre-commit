@@ -1,3 +1,6 @@
+# Run Kingfisher secret scanning on staged changes (auto-downloads and caches binary)
+curl -fsSL https://raw.githubusercontent.com/mongodb/kingfisher/main/scripts/kingfisher-pre-commit-auto.sh | bash
+
 # Run lint-staged on staged files
 echo "Running lint-staged checks..."
 npx lint-staged

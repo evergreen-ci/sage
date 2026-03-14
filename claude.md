@@ -32,3 +32,11 @@ Sage uses the Mastra framework for building agentic systems. Routes orchestrate 
 - Eval implementations: [src/evals/](src/evals/)
 
 For detailed implementation instructions, code examples, and patterns, see [agents.md](agents.md).
+
+## Security
+
+- **Never commit secrets, credentials, or private keys** to the repository — not in source files, `.env.defaults`, config files, tests, or comments.
+- Sensitive values (API keys, tokens, private keys, connection strings) must only be stored in `.env` files that are listed in `.gitignore`, or in a secrets manager.
+- If you suspect a secret has been committed, alert the user immediately — do not proceed with other changes until the exposure is addressed.
+- Before staging files, verify that no secrets are present in the diff. When in doubt, ask the user.
+- The repo uses a Kingfisher pre-commit hook to scan staged changes for secrets automatically. Do not bypass it.
