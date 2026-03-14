@@ -32,6 +32,7 @@
     "mastra:start": "node --import=./.mastra/output/instrumentation.mjs .mastra/output/index.mjs",
     "mastra:full": "pnpm mastra:build && pnpm mastra:start",
     "prepare": "husky",
+    "secret-scan": "kingfisher scan . --quiet --no-update-check",
     "eval": "BRAINTRUST_EVAL=true npx braintrust eval --external-packages @mastra/core @mastra/braintrust @mastra/observability @mastra/memory @mastra/mongodb --no-send-logs",
     "eval:send_to_braintrust": "BRAINTRUST_EVAL=true npx braintrust eval --external-packages @mastra/core @mastra/braintrust @mastra/observability @mastra/memory @mastra/mongodb --no-progress-bars",
     "load-dataset-into-braintrust": "vite-node src/evals/scripts/braintrust-dataset-loader.ts",
