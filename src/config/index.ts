@@ -258,10 +258,6 @@ export const validateConfig = (): string[] | undefined => {
     'ENCRYPTION_KEY',
     'JIRA_BASE_URL',
     'JIRA_API_TOKEN',
-    'GITHUB_APP_ID',
-    'GITHUB_PRIVATE_KEY',
-    'GITHUB_INSTALLATION_ID_10GEN',
-    'GITHUB_INSTALLATION_ID_EVERGREEN_CI',
   ];
 
   const errors: string[] = [];
