@@ -148,7 +148,7 @@ export class PrMergeStatusPollingService {
         pr: {
           ...job.pr,
           status: newStatus,
-          updatedAt: prInfo.mergedAt ? new Date(prInfo.mergedAt) : new Date(),
+          updatedAt: prInfo.mergedAt ? new Date(prInfo.mergedAt) : prInfo.closedAt ? new Date(prInfo.closedAt) : new Date(),
         },
       });
 

@@ -117,6 +117,7 @@ describe('PrMergeStatusPollingService', () => {
         state: 'open',
         merged: false,
         mergedAt: null,
+        closedAt: null,
         url: 'https://github.com/org/repo/pull/123',
         repository: 'org/repo',
       });
@@ -166,6 +167,7 @@ describe('PrMergeStatusPollingService', () => {
         state: 'closed',
         merged: true,
         mergedAt: '2024-01-01T00:00:00Z',
+        closedAt: '2024-01-01T00:00:00Z',
         url: 'https://github.com/org/repo/pull/123',
         repository: 'org/repo',
       });
@@ -198,6 +200,7 @@ describe('PrMergeStatusPollingService', () => {
         state: 'closed',
         merged: false,
         mergedAt: null,
+        closedAt: '2024-01-02T00:00:00Z',
         url: 'https://github.com/org/repo/pull/123',
         repository: 'org/repo',
       });
@@ -241,6 +244,7 @@ describe('PrMergeStatusPollingService', () => {
           state: 'closed',
           merged: true,
           mergedAt: '2024-01-01T00:00:00Z',
+          closedAt: '2024-01-01T00:00:00Z',
           url: 'https://github.com/org/repo/pull/123',
           repository: 'org/repo',
         })
@@ -250,6 +254,7 @@ describe('PrMergeStatusPollingService', () => {
           state: 'closed',
           merged: true,
           mergedAt: '2024-01-01T00:00:00Z',
+          closedAt: '2024-01-01T00:00:00Z',
           url: 'https://github.com/org/repo/pull/456',
           repository: 'org/repo',
         });
@@ -330,6 +335,7 @@ describe('PrMergeStatusPollingService', () => {
         state: 'closed',
         merged: true,
         mergedAt: '2024-01-01T00:00:00Z',
+        closedAt: '2024-01-01T00:00:00Z',
         url: 'https://github.com/org/repo/pull/123',
         repository: 'org/repo',
       });

@@ -95,6 +95,7 @@ export class GitHubTokenManager {
         state: pr.state as 'open' | 'closed',
         merged: pr.merged ?? false,
         mergedAt: pr.merged_at,
+        closedAt: pr.closed_at,
         url: pr.html_url,
         repository: repo,
       };

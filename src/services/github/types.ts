@@ -12,6 +12,7 @@ export interface PullRequestInfo {
   state: 'open' | 'closed';
   merged: boolean;
   mergedAt: string | null;
+  closedAt: string | null;
   url: string;
   repository: string;
 }

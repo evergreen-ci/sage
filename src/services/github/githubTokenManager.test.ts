@@ -69,6 +69,7 @@ describe('GitHubTokenManager', () => {
         state: 'closed',
         merged: true,
         merged_at: '2024-01-01T00:00:00Z',
+        closed_at: '2024-01-01T00:00:00Z',
         html_url: 'https://github.com/10gen/mms/pull/123',
       };
 
@@ -82,6 +83,7 @@ describe('GitHubTokenManager', () => {
         state: 'closed',
         merged: true,
         mergedAt: '2024-01-01T00:00:00Z',
+        closedAt: '2024-01-01T00:00:00Z',
         url: 'https://github.com/10gen/mms/pull/123',
         repository: '10gen/mms',
       });
