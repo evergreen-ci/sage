@@ -97,11 +97,22 @@ const runDebug = async () => {
 
     // Update the job run in the database
     console.log(`\nUpdating job run ${targetJob._id} in database...`);
+
+    // Determine the timestamp to use for the PR status update
+    let updatedAt: Date;
+    if (prInfo.mergedAt) {
+      updatedAt = new Date(prInfo.mergedAt);
+    } else if (prInfo.closedAt) {
+      updatedAt = new Date(prInfo.closedAt);
+    } else {
+      updatedAt = new Date();
+    }
+
     await updateJobRun(targetJob._id!, {
       pr: {
         ...targetJob.pr,
         status: newStatus,
-        updatedAt: prInfo.mergedAt ? new Date(prInfo.mergedAt) : prInfo.closedAt ? new Date(prInfo.closedAt) : new Date(),
+        updatedAt,
       },
     });
 

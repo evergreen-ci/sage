@@ -8,12 +8,12 @@ The PR merge status polling service checks whether PRs created by Sage agents ha
 
 The service authenticates as a GitHub App. You need four environment variables:
 
-| Variable | Description | Where to find it |
-|----------|-------------|-----------------|
-| `GITHUB_APP_ID` | The GitHub App's numeric ID | GitHub App settings page → "About" section |
-| `GITHUB_PRIVATE_KEY` | PEM-format private key | GitHub App settings → "Private keys" → Generate |
-| `GITHUB_INSTALLATION_ID_10GEN` | Installation ID for the `10gen` org | See below |
-| `GITHUB_INSTALLATION_ID_EVERGREEN_CI` | Installation ID for the `evergreen-ci` org | See below |
+| Variable                              | Description                                | Where to find it                                |
+| ------------------------------------- | ------------------------------------------ | ----------------------------------------------- |
+| `GITHUB_APP_ID`                       | The GitHub App's numeric ID                | GitHub App settings page → "About" section      |
+| `GITHUB_PRIVATE_KEY`                  | PEM-format private key                     | GitHub App settings → "Private keys" → Generate |
+| `GITHUB_INSTALLATION_ID_10GEN`        | Installation ID for the `10gen` org        | See below                                       |
+| `GITHUB_INSTALLATION_ID_EVERGREEN_CI` | Installation ID for the `evergreen-ci` org | See below                                       |
 
 **Finding installation IDs:**
 
@@ -82,9 +82,9 @@ This processes all completed jobs with open PRs sequentially.
 
 ## Troubleshooting
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `No Octokit instance found for organization: X` | Missing installation ID for that org | Add `GITHUB_INSTALLATION_ID_X` env var |
-| `Authentication failed` | Invalid app ID or private key | Verify credentials, check PEM key formatting |
-| `PR not found` (404) | PR was deleted or repo access revoked | Job is skipped gracefully |
-| Config validation failure on startup | Required env vars missing | Set all `GITHUB_*` vars listed above |
+| Error                                           | Cause                                 | Fix                                          |
+| ----------------------------------------------- | ------------------------------------- | -------------------------------------------- |
+| `No Octokit instance found for organization: X` | Missing installation ID for that org  | Add `GITHUB_INSTALLATION_ID_X` env var       |
+| `Authentication failed`                         | Invalid app ID or private key         | Verify credentials, check PEM key formatting |
+| `PR not found` (404)                            | PR was deleted or repo access revoked | Job is skipped gracefully                    |
+| Config validation failure on startup            | Required env vars missing             | Set all `GITHUB_*` vars listed above         |

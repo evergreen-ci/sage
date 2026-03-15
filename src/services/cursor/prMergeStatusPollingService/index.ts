@@ -144,11 +144,21 @@ export class PrMergeStatusPollingService {
       }
 
       // PR status has changed - update job run with status and timestamp
+      // Determine the timestamp to use for the PR status update
+      let updatedAt: Date;
+      if (prInfo.mergedAt) {
+        updatedAt = new Date(prInfo.mergedAt);
+      } else if (prInfo.closedAt) {
+        updatedAt = new Date(prInfo.closedAt);
+      } else {
+        updatedAt = new Date();
+      }
+
       await updateJobRun(job._id!, {
         pr: {
           ...job.pr,
           status: newStatus,
-          updatedAt: prInfo.mergedAt ? new Date(prInfo.mergedAt) : prInfo.closedAt ? new Date(prInfo.closedAt) : new Date(),
+          updatedAt,
         },
       });
 
@@ -279,5 +289,6 @@ export const createPrMergeStatusPollingService = (
 /**
  * Default instance of the PR merge status polling service
  */
-export const prMergeStatusPollingService =
-  createPrMergeStatusPollingService(defaultGitHubTokenManager);
+export const prMergeStatusPollingService = createPrMergeStatusPollingService(
+  defaultGitHubTokenManager
+);

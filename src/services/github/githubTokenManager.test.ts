@@ -1,4 +1,3 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GitHubTokenManager } from './githubTokenManager';
 import { GitHubAppConfig } from './types';
 
@@ -151,4 +150,3 @@ describe('GitHubTokenManager', () => {
     });
   });
 });
-

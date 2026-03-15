@@ -16,10 +16,7 @@ export class GitHubTokenManager {
   private initializeOctokitInstances = (): void => {
     const privateKey = this.config.privateKey.replace(/\\n/g, '\n');
 
-    const organizations: GitHubOrganization[] = [
-      '10gen',
-      'evergreen-ci',
-    ];
+    const organizations: GitHubOrganization[] = ['10gen', 'evergreen-ci'];
 
     for (const org of organizations) {
       const installationId = this.config.installationIds[org];
@@ -64,7 +61,9 @@ export class GitHubTokenManager {
     const owner = repo.split('/')[0];
 
     if (!owner) {
-      throw new Error(`Invalid repository format: ${repo}. Expected "owner/repo"`);
+      throw new Error(
+        `Invalid repository format: ${repo}. Expected "owner/repo"`
+      );
     }
 
     return this.getOctokit(owner as GitHubOrganization);
@@ -77,7 +76,9 @@ export class GitHubTokenManager {
     const [owner, repoName] = repo.split('/');
 
     if (!owner || !repoName) {
-      throw new Error(`Invalid repository format: ${repo}. Expected "owner/repo"`);
+      throw new Error(
+        `Invalid repository format: ${repo}. Expected "owner/repo"`
+      );
     }
 
     const octokit = this.getOctokitByRepo(repo);
@@ -100,7 +101,11 @@ export class GitHubTokenManager {
         repository: repo,
       };
     } catch (error) {
-      if (error instanceof Error && 'status' in error && (error as any).status === 404) {
+      if (
+        error instanceof Error &&
+        'status' in error &&
+        (error as any).status === 404
+      ) {
         logger.warn(`PR not found: ${repo}#${prNumber}`);
         return null;
       }
@@ -109,7 +114,9 @@ export class GitHubTokenManager {
     }
   };
 
-  getPullRequestByUrl = async (prUrl: string): Promise<PullRequestInfo | null> => {
+  getPullRequestByUrl = async (
+    prUrl: string
+  ): Promise<PullRequestInfo | null> => {
     const match = prUrl.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
 
     if (!match) {
@@ -127,4 +134,3 @@ export class GitHubTokenManager {
     return prInfo?.merged ?? false;
   };
 }
-
